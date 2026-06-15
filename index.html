@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cody J. Boillot, Technical Program Manager &amp; Engineering Leader</title>
+<meta name="description" content="Cody J. Boillot, MBA, CSM. Technical Program Manager, engineering leader, and hands-on AI builder. 15+ years shipping platforms, coaching engineers, and delivering complex programs." />
+<meta name="author" content="Cody J. Boillot" />
+
+<!-- Open Graph / social preview -->
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Cody J. Boillot, Technical Program Manager &amp; Engineering Leader" />
+<meta property="og:description" content="15+ years driving complex technology programs. Founder of an AI-powered SaaS. Coached 60+ engineers to independence." />
+<meta property="og:image" content="assets/headshot.jpg" />
+<meta property="og:url" content="https://codyboillot.com/" />
+<meta name="twitter:card" content="summary_large_image" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet" />
+
+<style>
+  :root {
+    --bg:        #0b0f17;
+    --bg-soft:   #111725;
+    --card:      #141b2b;
+    --card-2:    #182032;
+    --line:      rgba(255,255,255,0.08);
+    --line-2:    rgba(255,255,255,0.14);
+    --text:      #eef2f9;
+    --muted:     #9aa6bd;
+    --muted-2:   #6b768e;
+    --accent:    #ff8a3d;
+    --accent-2:  #ffc24b;
+    --accent-3:  #ff5e62;
+    --grad:      linear-gradient(100deg, #ffc24b 0%, #ff8a3d 45%, #ff5e62 100%);
+    --shadow:    0 18px 50px -20px rgba(0,0,0,0.65);
+    --radius:    18px;
+    --maxw:      1080px;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  /* Ambient glow background */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background:
+      radial-gradient(720px 480px at 78% -8%, rgba(255,138,61,0.16), transparent 60%),
+      radial-gradient(640px 520px at 0% 22%, rgba(255,94,98,0.12), transparent 55%),
+      radial-gradient(900px 600px at 50% 120%, rgba(255,194,75,0.08), transparent 60%);
+  }
+
+  a { color: inherit; text-decoration: none; }
+  h1, h2, h3 { font-family: "Sora", "Inter", sans-serif; line-height: 1.12; letter-spacing: -0.02em; margin: 0; }
+  p { margin: 0; }
+  ul { margin: 0; padding: 0; list-style: none; }
+
+  .wrap { width: min(100% - 2.5rem, var(--maxw)); margin-inline: auto; }
+  .gradient-text {
+    background: var(--grad);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* ---------- Nav ---------- */
+  header.nav {
+    position: sticky; top: 0; z-index: 50;
+    backdrop-filter: blur(12px);
+    background: rgba(11,15,23,0.72);
+    border-bottom: 1px solid var(--line);
+  }
+  .nav-inner { display: flex; align-items: center; justify-content: space-between; height: 64px; }
+  .brand { font-family: "Sora"; font-weight: 800; font-size: 1.05rem; letter-spacing: -0.01em; }
+  .brand .dot { color: var(--accent); }
+  .nav-links { display: flex; gap: 1.6rem; align-items: center; }
+  .nav-links a { color: var(--muted); font-size: 0.92rem; font-weight: 500; transition: color .2s; }
+  .nav-links a:hover { color: var(--text); }
+  .nav-cta {
+    padding: 0.5rem 1rem; border-radius: 999px; font-weight: 600; font-size: 0.88rem;
+    background: var(--grad); color: #1a1206 !important;
+  }
+  @media (max-width: 720px) { .nav-links a:not(.nav-cta) { display: none; } }
+
+  /* ---------- Buttons ---------- */
+  .btn {
+    display: inline-flex; align-items: center; gap: .55rem;
+    padding: 0.85rem 1.4rem; border-radius: 999px; font-weight: 600; font-size: 0.95rem;
+    border: 1px solid transparent; cursor: pointer; transition: transform .18s ease, box-shadow .2s ease, background .2s;
+    white-space: nowrap;
+  }
+  .btn-primary { background: var(--grad); color: #1a1206; box-shadow: 0 10px 30px -10px rgba(255,138,61,0.6); }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 16px 36px -10px rgba(255,138,61,0.7); }
+  .btn-ghost { background: rgba(255,255,255,0.04); border-color: var(--line-2); color: var(--text); }
+  .btn-ghost:hover { transform: translateY(-2px); background: rgba(255,255,255,0.08); }
+  .btn svg { width: 18px; height: 18px; }
+
+  /* ---------- Hero ---------- */
+  .hero { padding: clamp(3rem, 8vw, 6rem) 0 clamp(2.5rem, 6vw, 4rem); }
+  .hero-grid { display: grid; grid-template-columns: 1.35fr 0.85fr; gap: clamp(2rem, 5vw, 4rem); align-items: center; }
+  @media (max-width: 860px) { .hero-grid { grid-template-columns: 1fr; text-align: left; } }
+
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: .5rem;
+    font-size: 0.8rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;
+    color: var(--accent-2); border: 1px solid var(--line-2); border-radius: 999px;
+    padding: .4rem .85rem; margin-bottom: 1.4rem; background: rgba(255,194,75,0.06);
+  }
+  .eyebrow .pulse { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 0 rgba(255,138,61,.6); animation: pulse 2.2s infinite; }
+  @keyframes pulse { 0%{box-shadow:0 0 0 0 rgba(255,138,61,.55)} 70%{box-shadow:0 0 0 10px rgba(255,138,61,0)} 100%{box-shadow:0 0 0 0 rgba(255,138,61,0)} }
+
+  .hero h1 { font-size: clamp(2.4rem, 6vw, 4rem); font-weight: 800; }
+  .hero .creds { color: var(--muted-2); font-family: "Sora"; font-weight: 700; font-size: 0.5em; vertical-align: middle; }
+  .hero .role { margin-top: 1rem; font-size: clamp(1.02rem, 2.2vw, 1.3rem); font-weight: 600; color: var(--text); }
+  .hero .role span { color: var(--muted); font-weight: 500; }
+  .hero .pitch { margin-top: 1.3rem; color: var(--muted); font-size: 1.06rem; max-width: 36ch; }
+  .hero-cta { display: flex; flex-wrap: wrap; gap: .8rem; margin-top: 2rem; }
+
+  .portrait-wrap { justify-self: center; position: relative; }
+  .portrait {
+    width: clamp(220px, 32vw, 320px); aspect-ratio: 4/5; border-radius: 24px; object-fit: cover;
+    border: 1px solid var(--line-2); box-shadow: var(--shadow); position: relative; z-index: 2;
+    background: var(--card);
+  }
+  .portrait-wrap::after {
+    content: ""; position: absolute; inset: -14px -14px auto auto; width: 70%; height: 70%;
+    border-radius: 26px; background: var(--grad); filter: blur(38px); opacity: .35; z-index: 1;
+  }
+  /* Monogram fallback shown if no photo file is present */
+  .portrait-fallback {
+    width: clamp(220px, 32vw, 320px); aspect-ratio: 4/5; border-radius: 24px;
+    border: 1px solid var(--line-2); box-shadow: var(--shadow); position: relative; z-index: 2;
+    display: none; align-items: center; justify-content: center;
+    background: radial-gradient(120% 120% at 30% 20%, #1c2740, #0e1320);
+    font-family: "Sora"; font-weight: 800; font-size: clamp(4rem, 9vw, 6rem);
+  }
+
+  /* ---------- Stats ---------- */
+  .stats { padding: 1rem 0 0; }
+  .stats-grid {
+    display: grid; grid-template-columns: repeat(6, 1fr); gap: 1px;
+    background: var(--line); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden;
+  }
+  @media (max-width: 860px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+  .stat { background: var(--bg-soft); padding: 1.4rem 1rem; text-align: center; }
+  .stat .num { font-family: "Sora"; font-weight: 800; font-size: clamp(1.5rem, 3.4vw, 2.1rem); }
+  .stat .lbl { color: var(--muted); font-size: 0.82rem; margin-top: .25rem; }
+
+  /* ---------- Sections ---------- */
+  section.block { padding: clamp(3.5rem, 8vw, 6rem) 0 0; }
+  .sec-head { margin-bottom: 2.5rem; }
+  .sec-tag { font-size: 0.8rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); }
+  .sec-head h2 { font-size: clamp(1.7rem, 4vw, 2.5rem); margin-top: .6rem; font-weight: 800; }
+  .sec-head p { color: var(--muted); margin-top: .8rem; max-width: 60ch; }
+
+  .about-text { font-size: clamp(1.05rem, 2.2vw, 1.25rem); color: var(--text); max-width: 70ch; }
+  .about-text strong { color: var(--accent-2); font-weight: 700; }
+
+  /* ---------- Timeline ---------- */
+  .timeline { position: relative; margin-left: .5rem; }
+  .timeline::before { content: ""; position: absolute; left: 7px; top: 6px; bottom: 6px; width: 2px; background: linear-gradient(var(--accent), transparent); }
+  .tl-item { position: relative; padding: 0 0 2.2rem 2.4rem; }
+  .tl-item::before {
+    content: ""; position: absolute; left: 0; top: 6px; width: 16px; height: 16px; border-radius: 50%;
+    background: var(--bg); border: 3px solid var(--accent); box-shadow: 0 0 0 4px rgba(255,138,61,0.12);
+  }
+  .tl-top { display: flex; flex-wrap: wrap; align-items: baseline; gap: .25rem .8rem; }
+  .tl-role { font-family: "Sora"; font-weight: 700; font-size: 1.12rem; }
+  .tl-co { color: var(--accent-2); font-weight: 600; }
+  .tl-date { color: var(--muted-2); font-size: 0.85rem; font-weight: 500; margin-left: auto; }
+  @media (max-width: 620px){ .tl-date { margin-left: 0; flex-basis: 100%; } }
+  .tl-bullets { margin-top: .7rem; display: grid; gap: .5rem; }
+  .tl-bullets li { color: var(--muted); padding-left: 1.2rem; position: relative; font-size: 0.98rem; }
+  .tl-bullets li::before { content: "▹"; position: absolute; left: 0; color: var(--accent); }
+  .tl-item.featured .tl-role::after {
+    content: "Veteran"; font-family: "Inter"; font-size: .68rem; font-weight: 700; letter-spacing: .04em;
+    text-transform: uppercase; color: #1a1206; background: var(--grad); padding: .15rem .5rem; border-radius: 999px; margin-left: .6rem; vertical-align: middle;
+  }
+
+  /* ---------- Cards grid (platforms) ---------- */
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.1rem; }
+  .card {
+    background: linear-gradient(180deg, var(--card), var(--card-2));
+    border: 1px solid var(--line); border-radius: var(--radius); padding: 1.5rem 1.4rem;
+    transition: transform .2s ease, border-color .2s ease; position: relative; overflow: hidden;
+  }
+  .card:hover { transform: translateY(-4px); border-color: var(--line-2); }
+  .card::after { content:""; position:absolute; inset: 0 0 auto 0; height: 3px; background: var(--grad); transform: scaleX(0); transform-origin: left; transition: transform .25s ease; }
+  .card:hover::after { transform: scaleX(1); }
+  .card .ic { width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; background: rgba(255,138,61,0.12); margin-bottom: 1rem; }
+  .card .ic svg { width: 22px; height: 22px; color: var(--accent-2); }
+  .card h3 { font-size: 1.1rem; font-weight: 700; }
+  .card p { color: var(--muted); margin-top: .55rem; font-size: 0.96rem; }
+
+  /* ---------- Skills ---------- */
+  .skills-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.1rem; }
+  .skill-group { background: var(--bg-soft); border: 1px solid var(--line); border-radius: var(--radius); padding: 1.4rem; }
+  .skill-group h3 { font-size: .82rem; text-transform: uppercase; letter-spacing: .08em; color: var(--accent); margin-bottom: 1rem; }
+  .chips { display: flex; flex-wrap: wrap; gap: .5rem; }
+  .chip { font-size: 0.85rem; padding: .4rem .8rem; border-radius: 999px; background: rgba(255,255,255,0.04); border: 1px solid var(--line-2); color: var(--text); }
+
+  /* ---------- Education ---------- */
+  .edu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.1rem; }
+  .edu { background: var(--bg-soft); border: 1px solid var(--line); border-radius: var(--radius); padding: 1.3rem; }
+  .edu .deg { font-family: "Sora"; font-weight: 700; }
+  .edu .school { color: var(--muted); font-size: .92rem; margin-top: .3rem; }
+
+  /* ---------- Contact / footer ---------- */
+  .contact { margin-top: clamp(4rem, 9vw, 7rem); padding: clamp(3rem, 7vw, 5rem) 0; border-top: 1px solid var(--line);
+    background: radial-gradient(700px 400px at 50% -40%, rgba(255,138,61,0.12), transparent 70%); text-align: center; }
+  .contact h2 { font-size: clamp(1.9rem, 5vw, 3rem); font-weight: 800; }
+  .contact p { color: var(--muted); margin: 1rem auto 2rem; max-width: 48ch; }
+  .contact-cta { display: flex; flex-wrap: wrap; gap: .9rem; justify-content: center; }
+  footer.foot { padding: 2rem 0 3rem; text-align: center; color: var(--muted-2); font-size: .85rem; }
+
+  /* ---------- Scroll reveal ---------- */
+  .reveal { opacity: 0; transform: translateY(22px); transition: opacity .7s ease, transform .7s ease; }
+  .reveal.in { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) {
+    .reveal { opacity: 1 !important; transform: none !important; transition: none; }
+    html { scroll-behavior: auto; }
+    .pulse { animation: none !important; }
+  }
+  :focus-visible { outline: 2px solid var(--accent-2); outline-offset: 3px; border-radius: 6px; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<header class="nav">
+  <div class="wrap nav-inner">
+    <a href="#top" class="brand">Cody&nbsp;Boillot<span class="dot">.</span></a>
+    <nav class="nav-links" aria-label="Primary">
+      <a href="#about">About</a>
+      <a href="#experience">Experience</a>
+      <a href="#work">What I Build</a>
+      <a href="#skills">Skills</a>
+      <a href="#contact" class="nav-cta">Get in touch</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div class="reveal">
+        <span class="eyebrow"><span class="pulse"></span> Available for the right opportunity</span>
+        <h1>Cody&nbsp;J.&nbsp;Boillot <span class="creds">MBA · CSM</span></h1>
+        <p class="role">Technical Program Manager <span>·</span> Engineering Leader <span>·</span> AI Builder <span>·</span> Coach</p>
+        <p class="pitch">I run complex, multi-team programs <strong>and</strong> ship the products myself, then turn junior engineers into leaders along the way.</p>
+        <div class="hero-cta">
+          <a class="btn btn-primary" href="#contact">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z" opacity="0"/><path d="M22 6l-10 7L2 6"/><rect x="2" y="4" width="20" height="16" rx="2"/></svg>
+            Get in touch
+          </a>
+          <a class="btn btn-ghost" href="resume.pdf" download>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg>
+            Download résumé
+          </a>
+        </div>
+      </div>
+      <div class="portrait-wrap reveal">
+        <img class="portrait" src="assets/headshot.jpg" alt="Portrait of Cody J. Boillot"
+             onerror="this.style.display='none';document.getElementById('mono').style.display='flex';" />
+        <div class="portrait-fallback" id="mono" aria-hidden="true"><span class="gradient-text">CB</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <section class="stats">
+    <div class="wrap">
+      <div class="stats-grid reveal">
+        <div class="stat"><div class="num gradient-text">15+</div><div class="lbl">Years leading</div></div>
+        <div class="stat"><div class="num gradient-text">60+</div><div class="lbl">Engineers coached</div></div>
+        <div class="stat"><div class="num gradient-text">90%+</div><div class="lbl">Retention</div></div>
+        <div class="stat"><div class="num gradient-text">$5M+</div><div class="lbl">Annual savings</div></div>
+        <div class="stat"><div class="num gradient-text">40+</div><div class="lbl">Person org led</div></div>
+        <div class="stat"><div class="num gradient-text">100+</div><div class="lbl">Daily platform users</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ABOUT -->
+  <section class="block" id="about">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <div class="sec-tag">About</div>
+        <h2>A builder who leads, and a leader who ships.</h2>
+      </div>
+      <p class="about-text reveal">
+        I'm a technical program and engineering leader with <strong>15+ years</strong> driving complex,
+        multi-team initiatives from concept to delivery. I run concurrent programs across infrastructure,
+        platforms, AI, and engineering operations, setting measurable metrics, reporting risk and progress
+        to leadership, and clearing roadblocks so teams can move. I'm also a hands-on builder: I
+        <strong>founded a revenue-producing, AI-agent-powered SaaS CRM</strong> and architected multiple
+        internal platforms now used daily across a 40+ person engineering org. What I'm proudest of is the
+        people side. I personally hired, coached, and graduated <strong>60+ junior engineers</strong> into
+        fully independent contributors, reshaping culture around learning, ownership, and knowledge-sharing.
+      </p>
+    </div>
+  </section>
+
+  <!-- EXPERIENCE -->
+  <section class="block" id="experience">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <div class="sec-tag">Experience</div>
+        <h2>Where I've made an impact</h2>
+      </div>
+      <div class="timeline">
+
+        <div class="tl-item reveal">
+          <div class="tl-top">
+            <span class="tl-role">Founder &amp; Builder</span>
+            <span class="tl-co">LoPro CRM LLC</span>
+            <span class="tl-date">2024 - Present</span>
+          </div>
+          <ul class="tl-bullets">
+            <li>Designed, engineered, and launched a revenue-producing SaaS CRM powered by autonomous AI agents, architecting the full stack from data model to agent orchestration, concept to live paying product.</li>
+            <li>Built autonomous AI-agent workflows handling core CRM functions: data entry, enrichment, follow-up, and reporting.</li>
+            <li>Owned the entire lifecycle: infrastructure, integrations, deployment, go-to-market, and customer onboarding.</li>
+          </ul>
+        </div>
+
+        <div class="tl-item reveal">
+          <div class="tl-top">
+            <span class="tl-role">Software Development Engineering Manager, AI, Learning, Gaming &amp; Digital Platforms</span>
+            <span class="tl-co">Sinclair Digital</span>
+            <span class="tl-date">2023 - Present</span>
+          </div>
+          <ul class="tl-bullets">
+            <li>Manage multiple concurrent programs across a 40+ person engineering org: planning, timelines, resourcing, and delivery end to end.</li>
+            <li>Hired 60+ junior engineers and personally coached them into independent engineers who graduated onto product teams, with 90%+ retention and a durable homegrown talent pipeline.</li>
+            <li>Architected and shipped a suite of internal platforms (below) now used daily across the organization.</li>
+            <li>Led a vendor consolidation replacing multiple suppliers with one platform, delivering $5M+ in annual savings with zero operational disruption.</li>
+            <li>Established accountability rituals and tracked measurable metrics, reporting progress, milestones, and risk to leadership.</li>
+          </ul>
+        </div>
+
+        <div class="tl-item reveal">
+          <div class="tl-top">
+            <span class="tl-role">Product Owner &amp; Engineering Manager</span>
+            <span class="tl-co">Indiana Dept. of Workforce Development</span>
+            <span class="tl-date">2021 - 2023</span>
+          </div>
+          <ul class="tl-bullets">
+            <li>Led delivery across 3 teams for large-scale platforms serving thousands of users, coordinating cross-functional dependencies and ceremonies against cost and schedule targets.</li>
+            <li>Improved operational reliability and release predictability by 35% through process improvements and structured accountability.</li>
+            <li>Served as Voice of Customer, translating feedback into prioritized initiatives in a compliance-driven public-sector environment.</li>
+          </ul>
+        </div>
+
+        <div class="tl-item reveal">
+          <div class="tl-top">
+            <span class="tl-role">Software Engineer &amp; Scrum Master</span>
+            <span class="tl-co">Sallie Mae</span>
+            <span class="tl-date">2018 - 2021</span>
+          </div>
+          <ul class="tl-bullets">
+            <li>Delivered enterprise applications and automated business workflows in a regulated financial-services environment; coached teams on Agile best practices and consistent delivery cycles.</li>
+          </ul>
+        </div>
+
+        <div class="tl-item reveal">
+          <div class="tl-top">
+            <span class="tl-role">Senior Operations &amp; Sales Manager</span>
+            <span class="tl-co">Angi &amp; Others</span>
+            <span class="tl-date">2010 - 2018</span>
+          </div>
+          <ul class="tl-bullets">
+            <li>Managed site-level operations and built training programs that measurably accelerated team productivity and engagement across multiple business units and locations.</li>
+          </ul>
+        </div>
+
+        <div class="tl-item featured reveal">
+          <div class="tl-top">
+            <span class="tl-role">Combat Sergeant &amp; Aviator</span>
+            <span class="tl-co">U.S. Air Force</span>
+            <span class="tl-date">2001 - 2010</span>
+          </div>
+          <ul class="tl-bullets">
+            <li>Deployed multiple times across two wars in Iraq and Afghanistan, leading airmen in active war-zone operations where readiness and split-second decisions carried life-or-death stakes.</li>
+            <li>Promoted to Sergeant with direct leadership of personnel under combat conditions, responsible for their training, safety, performance, and morale.</li>
+            <li>Completed Airman Leadership School, formalizing the people-leadership skills that anchor my career today.</li>
+          </ul>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- WHAT I BUILD -->
+  <section class="block" id="work">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <div class="sec-tag">What I Build</div>
+        <h2>Platforms that solve real problems</h2>
+        <p>A selection of internal platforms I conceived, built, and launched, each adopted into daily use to remove friction and unlock the team.</p>
+      </div>
+      <div class="cards">
+
+        <div class="card reveal">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l2.2 6.6L21 9l-5 4.2L17.4 21 12 17.3 6.6 21 8 13.2 3 9l6.8-.4z"/></svg></div>
+          <h3>AI app-generation platform</h3>
+          <p>An internal AI-powered platform that lets engineers and non-engineers spin up working applications from natural-language prompts, bringing rapid prototyping in-house and removing dependence on external low-code vendors.</p>
+        </div>
+
+        <div class="card reveal">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4l16 8-16 8 4-8z"/></svg></div>
+          <h3>Self-service deployment platform</h3>
+          <p>A self-service system that lets users stand up applications on AWS behind company SSO with a custom URL, turning a manual, engineering-gated process into a few-click workflow and dramatically shortening time-to-launch.</p>
+        </div>
+
+        <div class="card reveal">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3 6 6 .9-4.5 4.3 1 6.1L12 16.8 6.5 19.3l1-6.1L3 8.9 9 8z"/></svg></div>
+          <h3>Gamified engineer training platform</h3>
+          <p>A gamified learning platform that helps engineers target and close individual skill gaps using badges and achievements, central to the program that graduated 60+ junior engineers into independent contributors.</p>
+        </div>
+
+        <div class="card reveal">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 14h5"/></svg></div>
+          <h3>Streamlined project-delivery platform</h3>
+          <p>A simpler, faster, more usable alternative to heavyweight project tools for managing development work, launched on AWS serving 100+ daily users, with service standards and adoption metrics defined from scratch.</p>
+        </div>
+
+        <div class="card reveal">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M8 7V5a4 4 0 018 0v2"/></svg></div>
+          <h3>Broadcast operations portal</h3>
+          <p>A unified portal giving users access to every station across a large media broadcaster: market info, endpoints, schedules, and personnel, including a live module to view what each station is broadcasting in real time.</p>
+        </div>
+
+        <div class="card reveal">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l18-5v12L3 13zM3 11v4M11 8v8"/></svg></div>
+          <h3>Weekly internal speaker series</h3>
+          <p>A TED-style talk series where volunteers present on a topic of their choice, building a culture of education and knowledge-sharing while developing presentation and public-speaking skills across the org.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- SKILLS -->
+  <section class="block" id="skills">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <div class="sec-tag">Toolkit</div>
+        <h2>Skills &amp; technologies</h2>
+      </div>
+      <div class="skills-grid">
+        <div class="skill-group reveal">
+          <h3>Program &amp; Delivery</h3>
+          <div class="chips">
+            <span class="chip">Technical Program Management</span><span class="chip">Agile / Scrum</span>
+            <span class="chip">Dependency Coordination</span><span class="chip">Metrics &amp; KPIs</span>
+            <span class="chip">Risk Reporting</span><span class="chip">Change Management</span>
+            <span class="chip">Stakeholder Comms</span>
+          </div>
+        </div>
+        <div class="skill-group reveal">
+          <h3>Platforms &amp; Infrastructure</h3>
+          <div class="chips">
+            <span class="chip">AWS</span><span class="chip">React</span><span class="chip">Node.js</span>
+            <span class="chip">REST APIs</span><span class="chip">CI/CD</span><span class="chip">SSO Integration</span>
+          </div>
+        </div>
+        <div class="skill-group reveal">
+          <h3>AI &amp; Agents</h3>
+          <div class="chips">
+            <span class="chip">Agentic AI Systems</span><span class="chip">Claude Code</span><span class="chip">Cursor</span>
+            <span class="chip">Codex</span><span class="chip">n8n</span><span class="chip">Custom AI Platforms</span>
+          </div>
+        </div>
+        <div class="skill-group reveal">
+          <h3>People &amp; Analytics</h3>
+          <div class="chips">
+            <span class="chip">Hiring &amp; Coaching</span><span class="chip">Talent Development</span>
+            <span class="chip">SQL</span><span class="chip">KPI Dashboards</span><span class="chip">Workforce Analytics</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- EDUCATION -->
+  <section class="block" id="education">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <div class="sec-tag">Education &amp; Certifications</div>
+        <h2>Credentials</h2>
+      </div>
+      <div class="edu-grid">
+        <div class="edu reveal"><div class="deg">Doctor of Industrial &amp; Organizational Psychology</div><div class="school">Touro University · Candidate, 2026</div></div>
+        <div class="edu reveal"><div class="deg">Master of Business Administration (MBA)</div><div class="school">University of Phoenix</div></div>
+        <div class="edu reveal"><div class="deg">B.A., Political Science</div><div class="school">University at Buffalo</div></div>
+        <div class="edu reveal"><div class="deg">Certified Scrum Master (CSM)</div><div class="school">Scrum Alliance</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section class="contact" id="contact">
+    <div class="wrap reveal">
+      <h2>Let's build something <span class="gradient-text">that ships</span>.</h2>
+      <p>Open to technical program management and engineering leadership roles. The fastest way to reach me is email or LinkedIn.</p>
+      <div class="contact-cta">
+        <a class="btn btn-primary" href="mailto:Boillot.Cody@gmail.com">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 6l-10 7L2 6"/></svg>
+          Boillot.Cody@gmail.com
+        </a>
+        <a class="btn btn-ghost" href="https://www.linkedin.com/in/cody-boillot-mba-csm-47475654/" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M4.98 3.5A2.5 2.5 0 002.5 6a2.5 2.5 0 002.48 2.5A2.5 2.5 0 007.5 6 2.5 2.5 0 004.98 3.5zM3 9h4v12H3zM10 9h3.8v1.7h.05c.53-1 1.83-2.05 3.77-2.05 4 0 4.75 2.65 4.75 6.1V21h-4v-5.3c0-1.27-.02-2.9-1.77-2.9-1.77 0-2.04 1.38-2.04 2.8V21h-4z"/></svg>
+          LinkedIn
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <div class="wrap">© <span id="yr">2026</span> Cody J. Boillot · Built simple, built to ship.</div>
+  </footer>
+
+</main>
+
+<script>
+  // Scroll reveal
+  (function () {
+    var els = document.querySelectorAll(".reveal");
+    if (!("IntersectionObserver" in window)) { els.forEach(function (e) { e.classList.add("in"); }); return; }
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) { en.target.classList.add("in"); io.unobserve(en.target); }
+      });
+    }, { threshold: 0.12, rootMargin: "0px 0px -40px 0px" });
+    els.forEach(function (e) { io.observe(e); });
+  })();
+  // Footer year (Date is fine in the browser)
+  document.getElementById("yr").textContent = new Date().getFullYear();
+</script>
+
+</body>
+</html>
