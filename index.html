@@ -119,8 +119,8 @@
     color: var(--accent-2); border: 1px solid var(--line-2); border-radius: 999px;
     padding: .4rem .85rem; margin-bottom: 1.4rem; background: rgba(255,194,75,0.06);
   }
-  .eyebrow .pulse { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 0 rgba(255,138,61,.6); animation: pulse 2.2s infinite; }
-  @keyframes pulse { 0%{box-shadow:0 0 0 0 rgba(255,138,61,.55)} 70%{box-shadow:0 0 0 10px rgba(255,138,61,0)} 100%{box-shadow:0 0 0 0 rgba(255,138,61,0)} }
+  .eyebrow .pulse { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 0 0 rgba(34,197,94,.6); animation: pulse 2.2s infinite; }
+  @keyframes pulse { 0%{box-shadow:0 0 0 0 rgba(34,197,94,.55)} 70%{box-shadow:0 0 0 10px rgba(34,197,94,0)} 100%{box-shadow:0 0 0 0 rgba(34,197,94,0)} }
 
   .hero h1 { font-size: clamp(2.4rem, 6vw, 4rem); font-weight: 800; }
   .hero .creds { color: var(--muted-2); font-family: "Sora"; font-weight: 700; font-size: 0.5em; vertical-align: middle; }
@@ -275,7 +275,7 @@
         </div>
       </div>
       <div class="portrait-wrap reveal">
-        <img class="portrait" src="assets/headshot.jpg" alt="Portrait of Cody J. Boillot"
+        <img class="portrait" src="assets/headshot.jpg?v=2" alt="Portrait of Cody J. Boillot"
              onerror="this.style.display='none';document.getElementById('mono').style.display='flex';" />
         <div class="portrait-fallback" id="mono" aria-hidden="true"><span class="gradient-text">CB</span></div>
       </div>
