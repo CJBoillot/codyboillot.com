@@ -235,6 +235,17 @@
     .pulse { animation: none !important; }
   }
   :focus-visible { outline: 2px solid var(--accent-2); outline-offset: 3px; border-radius: 6px; }
+
+  /* ---------- Featured project (engine) ---------- */
+  .feature-grid { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: clamp(1.5rem, 4vw, 2.6rem); align-items: center; }
+  @media (max-width: 880px) { .feature-grid { grid-template-columns: 1fr; } }
+  .video-embed { position: relative; width: 100%; aspect-ratio: 16 / 9; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--line-2); box-shadow: var(--shadow); background: #000; }
+  .video-embed::after { content: ""; position: absolute; inset: 0 0 auto 0; height: 3px; background: var(--grad); z-index: 2; }
+  .video-embed iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+  .feature-meta .badge-row { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: 1.1rem; }
+  .pill { font-size: .72rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: #1a1206; background: var(--grad); padding: .32rem .72rem; border-radius: 999px; }
+  .pill.ghost { background: rgba(255,255,255,0.05); color: var(--accent-2); border: 1px solid var(--line-2); }
+  .feature-meta p { color: var(--muted); margin-top: 1.1rem; }
 </style>
 </head>
 <body>
@@ -247,6 +258,7 @@
       <a href="#about">About</a>
       <a href="#experience">Experience</a>
       <a href="#work">What I Build</a>
+      <a href="#engine">Engine</a>
       <a href="#skills">Skills</a>
       <a href="#contact" class="nav-cta">Get in touch</a>
     </nav>
@@ -451,6 +463,39 @@
           <p>A TED-style talk series where volunteers present on a topic of their choice, building a culture of education and knowledge-sharing while developing presentation and public-speaking skills across the org.</p>
         </div>
 
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURED PROJECT: CoEngine -->
+  <section class="block" id="engine">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <div class="sec-tag">Featured Project</div>
+        <h2>CoEngine: a 3D game engine built from scratch</h2>
+        <p>A solo engineering project. A real-time 3D engine written from the ground up in C++ and rendered in the browser through WebGL and WebGPU. No game framework, no off-the-shelf engine, just the fundamentals built by hand.</p>
+      </div>
+      <div class="feature-grid">
+        <div class="video-embed reveal">
+          <iframe src="https://drive.google.com/file/d/1mhQ_iCnCS22JIfVAdA-5foSgZLsWjeEP/preview" allow="autoplay; fullscreen" allowfullscreen title="CoEngine development demo"></iframe>
+        </div>
+        <div class="feature-meta reveal">
+          <div class="badge-row">
+            <span class="pill">Solo build</span>
+            <span class="pill ghost">From scratch</span>
+          </div>
+          <div class="chips">
+            <span class="chip">C++</span>
+            <span class="chip">WebGL</span>
+            <span class="chip">WebGPU</span>
+            <span class="chip">Real-time 3D</span>
+          </div>
+          <p>Built end to end to go deep on real-time graphics and engine architecture. The demo plays right here in your browser, no download required.</p>
+          <a class="btn btn-ghost" style="margin-top:1.3rem" href="https://drive.google.com/file/d/1mhQ_iCnCS22JIfVAdA-5foSgZLsWjeEP/view" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3l14 9-14 9z"/></svg>
+            Open demo in new tab
+          </a>
+        </div>
       </div>
     </div>
   </section>
