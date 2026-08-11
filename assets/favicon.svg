@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ffc24b"/>
+      <stop offset="45%" stop-color="#ff8a3d"/>
+      <stop offset="100%" stop-color="#ff5e62"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="#0b0f17"/>
+  <text x="32" y="43" text-anchor="middle" fill="url(#g)"
+        font-family="Sora, Inter, system-ui, sans-serif" font-size="30" font-weight="800"
+        letter-spacing="-1">CB</text>
+</svg>

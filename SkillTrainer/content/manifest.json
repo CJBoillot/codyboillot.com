@@ -1,0 +1,8 @@
+{
+  "name": "SkillTrainer shipped content",
+  "note": "Packs load in order and merge. To install content, drop a JSON file in content/packs/ and add it to this list. No code change is needed. Every category must have exactly 4 tiers (I Basic Awareness, II Foundational, III Skilled, IV Advanced); a pack that does not is reported and skipped. An exported pack may carry an `assets` map of base64 files, which are restored on import.",
+  "packs": [
+    { "file": "software-engineering.json", "title": "Software Engineering" },
+    { "file": "security.json", "title": "Security" }
+  ]
+}

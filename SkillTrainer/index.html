@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SkillTrainer</title>
+<meta name="description" content="A skill-tree training engine: build sections, trees and modules with articles, media and quizzes, all in the browser.">
+<meta name="theme-color" content="#0b0f17">
+
+<meta property="og:title" content="SkillTrainer">
+<meta property="og:description" content="A skill-tree training engine built from scratch. Author unlimited trees, modules and quizzes in the browser.">
+<meta property="og:type" content="website">
+
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/app.css">
+
+<script>
+  /* Resolve the theme before first paint so there is no flash of the wrong one.
+     theme.js owns it from then on; this only has to agree with it. */
+  try {
+    var saved = JSON.parse(localStorage.getItem("skilltrainer:prefs:v1") || "{}");
+    var theme = saved.theme || (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+    document.documentElement.setAttribute("data-theme", theme);
+  } catch (e) { /* first visit, the default on <html> is already right */ }
+</script>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="topbar-brand" href="../index.html" title="Back to codyboillot.com">
+    <span>Cody&nbsp;Boillot</span><span class="dot">.</span>
+  </a>
+  <nav class="crumbs" id="crumbs" aria-label="Breadcrumb"></nav>
+  <div class="topbar-actions" id="topbar-actions"></div>
+</header>
+
+<main id="app" role="main">
+  <div class="wrap view">
+    <div class="empty"><h3>Loading…</h3></div>
+  </div>
+</main>
+
+<div class="toast-host" id="toasts" aria-live="polite"></div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

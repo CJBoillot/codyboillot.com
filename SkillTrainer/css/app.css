@@ -1,0 +1,2332 @@
+/* ============================================================== base ==== */
+
+* { box-sizing: border-box; }
+
+html, body { height: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: var(--glow);
+  pointer-events: none;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  line-height: 1.14;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+p { margin: 0; }
+ul, ol { margin: 0; padding: 0; }
+a { color: inherit; text-decoration: none; }
+button, input, select, textarea { font: inherit; color: inherit; }
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.ico { width: 1em; height: 1em; flex: 0 0 auto; }
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+.gradient-text {
+  background: var(--grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.wrap { width: min(100% - 2rem, var(--maxw)); margin-inline: auto; }
+
+/* ============================================================ chrome ==== */
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  height: var(--chrome);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding-inline: clamp(0.75rem, 2vw, 1.25rem);
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--line);
+}
+
+.topbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 0.98rem;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+.topbar-brand .dot { color: var(--accent); }
+
+.crumbs {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+  flex: 1;
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+.crumbs a { color: var(--muted); }
+.crumbs a:hover { color: var(--text); }
+.crumbs .ico { width: 0.85em; opacity: 0.5; }
+.crumbs .crumb-now {
+  color: var(--text);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.topbar-actions { display: flex; align-items: center; gap: 0.4rem; }
+
+/* ========================================================== controls ==== */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.62rem 1.05rem;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  border: 1px solid transparent;
+  background: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: transform 0.16s var(--ease), background 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+.btn:hover { transform: translateY(-1px); }
+.btn:active { transform: translateY(0); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+.btn-primary {
+  background: var(--grad);
+  color: var(--on-accent);
+  box-shadow: 0 10px 26px -12px rgba(255, 138, 61, 0.7);
+}
+.btn-ghost { background: var(--card); border-color: var(--line-2); color: var(--text); }
+.btn-ghost:hover { background: var(--card-3); border-color: var(--line-3); }
+.btn-quiet { color: var(--muted); }
+.btn-quiet:hover { color: var(--text); background: var(--card); }
+.btn-danger { background: var(--danger-wash); border-color: var(--danger); color: var(--danger); }
+.btn-sm { padding: 0.4rem 0.75rem; font-size: 0.82rem; }
+.btn-block { width: 100%; }
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 1.05rem;
+  transition: color 0.18s, border-color 0.18s, background 0.18s;
+}
+.icon-btn:hover { color: var(--text); border-color: var(--line-3); background: var(--card-3); }
+.icon-btn.is-on { color: var(--on-accent); background: var(--grad); border-color: transparent; }
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  background: var(--card-2);
+  border: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 500;
+}
+.chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--on-accent);
+  background: var(--grad);
+  padding: 0.26rem 0.62rem;
+  border-radius: 999px;
+}
+.pill.ghost {
+  background: var(--accent-wash);
+  color: var(--accent-ink);
+  border: 1px solid var(--line-2);
+}
+.pill.ok { background: var(--ok-wash); color: var(--ok-ink); border: 1px solid var(--ok-wash); }
+
+.field { display: grid; gap: 0.35rem; margin-bottom: 0.9rem; }
+.field > label { font-size: 0.8rem; font-weight: 600; color: var(--muted); }
+.field .hint { font-size: 0.76rem; color: var(--muted-2); }
+
+input[type="text"], input[type="url"], input[type="number"], select, textarea {
+  width: 100%;
+  padding: 0.62rem 0.75rem;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--line-2);
+  background: var(--card-2);
+  color: var(--text);
+  transition: border-color 0.18s, background 0.18s;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--accent);
+  outline: none;
+  background: var(--card);
+}
+textarea { resize: vertical; min-height: 96px; font-family: inherit; line-height: 1.55; }
+textarea.mono { font-family: var(--font-mono); font-size: 0.85rem; }
+
+.switch { display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.85rem; }
+.switch input { width: auto; accent-color: var(--accent); }
+
+.row { display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center; }
+.row-end { justify-content: flex-end; }
+.grow { flex: 1; min-width: 0; }
+
+/* ======================================================= progress bar ==== */
+
+.meter {
+  position: relative;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--card-3);
+  overflow: hidden;
+  border: 1px solid var(--line);
+}
+.meter > i {
+  display: block;
+  height: 100%;
+  background: var(--grad);
+  border-radius: 999px;
+  transition: width 0.5s var(--ease);
+}
+
+/* The SWG skill-points readout, segmented like the original. */
+.points-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+.points-bar .points-track {
+  position: relative;
+  flex: 1;
+  min-width: 90px;
+  height: 12px;
+  border: 1px solid var(--line-2);
+  border-radius: 4px;
+  background: var(--card-3);
+  overflow: hidden;
+}
+.points-bar .points-fill {
+  height: 100%;
+  background: var(--grad);
+  transition: width 0.5s var(--ease);
+}
+.points-bar .points-track::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    90deg,
+    transparent 0 6px,
+    color-mix(in srgb, var(--bg) 70%, transparent) 6px 8px
+  );
+  pointer-events: none;
+}
+.points-bar b { color: var(--text); font-variant-numeric: tabular-nums; font-weight: 700; }
+
+.tree-progress { display: flex; align-items: center; gap: 0.6rem; font-size: 0.8rem; }
+.tree-progress .meter { flex: 1; min-width: 80px; }
+.tree-progress b { color: var(--text); font-variant-numeric: tabular-nums; }
+
+/* The tier ladder, stated once per tree instead of on every box. */
+.tier-legend {
+  display: flex;
+  gap: 0.9rem;
+  list-style: none;
+  flex-wrap: wrap;
+  font-size: 0.72rem;
+  color: var(--muted-2);
+}
+.tier-legend li { display: flex; align-items: baseline; gap: 0.3rem; white-space: nowrap; }
+.tier-legend b {
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--accent-ink);
+  min-width: 1.3em;
+  text-align: right;
+}
+
+.tier-ladder {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.7rem 0.85rem;
+  border-radius: var(--radius-xs);
+  border: 1px dashed var(--line-2);
+  background: var(--card-3);
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+.tier-ladder b { color: var(--accent-ink); display: inline-block; min-width: 2.2em; }
+
+.chip-level { border-color: var(--accent); color: var(--accent-ink); background: var(--accent-wash); }
+
+/* ============================================================ browse ==== */
+
+.view { padding-block: clamp(1.5rem, 4vh, 2.75rem) 4rem; }
+
+.page-head { margin-bottom: clamp(1.5rem, 4vh, 2.4rem); }
+.page-head .eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent-ink);
+  margin-bottom: 0.6rem;
+}
+.page-head h1 { font-size: clamp(1.7rem, 4.5vw, 2.6rem); margin-bottom: 0.6rem; }
+.page-head p { color: var(--muted); max-width: 62ch; }
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  gap: clamp(0.8rem, 2vw, 1.2rem);
+}
+
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  padding: clamp(1.1rem, 2.4vw, 1.5rem);
+  border-radius: var(--radius);
+  background: var(--card);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s var(--ease), border-color 0.2s, box-shadow 0.2s;
+  text-align: left;
+  cursor: pointer;
+  width: 100%;
+  font: inherit;
+}
+.card:hover { transform: translateY(-3px); border-color: var(--line-3); box-shadow: var(--shadow); }
+.card h3 { font-size: 1.12rem; }
+.card p { color: var(--muted); font-size: 0.9rem; }
+.card .card-foot {
+  margin-top: auto;
+  padding-top: 0.6rem;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  font-size: 0.78rem;
+  color: var(--muted-2);
+}
+.card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.75rem; }
+
+/* ========================================================= catalogue ==== */
+
+/*
+ * One page for the whole hierarchy: section > sub-section > tree, collapsed by
+ * default. Rows rather than cards, because a card spent a lot of vertical space
+ * to show a name and a count and then charged a navigation to see inside.
+ */
+.catalogue { display: flex; flex-direction: column; gap: 0.7rem; }
+
+.cat-sec {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card);
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+.cat-sec.is-open { border-color: var(--line-3); }
+
+.cat-head {
+  display: grid;
+  grid-template-columns: auto 1fr auto minmax(60px, 130px) auto;
+  align-items: center;
+  gap: 0.85rem;
+  width: 100%;
+  padding: 0.95rem 1.1rem;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  text-align: left;
+  color: var(--text);
+  transition: background 0.18s;
+}
+.cat-head:hover { background: var(--card-3); }
+.cat-chevron { display: inline-flex; color: var(--muted-2); transition: transform 0.26s var(--ease); }
+.cat-sec.is-open .cat-chevron { transform: rotate(0deg); }
+.cat-sec:not(.is-open) .cat-chevron { transform: rotate(-90deg); }
+.cat-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.05rem;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cat-meta { font-size: 0.78rem; color: var(--muted-2); white-space: nowrap; }
+.cat-bar {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--card-3);
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+.cat-bar > i { display: block; height: 100%; background: var(--grad); transition: width 0.5s var(--ease); }
+.cat-count {
+  font-size: 0.78rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* The 1fr -> 0fr collapse sizes only the FIRST row, so the panel must have
+   exactly one child. Everything lives in .cat-panel-inner for that reason. */
+.cat-panel {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 0.3s var(--ease), opacity 0.22s, padding 0.3s var(--ease);
+  padding: 0 1.1rem 1.1rem;
+  border-top: 1px solid var(--line);
+}
+.cat-panel-inner { min-height: 0; }
+.cat-sec:not(.is-open) .cat-panel {
+  grid-template-rows: 0fr;
+  opacity: 0;
+  padding-block: 0;
+  border-top-color: transparent;
+  overflow: hidden;
+}
+.cat-blurb { color: var(--muted); font-size: 0.9rem; padding-top: 0.9rem; }
+.cat-tools { padding-top: 0.9rem; }
+
+.cat-group { padding-top: 1rem; }
+.cat-group-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+.cat-group-name {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent-ink);
+}
+.cat-group-count {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--muted-2);
+  background: var(--card-3);
+  border-radius: 999px;
+  padding: 0.08rem 0.4rem;
+}
+.cat-group-blurb { margin-bottom: 0.5rem; }
+.cat-group-empty { padding: 0.3rem 0 0.2rem; }
+
+/* ---- tree rows ---- */
+
+.tree-rows { display: flex; flex-direction: column; gap: 0.35rem; }
+
+.tree-row {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--card-2);
+  transition: border-color 0.18s, background 0.18s, transform 0.18s var(--ease);
+}
+.tree-row:hover { border-color: var(--accent); background: var(--card-3); transform: translateX(2px); }
+.tree-row.is-done { border-color: var(--ok); }
+
+/*
+ * Six columns for five guaranteed children plus one optional (skill points).
+ * A spare auto column collapses to zero width when unused, whereas a missing
+ * one silently wraps the extra child onto a second row and makes that one row
+ * taller than every other.
+ *
+ * Do NOT try to pin that shut with grid-auto-rows: the rows here are implicit,
+ * so sizing them to 0 collapses the only row there is and crushes the content.
+ * Having enough columns is the whole fix.
+ */
+.tree-row-link {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto minmax(50px, 96px) auto auto;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.6rem 0.85rem;
+}
+.tr-mark { display: inline-flex; color: var(--muted-2); font-size: 0.95rem; }
+.tree-row.is-done .tr-mark { color: var(--ok-ink); }
+.tr-body { min-width: 0; display: grid; }
+.tr-name {
+  font-weight: 600;
+  font-size: 0.92rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tr-sub {
+  font-size: 0.74rem;
+  color: var(--muted-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tr-shape { font-size: 0.74rem; color: var(--muted-2); white-space: nowrap; }
+.tr-bar {
+  height: 5px;
+  border-radius: 999px;
+  background: var(--card-3);
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+.tr-bar > i { display: block; height: 100%; background: var(--grad); transition: width 0.5s var(--ease); }
+.tr-count {
+  font-size: 0.76rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.tr-pts { font-size: 0.72rem; color: var(--muted-2); font-variant-numeric: tabular-nums; }
+.tr-tools { display: flex; align-items: center; gap: 0.2rem; padding-right: 0.5rem; }
+
+@media (max-width: 760px) {
+  .cat-head { grid-template-columns: auto 1fr auto; gap: 0.6rem; padding: 0.85rem 0.9rem; }
+  .cat-meta, .cat-bar { display: none; }
+  .cat-panel { padding-inline: 0.9rem; }
+  .tree-row-link { grid-template-columns: auto minmax(0, 1fr) auto auto; gap: 0.6rem; }
+  .tr-shape, .tr-bar { display: none; }
+}
+
+.empty {
+  text-align: center;
+  padding: clamp(2.5rem, 8vh, 5rem) 1.5rem;
+  border: 1px dashed var(--line-2);
+  border-radius: var(--radius);
+  color: var(--muted);
+  background: var(--card-2);
+}
+.empty h3 { margin-bottom: 0.5rem; color: var(--text); }
+.empty .btn { margin-top: 1.1rem; }
+
+.banner {
+  display: flex;
+  gap: 0.7rem;
+  align-items: flex-start;
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line-2);
+  background: var(--card-2);
+  font-size: 0.86rem;
+  color: var(--muted);
+  margin-bottom: 1.25rem;
+}
+.banner.warn { border-color: var(--warn); background: color-mix(in srgb, var(--warn) 10%, transparent); }
+.banner.danger { border-color: var(--danger); background: var(--danger-wash); color: var(--danger); }
+.banner .ico { color: var(--warn); margin-top: 0.2rem; }
+
+/* ======================================================== tree view ==== */
+
+.view-tree {
+  height: calc(100dvh - var(--chrome));
+  display: flex;
+  flex-direction: column;
+  padding: clamp(0.6rem, 1.6vh, 1.1rem) clamp(0.75rem, 2vw, 1.5rem) clamp(0.75rem, 2vh, 1.25rem);
+  gap: clamp(0.5rem, 1.4vh, 1rem);
+  overflow: hidden;
+}
+
+.tree-head {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.tree-head h1 {
+  font-size: clamp(1.05rem, 2.4vh, 1.5rem);
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+.tree-head .tree-sub { font-size: 0.8rem; color: var(--muted); font-weight: 500; font-family: var(--font-sans); }
+.tree-head-right { display: flex; align-items: center; gap: 0.9rem; min-width: min(320px, 100%); }
+
+.lattice {
+  --tgap: clamp(0.35rem, 1.1vh, 0.8rem);
+  /* Boxes are capped rather than stretched to fill. Without this, a shallow
+     tree on a tall screen produces enormous blocks with three words in them. */
+  --box-max: clamp(52px, 8vh, 76px);
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--tgap);
+  justify-content: center;
+}
+
+.lattice-cap {
+  position: relative;
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: center;
+  height: var(--box-max);
+}
+/*
+ * Connectors.
+ *
+ * The branch turns HALFWAY between a cap and the boxes, not a few pixels off
+ * the cap. That distance is not knowable in CSS: the band stretches to the
+ * viewport while the boxes are capped and centred inside it, so the gap changes
+ * with the window. view-tree.js measures it after layout and publishes it as
+ * --gap-top / --gap-bottom; everything here is expressed as half of those.
+ *
+ * 2px rather than a hairline: at this scale a 1px line reads as a rendering
+ * artefact rather than a drawn connector.
+ */
+.lattice { --gap-top: 0px; --gap-bottom: 0px; --wire: 2px; }
+
+.lattice-cap::after {
+  content: "";
+  position: absolute;
+  left: calc(50% / var(--cols));
+  right: calc(50% / var(--cols));
+  height: var(--wire);
+  border-radius: var(--wire);
+  background: var(--connector);
+}
+.lattice-cap.is-master::after { bottom: calc(var(--gap-top) / -2); }
+.lattice-cap.is-novice::after { top: calc(var(--gap-bottom) / -2); }
+
+/* The stub joining the cap box to its rail. It lives on the container, not on
+   the box: the box clips its own overflow to keep long titles in bounds, which
+   would swallow a stub drawn there. */
+.lattice-cap::before {
+  content: "";
+  position: absolute;
+  left: calc(50% - var(--wire) / 2);
+  width: var(--wire);
+  border-radius: var(--wire);
+  background: var(--connector);
+}
+.lattice-cap.is-master::before {
+  bottom: calc(var(--gap-top) / -2);
+  height: calc(var(--gap-top) / 2);
+}
+.lattice-cap.is-novice::before {
+  top: calc(var(--gap-bottom) / -2);
+  height: calc(var(--gap-bottom) / 2);
+}
+
+.lattice-cap .mbox { width: min(340px, 60%); }
+
+.lattice-band {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+  gap: var(--tgap);
+}
+
+/* The column stretches to fill the band so its spine can reach both rails. */
+.lattice-col {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 0;
+}
+/*
+ * The spine hangs off .col-boxes, not .lattice-col.
+ *
+ * .lattice-col stretches to the whole band, but the boxes are capped and
+ * centred inside it, so a spine anchored to the column would start well above
+ * the top box and overshoot the rail. Anchoring it to the boxes and extending
+ * half a gap in each direction lands it exactly on both rails.
+ */
+.col-boxes::before {
+  content: "";
+  position: absolute;
+  left: calc(50% - var(--wire) / 2);
+  top: calc(var(--gap-top) / -2);
+  bottom: calc(var(--gap-bottom) / -2);
+  width: var(--wire);
+  border-radius: var(--wire);
+  background: var(--connector);
+  z-index: 0;
+}
+
+/*
+ * The boxes sit in their own centred wrapper. Rows are 1fr so they divide
+ * whatever height the wrapper actually gets, and the wrapper is capped at the
+ * height the boxes want. Overflow is therefore impossible: on a tall screen the
+ * cap wins and the boxes stay small, on a short one the band wins and they
+ * shrink. Capping the tracks themselves would let them spill, since
+ * align-content cannot shrink a track below its max.
+ */
+.col-boxes {
+  position: relative;
+  /* flex:1 so it grows to the band; max-height then caps it. Without the grow it
+     would collapse to content height and the boxes would never reach full size. */
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: repeat(var(--tiers), minmax(0, 1fr));
+  gap: var(--tgap);
+  max-height: calc(var(--tiers) * var(--box-max) + (var(--tiers) - 1) * var(--tgap));
+}
+
+/* Column names are hidden on the desktop lattice, exactly as in the game: the
+   box titles carry the meaning and a label row would break the connector rail.
+   Mobile stacks the columns, where a heading genuinely helps, so it returns. */
+.col-label {
+  display: none;
+  position: absolute;
+  inset: auto 0 100% 0;
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted-2);
+  text-align: center;
+  padding-bottom: 0.25rem;
+  pointer-events: none;
+}
+
+/* ------------------------------------------------------- module boxes -- */
+
+.mbox {
+  position: relative;
+  z-index: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.1rem;
+  padding: 0.3rem clamp(0.4rem, 0.9vw, 0.7rem);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--box-line);
+  background: var(--box-bg);
+  color: var(--box-text);
+  text-align: center;
+  cursor: pointer;
+  overflow: hidden;
+  font: inherit;
+  transition: transform 0.16s var(--ease), border-color 0.2s, background 0.2s, box-shadow 0.2s;
+}
+.mbox:hover { background: var(--box-bg-hover); border-color: var(--accent); transform: translateY(-1px); }
+
+/* ================================================== the tier-pill system == */
+
+/*
+ * A rarity ladder, built entirely from CSS layers so it survives any width.
+ *
+ * RESPONSIVE STRATEGY
+ *
+ * 1. The calm content zone is carved by a MASK, not by pixel offsets. One
+ *    linear-gradient mask in percentages keeps the left ~55% clear of every
+ *    decorative layer at any width, so a title can never collide with geometry.
+ * 2. Diagonals come from repeating-linear-gradient. A gradient's ANGLE is
+ *    absolute, so the lines cannot shear as the box's ratio changes, which is
+ *    exactly what a stretched background image would do. The line COUNT comes
+ *    from constraining that layer's paint box to bands x pitch, anchored right.
+ * 3. The tier glyph scales with clamp() against height, never width, so a wide
+ *    card does not get a fat letter.
+ * 4. Container queries simplify the design when the pill gets narrow: smaller
+ *    glyph, geometry pushed further right, dots dropped. Content text is never
+ *    shrunk to protect decoration.
+ *
+ * COLOUR AND STATE
+ *
+ * Rarity colour is decorative; the app's state colour is functional and has to
+ * win. So the tier tint always shows in the interior (glow, lines, glyph) while
+ * the BORDER only takes the tier colour in the neutral state. Available stays
+ * orange and complete stays green, because those mean something.
+ */
+
+.tier-pill {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  container-type: inline-size;
+
+  /*
+   * Each decorative layer carries its OWN alpha rather than being dimmed
+   * wholesale by one opacity on the layer. Dimming the whole layer to calm the
+   * lines also killed the glow, and dialling the glow back up brought the lines
+   * with it. Separate alphas mean the lines can be a whisper while the wash
+   * stays readable, which is the difference between "textured" and "striped".
+   */
+  --t-ink: #7c8aa5;          /* the tier hue, for the wash and the glow */
+  --t-line: rgba(124, 138, 165, 0.1);  /* the diagonals, deliberately faint */
+  --t-wash: transparent;     /* soft gradient where the dot pattern used to be */
+  --t-glow: transparent;     /* interior light from the top-right */
+  --t-edge: rgba(255, 255, 255, 0.14);
+  --t-mark: linear-gradient(115deg, #9fb0cc, #6d7d99);
+  --bands: 1;
+  --pitch: 13px;
+  /* Dialled back 20% from 0.9. This scales the wash, the diagonals and the glow
+     together, so the balance between them is unchanged. */
+  --geo-alpha: 0.72;
+  --mark-alpha: 0.16;
+}
+
+.tier-pill > * { position: relative; z-index: 1; }
+
+/* ------------------------------------------------------- the six tiers -- */
+
+.tier-pill[data-tier="novice"] {
+  --t-ink: #8493ad;
+  --t-line: rgba(132, 147, 173, 0.085);
+  --t-wash: radial-gradient(58% 120% at 78% 52%, rgba(132, 147, 173, 0.07), transparent 72%);
+  --t-glow: radial-gradient(120% 150% at 104% -20%, rgba(132, 147, 173, 0.08), transparent 62%);
+  --t-edge: rgba(132, 147, 173, 0.22);
+  --t-mark: linear-gradient(115deg, #b6c4dc, #6d7d99);
+  --bands: 1;
+  --mark-alpha: 0.15;
+}
+
+.tier-pill[data-tier="basic"] {
+  --t-ink: #4ade80;
+  --t-line: rgba(74, 222, 128, 0.1);
+  --t-wash: radial-gradient(58% 120% at 78% 52%, rgba(74, 222, 128, 0.075), transparent 72%);
+  --t-glow: radial-gradient(120% 150% at 104% -20%, rgba(74, 222, 128, 0.09), transparent 62%);
+  --t-edge: rgba(74, 222, 128, 0.26);
+  --t-mark: linear-gradient(115deg, #a7f3c4, #35a05e);
+  --bands: 2;
+  --mark-alpha: 0.18;
+}
+
+.tier-pill[data-tier="foundational"] {
+  --t-ink: #58a6ff;
+  --t-line: rgba(88, 166, 255, 0.11);
+  --t-wash: radial-gradient(58% 120% at 78% 52%, rgba(88, 166, 255, 0.085), transparent 72%);
+  --t-glow: radial-gradient(120% 150% at 104% -20%, rgba(88, 166, 255, 0.1), transparent 62%);
+  --t-edge: rgba(88, 166, 255, 0.3);
+  --t-mark: linear-gradient(115deg, #b3d8ff, #3577c8);
+  --bands: 3;
+  --mark-alpha: 0.2;
+}
+
+.tier-pill[data-tier="skilled"] {
+  --t-ink: #e3b341;
+  --t-line: rgba(227, 179, 65, 0.12);
+  --t-wash: radial-gradient(58% 120% at 78% 52%, rgba(227, 179, 65, 0.09), transparent 72%);
+  --t-glow: radial-gradient(120% 150% at 104% -20%, rgba(227, 179, 65, 0.11), transparent 62%);
+  --t-edge: rgba(227, 179, 65, 0.32);
+  --t-mark: linear-gradient(115deg, #f8e2a0, #b8860f);
+  --bands: 4;
+  --mark-alpha: 0.22;
+}
+
+.tier-pill[data-tier="advanced"] {
+  --t-ink: #a371f7;
+  --t-line: rgba(163, 113, 247, 0.13);
+  --t-wash: radial-gradient(58% 120% at 78% 52%, rgba(163, 113, 247, 0.1), transparent 72%);
+  --t-glow: radial-gradient(120% 150% at 104% -20%, rgba(163, 113, 247, 0.13), transparent 64%);
+  --t-edge: rgba(163, 113, 247, 0.36);
+  --t-mark: linear-gradient(115deg, #d5bcff, #7c48d6);
+  --bands: 5;
+  --mark-alpha: 0.24;
+}
+
+/*
+ * Master is prismatic, but only in the geometry: the border, the diagonals and
+ * the glow. The card stays dark and the M stays translucent, so it reads as
+ * precious rather than as a neon logo.
+ */
+.tier-pill[data-tier="master"] {
+  --prism: linear-gradient(
+    115deg, #22d3ee, #60a5fa, #a78bfa, #f472b6, #fb7185, #fbbf24, #4ade80
+  );
+  --t-ink: #b9a6ff;
+  --t-line: rgba(185, 166, 255, 0.14);
+  --t-wash: radial-gradient(58% 120% at 78% 52%, rgba(167, 139, 250, 0.1), transparent 72%),
+            radial-gradient(46% 100% at 92% 78%, rgba(34, 211, 238, 0.07), transparent 72%);
+  --t-glow: radial-gradient(130% 160% at 104% -25%, rgba(167, 139, 250, 0.13), transparent 60%);
+  --t-edge: rgba(180, 200, 255, 0.4);
+  --t-mark: var(--prism);
+  --bands: 6;
+  --pitch: 9px;
+  --mark-alpha: 0.28;
+}
+
+/* Light theme needs denser ink or the whole system disappears on parchment. */
+[data-theme="light"] .tier-pill { --mark-alpha: 0.22; }
+[data-theme="light"] .tier-pill[data-tier="novice"] {
+  --t-ink: #5b6880; --t-line: rgba(91, 104, 128, 0.14);
+}
+[data-theme="light"] .tier-pill[data-tier="basic"] {
+  --t-ink: #1f9d55; --t-line: rgba(31, 157, 85, 0.16); --mark-alpha: 0.24;
+}
+[data-theme="light"] .tier-pill[data-tier="foundational"] {
+  --t-ink: #2563eb; --t-line: rgba(37, 99, 235, 0.16); --mark-alpha: 0.26;
+}
+[data-theme="light"] .tier-pill[data-tier="skilled"] {
+  --t-ink: #b07d12; --t-line: rgba(176, 125, 18, 0.17); --mark-alpha: 0.28;
+}
+[data-theme="light"] .tier-pill[data-tier="advanced"] {
+  --t-ink: #7c3aed; --t-line: rgba(124, 58, 237, 0.17); --mark-alpha: 0.3;
+}
+[data-theme="light"] .tier-pill[data-tier="master"] {
+  --t-ink: #7c5cd6; --t-line: rgba(124, 92, 214, 0.18); --mark-alpha: 0.32;
+}
+
+/* ------------------------------------------------- layer 1: the geometry -- */
+
+/*
+ * Three background layers, all confined to the right side by a percentage mask:
+ *   1  the soft tier wash, where a dotted pattern used to be. Dots read as
+ *      noise at this scale and fought the numeral for attention; a gradient in
+ *      the same hue gives the same sense of density without the stipple.
+ *   2  the diagonal accent lines, count = --bands
+ *   3  the tier glow from the top-right
+ */
+.tier-pill[data-tier]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  opacity: var(--geo-alpha);
+  transition: opacity 0.24s;
+
+  background-image:
+    var(--t-wash),
+    repeating-linear-gradient(115deg, var(--t-line) 0 1.5px, transparent 1.5px var(--pitch)),
+    var(--t-glow);
+  background-repeat: no-repeat, no-repeat, no-repeat;
+  background-size:
+    cover,
+    calc(var(--bands) * var(--pitch)) 210%,
+    cover;
+  background-position:
+    center,
+    right -8% center,
+    center;
+
+  /* The calm zone, in percentages so it holds at any width. */
+  -webkit-mask-image: linear-gradient(90deg, transparent 42%, #000 72%);
+  mask-image: linear-gradient(90deg, transparent 42%, #000 72%);
+}
+
+.tier-pill:hover::before { opacity: 0.9; }
+
+/* Master's prismatic border, via the gradient-border trick so the radius
+   survives. Only in the neutral state: available and complete mean something
+   and their colours must win. */
+.tier-pill[data-tier="master"].state-pending,
+.tier-pill[data-tier="master"].is-pending {
+  border-color: transparent;
+  background-image: linear-gradient(var(--box-locked-bg), var(--box-locked-bg)), var(--prism);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+}
+
+/* Every other tier tints its border only when the state is neutral. */
+.tier-pill.state-pending,
+.tier-pill.is-pending { border-color: var(--t-edge); }
+
+/* ---------------------------------------------- layer 2: the tier glyph -- */
+
+/*
+ * Oversized, pivoted in 3D and cropped by the card. It sits at z-index -1,
+ * which inside a stacking context paints it above the geometry but below the
+ * text, so the glyph is always readable over the rainbow and never competes
+ * with the title.
+ */
+.tier-pill[data-mark]:not([data-mark=""])::after {
+  content: attr(data-mark);
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+  top: 50%;
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.06em;
+  line-height: 0.78;
+  background: var(--t-mark);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  opacity: var(--mark-alpha);
+
+  /*
+   * Offset left off its anchor, then pivoted in 3D rather than skewed. A
+   * negative rotateY swings the left edge away from the viewer and brings the
+   * right edge forward, so the glyph reads as set back into the card.
+   *
+   * -50% on Y is what centres it, paired with top:50%. Held in a custom
+   * property so hover and state variants append to it instead of restating the
+   * whole stack and drifting out of sync.
+   */
+  --mark-transform: perspective(260px) translate(-20%, -50%) rotateY(-10deg) skewX(-7deg);
+  transform: var(--mark-transform);
+  transform-origin: 50% 50%;
+  transition: opacity 0.22s, transform 0.28s var(--ease);
+}
+
+.mbox[data-mark]:not([data-mark=""])::after {
+  right: -0.06em;
+  font-size: clamp(3.6rem, 9.75vh, 6rem);
+}
+.rail-item[data-mark]:not([data-mark=""])::after {
+  right: -0.04em;
+  font-size: 3.2rem;
+}
+
+.tier-pill:hover::after {
+  transform: var(--mark-transform) scale(1.06);
+  opacity: calc(var(--mark-alpha) * 1.45);
+}
+
+/* Completed and available cards carry a functional colour, so the decoration
+   steps back a little rather than competing with it. */
+.mbox.state-complete::after,
+.mbox.state-available::after { opacity: calc(var(--mark-alpha) * 0.85); }
+
+/* ------------------------------------------------------ narrow variants -- */
+
+/*
+ * Below ~190px the pill cannot carry the full treatment: the glyph starts to
+ * crowd the title. Simplify rather than scale everything down uniformly, and
+ * never touch the content's own type size.
+ */
+@container (max-width: 190px) {
+  .tier-pill[data-mark]:not([data-mark=""])::after { font-size: clamp(2.2rem, 6.5vh, 3.4rem); }
+  .tier-pill[data-tier]::before {
+    background-position: center, right -14% center, center;
+    -webkit-mask-image: linear-gradient(90deg, transparent 52%, #000 82%);
+    mask-image: linear-gradient(90deg, transparent 52%, #000 82%);
+  }
+}
+
+@container (max-width: 150px) {
+  /* Halve the diagonals: at this width the full set reads as a hatch, not an
+     accent. The wash and glow carry the tier colour on their own. */
+  .tier-pill[data-tier]::before {
+    background-size: cover, calc(var(--bands) * var(--pitch) / 2) 210%, cover;
+  }
+}
+
+.mbox .mbox-title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  /* Two steps up from the original clamp(.68, 1.4vh, .88). The category is what
+     you scan the lattice for, so it carries the weight; the level line below it
+     stays small deliberately, as a subtitle rather than a peer. */
+  font-size: clamp(0.85rem, 1.8vh, 1.12rem);
+  line-height: 1.2;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+/* The tier sits UNDER the title: the title is what you scan for, the numeral is
+   the footnote that tells you where you are in the column. */
+.mbox .mbox-tier {
+  font-size: clamp(0.5rem, 0.92vh, 0.62rem);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted-2);
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.mbox.is-cap {
+  background: var(--card-3);
+  border-color: var(--line-3);
+}
+.mbox.is-cap .mbox-title { font-size: clamp(0.95rem, 2.05vh, 1.28rem); font-weight: 700; }
+
+/*
+ * Three states, and none of them is "closed". Every box is a link; the outline
+ * says where you stand.
+ *
+ *   pending    neutral, readable, quiz not attemptable yet
+ *   available  orange outline, the quiz can be taken now
+ *   complete   green outline, quiz passed
+ */
+.mbox.state-complete {
+  border-color: var(--ok);
+  border-width: 2px;
+  background: color-mix(in srgb, var(--ok) 12%, var(--box-bg));
+}
+.mbox.state-complete .mbox-tier { color: var(--ok-ink); }
+.mbox.state-complete:hover { border-color: var(--ok); }
+
+.mbox.state-available {
+  border-color: var(--accent);
+  border-width: 2px;
+  box-shadow: 0 0 0 3px var(--accent-wash);
+}
+.mbox.state-available .mbox-tier { color: var(--accent-ink); }
+
+.mbox.state-pending {
+  background: var(--box-locked-bg);
+  color: var(--box-locked-text);
+  border-color: var(--box-line);
+}
+.mbox.state-pending .mbox-tier { color: var(--box-locked-text); }
+.mbox.state-pending:hover {
+  background: var(--box-bg-hover);
+  color: var(--box-text);
+  border-color: var(--line-3);
+}
+
+.mbox-mark {
+  position: absolute;
+  top: 0.3rem;
+  right: 0.35rem;
+  font-size: 0.72rem;
+  line-height: 1;
+  opacity: 0.9;
+}
+.mbox.state-complete .mbox-mark { color: var(--ok-ink); }
+
+.mbox-edit {
+  position: absolute;
+  top: 0.25rem;
+  left: 0.3rem;
+  width: 22px;
+  height: 22px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  border: 1px solid var(--line-2);
+  background: var(--card-2);
+  color: var(--muted);
+  font-size: 0.7rem;
+  cursor: pointer;
+  z-index: 3;
+}
+.mbox-edit:hover { color: var(--accent-ink); border-color: var(--accent); }
+body.edit-mode .mbox-edit { display: inline-flex; }
+
+/* Authoring: force a module's completion so the finished state can be seen
+   without working through every quiz beneath it. */
+.mbox-toggle {
+  position: absolute;
+  top: 0.25rem;
+  left: 1.9rem;
+  width: 22px;
+  height: 22px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  border: 1px solid var(--line-2);
+  background: var(--card-2);
+  color: var(--muted);
+  font-size: 0.7rem;
+  cursor: pointer;
+  z-index: 3;
+}
+.mbox-toggle:hover { color: var(--ok-ink); border-color: var(--ok); }
+body.edit-mode .mbox-toggle { display: inline-flex; }
+.mbox.state-complete .mbox-toggle:hover { color: var(--danger); border-color: var(--danger); }
+
+@media (max-width: 768px) {
+  .mbox-toggle { left: auto; right: 4.4rem; }
+}
+
+/* ------------------------------------------------------- tree mobile -- */
+
+@media (max-width: 768px) {
+  .view-tree {
+    height: auto;
+    min-height: calc(100dvh - var(--chrome));
+    overflow: visible;
+  }
+  .lattice { --tgap: 0.5rem; }
+  .lattice-cap { min-height: 0; }
+  .lattice-cap .mbox { width: 100%; }
+  .lattice-cap::after { display: none; }
+  .lattice-cap .mbox::after { display: none; }
+  .lattice-band {
+    grid-template-columns: 1fr;
+    gap: 1.4rem;
+    margin-block: 0.4rem;
+  }
+  .lattice-col { display: block; padding-top: 1.35rem; }
+  .lattice-col::before { top: 1.35rem; bottom: 0; }
+  .col-boxes {
+    grid-template-rows: none;
+    grid-auto-rows: minmax(48px, auto);
+    max-height: none;
+  }
+  .col-label {
+    display: block;
+    inset: 0 0 auto 0;
+    text-align: left;
+    font-size: 0.72rem;
+    color: var(--accent-ink);
+    padding-bottom: 0;
+  }
+  .lattice-cap { height: auto; min-height: 48px; }
+  .mbox { text-align: left; align-items: flex-start; padding: 0.5rem 0.7rem; }
+  .mbox .mbox-title { font-size: 0.92rem; }
+  .mbox .mbox-tier { font-size: 0.62rem; }
+  .mbox-edit { left: auto; right: 2rem; }
+  .tree-head-right { min-width: 100%; }
+}
+
+/* ======================================================= module view ==== */
+
+/*
+ * Two columns, and the first one collapses.
+ *
+ * The width lives in a custom property so the grid template can transition it;
+ * the rail itself keeps its natural width and is clipped by its wrapper, which
+ * is what makes the close read as a slide rather than a squash.
+ */
+.view-module {
+  --rail-w: clamp(190px, 17vw, 220px);
+  --rail-gap: clamp(1rem, 2.5vw, 2rem);
+  display: grid;
+  grid-template-columns: var(--rail-w) minmax(0, 1fr);
+  column-gap: var(--rail-gap);
+  align-items: start;
+  padding: clamp(1rem, 3vh, 1.8rem) clamp(0.75rem, 2vw, 1.5rem) 4rem;
+  transition: grid-template-columns 0.34s var(--ease), column-gap 0.34s var(--ease);
+}
+/* The collapse only exists where the rail is a sidebar. Below 900px it becomes a
+   horizontal strip and the saved "closed" preference must not follow it there,
+   or the strip would inherit opacity:0 and vanish. */
+@media (min-width: 901px) {
+  .view-module.rail-closed {
+    --rail-w: 0px;
+    --rail-gap: 0px;
+  }
+  .rail-closed .mod-rail {
+    transform: translateX(-14px);
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
+.mod-rail-wrap {
+  overflow: hidden;
+  position: sticky;
+  top: calc(var(--chrome) + 1rem);
+}
+
+/* The originating category, kept alongside so the module never loses its place. */
+.mod-rail {
+  width: clamp(190px, 17vw, 220px);
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  transition: transform 0.34s var(--ease), opacity 0.22s ease;
+}
+
+/*
+ * Icon AND label. The glyph alone was an arrow, which in a view that already has
+ * breadcrumbs and a "Tree" button reads as "go back" rather than "collapse a
+ * panel". The word removes the guess; the sidebar glyph carries the state.
+ */
+.rail-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  height: 30px;
+  padding: 0 0.6rem;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  border: 1px solid var(--line-2);
+  background: var(--card);
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.18s, border-color 0.18s, background 0.18s;
+}
+.rail-toggle:hover { color: var(--text); border-color: var(--accent); background: var(--card-3); }
+.rail-toggle .rail-toggle-ico { display: inline-flex; font-size: 0.95rem; }
+.rail-toggle-label { line-height: 1; }
+
+/* Pressed state, so "the menu is showing" is visible without reading the icon. */
+.rail-toggle[aria-expanded="true"] {
+  color: var(--accent-ink);
+  border-color: var(--accent);
+  background: var(--accent-wash);
+}
+.mod-rail .rail-head {
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted-2);
+  margin-bottom: 0.2rem;
+}
+.rail-item {
+  position: relative;
+  isolation: isolate; /* so the watermark's z-index:-1 stays inside the pill */
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.5rem 1.6rem 0.5rem 0.65rem;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--muted);
+  font-size: 0.83rem;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  transition: border-color 0.18s, color 0.18s, background 0.18s;
+}
+
+/* Position and size live in the tier-pill system; only the selected emphasis
+   is specific to the rail. */
+.rail-item.is-current::after { opacity: calc(var(--mark-alpha) * 1.8); }
+.rail-item:hover { color: var(--text); border-color: var(--line-3); }
+/* Wide enough for "III" and for a category's "2/4"; the old fixed 22px was
+   clipping the third numeral down to "II". */
+.rail-item .rail-n {
+  flex: 0 0 auto;
+  min-width: 30px;
+  height: 24px;
+  padding-inline: 0.3rem;
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+  background: var(--card-3);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted-2);
+}
+.rail-item.is-available { border-color: var(--accent); }
+.rail-item.is-available .rail-n { color: var(--accent-ink); }
+.rail-item.is-complete { border-color: var(--ok); }
+.rail-item.is-complete .rail-n { background: var(--ok-wash); color: var(--ok-ink); }
+.rail-item.is-current {
+  background: var(--accent-wash);
+  color: var(--text);
+  font-weight: 600;
+  border-color: var(--accent);
+}
+.rail-item.is-current .rail-n { background: var(--grad); color: var(--on-accent); }
+.rail-item.is-complete.is-current { border-color: var(--ok); }
+
+/* Novice and Master read as bookends, not as another rung on the ladder. */
+.rail-cat .rail-n { font-size: 0.64rem; }
+.rail-item.is-exit {
+  margin-top: 0.5rem;
+  border-style: dashed;
+  color: var(--muted-2);
+}
+.rail-item.is-exit:hover { border-style: solid; color: var(--text); }
+/*
+ * The label stacks: category on top, level beneath.
+ *
+ * A hyphenated single line read as one phrase, and at rail width it truncated
+ * exactly where the meaning lives. Stacked, each part gets its own line and its
+ * own weight, and the pill height stays constant because the block is always
+ * two lines tall whether or not the second one is used.
+ */
+.rail-item .rail-t {
+  flex: 1;
+  min-width: 0;
+  min-height: 2.5em;
+  display: flex;
+  align-items: center;
+  line-height: 1.2;
+}
+/*
+ * The lines live inside a plain block, not directly in the flex box.
+ * -webkit-line-clamp only works on display:-webkit-box, and a flex item is
+ * blockified out of that, which silently turns the clamp into a hard clip with
+ * no ellipsis. One wrapper keeps the clamp intact.
+ */
+.rail-item .rail-lines { display: block; width: 100%; min-width: 0; }
+.rail-item .rail-title {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rail-item .rail-level {
+  font-size: 0.72em;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--muted-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rail-item.is-current .rail-level { color: var(--accent-ink); }
+.rail-item.is-complete .rail-level { color: var(--ok-ink); }
+
+/* Novice, Master and the category rows have no level beneath them, so their
+   title is free to use both reserved lines rather than ellipsising at one. */
+.rail-item .rail-lines:not(:has(.rail-level)) .rail-title {
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  text-overflow: ellipsis;
+}
+
+.mod-main { min-width: 0; max-width: 78ch; }
+
+.mod-head { margin-bottom: 1.6rem; }
+.mod-head .mod-kicker {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.7rem;
+}
+.mod-head h1 { font-size: clamp(1.5rem, 4vw, 2.2rem); margin-bottom: 0.35rem; }
+/* The topic: what this particular tier covers, under the derived box name. */
+.mod-head .mod-topic {
+  font-family: var(--font-display);
+  font-size: clamp(1rem, 2.4vw, 1.2rem);
+  font-weight: 600;
+  color: var(--accent-ink);
+  margin-bottom: 0.6rem;
+}
+.mod-head .mod-blurb { color: var(--muted); font-size: 1rem; }
+
+.mod-blocks { display: flex; flex-direction: column; gap: clamp(1.2rem, 3vh, 2rem); }
+
+/* ---------------------------------------------------- collapsible sections */
+
+.mod-sections { display: flex; flex-direction: column; gap: 0.9rem; }
+
+.mod-section {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card);
+  overflow: hidden;
+}
+
+.sec-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+  padding: 0.85rem 1rem;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  text-align: left;
+  color: var(--text);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.98rem;
+  transition: background 0.18s;
+}
+.sec-toggle:hover { background: var(--card-3); }
+.sec-chevron { display: inline-flex; color: var(--muted-2); transition: transform 0.28s var(--ease); }
+.sec-ico { display: inline-flex; color: var(--accent-ink); }
+.sec-title { flex: 1; min-width: 0; }
+.sec-count {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--muted-2);
+  background: var(--card-3);
+  border-radius: 999px;
+  min-width: 22px;
+  padding: 0.15rem 0.45rem;
+  text-align: center;
+}
+
+.sec-body {
+  padding: 0 1rem 1.1rem;
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 0.3s var(--ease), padding 0.3s var(--ease), opacity 0.2s;
+}
+.sec-body > * { min-height: 0; }
+
+.mod-section.is-collapsed .sec-chevron { transform: rotate(-90deg); }
+.mod-section.is-collapsed .sec-body {
+  grid-template-rows: 0fr;
+  padding-block: 0;
+  opacity: 0;
+  overflow: hidden;
+}
+
+.sec-stack { display: flex; flex-direction: column; gap: 1rem; }
+.sec-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: 1rem;
+}
+.sub-article + .sub-article { padding-top: 1.2rem; border-top: 1px solid var(--line); }
+.sub-article h3 { font-size: 1.05rem; margin-bottom: 0.6rem; }
+
+.quiz-teaser {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.quiz-teaser .hint { margin-top: 0.15rem; }
+
+.mod-foot {
+  margin-top: 2.4rem;
+  padding-top: 1.6rem;
+  border-top: 1px solid var(--line);
+  display: flex;
+  gap: 0.8rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Shown under the content, never instead of it. */
+.banner.prereq {
+  margin: 2rem 0 0;
+  border-color: var(--accent);
+  background: var(--accent-wash);
+  color: var(--text);
+}
+.banner.prereq .ico { color: var(--accent-ink); }
+.banner.prereq strong { display: block; }
+
+@media (max-width: 900px) {
+  /* The rail becomes a horizontal strip here, which is already compact, so the
+     collapse control has nothing useful to do and would only take up room. */
+  .view-module, .view-module.rail-closed {
+    grid-template-columns: 1fr;
+    --rail-gap: 0px;
+  }
+  .mod-rail-wrap { position: static; overflow: visible; }
+  .mod-rail {
+    width: auto;
+    position: static;
+    flex-direction: row;
+    overflow-x: auto;
+    gap: 0.4rem;
+    padding-bottom: 0.4rem;
+    scrollbar-width: thin;
+  }
+  .mod-rail .rail-head { display: none; }
+  .rail-item { width: auto; flex: 0 0 auto; }
+  .rail-item .rail-t { max-width: 120px; }
+  .rail-toggle { display: none; }
+}
+
+/* ============================================================ blocks ==== */
+
+.block { position: relative; }
+.block > h3 {
+  font-size: 1.12rem;
+  margin-bottom: 0.7rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.block > h3 .ico { color: var(--accent-ink); font-size: 0.95rem; }
+
+.prose { color: var(--text); }
+.prose > * + * { margin-top: 0.9rem; }
+.prose p { color: var(--muted); }
+.prose .md-h { font-size: 1.05rem; margin-top: 1.4rem; }
+/*
+ * Lists get generous left padding for two reasons. The base reset strips
+ * list-style and padding globally, so a bare <ul> from the rich text editor
+ * would otherwise render with no markers at all; and with markers OUTSIDE the
+ * content box, a small padding leaves the bullets hanging into the card's own
+ * padding, almost touching its edge. 1.9rem puts the marker inside the card and
+ * the text in a clean column.
+ */
+.prose ul, .prose ol, .prose .md-ul, .prose .md-ol {
+  padding-left: 1.9rem;
+  color: var(--muted);
+  display: grid;
+  gap: 0.4rem;
+}
+.prose ul, .prose .md-ul { list-style: disc; }
+.prose ol, .prose .md-ol { list-style: decimal; }
+.prose li { padding-left: 0.15rem; }
+.prose li::marker { color: var(--accent); }
+.prose li > ul, .prose li > ol { margin-top: 0.4rem; }
+.prose .md-quote {
+  border-left: 3px solid var(--accent);
+  padding: 0.35rem 0 0.35rem 1rem;
+  color: var(--muted);
+  font-style: italic;
+}
+.prose .md-code {
+  font-family: var(--font-mono);
+  font-size: 0.86em;
+  background: var(--card-3);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 0.1em 0.38em;
+}
+.prose .md-pre {
+  background: var(--card-3);
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-sm);
+  padding: 0.9rem 1rem;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 0.84rem;
+  line-height: 1.55;
+}
+.prose .md-pre code { background: none; border: 0; padding: 0; }
+.prose .md-link { color: var(--accent-ink); text-decoration: underline; text-underline-offset: 2px; }
+.prose .md-img { max-width: 100%; height: auto; border-radius: var(--radius-sm); }
+.prose hr { border: 0; border-top: 1px solid var(--line); margin: 1.4rem 0; }
+
+/* ============================================================ rich text ==== */
+
+/* Classes the editor applies, and the only ones the sanitiser lets through. */
+.prose .rt-serif { font-family: Georgia, "Times New Roman", serif; }
+.prose .rt-mono { font-family: var(--font-mono); font-size: 0.9em; }
+.prose .rt-sans { font-family: var(--font-sans); }
+.prose .rt-sm { font-size: 0.86em; }
+.prose .rt-lg { font-size: 1.18em; }
+.prose .rt-xl { font-size: 1.42em; font-weight: 600; }
+.prose .rt-hl { background: var(--accent-wash); border-radius: 3px; padding: 0 0.15em; }
+
+/* The note box: a highlighted aside written inline, not a separate block type. */
+.prose .rt-note,
+.rt-surface .rt-note {
+  position: relative;
+  margin: 1.2rem 0;
+  padding: 0.9rem 1.1rem 0.9rem 2.6rem;
+  border: 1px solid var(--line-2);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius-sm);
+  background: var(--card-2);
+}
+.prose .rt-note::before,
+.rt-surface .rt-note::before {
+  content: "i";
+  position: absolute;
+  left: 0.85rem;
+  top: 0.95rem;
+  width: 1.1rem;
+  height: 1.1rem;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--on-accent);
+  background: var(--accent);
+}
+.prose .rt-note p:last-child, .rt-surface .rt-note p:last-child { margin-bottom: 0; }
+
+.rt-note[data-tone="tip"] { border-left-color: var(--ok); }
+.rt-note[data-tone="tip"]::before { content: "✓"; background: var(--ok); color: #fff; }
+.rt-note[data-tone="warning"] { border-left-color: var(--warn); }
+.rt-note[data-tone="warning"]::before { content: "!"; background: var(--warn); color: #fff; }
+.rt-note[data-tone="danger"] { border-left-color: var(--danger); background: var(--danger-wash); }
+.rt-note[data-tone="danger"]::before { content: "!"; background: var(--danger); color: #fff; }
+
+/* ---- the editor itself ---- */
+
+.rt {
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-sm);
+  background: var(--card-2);
+  overflow: hidden;
+}
+.rt-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.45rem;
+  background: var(--card-3);
+  border-bottom: 1px solid var(--line-2);
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+.rt-group { display: inline-flex; gap: 0.2rem; }
+.rt-group + .rt-group::before,
+.rt-select + .rt-group::before {
+  content: "";
+  width: 1px;
+  align-self: stretch;
+  background: var(--line-2);
+  margin-inline: 0.25rem;
+}
+.rt-btn {
+  min-width: 32px;
+  height: 32px;
+  padding: 0 0.5rem;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 7px;
+  border: 1px solid transparent;
+  background: none;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.rt-btn:hover { background: var(--card); color: var(--text); border-color: var(--line-2); }
+.rt-note-btn { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.02em; }
+.rt-clear { font-size: 0.72rem; margin-left: auto; }
+.rt-select {
+  height: 32px;
+  width: auto;
+  padding: 0 0.45rem;
+  font-size: 0.8rem;
+  border-radius: 7px;
+  background: var(--card);
+  border: 1px solid var(--line-2);
+}
+
+.rt-surface {
+  padding: 1rem 1.1rem;
+  outline: none;
+  overflow-y: auto;
+  max-height: 55vh;
+  background: var(--card);
+}
+.rt-surface:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.rt-surface > *:first-child { margin-top: 0; }
+/* The editor writes bare <ul>/<ol>, which the global reset would flatten. */
+.rt-surface ul, .rt-surface ol { padding-left: 1.9rem; display: grid; gap: 0.4rem; }
+.rt-surface ul { list-style: disc; }
+.rt-surface ol { list-style: decimal; }
+.rt-surface li::marker { color: var(--accent); }
+.rt-surface[contenteditable]:empty::before {
+  content: "Write the module here…";
+  color: var(--muted-2);
+}
+
+@media (max-width: 768px) {
+  .rt-toolbar { gap: 0.2rem; padding: 0.35rem; }
+  .rt-btn { min-width: 38px; height: 38px; }
+  .rt-select { height: 38px; }
+  .rt-clear { margin-left: 0; }
+  .rt-surface { max-height: 45vh; }
+}
+
+.callout {
+  display: flex;
+  gap: 0.8rem;
+  padding: 1rem 1.15rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line-2);
+  border-left-width: 3px;
+  background: var(--card-2);
+}
+.callout .ico { flex: 0 0 auto; margin-top: 0.2rem; font-size: 1.05rem; }
+.callout strong { display: block; margin-bottom: 0.2rem; }
+.callout .prose p { color: var(--muted); }
+.callout.tone-note { border-left-color: var(--accent); }
+.callout.tone-note .ico { color: var(--accent-ink); }
+.callout.tone-tip { border-left-color: var(--ok); }
+.callout.tone-tip .ico { color: var(--ok-ink); }
+.callout.tone-warning { border-left-color: var(--warn); }
+.callout.tone-warning .ico { color: var(--warn); }
+.callout.tone-danger { border-left-color: var(--danger); background: var(--danger-wash); }
+.callout.tone-danger .ico { color: var(--danger); }
+
+.media-frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1px solid var(--line-2);
+  background: #000;
+  box-shadow: var(--shadow-sm);
+}
+.media-frame iframe, .media-frame video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+figure { margin: 0; }
+figcaption { font-size: 0.82rem; color: var(--muted-2); margin-top: 0.5rem; text-align: center; }
+
+/* YouTube click-to-play facade: a thumbnail until someone presses play, so an
+   unwatched video costs one image instead of a whole embedded player. */
+.yt-facade { background: #000; }
+.yt-cover {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: #000;
+  cursor: pointer;
+}
+.yt-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: opacity 0.2s, transform 0.3s var(--ease);
+}
+.yt-cover:hover .yt-thumb { opacity: 0.82; transform: scale(1.02); }
+.yt-play {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 68px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: rgba(18, 18, 18, 0.78);
+  color: #fff;
+  font-size: 1.4rem;
+  transition: background 0.2s, transform 0.2s var(--ease);
+}
+.yt-cover:hover .yt-play { background: #ff0033; transform: scale(1.06); }
+.yt-play .ico { width: 1em; height: 1em; fill: currentColor; }
+
+.block-image img {
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  cursor: zoom-in;
+  display: block;
+}
+
+.resource {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.9rem 1.1rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line-2);
+  background: var(--card);
+  transition: border-color 0.18s, transform 0.18s var(--ease);
+}
+.resource:hover { border-color: var(--accent); transform: translateY(-1px); }
+.resource .res-ico {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: var(--accent-wash);
+  color: var(--accent-ink);
+  font-size: 1.05rem;
+}
+.resource .res-body { min-width: 0; flex: 1; }
+.resource .res-title { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.resource .res-sub { font-size: 0.8rem; color: var(--muted-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.resource .ico-go { color: var(--muted-2); }
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  padding: 2rem;
+  background: rgba(0, 0, 0, 0.86);
+  cursor: zoom-out;
+}
+.lightbox img { max-width: 100%; max-height: 100%; border-radius: var(--radius-sm); }
+
+/* ============================================================== quiz ==== */
+
+.quiz { max-width: 68ch; }
+.quiz-head { margin-bottom: 1.6rem; }
+.quiz-head h1 { font-size: clamp(1.4rem, 3.6vw, 2rem); margin-bottom: 0.5rem; }
+.quiz-head p { color: var(--muted); }
+.quiz-meta { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.9rem; }
+
+.q-card {
+  padding: clamp(1.1rem, 2.6vw, 1.6rem);
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  background: var(--card);
+  margin-bottom: 1rem;
+}
+.q-card .q-num {
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted-2);
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+}
+.q-card .q-prompt { font-weight: 600; font-size: 1.02rem; margin-bottom: 0.9rem; }
+.q-card .q-image {
+  max-width: 100%;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  margin-bottom: 1rem;
+  display: block;
+}
+
+.choices { display: grid; gap: 0.5rem; }
+.choice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  padding: 0.7rem 0.9rem;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--line-2);
+  background: var(--card-2);
+  cursor: pointer;
+  transition: border-color 0.16s, background 0.16s;
+}
+.choice:hover { border-color: var(--line-3); }
+.choice input { margin-top: 0.28rem; accent-color: var(--accent); width: auto; flex: 0 0 auto; }
+.choice.is-picked { border-color: var(--accent); background: var(--accent-wash); }
+.choice.is-right { border-color: var(--ok); background: var(--ok-wash); }
+.choice.is-wrong { border-color: var(--danger); background: var(--danger-wash); }
+.choice .mark { margin-left: auto; font-size: 0.78rem; font-weight: 700; }
+.choice.is-right .mark { color: var(--ok-ink); }
+.choice.is-wrong .mark { color: var(--danger); }
+
+.q-verdict {
+  margin-top: 0.9rem;
+  padding: 0.75rem 0.95rem;
+  border-radius: var(--radius-xs);
+  font-size: 0.88rem;
+  border: 1px solid var(--line-2);
+  background: var(--card-2);
+}
+.q-verdict.right { border-color: var(--ok); background: var(--ok-wash); }
+.q-verdict.wrong { border-color: var(--danger); background: var(--danger-wash); }
+.q-verdict b { display: block; margin-bottom: 0.2rem; }
+
+.quiz-result {
+  text-align: center;
+  padding: clamp(1.6rem, 5vh, 2.8rem);
+  border-radius: var(--radius);
+  border: 1px solid var(--line-2);
+  background: var(--card);
+  margin-bottom: 1.6rem;
+}
+.quiz-result .score {
+  font-family: var(--font-display);
+  font-size: clamp(2.4rem, 9vw, 3.4rem);
+  font-weight: 800;
+  line-height: 1;
+}
+.quiz-result.pass .score { color: var(--ok-ink); }
+.quiz-result.fail .score { color: var(--danger); }
+.quiz-result p { color: var(--muted); margin-top: 0.6rem; }
+.quiz-actions { display: flex; gap: 0.7rem; justify-content: center; flex-wrap: wrap; margin-top: 1.4rem; }
+
+.quiz-bar {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  gap: 0.8rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.9rem 0;
+  background: linear-gradient(to top, var(--bg) 60%, transparent);
+  flex-wrap: wrap;
+}
+
+/* ============================================================ editor ==== */
+
+.sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+}
+.sheet-head {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.7rem clamp(0.75rem, 2vw, 1.5rem);
+  border-bottom: 1px solid var(--line);
+  background: var(--bg-soft);
+}
+.sheet-head h2 { font-size: 1rem; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sheet-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: clamp(1rem, 3vh, 1.6rem) clamp(0.75rem, 2vw, 1.5rem) 5rem;
+  -webkit-overflow-scrolling: touch;
+}
+.sheet-body > .sheet-inner { width: min(100%, 760px); margin-inline: auto; }
+.sheet-foot {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 0.7rem;
+  justify-content: flex-end;
+  padding: 0.75rem clamp(0.75rem, 2vw, 1.5rem);
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  border-top: 1px solid var(--line);
+  background: var(--bg-soft);
+}
+.sheet-foot .btn { min-height: 44px; }
+
+.ed-section {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  padding: clamp(0.9rem, 2.4vw, 1.25rem);
+  margin-bottom: 1.1rem;
+}
+.ed-section > h3 {
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted-2);
+  margin-bottom: 0.9rem;
+}
+
+.ed-item {
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-sm);
+  background: var(--card-2);
+  margin-bottom: 0.7rem;
+  overflow: hidden;
+}
+.ed-item-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.7rem;
+  background: var(--card-3);
+  cursor: pointer;
+}
+.ed-item-head .ed-kind {
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent-ink);
+  background: var(--accent-wash);
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  flex: 0 0 auto;
+}
+.ed-item-head .ed-name {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+  font-size: 0.88rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ed-item-head .ed-tools { display: flex; gap: 0.25rem; flex: 0 0 auto; }
+.ed-tool {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  border: 1px solid var(--line-2);
+  background: var(--card);
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+.ed-tool:hover { color: var(--text); border-color: var(--line-3); }
+.ed-tool.danger:hover { color: var(--danger); border-color: var(--danger); }
+.ed-tool:disabled { opacity: 0.3; cursor: not-allowed; }
+
+.ed-item-body { padding: 0.9rem; display: none; border-top: 1px solid var(--line); }
+.ed-item.is-open .ed-item-body { display: block; }
+
+/* Collapsible section wrappers in the editor, mirroring the reader's. */
+.ed-collapsible { padding: 0; overflow: hidden; }
+.ed-sec-head {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.8rem 1rem;
+  background: var(--card-3);
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  cursor: pointer;
+  text-align: left;
+  color: var(--text);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.92rem;
+}
+.ed-sec-head:hover { background: var(--card-2); }
+.ed-sec-body { padding: 1rem; }
+.ed-collapsible.is-collapsed .ed-sec-body { display: none; }
+.ed-collapsible.is-collapsed .ed-sec-head { border-bottom-color: transparent; }
+.ed-collapsible.is-collapsed .sec-chevron { transform: rotate(-90deg); }
+.ed-sec-head .sec-chevron { display: inline-flex; color: var(--muted-2); transition: transform 0.2s var(--ease); }
+.ed-sec-head .sec-ico { display: inline-flex; color: var(--accent-ink); }
+.ed-sec-head .sec-title { flex: 1; }
+
+.type-picker { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1rem; }
+.type-picker button {
+  padding: 0.5rem 0.8rem;
+  min-height: 40px;
+  border-radius: 999px;
+  border: 1px dashed var(--line-2);
+  background: var(--card-2);
+  color: var(--muted);
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+.type-picker button:hover { border-style: solid; border-color: var(--accent); color: var(--accent-ink); }
+
+.ed-choice {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.45rem;
+}
+.ed-choice input[type="text"] { flex: 1; }
+.ed-choice .ed-correct {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  color: var(--muted);
+  white-space: nowrap;
+  padding: 0.35rem 0.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--line-2);
+  cursor: pointer;
+}
+.ed-choice .ed-correct input { width: auto; accent-color: var(--ok); }
+.ed-choice .ed-correct:has(input:checked) { border-color: var(--ok); color: var(--ok-ink); background: var(--ok-wash); }
+
+/* A value the editor shows but does not let you type into, because it is
+   derived from somewhere else. */
+.ed-derived {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  padding: 0.62rem 0.75rem;
+  border-radius: var(--radius-xs);
+  border: 1px dashed var(--line-2);
+  background: var(--card-3);
+}
+.ed-derived b { font-family: var(--font-display); font-size: 1rem; }
+.ed-derived span { font-size: 0.78rem; color: var(--muted-2); }
+
+.upload-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.9rem;
+}
+.upload-thumb {
+  width: 62px;
+  height: 44px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--line-2);
+  background: var(--card-3);
+}
+
+.quota {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  font-size: 0.76rem;
+  color: var(--muted-2);
+  margin-top: 0.6rem;
+}
+.quota .meter { flex: 1; height: 6px; }
+.quota.is-high { color: var(--warn); }
+
+.dim-controls { display: flex; align-items: center; gap: 0.5rem; }
+.dim-controls .dim-val {
+  min-width: 2.2rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+/* ============================================== modal, toast, dialogs ==== */
+
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 150;
+  display: grid;
+  place-items: center;
+  padding: 1.25rem;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(3px);
+}
+.modal {
+  width: min(100%, 520px);
+  max-height: min(86vh, 720px);
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius);
+  border: 1px solid var(--line-2);
+  background: var(--card);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.modal-head { padding: 1.1rem 1.25rem 0.6rem; }
+.modal-head h2 { font-size: 1.15rem; }
+.modal-head p { color: var(--muted); font-size: 0.9rem; margin-top: 0.4rem; }
+.modal-body { padding: 0.6rem 1.25rem; overflow-y: auto; flex: 1; min-height: 0; }
+.modal-foot {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: flex-end;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+.modal-foot .btn { min-height: 44px; }
+
+.report { font-size: 0.84rem; display: grid; gap: 0.4rem; }
+.report .r-row {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.5rem 0.6rem;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--line-2);
+  background: var(--card-2);
+}
+.report .r-row.err { border-color: var(--danger); }
+.report .r-path { font-family: var(--font-mono); font-size: 0.76rem; color: var(--muted-2); }
+
+.toast-host {
+  position: fixed;
+  left: 50%;
+  bottom: 1.25rem;
+  transform: translateX(-50%);
+  z-index: 300;
+  display: grid;
+  gap: 0.5rem;
+  width: min(100% - 2rem, 460px);
+  pointer-events: none;
+}
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line-2);
+  background: var(--card);
+  box-shadow: var(--shadow);
+  font-size: 0.88rem;
+  animation: toast-in 0.25s var(--ease);
+}
+.toast.ok { border-color: var(--ok); }
+.toast.ok .ico { color: var(--ok-ink); }
+.toast.err { border-color: var(--danger); }
+.toast.err .ico { color: var(--danger); }
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ======================================================== responsive ==== */
+
+@media (max-width: 768px) {
+  .topbar { gap: 0.5rem; }
+  .topbar-brand span:not(.dot) { display: none; }
+  .crumbs { font-size: 0.8rem; }
+  .icon-btn { width: 40px; height: 40px; }
+  .card-grid { grid-template-columns: 1fr; }
+  .sheet-foot { padding-inline: 0.9rem; }
+  .sheet-foot .btn { flex: 1; }
+  .modal-foot .btn { flex: 1; }
+
+  /* Touch targets. Up/down/delete are the primary reordering controls on a
+     phone, so they get the most room; 34px is a thumb-width miss. */
+  .ed-tool { width: 42px; height: 42px; font-size: 1rem; }
+  .ed-item-head { padding: 0.5rem 0.55rem; gap: 0.4rem; }
+  .ed-item-head .ed-tools { gap: 0.2rem; }
+  .btn-sm { min-height: 42px; padding-inline: 0.9rem; }
+  .switch input, .ed-correct input, .choice input { width: 20px; height: 20px; }
+  .switch { padding-block: 0.3rem; }
+  .dim-controls .ed-tool { font-size: 1.2rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .card:hover, .btn:hover, .mbox:hover, .resource:hover { transform: none; }
+}
+
+@media print {
+  .topbar, .mod-rail, .mod-foot, .mbox-edit { display: none !important; }
+}

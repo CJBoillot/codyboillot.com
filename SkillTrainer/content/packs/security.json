@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "meta": { "title": "Security", "author": "Cody Boillot" },
+
+  "sections": [
+    {
+      "id": "security",
+      "title": "Security",
+      "blurb": "Building software that holds up when someone is actively trying to break it.",
+      "groups": [
+        { "id": "sec-appsec", "title": "Application Security", "treeIds": ["appsec"] }
+      ]
+    },
+    {
+      "id": "software-engineering",
+      "title": "Software Engineering",
+      "groups": [
+        {
+          "id": "se-core",
+          "title": "Core Practice",
+          "blurb": "This pack adds its tree to a sub-section another pack already defined, matching on id.",
+          "treeIds": ["appsec"]
+        }
+      ]
+    }
+  ],
+
+  "trees": [
+    {
+      "id": "appsec",
+      "title": "Application Security",
+      "subtitle": "Master of Application Security",
+      "blurb": "A second pack, installed by dropping this file in content/packs/ and adding one line to the manifest. It also adds itself to the existing Software Engineering section, which is how a pack extends content it does not own.",
+      "novice": {
+        "id": "as-novice",
+        "title": "Novice Defender",
+        "blurb": "Threat modelling in five minutes a feature.",
+        "blocks": [
+          {
+            "type": "article",
+            "title": "Four questions",
+            "body": "Threat modelling does not need a formal process to be worth doing. Four questions, asked out loud, catch most of it:\n\n1. **What are we building?** A sketch, not a document.\n2. **What can go wrong?** Who benefits from breaking this, and how?\n3. **What are we going to do about it?** Per risk, one of: mitigate, accept, transfer, eliminate.\n4. **Did we do a good job?** Revisit when the design changes.\n\nThe second question is the one teams skip, and it is the only one that finds anything."
+          },
+          {
+            "type": "callout",
+            "tone": "tip",
+            "title": "This whole pack is the demo",
+            "body": "Nothing in the application code knows this content exists. It was installed as a JSON file and a manifest entry."
+          }
+        ],
+        "quiz": {
+          "title": "Threat modelling check",
+          "passPct": 100,
+          "questions": [
+            {
+              "type": "mc",
+              "prompt": "Which threat-modelling question do teams most often skip?",
+              "choices": [
+                { "text": "What can go wrong?", "correct": true },
+                { "text": "What are we building?", "correct": false },
+                { "text": "Did we do a good job?", "correct": false },
+                { "text": "Who is on the team?", "correct": false }
+              ],
+              "explanation": "It is the only question that actually surfaces new risk, and the easiest one to hand-wave."
+            }
+          ]
+        }
+      },
+      "master": {
+        "id": "as-master",
+        "title": "Master of Application Security",
+        "blurb": "All three columns complete."
+      },
+      "columns": [
+        {
+          "id": "as-input",
+          "title": "Untrusted Input",
+          "modules": [
+            { "id": "as-input-1", "title": "Injection", "blurb": "Data interpreted as instructions." },
+            { "id": "as-input-2", "title": "Output Encoding", "blurb": "Escape where you render, not where you store." },
+            { "id": "as-input-3", "title": "Deserialisation", "blurb": "Parsing attacker-controlled structure." },
+            { "id": "as-input-4", "title": "Server-side requests", "blurb": "When your server is the attacker's browser." }
+          ]
+        },
+        {
+          "id": "as-identity",
+          "title": "Identity",
+          "modules": [
+            { "id": "as-id-1", "title": "Authentication", "blurb": "Proving who someone is." },
+            { "id": "as-id-2", "title": "Authorisation", "blurb": "The bug class that automated scanners miss." },
+            { "id": "as-id-3", "title": "Sessions and Tokens", "blurb": "Holding identity over time, safely." },
+            { "id": "as-id-4", "title": "Secrets", "blurb": "Storage, rotation, and keeping them out of logs." }
+          ]
+        },
+        {
+          "id": "as-supply",
+          "title": "Supply Chain",
+          "modules": [
+            { "id": "as-sup-1", "title": "Dependencies", "blurb": "Most of your code was written by strangers." },
+            { "id": "as-sup-2", "title": "Build Integrity", "blurb": "Trusting what actually shipped." },
+            { "id": "as-sup-3", "title": "Provenance", "blurb": "Knowing where an artefact came from." },
+            { "id": "as-sup-4", "title": "Responding to a CVE", "blurb": "Working out whether it reaches you, fast." }
+          ]
+        }
+      ]
+    }
+  ]
+}

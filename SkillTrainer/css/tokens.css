@@ -1,0 +1,139 @@
+/*
+ * tokens.css - the palette, in two themes.
+ *
+ * Dark reuses the parent site's values verbatim so SkillTrainer reads as part
+ * of codyboillot.com. Light is a derived warm palette rather than an inversion.
+ *
+ * One trap worth naming: #ff8a3d on white is about 2.4:1 and fails WCAG AA for
+ * text. Light mode therefore keeps the bright orange for FILLS and uses
+ * --accent-ink, a darkened orange, for anything that has to be read.
+ */
+
+:root {
+  --radius: 18px;
+  --radius-sm: 12px;
+  --radius-xs: 8px;
+  --maxw: 1180px;
+
+  /* Height of the fixed chrome, the basis of the no-scroll tree math. */
+  --chrome: 60px;
+
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Sora", "Inter", system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ------------------------------------------------------------------ dark */
+
+[data-theme="dark"] {
+  --bg: #0b0f17;
+  --bg-soft: #111725;
+  --card: #141b2b;
+  --card-2: #182032;
+  --card-3: #1e273c;
+  --line: rgba(255, 255, 255, 0.08);
+  --line-2: rgba(255, 255, 255, 0.14);
+  --line-3: rgba(255, 255, 255, 0.22);
+
+  --text: #eef2f9;
+  --muted: #9aa6bd;
+  /* Lighter than the parent site's #6b768e, which measures 3.8:1 on --card and
+     misses WCAG AA. This tier carries small metadata, so it has to clear 4.5. */
+  --muted-2: #8994ab;
+
+  --accent: #ff8a3d;
+  --accent-2: #ffc24b;
+  --accent-3: #ff5e62;
+  --accent-ink: #ffa463;
+  --accent-wash: rgba(255, 138, 61, 0.14);
+  --accent-wash-2: rgba(255, 138, 61, 0.28);
+  --on-accent: #1a1206;
+
+  --ok: #4ade80;
+  --ok-ink: #86efac;
+  --ok-wash: rgba(74, 222, 128, 0.14);
+  --warn: #fbbf24;
+  --danger: #f87171;
+  --danger-wash: rgba(248, 113, 113, 0.14);
+
+  --grad: linear-gradient(100deg, #ffc24b 0%, #ff8a3d 45%, #ff5e62 100%);
+  --shadow: 0 18px 50px -20px rgba(0, 0, 0, 0.65);
+  --shadow-sm: 0 8px 24px -12px rgba(0, 0, 0, 0.7);
+
+  --glow: radial-gradient(720px 480px at 78% -8%, rgba(255, 138, 61, 0.16), transparent 60%),
+    radial-gradient(640px 520px at 0% 22%, rgba(255, 94, 98, 0.12), transparent 55%),
+    radial-gradient(900px 600px at 50% 120%, rgba(255, 194, 75, 0.08), transparent 60%);
+
+  color-scheme: dark;
+}
+
+/* ----------------------------------------------------------------- light */
+
+[data-theme="light"] {
+  --bg: #fbf7f2;
+  --bg-soft: #f5efe6;
+  --card: #ffffff;
+  --card-2: #fdf9f4;
+  --card-3: #f6efe5;
+  --line: rgba(38, 26, 12, 0.11);
+  --line-2: rgba(38, 26, 12, 0.19);
+  --line-3: rgba(38, 26, 12, 0.3);
+
+  --text: #1c1814;
+  --muted: #5f574c;
+  --muted-2: #756c60;
+
+  --accent: #ff8a3d;
+  --accent-2: #f5a623;
+  --accent-3: #e23d42;
+  --accent-ink: #b7410e;
+  --accent-wash: rgba(255, 138, 61, 0.13);
+  --accent-wash-2: rgba(255, 138, 61, 0.26);
+  --on-accent: #26160a;
+
+  --ok: #16a34a;
+  /* Darker than the usual #15803d: it sits on the green-tinted "complete" box,
+     where the lighter value lands at 4.39 and misses AA. */
+  --ok-ink: #14652f;
+  --ok-wash: rgba(22, 163, 74, 0.12);
+  --warn: #b45309;
+  --danger: #dc2626;
+  --danger-wash: rgba(220, 38, 38, 0.1);
+
+  --grad: linear-gradient(100deg, #ffc24b 0%, #ff8a3d 45%, #ff5e62 100%);
+  --shadow: 0 18px 44px -22px rgba(74, 48, 20, 0.34);
+  --shadow-sm: 0 8px 20px -12px rgba(74, 48, 20, 0.3);
+
+  --glow: radial-gradient(720px 480px at 78% -8%, rgba(255, 138, 61, 0.13), transparent 60%),
+    radial-gradient(640px 520px at 0% 22%, rgba(255, 94, 98, 0.09), transparent 55%),
+    radial-gradient(900px 600px at 50% 120%, rgba(255, 194, 75, 0.1), transparent 60%);
+
+  color-scheme: light;
+}
+
+/* Module lattice states. Separate tokens so both themes stay legible without
+   either one having to fight the accent colours. */
+/* Locked backgrounds are deliberately OPAQUE. A translucent tint would let the
+   column spine show straight through the box, and the connector is supposed to
+   run behind the lattice, not across it. */
+[data-theme="dark"] {
+  --box-bg: var(--card);
+  --box-bg-hover: var(--card-3);
+  --box-line: var(--line-2);
+  --box-text: var(--text);
+  --box-locked-bg: #0e131e;
+  --box-locked-text: var(--muted-2);
+  --connector: rgba(255, 255, 255, 0.18);
+}
+
+[data-theme="light"] {
+  --box-bg: #ffffff;
+  --box-bg-hover: #fffaf4;
+  --box-line: rgba(38, 26, 12, 0.16);
+  --box-text: var(--text);
+  --box-locked-bg: #f4eee4;
+  --box-locked-text: #6b6357;
+  --connector: rgba(38, 26, 12, 0.22);
+}
