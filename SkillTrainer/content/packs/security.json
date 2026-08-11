@@ -1,67 +1,146 @@
 {
-  "schemaVersion": 1,
-  "meta": { "title": "Security", "author": "Cody Boillot" },
-
+  "schemaVersion": 3,
+  "meta": {
+    "title": "Security",
+    "author": "Cody Boillot",
+    "updated": "2026-08-11"
+  },
   "sections": [
     {
       "id": "security",
       "title": "Security",
-      "blurb": "Building software that holds up when someone is actively trying to break it.",
+      "blurb": "Elit eu duis consequat non irure velit proident cupidatat velit pariatur aliquip.",
       "groups": [
-        { "id": "sec-appsec", "title": "Application Security", "treeIds": ["appsec"] }
+        {
+          "id": "sec-appsec",
+          "title": "Application Security",
+          "blurb": "",
+          "treeIds": [
+            "appsec"
+          ]
+        }
       ]
     },
     {
       "id": "software-engineering",
       "title": "Software Engineering",
+      "blurb": "Cupidatat sed consectetur occaecat consectetur magna eiusmod ea non irure laborum ad veniam.",
       "groups": [
         {
           "id": "se-core",
           "title": "Core Practice",
-          "blurb": "This pack adds its tree to a sub-section another pack already defined, matching on id.",
-          "treeIds": ["appsec"]
+          "blurb": "Ipsum et nostrud dolore ut culpa aute eu.",
+          "treeIds": [
+            "appsec"
+          ]
         }
       ]
     }
   ],
-
   "trees": [
     {
       "id": "appsec",
       "title": "Application Security",
       "subtitle": "Master of Application Security",
-      "blurb": "A second pack, installed by dropping this file in content/packs/ and adding one line to the manifest. It also adds itself to the existing Software Engineering section, which is how a pack extends content it does not own.",
+      "blurb": "Minim magna cillum nisi laborum ad dolore sint nisi enim sed ad.",
       "novice": {
         "id": "as-novice",
         "title": "Novice Defender",
-        "blurb": "Threat modelling in five minutes a feature.",
-        "blocks": [
+        "blurb": "Velit dolore veniam pariatur exercitation ipsum.",
+        "points": null,
+        "body": "<h2>Ipsum dolore anim</h2><p>Proident mollit occaecat eu proident do elit occaecat dolor proident nulla officia. Sed voluptate non fugiat deserunt ipsum occaecat consequat laborum incididunt nulla ad. Irure in enim quis consectetur sit officia fugiat minim irure non velit ipsum. Consequat eu velit non deserunt labore duis culpa irure sed velit.</p><ul><li>Ea et consequat proident do.</li><li>Do cupidatat labore officia exercitation id cupidatat nisi.</li><li>Et et excepteur lorem mollit id.</li></ul><p>Anim aliqua ad laboris duis sed anim consectetur lorem reprehenderit et culpa est. Quis aliquip deserunt nostrud ad ea ea ad occaecat consectetur nulla laborum labore. Excepteur duis ex commodo eiusmod cillum incididunt officia occaecat nostrud incididunt incididunt.</p><div class=\"rt-note\" data-tone=\"note\"><p><strong>Id laboris.</strong> Fugiat do magna et pariatur et amet laboris adipiscing adipiscing ullamco laboris nulla ullamco incididunt do laborum.</p></div>",
+        "links": [
           {
-            "type": "article",
-            "title": "Four questions",
-            "body": "Threat modelling does not need a formal process to be worth doing. Four questions, asked out loud, catch most of it:\n\n1. **What are we building?** A sketch, not a document.\n2. **What can go wrong?** Who benefits from breaking this, and how?\n3. **What are we going to do about it?** Per risk, one of: mitigate, accept, transfer, eliminate.\n4. **Did we do a good job?** Revisit when the design changes.\n\nThe second question is the one teams skip, and it is the only one that finds anything."
-          },
-          {
-            "type": "callout",
-            "tone": "tip",
-            "title": "This whole pack is the demo",
-            "body": "Nothing in the application code knows this content exists. It was installed as a JSON file and a manifest entry."
+            "id": "as-novice-l1",
+            "title": "Velit officia adipiscing",
+            "url": "https://example.com/",
+            "note": "Voluptate excepteur qui tempor."
           }
         ],
+        "videos": [],
+        "images": [],
+        "docs": [],
+        "articles": [],
         "quiz": {
-          "title": "Threat modelling check",
-          "passPct": 100,
+          "id": "as-novice-quiz",
+          "title": "Module check",
+          "intro": "Nulla veniam est sed deserunt proident laboris proident laboris sit proident cillum lorem.",
+          "passPct": 80,
+          "shuffleQuestions": false,
+          "shuffleChoices": true,
+          "allowRetry": true,
           "questions": [
             {
+              "id": "as-novice-q1",
               "type": "mc",
-              "prompt": "Which threat-modelling question do teams most often skip?",
+              "prompt": "Sunt voluptate eiusmod nostrud et cupidatat veniam est officia?",
+              "image": "",
+              "imageAlt": "",
+              "points": 1,
+              "explanation": "Pariatur consequat dolore in velit labore do aute.",
               "choices": [
-                { "text": "What can go wrong?", "correct": true },
-                { "text": "What are we building?", "correct": false },
-                { "text": "Did we do a good job?", "correct": false },
-                { "text": "Who is on the team?", "correct": false }
-              ],
-              "explanation": "It is the only question that actually surfaces new risk, and the easiest one to hand-wave."
+                {
+                  "id": "as-novice-q1a",
+                  "text": "Consequat magna cillum",
+                  "correct": true
+                },
+                {
+                  "id": "as-novice-q1b",
+                  "text": "Labore voluptate cupidatat",
+                  "correct": false
+                },
+                {
+                  "id": "as-novice-q1c",
+                  "text": "Adipiscing sit irure",
+                  "correct": false
+                },
+                {
+                  "id": "as-novice-q1d",
+                  "text": "Tempor esse lorem",
+                  "correct": false
+                }
+              ]
+            },
+            {
+              "id": "as-novice-q2",
+              "type": "tf",
+              "prompt": "Pariatur aliqua est officia ipsum est aliquip.",
+              "image": "",
+              "imageAlt": "",
+              "points": 1,
+              "answer": true,
+              "explanation": "Enim minim eu pariatur excepteur ex dolor quis lorem."
+            },
+            {
+              "id": "as-novice-q3",
+              "type": "multi",
+              "prompt": "Reprehenderit adipiscing cillum consequat ipsum quis pariatur?",
+              "image": "",
+              "imageAlt": "",
+              "points": 2,
+              "explanation": "Amet incididunt aliqua culpa qui occaecat ipsum cupidatat nisi consectetur consectetur.",
+              "choices": [
+                {
+                  "id": "as-novice-q3a",
+                  "text": "Laborum laboris",
+                  "correct": true
+                },
+                {
+                  "id": "as-novice-q3b",
+                  "text": "Cillum aliqua",
+                  "correct": true
+                },
+                {
+                  "id": "as-novice-q3c",
+                  "text": "Cupidatat in",
+                  "correct": false
+                },
+                {
+                  "id": "as-novice-q3d",
+                  "text": "Nisi nisi",
+                  "correct": false
+                }
+              ]
             }
           ]
         }
@@ -69,37 +148,643 @@
       "master": {
         "id": "as-master",
         "title": "Master of Application Security",
-        "blurb": "All three columns complete."
+        "blurb": "Laborum anim eiusmod ipsum officia laborum adipiscing.",
+        "points": null,
+        "body": "<h2>Nostrud ex incididunt</h2><p>Non ipsum irure nostrud ipsum cupidatat esse commodo ipsum aute velit duis aliquip. Qui do labore ut amet tempor minim in ex adipiscing amet aute dolor proident. Occaecat magna labore do aliquip ea ut fugiat ad sit id officia. Magna qui exercitation qui enim elit cillum proident id.</p><p>Qui amet nostrud mollit id exercitation esse culpa amet. Elit elit cillum amet sed ipsum exercitation nostrud consectetur deserunt sit laborum. Enim nulla quis laboris exercitation adipiscing exercitation fugiat.</p><h3>Adipiscing magna</h3><p>Adipiscing sed pariatur voluptate aliquip quis ex aliquip magna enim ut exercitation anim. Officia nostrud cillum aute nostrud pariatur ut sunt cupidatat voluptate proident aute occaecat.</p>",
+        "links": [],
+        "videos": [
+          {
+            "id": "as-master-v1",
+            "kind": "youtube",
+            "title": "Adipiscing cupidatat laborum",
+            "videoId": "6avJHaC3C2U",
+            "src": "",
+            "poster": "",
+            "caption": "Sunt irure culpa consectetur minim amet aute ex.",
+            "start": 0,
+            "mode": "facade"
+          }
+        ],
+        "images": [
+          {
+            "id": "as-master-i1",
+            "title": "Culpa non",
+            "src": "assets/layers.svg",
+            "alt": "Aliquip do et voluptate labore ut.",
+            "caption": "Ut quis eu dolor quis ad consequat eiusmod."
+          }
+        ],
+        "docs": [],
+        "articles": [],
+        "quiz": null
       },
       "columns": [
         {
           "id": "as-input",
           "title": "Untrusted Input",
+          "blurb": "",
           "modules": [
-            { "id": "as-input-1", "title": "Injection", "blurb": "Data interpreted as instructions." },
-            { "id": "as-input-2", "title": "Output Encoding", "blurb": "Escape where you render, not where you store." },
-            { "id": "as-input-3", "title": "Deserialisation", "blurb": "Parsing attacker-controlled structure." },
-            { "id": "as-input-4", "title": "Server-side requests", "blurb": "When your server is the attacker's browser." }
+            {
+              "id": "as-input-1",
+              "title": "Injection",
+              "blurb": "Nulla consequat enim ut anim et incididunt.",
+              "points": null,
+              "body": "<h2>Cupidatat officia occaecat</h2><p>Commodo sed eiusmod dolore elit deserunt sunt ea officia sint. Qui amet laboris nostrud ipsum veniam lorem pariatur eu proident. Do occaecat veniam qui dolor in amet est ea consequat culpa occaecat deserunt laborum. Sunt cillum tempor ut dolor minim consectetur minim.</p><ul><li>Pariatur magna do minim in ipsum do enim.</li><li>Id amet qui excepteur fugiat deserunt ad.</li><li>Id laborum aliqua non reprehenderit pariatur culpa est.</li></ul><p>Deserunt est excepteur sunt veniam nisi in quis minim deserunt. Sit exercitation nisi aliqua qui dolore velit mollit qui. Eu aliquip anim incididunt ipsum in sed est.</p>",
+              "links": [
+                {
+                  "id": "as-input-1-l1",
+                  "title": "Non magna esse",
+                  "url": "https://example.com/",
+                  "note": "Laborum ipsum sed proident."
+                }
+              ],
+              "videos": [],
+              "images": [],
+              "docs": [
+                {
+                  "id": "as-input-1-d1",
+                  "title": "Est cupidatat",
+                  "src": "assets/code-review-checklist.md",
+                  "filename": "code-review-checklist.md",
+                  "kind": "doc",
+                  "size": "3 KB"
+                }
+              ],
+              "articles": [],
+              "quiz": null
+            },
+            {
+              "id": "as-input-2",
+              "title": "Output Encoding",
+              "blurb": "Tempor laborum non pariatur magna qui commodo eiusmod culpa fugiat.",
+              "points": null,
+              "body": "<h2>Sit velit sint</h2><p>Proident ut lorem veniam tempor nisi dolor fugiat eu ea incididunt. Ullamco occaecat qui fugiat magna ullamco anim proident adipiscing ullamco ullamco est consectetur nostrud. Proident elit id nulla laboris elit culpa occaecat excepteur cupidatat magna laboris. Ipsum non nisi adipiscing ea do eu irure incididunt qui cupidatat in ad tempor ut.</p><p>Qui ea commodo nostrud eu laboris eiusmod ut qui eiusmod laborum consequat eiusmod. Id magna nulla elit excepteur nisi nisi cillum sint officia ipsum. Consequat laborum adipiscing proident incididunt reprehenderit velit ad eiusmod incididunt do excepteur.</p><div class=\"rt-note\" data-tone=\"note\"><p><strong>Adipiscing reprehenderit.</strong> Duis occaecat aliqua ad sed cillum ea adipiscing exercitation veniam ad voluptate et aute ea pariatur aliqua.</p></div>",
+              "links": [],
+              "videos": [],
+              "images": [],
+              "docs": [],
+              "articles": [],
+              "quiz": {
+                "id": "as-input-2-quiz",
+                "title": "Module check",
+                "intro": "Ex dolor excepteur deserunt consectetur aute non culpa adipiscing enim nisi aliqua nisi anim.",
+                "passPct": 80,
+                "shuffleQuestions": false,
+                "shuffleChoices": true,
+                "allowRetry": true,
+                "questions": [
+                  {
+                    "id": "as-input-2-q1",
+                    "type": "mc",
+                    "prompt": "Proident et dolor laboris lorem occaecat incididunt dolor incididunt reprehenderit?",
+                    "image": "",
+                    "imageAlt": "",
+                    "points": 1,
+                    "explanation": "Ipsum elit amet eu proident mollit minim in lorem do eiusmod sed.",
+                    "choices": [
+                      {
+                        "id": "as-input-2-q1a",
+                        "text": "Ad irure culpa",
+                        "correct": true
+                      },
+                      {
+                        "id": "as-input-2-q1b",
+                        "text": "Aute excepteur ex",
+                        "correct": false
+                      },
+                      {
+                        "id": "as-input-2-q1c",
+                        "text": "Sunt ipsum et",
+                        "correct": false
+                      },
+                      {
+                        "id": "as-input-2-q1d",
+                        "text": "Non dolor proident",
+                        "correct": false
+                      }
+                    ]
+                  },
+                  {
+                    "id": "as-input-2-q2",
+                    "type": "tf",
+                    "prompt": "Eiusmod officia qui proident do ad laborum esse magna laboris ea culpa.",
+                    "image": "",
+                    "imageAlt": "",
+                    "points": 1,
+                    "answer": false,
+                    "explanation": "Sit sint amet ea consequat labore ipsum pariatur qui minim."
+                  },
+                  {
+                    "id": "as-input-2-q4",
+                    "type": "exact",
+                    "prompt": "Laboris commodo veniam veniam eu dolor est (one word)?",
+                    "image": "",
+                    "imageAlt": "",
+                    "points": 1,
+                    "answers": [
+                      "lorem",
+                      "Lorem"
+                    ],
+                    "caseSensitive": false,
+                    "explanation": "Et magna consequat elit esse exercitation est enim consectetur voluptate."
+                  }
+                ]
+              }
+            },
+            {
+              "id": "as-input-3",
+              "title": "Deserialisation",
+              "blurb": "Exercitation mollit nisi cupidatat cupidatat laboris eiusmod.",
+              "points": null,
+              "body": "<h2>Nostrud ut enim</h2><p>Eiusmod nulla sunt laboris aliquip adipiscing aliqua ut dolore ut. Ipsum irure velit deserunt aute nisi ex laboris. Voluptate non occaecat irure minim labore est est et nulla dolor est consequat. Eiusmod ad consectetur exercitation nisi voluptate ipsum nostrud ex.</p><ul><li>Amet eiusmod enim incididunt eiusmod anim.</li><li>Pariatur sunt cillum laborum magna non commodo.</li><li>Cupidatat nostrud qui eu eiusmod minim deserunt.</li></ul><p>Ullamco velit adipiscing tempor incididunt aliqua et consequat. Sit consectetur consectetur id nisi sit culpa cillum incididunt voluptate nostrud eiusmod. Labore consectetur irure incididunt proident adipiscing aliquip quis lorem.</p>",
+              "links": [
+                {
+                  "id": "as-input-3-l1",
+                  "title": "Sed proident labore",
+                  "url": "https://example.com/",
+                  "note": "Aute magna ex laborum."
+                }
+              ],
+              "videos": [],
+              "images": [
+                {
+                  "id": "as-input-3-i1",
+                  "title": "Irure ipsum",
+                  "src": "assets/layers.svg",
+                  "alt": "Enim dolor in veniam reprehenderit.",
+                  "caption": "Adipiscing amet id nostrud cillum culpa veniam."
+                }
+              ],
+              "docs": [],
+              "articles": [
+                {
+                  "id": "as-input-3-a1",
+                  "title": "Laboris do esse",
+                  "body": "<p>Exercitation commodo sunt laboris mollit aute non eiusmod. Velit sed dolore occaecat ipsum consectetur est excepteur sed sint lorem fugiat et non. Aliquip id fugiat fugiat et officia qui cupidatat est non dolore voluptate cupidatat aute reprehenderit.</p>"
+                }
+              ],
+              "quiz": null
+            },
+            {
+              "id": "as-input-4",
+              "title": "Server-side requests",
+              "blurb": "Adipiscing ipsum esse excepteur mollit velit laborum tempor consequat ullamco.",
+              "points": null,
+              "body": "<h2>Dolore eu labore</h2><p>Pariatur mollit aliquip nisi eiusmod amet ex proident adipiscing est occaecat ut. Sed incididunt id dolore aliqua excepteur culpa ipsum exercitation amet nulla. Nisi culpa proident voluptate dolor excepteur ex voluptate. Aliqua voluptate aliqua cillum in labore ea in et nisi aute officia in pariatur esse.</p><p>Exercitation ipsum ullamco ex quis laboris aliqua minim excepteur incididunt. Non duis in laboris velit consequat mollit ullamco consectetur commodo minim pariatur est fugiat labore. Ea elit sunt elit nisi ex commodo nulla non.</p><h3>Amet culpa</h3><p>Id nisi adipiscing adipiscing anim deserunt aliquip magna proident sunt reprehenderit. Consectetur sed ad voluptate qui enim sed quis aliqua.</p>",
+              "links": [],
+              "videos": [],
+              "images": [],
+              "docs": [],
+              "articles": [],
+              "quiz": null
+            }
           ]
         },
         {
           "id": "as-identity",
           "title": "Identity",
+          "blurb": "",
           "modules": [
-            { "id": "as-id-1", "title": "Authentication", "blurb": "Proving who someone is." },
-            { "id": "as-id-2", "title": "Authorisation", "blurb": "The bug class that automated scanners miss." },
-            { "id": "as-id-3", "title": "Sessions and Tokens", "blurb": "Holding identity over time, safely." },
-            { "id": "as-id-4", "title": "Secrets", "blurb": "Storage, rotation, and keeping them out of logs." }
+            {
+              "id": "as-id-1",
+              "title": "Authentication",
+              "blurb": "Voluptate ea dolore labore sunt laboris ullamco deserunt laboris laboris.",
+              "points": null,
+              "body": "<h2>Do ullamco fugiat</h2><p>Esse reprehenderit sit elit consectetur do non minim veniam anim reprehenderit labore. Id magna sit fugiat aliquip et magna ullamco deserunt. Occaecat aute veniam aliqua in fugiat do minim velit ut ea. Non enim do proident eiusmod nisi incididunt et consequat occaecat eu sit amet.</p><ul><li>Laboris pariatur proident labore cupidatat dolor est.</li><li>Incididunt consequat consequat nisi pariatur.</li><li>Consequat consequat commodo veniam tempor consectetur veniam nisi.</li></ul><p>Aliquip adipiscing ad cillum mollit nisi mollit quis aliquip mollit elit cillum duis proident. Enim nisi cupidatat ex aliqua ut in eu nisi proident elit quis occaecat nulla. Ipsum laborum cupidatat exercitation eu non aliqua irure ullamco.</p><div class=\"rt-note\" data-tone=\"note\"><p><strong>Incididunt id.</strong> Dolore tempor minim nostrud eu esse duis esse esse magna incididunt occaecat quis.</p></div>",
+              "links": [
+                {
+                  "id": "as-id-1-l1",
+                  "title": "Esse sit aliquip",
+                  "url": "https://example.com/",
+                  "note": "Consequat dolore duis dolor."
+                }
+              ],
+              "videos": [
+                {
+                  "id": "as-id-1-v1",
+                  "kind": "youtube",
+                  "title": "Sit sit elit",
+                  "videoId": "6avJHaC3C2U",
+                  "src": "",
+                  "poster": "",
+                  "caption": "Minim sit cupidatat ad id dolor excepteur.",
+                  "start": 0,
+                  "mode": "facade"
+                }
+              ],
+              "images": [],
+              "docs": [
+                {
+                  "id": "as-id-1-d1",
+                  "title": "Veniam in",
+                  "src": "assets/code-review-checklist.md",
+                  "filename": "code-review-checklist.md",
+                  "kind": "doc",
+                  "size": "3 KB"
+                }
+              ],
+              "articles": [],
+              "quiz": {
+                "id": "as-id-1-quiz",
+                "title": "Module check",
+                "intro": "Tempor irure sunt minim laboris duis aliqua incididunt et esse fugiat proident magna.",
+                "passPct": 80,
+                "shuffleQuestions": false,
+                "shuffleChoices": true,
+                "allowRetry": true,
+                "questions": [
+                  {
+                    "id": "as-id-1-q1",
+                    "type": "mc",
+                    "prompt": "Ad exercitation nisi irure excepteur duis veniam velit?",
+                    "image": "",
+                    "imageAlt": "",
+                    "points": 1,
+                    "explanation": "Commodo esse reprehenderit consequat consequat pariatur elit nisi.",
+                    "choices": [
+                      {
+                        "id": "as-id-1-q1a",
+                        "text": "Dolore magna sed",
+                        "correct": true
+                      },
+                      {
+                        "id": "as-id-1-q1b",
+                        "text": "Commodo magna ut",
+                        "correct": false
+                      },
+                      {
+                        "id": "as-id-1-q1c",
+                        "text": "Ea voluptate esse",
+                        "correct": false
+                      },
+                      {
+                        "id": "as-id-1-q1d",
+                        "text": "Eiusmod ipsum anim",
+                        "correct": false
+                      }
+                    ]
+                  },
+                  {
+                    "id": "as-id-1-q2",
+                    "type": "tf",
+                    "prompt": "Do exercitation duis anim minim in culpa pariatur est aute.",
+                    "image": "",
+                    "imageAlt": "",
+                    "points": 1,
+                    "answer": true,
+                    "explanation": "Ullamco ullamco pariatur laborum mollit officia commodo ad sit officia."
+                  },
+                  {
+                    "id": "as-id-1-q3",
+                    "type": "multi",
+                    "prompt": "Labore laboris quis tempor exercitation ut ex?",
+                    "image": "",
+                    "imageAlt": "",
+                    "points": 2,
+                    "explanation": "Non pariatur commodo aute cillum consectetur exercitation sint.",
+                    "choices": [
+                      {
+                        "id": "as-id-1-q3a",
+                        "text": "Ex nisi",
+                        "correct": true
+                      },
+                      {
+                        "id": "as-id-1-q3b",
+                        "text": "Deserunt eiusmod",
+                        "correct": true
+                      },
+                      {
+                        "id": "as-id-1-q3c",
+                        "text": "Proident dolor",
+                        "correct": false
+                      },
+                      {
+                        "id": "as-id-1-q3d",
+                        "text": "Non anim",
+                        "correct": false
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "id": "as-id-2",
+              "title": "Authorisation",
+              "blurb": "Qui sit dolor irure cupidatat cillum.",
+              "points": null,
+              "body": "<h2>Officia culpa voluptate</h2><p>Irure esse et minim mollit cupidatat irure exercitation nulla eiusmod aliqua deserunt. Dolore in id excepteur veniam esse voluptate esse incididunt ullamco incididunt deserunt tempor qui consequat. Enim id eu ad tempor nulla nostrud do id excepteur dolor irure aliquip. Lorem et mollit amet cupidatat ut elit consectetur eu do aute non mollit laborum ut.</p><p>Qui nulla adipiscing commodo consectetur minim culpa et dolor pariatur dolore eu quis ad elit. Esse velit ipsum tempor velit tempor veniam laborum aliquip nisi commodo in aliquip laboris. Dolor labore reprehenderit sit consequat consequat velit laboris do ipsum do occaecat elit sit nulla.</p>",
+              "links": [],
+              "videos": [],
+              "images": [
+                {
+                  "id": "as-id-2-i1",
+                  "title": "Pariatur ad",
+                  "src": "assets/layers.svg",
+                  "alt": "Sint laborum aliqua elit.",
+                  "caption": "Nostrud ullamco ad irure aliqua eu tempor."
+                }
+              ],
+              "docs": [],
+              "articles": [],
+              "quiz": null
+            },
+            {
+              "id": "as-id-3",
+              "title": "Sessions and Tokens",
+              "blurb": "Quis anim ad id mollit do nulla consequat.",
+              "points": null,
+              "body": "<h2>Non esse pariatur</h2><p>Et officia enim proident nisi non culpa amet ad minim. Nostrud eu nulla exercitation irure sint qui nostrud excepteur adipiscing veniam sit sed. Ex laborum cupidatat cillum consequat deserunt voluptate voluptate exercitation esse esse. Incididunt est sed elit culpa eu qui consectetur ea duis do ex officia.</p><ul><li>Labore cupidatat mollit laboris amet id.</li><li>Cillum ex labore in exercitation laboris non aliquip.</li><li>Ad ea laborum aute velit sint.</li></ul><p>Incididunt adipiscing commodo exercitation sint elit officia labore ut. Incididunt laboris exercitation magna exercitation minim eiusmod sit tempor laborum eu et. Minim magna nulla sunt anim minim nostrud duis tempor qui dolor aliqua tempor amet nostrud.</p>",
+              "links": [
+                {
+                  "id": "as-id-3-l1",
+                  "title": "Occaecat veniam anim",
+                  "url": "https://example.com/",
+                  "note": "Ullamco amet nulla occaecat sed."
+                }
+              ],
+              "videos": [],
+              "images": [],
+              "docs": [],
+              "articles": [],
+              "quiz": null
+            },
+            {
+              "id": "as-id-4",
+              "title": "Secrets",
+              "blurb": "Velit voluptate dolore laborum minim cillum lorem in.",
+              "points": null,
+              "body": "<h2>Cupidatat aliquip non</h2><p>Reprehenderit mollit velit irure officia occaecat voluptate consectetur labore laborum proident lorem. Qui ut sit et reprehenderit sint deserunt aute dolor mollit fugiat ipsum amet. Sunt voluptate sit ut culpa duis laborum exercitation. Lorem eu lorem non sunt aute id commodo sint do nulla.</p><p>Nisi consequat pariatur aliqua aliquip velit do commodo fugiat ad. Laboris duis nulla do elit eu labore aute aliqua cupidatat laboris do amet. Aliqua aliqua sit dolor eu occaecat aliqua occaecat lorem ipsum in exercitation culpa.</p><div class=\"rt-note\" data-tone=\"note\"><p><strong>Quis lorem.</strong> Officia incididunt minim do ad consequat lorem proident esse ut incididunt incididunt excepteur.</p></div><h3>Nisi ex</h3><p>Eu magna commodo aliqua cillum minim magna est anim minim incididunt. Quis laboris dolor elit exercitation deserunt voluptate anim deserunt tempor velit nisi.</p>",
+              "links": [],
+              "videos": [],
+              "images": [],
+              "docs": [],
+              "articles": [],
+              "quiz": {
+                "id": "as-id-4-quiz",
+                "title": "Module check",
+                "intro": "Aute excepteur cillum sed reprehenderit enim commodo sit do nostrud et.",
+                "passPct": 80,
+                "shuffleQuestions": false,
+                "shuffleChoices": true,
+                "allowRetry": true,
+                "questions": [
+                  {
+                    "id": "as-id-4-q1",
+                    "type": "mc",
+                    "prompt": "Sed occaecat do id laborum laborum commodo do dolor?",
+                    "image": "",
+                    "imageAlt": "",
+                    "points": 1,
+                    "explanation": "Commodo do commodo consequat nisi magna exercitation ut proident dolore.",
+                    "choices": [
+                      {
+                        "id": "as-id-4-q1a",
+                        "text": "Consectetur mollit fugiat",
+                        "correct": true
+                      },
+                      {
+                        "id": "as-id-4-q1b",
+                        "text": "Laboris fugiat consectetur",
+                        "correct": false
+                      },
+                      {
+                        "id": "as-id-4-q1c",
+                        "text": "Exercitation ea sint",
+                        "correct": false
+                      },
+                      {
+                        "id": "as-id-4-q1d",
+                        "text": "Sunt consequat cupidatat",
+                        "correct": false
+                      }
+                    ]
+                  },
+                  {
+                    "id": "as-id-4-q2",
+                    "type": "tf",
+                    "prompt": "Minim sint quis sunt veniam officia cupidatat sed eu irure incididunt.",
+                    "image": "",
+                    "imageAlt": "",
+                    "points": 1,
+                    "answer": false,
+                    "explanation": "Cillum pariatur sint amet officia deserunt minim ipsum labore ipsum exercitation quis sint."
+                  }
+                ]
+              }
+            }
           ]
         },
         {
           "id": "as-supply",
           "title": "Supply Chain",
+          "blurb": "",
           "modules": [
-            { "id": "as-sup-1", "title": "Dependencies", "blurb": "Most of your code was written by strangers." },
-            { "id": "as-sup-2", "title": "Build Integrity", "blurb": "Trusting what actually shipped." },
-            { "id": "as-sup-3", "title": "Provenance", "blurb": "Knowing where an artefact came from." },
-            { "id": "as-sup-4", "title": "Responding to a CVE", "blurb": "Working out whether it reaches you, fast." }
+            {
+              "id": "as-sup-1",
+              "title": "Dependencies",
+              "blurb": "Quis nulla ullamco mollit mollit in reprehenderit cupidatat ipsum excepteur.",
+              "points": null,
+              "body": "<h2>Pariatur pariatur elit</h2><p>Aliquip labore ipsum in officia eiusmod veniam nostrud sunt sit. Et nisi voluptate tempor irure fugiat velit labore. Duis veniam dolore culpa proident velit occaecat est deserunt duis. Est eu veniam velit dolore sed consequat est sed exercitation cillum.</p><ul><li>Ullamco excepteur exercitation aliquip occaecat.</li><li>Tempor in magna laboris eu elit excepteur laborum.</li><li>Dolore sint duis ullamco ea id.</li></ul><p>Quis quis irure quis amet dolor cillum aliquip esse nostrud reprehenderit non eiusmod. Nostrud velit id incididunt minim ad dolore exercitation elit deserunt nostrud aliqua eiusmod veniam nostrud. Sed mollit eu labore anim cupidatat esse amet ad.</p>",
+              "links": [
+                {
+                  "id": "as-sup-1-l1",
+                  "title": "Fugiat ut elit",
+                  "url": "https://example.com/",
+                  "note": "Ad adipiscing esse et consequat."
+                }
+              ],
+              "videos": [],
+              "images": [
+                {
+                  "id": "as-sup-1-i1",
+                  "title": "Sint do",
+                  "src": "assets/layers.svg",
+                  "alt": "Et adipiscing ut dolore ad.",
+                  "caption": "Excepteur officia do duis in et."
+                }
+              ],
+              "docs": [
+                {
+                  "id": "as-sup-1-d1",
+                  "title": "Veniam laboris",
+                  "src": "assets/code-review-checklist.md",
+                  "filename": "code-review-checklist.md",
+                  "kind": "doc",
+                  "size": "3 KB"
+                }
+              ],
+              "articles": [
+                {
+                  "id": "as-sup-1-a1",
+                  "title": "Veniam dolor sit",
+                  "body": "<p>Nisi commodo commodo ex sunt consectetur velit consequat ex. In ex cillum est exercitation dolore dolor qui do nisi nostrud aliqua dolore ex est. Est elit est reprehenderit tempor lorem esse officia aliqua eu labore magna deserunt nulla fugiat.</p>"
+                }
+              ],
+              "quiz": null
+            },
+            {
+              "id": "as-sup-2",
+              "title": "Build Integrity",
+              "blurb": "Occaecat pariatur commodo qui fugiat ea aute anim.",
+              "points": null,
+              "body": "<h2>Sint elit sed</h2><p>Sunt sit ad aliquip nostrud sed anim exercitation consequat dolor pariatur minim tempor do. Ea velit est occaecat quis mollit nulla do mollit anim ullamco elit minim. Qui est reprehenderit sed qui id minim sed lorem eu aute exercitation excepteur. Sint ullamco ex excepteur velit esse eiusmod ullamco reprehenderit non veniam.</p><p>Non in ad fugiat id nisi aute aliqua in nulla. Sint lorem nisi culpa incididunt sunt excepteur minim nisi. Excepteur nostrud lorem elit aliqua sed laboris nostrud.</p>",
+              "links": [],
+              "videos": [
+                {
+                  "id": "as-sup-2-v1",
+                  "kind": "youtube",
+                  "title": "Pariatur in ipsum",
+                  "videoId": "6avJHaC3C2U",
+                  "src": "",
+                  "poster": "",
+                  "caption": "Eu anim deserunt consequat fugiat.",
+                  "start": 0,
+                  "mode": "facade"
+                }
+              ],
+              "images": [],
+              "docs": [],
+              "articles": [],
+              "quiz": null
+            },
+            {
+              "id": "as-sup-3",
+              "title": "Provenance",
+              "blurb": "Eu ex minim excepteur non enim aliquip do.",
+              "points": null,
+              "body": "<h2>Ipsum mollit nostrud</h2><p>Eu cupidatat sed velit velit pariatur id labore sed sit aute incididunt aute sed. Do veniam culpa aliqua quis eu est enim occaecat. Pariatur velit laborum minim et aliquip pariatur excepteur do est exercitation ipsum ex sed. Aliquip proident tempor est occaecat cillum irure ex dolore id deserunt exercitation deserunt officia.</p><ul><li>Non excepteur magna est sunt.</li><li>Consequat ad mollit excepteur officia sint minim.</li><li>Tempor cupidatat aliqua ea consequat aliquip.</li></ul><p>Do velit magna aute deserunt et labore minim consequat aliquip. Elit lorem culpa dolore nisi adipiscing ut magna anim sit ad velit laborum quis eiusmod. Sunt do labore adipiscing qui voluptate dolor tempor exercitation.</p><div class=\"rt-note\" data-tone=\"note\"><p><strong>Exercitation laboris.</strong> Adipiscing elit aliqua lorem ex duis elit officia reprehenderit officia.</p></div>",
+              "links": [
+                {
+                  "id": "as-sup-3-l1",
+                  "title": "Dolor elit amet",
+                  "url": "https://example.com/",
+                  "note": "Ad nostrud ea ea cillum."
+                }
+              ],
+              "videos": [],
+              "images": [],
+              "docs": [],
+              "articles": [],
+              "quiz": {
+                "id": "as-sup-3-quiz",
+                "title": "Module check",
+                "intro": "Commodo laboris velit officia et magna duis officia enim.",
+                "passPct": 80,
+                "shuffleQuestions": false,
+                "shuffleChoices": true,
+                "allowRetry": true,
+                "questions": [
+                  {
+                    "id": "as-sup-3-q1",
+                    "type": "mc",
+                    "prompt": "Proident eu laborum cupidatat ea magna nisi?",
+                    "image": "",
+                    "imageAlt": "",
+                    "points": 1,
+                    "explanation": "Ut incididunt deserunt enim aliquip laborum do proident labore.",
+                    "choices": [
+                      {
+                        "id": "as-sup-3-q1a",
+                        "text": "Veniam nisi consectetur",
+                        "correct": true
+                      },
+                      {
+                        "id": "as-sup-3-q1b",
+                        "text": "Exercitation est occaecat",
+                        "correct": false
+                      },
+                      {
+                        "id": "as-sup-3-q1c",
+                        "text": "Irure ut elit",
+                        "correct": false
+                      },
+                      {
+                        "id": "as-sup-3-q1d",
+                        "text": "Aliqua exercitation laborum",
+                        "correct": false
+                      }
+                    ]
+                  },
+                  {
+                    "id": "as-sup-3-q2",
+                    "type": "tf",
+                    "prompt": "Mollit aute elit do elit aute officia cupidatat nulla cillum nulla.",
+                    "image": "",
+                    "imageAlt": "",
+                    "points": 1,
+                    "answer": true,
+                    "explanation": "Laborum do reprehenderit enim ex fugiat duis incididunt dolore ut."
+                  },
+                  {
+                    "id": "as-sup-3-q3",
+                    "type": "multi",
+                    "prompt": "Quis eu eu dolor duis occaecat non id?",
+                    "image": "",
+                    "imageAlt": "",
+                    "points": 2,
+                    "explanation": "Voluptate sed velit dolor sunt occaecat nostrud pariatur.",
+                    "choices": [
+                      {
+                        "id": "as-sup-3-q3a",
+                        "text": "Labore consequat",
+                        "correct": true
+                      },
+                      {
+                        "id": "as-sup-3-q3b",
+                        "text": "Dolore velit",
+                        "correct": true
+                      },
+                      {
+                        "id": "as-sup-3-q3c",
+                        "text": "Aliqua incididunt",
+                        "correct": false
+                      },
+                      {
+                        "id": "as-sup-3-q3d",
+                        "text": "Sunt dolor",
+                        "correct": false
+                      }
+                    ]
+                  },
+                  {
+                    "id": "as-sup-3-q4",
+                    "type": "exact",
+                    "prompt": "Exercitation laborum adipiscing exercitation elit officia labore id dolore (one word)?",
+                    "image": "",
+                    "imageAlt": "",
+                    "points": 1,
+                    "answers": [
+                      "lorem",
+                      "Lorem"
+                    ],
+                    "caseSensitive": false,
+                    "explanation": "Aliqua cillum sit ipsum consectetur aute fugiat veniam anim sint qui."
+                  }
+                ]
+              }
+            },
+            {
+              "id": "as-sup-4",
+              "title": "Responding to a CVE",
+              "blurb": "Elit dolore esse cillum non dolore.",
+              "points": null,
+              "body": "<h2>Ut quis ut</h2><p>Dolor irure in esse nisi duis duis aute est sint magna voluptate elit fugiat ullamco. Ullamco ut ad irure adipiscing et proident id officia lorem. Et reprehenderit amet reprehenderit voluptate duis nisi minim velit nostrud do pariatur irure. Ex ipsum quis esse elit sed consequat dolore consectetur.</p><p>Occaecat commodo ullamco fugiat consequat aute consectetur proident irure. Nulla labore eiusmod aliqua culpa occaecat esse elit laborum id minim nulla laborum proident do. Sit voluptate eiusmod deserunt sit ullamco proident mollit magna exercitation.</p><h3>Do aute</h3><p>Sed ex est adipiscing exercitation exercitation sed et. Deserunt sed adipiscing qui qui officia ex magna ex deserunt sed irure laboris.</p>",
+              "links": [],
+              "videos": [],
+              "images": [
+                {
+                  "id": "as-sup-4-i1",
+                  "title": "Anim in",
+                  "src": "assets/layers.svg",
+                  "alt": "Eiusmod elit sint dolor do id.",
+                  "caption": "Sint voluptate velit minim irure."
+                }
+              ],
+              "docs": [],
+              "articles": [],
+              "quiz": null
+            }
           ]
         }
       ]

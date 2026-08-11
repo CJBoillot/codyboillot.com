@@ -15,7 +15,15 @@
  */
 
 import { html, icon, on } from "./dom.js";
-import { TIERS, sectionTreeIds, sectionsForTree } from "./schema.js";
+import {
+  MASTER_TIME,
+  NOVICE_TIME,
+  TIERS,
+  TIER_SHORT,
+  TIER_TIME,
+  sectionTreeIds,
+  sectionsForTree,
+} from "./schema.js";
 import { POINTS_ENABLED } from "./config.js";
 import { getPrefs, sectionProgress, setPrefs, treeProgress } from "./store.js";
 import { routes } from "./main.js";
@@ -31,6 +39,17 @@ import {
 } from "./editor.js";
 
 const isOpen = (id) => !!(getPrefs().openSections || {})[id];
+
+/*
+ * The time contract, stated once on the front page: what each rung costs before
+ * anyone clicks into it. Novice is a five minute orientation, the tiers grow,
+ * and Master is the final exam rather than more reading.
+ */
+const TIME_LADDER = [
+  { mark: "N", name: "Novice", time: NOVICE_TIME },
+  ...TIER_SHORT.map((name, i) => ({ mark: ["I", "II", "III", "IV"][i], name, time: TIER_TIME[i] })),
+  { mark: "M", name: "Master", time: MASTER_TIME },
+];
 
 /* ------------------------------------------------------------- sections */
 
@@ -49,6 +68,13 @@ export function renderSections(doc, loadErrors = [], focusId = null) {
           what is inside. Work a tree from Novice upward, one tier at a time, exactly like the old
           Star Wars Galaxies skill boxes.
         </p>
+        <div class="time-ladder" role="list" aria-label="Time commitment per tier">
+          ${TIME_LADDER.map(
+            (t) => html`<span class="tl-item" role="listitem">
+              <b>${t.mark}</b><span>${t.name}</span><i>${t.time}</i>
+            </span>`
+          )}
+        </div>
         <div class="row" style="margin-top:1.1rem">
           <a class="btn btn-ghost btn-sm" href="${routes.trees()}">${icon("book")} All trees</a>
           <button class="btn btn-ghost btn-sm" data-act="expand-all">${icon("chevronDown")} Expand all</button>

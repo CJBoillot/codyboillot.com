@@ -24,6 +24,7 @@ import {
   moduleTierLabel,
   sectionHasContent,
   tierLevel,
+  tierTime,
 } from "./schema.js";
 import {
   blockingModule,
@@ -67,6 +68,10 @@ export function renderModule(tree, entry, columnId = null) {
             ${entry.role === "tier"
               ? html`<span class="chip chip-level">${tierLevel(entry.tier)}</span>`
               : ""}
+            <!-- The time contract for this rung. Master is the exam, not an estimate. -->
+            <span class="chip" title="Estimated time for this tier">
+              ${icon("clock")} ${entry.role === "master" ? tierTime(entry) : `~${tierTime(entry)}`}
+            </span>
             ${entry.column ? html`<span class="chip">${entry.column.title}</span>` : ""}
             ${POINTS_ENABLED && modulePoints(entry)
               ? html`<span class="chip">${modulePoints(entry)} skill points</span>`

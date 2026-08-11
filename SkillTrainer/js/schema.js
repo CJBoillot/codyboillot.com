@@ -58,6 +58,23 @@ export function tierShort(tier) {
   return TIER_SHORT[tier - 1] || "";
 }
 
+/*
+ * The time contract. Each rung tells the learner what it will cost before they
+ * commit, and the ladder itself communicates that depth grows with rank.
+ * Master is not a time estimate: it is the final exam that pulls the four
+ * categories together.
+ */
+export const NOVICE_TIME = "5 min";
+export const MASTER_TIME = "Final Exam";
+export const TIER_TIME = ["30 min", "1-2 hrs", "2-3 hrs", "4+ hrs"];
+
+export function tierTime(entry) {
+  if (!entry) return "";
+  if (entry.role === "novice") return NOVICE_TIME;
+  if (entry.role === "master") return MASTER_TIME;
+  return TIER_TIME[entry.tier - 1] || "";
+}
+
 /**
  * A rung as two parts, for stacking: the category on top, the level beneath.
  * Novice and Master belong to no category, so they carry only a title.
