@@ -584,6 +584,7 @@ const CONFIG = {
       { id: 'bloodline', name: 'Bloodline',       icon: [1,0],  max: 5, cost: 10, costMult: 1.8, desc: '+5% attack, HP, regen per rank' },
       { id: 'oldblade', name: 'Old Blade',        icon: [5,1],  max: 1, cost: 25, costMult: 1,   desc: 'Keep your weapon through a founding' },
       { id: 'haggler', name: 'Haggler',           icon: [12,10], max: 5, cost: 8,  costMult: 1.7, desc: 'Sell prices +10% per rank' },
+      { id: 'ledger', name: 'The Ledger',        icon: [13,11], max: 1, cost: 4,  costMult: 1,   desc: 'See your AFK forecast (gold and goods per hour while away) on the fight and harvest screens' },
     ],
   },
 };
