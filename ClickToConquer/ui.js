@@ -439,8 +439,9 @@ const UI = (() => {
   function forgeState(forge, kind, slot, label) {
     const cr = Game.crafting(), mine = cr && cr.kind === kind && cr.slot === slot;
     forge.classList.toggle('forging', !!mine); forge.classList.toggle('busy', !!cr && !mine);
-    if (mine) { forge.style.setProperty('--p', (100 * cr.t / cr.total) + '%'); setHtml(forge, `<span class="small">Forging…</span><br><span class="cost">${(cr.total - cr.t).toFixed(1)}s</span>`); forge.disabled = true; return true; }
-    if (forge.dataset.restored !== '1' && !forge.querySelector('[data-f=forgelbl]')) { forge.innerHTML = `<span class="small" data-f="forgelbl">${label}</span><br><span class="cost" data-f="forgecost"></span>`; }
+    if (mine) { forge.style.setProperty('--p', (100 * cr.t / cr.total) + '%'); setHtml(forge, `<span class="small">${kind.endsWith('Up') ? 'Upgrading…' : 'Forging…'}</span><br><span class="cost">${(cr.total - cr.t).toFixed(1)}s</span>`); forge.disabled = true; return true; }
+    const costF = kind.endsWith('Up') ? 'upcost' : 'forgecost';
+    if (!forge.querySelector('[data-f=' + costF + ']')) { forge.innerHTML = kind.endsWith('Up') ? `<span class="small">${label}</span><br><span class="cost" data-f="upcost"></span>` : `<span class="small" data-f="forgelbl">${label}</span><br><span class="cost" data-f="forgecost"></span>`; }
     forge.style.removeProperty('--p'); return false;
   }
 
@@ -666,7 +667,7 @@ const UI = (() => {
         setText(row.querySelector('[data-f=stats]'), Object.entries(cur).map(([k, v]) => `${STAT_LABEL[k]} ${fs(k, v)}`).join(' · '));
         setText(row.querySelector('[data-f=next]'), 'Next: ' + Object.entries(nxt).map(([k, v]) => fs(k, v)).join(' · '));
         up.classList.remove('hidden');
-        const uc = Game.gearUpgradeCost(slot); setHtml(up.querySelector('[data-f=upcost]'), costHtml(uc)); up.disabled = !Game.canAfford(uc); if (!up.disabled) anyGear = true;
+        if (!forgeState(up, 'gearUp', slot, 'Upgrade')) { const uc = Game.gearUpgradeCost(slot); setHtml(up.querySelector('[data-f=upcost]'), costHtml(uc)); up.disabled = !Game.canAfford(uc) || !!Game.crafting(); if (!up.disabled) anyGear = true; }
       }
       const fc = Game.gearCraftCost(slot), can = Game.canTierUp(slot);
       if (!fc) forge.classList.add('hidden');
@@ -786,7 +787,7 @@ const UI = (() => {
       else {
         setHtml(row.querySelector('[data-f=title]'), `${CONFIG.toolTiers[it.tier].name} ${def.name} <span class="owned">Lv${it.level}</span>`);
         setText(row.querySelector('[data-f=stats]'), def.activity ? `Power ×${Game.toolPower(slot).toFixed(2)} → ${CONFIG.activities[def.activity].name}: ${Object.entries(Game.harvestRates(def.activity)).map(([k, v]) => `${f(v)} ${R[k].name}/s`).join(', ')}` : `Power ×${Game.toolPower(slot).toFixed(2)} → ${R[def.boosts].name} chance ×${Game.dropToolMult(slot).toFixed(2)}`);
-        up.classList.remove('hidden'); const uc = Game.toolUpgradeCost(slot); setHtml(up.querySelector('[data-f=upcost]'), costHtml(uc)); up.disabled = !Game.canAfford(uc);
+        up.classList.remove('hidden'); if (!forgeState(up, 'toolUp', slot, 'Upgrade')) { const uc = Game.toolUpgradeCost(slot); setHtml(up.querySelector('[data-f=upcost]'), costHtml(uc)); up.disabled = !Game.canAfford(uc) || !!Game.crafting(); }
       }
       const fc = Game.toolCraftCost(slot), can = Game.canToolTierUp(slot), nt = it ? it.tier + 1 : 0;
       if (!fc) forge.classList.add('hidden');

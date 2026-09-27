@@ -124,6 +124,7 @@ const CONFIG = {
   gearGrowth: 1.15,
   tierUpAt: 15,
   researchSeconds: 5, // researching a tech takes this long (one at a time)
+  upgradeSeconds: 2, // each gear/tool upgrade level takes this long (shares the one-at-a-time forge)
   craftSeconds: 5, // forging a gear piece or tool takes this long (one at a time)
   slots: {
     weapon:  { name: 'Weapon', icon: [5,1],  primary: 'attack', base: 3,   secondary: 'crit',    secBase: 0.02 },

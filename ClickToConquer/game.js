@@ -95,13 +95,15 @@ function craftGear(slot) {
 function finishCraft() {
   const cr = crafting(); if (!cr) return; S.hero.crafting = null;
   if (cr.kind === 'gear') { const it = S.hero.gear[cr.slot]; S.hero.gear[cr.slot] = { tier: it ? it.tier + 1 : 0, level: 0 }; log(`Forged ${cr.name}`); }
+  else if (cr.kind === 'gearUp') { if (S.hero.gear[cr.slot]) S.hero.gear[cr.slot].level++; }
+  else if (cr.kind === 'toolUp') { if (S.hero.tools[cr.slot]) S.hero.tools[cr.slot].level++; }
   else { const it = S.hero.tools[cr.slot]; S.hero.tools[cr.slot] = { tier: it ? it.tier + 1 : 0, level: 0 }; log(`Made a ${cr.name}`); }
-  pushEvent({ who: 'craft', name: cr.name });
+  if (cr.kind === 'gear' || cr.kind === 'tool') pushEvent({ who: 'craft', name: cr.name });
 }
 function tickCraft(dt) { const cr = crafting(); if (!cr) return; cr.t += dt; if (cr.t >= cr.total) finishCraft(); }
 function upgradeGear(slot) {
-  const c = gearUpgradeCost(slot); if (!c || !canAfford(c)) return false;
-  pay(c); S.hero.gear[slot].level++; return true;
+  if (crafting()) return false; const c = gearUpgradeCost(slot); if (!c || !canAfford(c)) return false;
+  pay(c); const it = S.hero.gear[slot]; S.hero.crafting = { kind: 'gearUp', slot, t: 0, total: CONFIG.upgradeSeconds, name: `${tierName(slot, it.tier)} ${CONFIG.slots[slot].name} Lv${it.level + 1}` }; return true;
 }
 
 // ---------- By hand ----------
@@ -119,7 +121,7 @@ function toolUpgradeCost(slot) { const it = S.hero.tools[slot]; if (!it) return 
 function toolSlotUnlocked(slot) { return !CONFIG.techs.some(t => t.unlocks.tool === slot) || CONFIG.techs.some(t => t.unlocks.tool === slot && hasTech(t.id)); }
 function canToolTierUp(slot) { const it = S.hero.tools[slot], next = it ? it.tier + 1 : 0; return toolSlotUnlocked(slot) && next < CONFIG.toolTiers.length && toolTierUnlocked(next) && (!it || it.level >= CONFIG.tierUpAt); }
 function craftTool(slot) { if (crafting() || !canToolTierUp(slot)) return false; const c = toolCraftCost(slot); if (!c || !canAfford(c)) return false; pay(c); const it = S.hero.tools[slot]; S.hero.crafting = { kind: 'tool', slot, t: 0, total: CONFIG.craftSeconds, name: `${CONFIG.toolTiers[it ? it.tier + 1 : 0].name} ${CONFIG.toolSlots[slot].name}` }; return true; }
-function upgradeTool(slot) { const c = toolUpgradeCost(slot); if (!c || !canAfford(c)) return false; pay(c); S.hero.tools[slot].level++; return true; }
+function upgradeTool(slot) { if (crafting()) return false; const c = toolUpgradeCost(slot); if (!c || !canAfford(c)) return false; pay(c); const it = S.hero.tools[slot]; S.hero.crafting = { kind: 'toolUp', slot, t: 0, total: CONFIG.upgradeSeconds, name: `${CONFIG.toolTiers[it.tier].name} ${CONFIG.toolSlots[slot].name} Lv${it.level + 1}` }; return true; }
 function activityDef(id) { return CONFIG.activities[id]; }
 function activityAvailable(id) { const a = activityDef(id); return !!a && (!a.tool || !!S.hero.tools[a.tool]) && (!a.gear || !!S.hero.gear[a.gear]); }
 function setActivity(id) { if (!activityAvailable(id)) return false; S.hero.activity = id; S.hero.harvestTimer = 0; if (id !== 'fight') { S.hero.resting = false; S.hero.enemyHp = 0; } return true; }
