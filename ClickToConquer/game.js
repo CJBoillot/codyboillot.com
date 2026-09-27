@@ -116,7 +116,8 @@ function setActivity(id) { if (!activityAvailable(id)) return false; S.hero.acti
 function heroFighting() { return S.hero.activity === 'fight' && activityAvailable('fight'); }
 function masteryLevel(id) { return Math.floor(Math.sqrt((S.hero.mastery[id] || 0) / 10)); } // swings → level; +2% speed each
 function harvestTime(id) { const a = activityDef(id), p = toolPower(a.tool); return a.time / (Math.pow(p, 0.5)) / (1 + CONFIG.harvestStrPct * (S.hero.attr.str || 0)) / (1 + 0.02 * masteryLevel(id)); }
-function harvestYield(id) { const a = activityDef(id), p = toolPower(a.tool), o = {}; for (const k in a.outputs) o[k] = a.outputs[k] * Math.pow(p, 0.5); return o; }
+function outputGated(k) { const g = CONFIG.harvestGate && CONFIG.harvestGate[k]; return !!g && !hasTech(g); }
+function harvestYield(id) { const a = activityDef(id), p = toolPower(a.tool), o = {}; for (const k in a.outputs) { if (outputGated(k)) continue; o[k] = a.outputs[k] * Math.pow(p, 0.5); } return o; }
 function harvestRates(id = S.hero.activity) { if (id === 'fight' || id === 'idle' || !activityAvailable(id)) return {}; const y = harvestYield(id), t = harvestTime(id), r = {}; for (const k in y) r[k] = y[k] / t; return r; }
 function tickHarvest(dt) {
   const id = S.hero.activity; if (id === 'fight' || id === 'idle') return;
@@ -319,7 +320,7 @@ function jobOutputs(p) {
   const t = btype(p.type), o = {}, bonus = Math.floor((p.level - 1) / CONFIG.buildingUpgrade.batchEvery), kp = kingdomPath();
   const om = kp && kp.outputMult && kp.outputMult[p.type] ? kp.outputMult[p.type] : 1;
   const tm = p.worker !== null && p.worker !== undefined ? CONFIG.thrallOutputMult : 1;
-  for (const k in t.job.outputs) o[k] = (t.job.outputs[k] + bonus) * om * tm;
+  for (const k in t.job.outputs) { if (outputGated(k)) continue; o[k] = (t.job.outputs[k] + bonus) * om * tm; }
   return o;
 }
 function jobInputs(p) { return btype(p.type).job.inputs; }

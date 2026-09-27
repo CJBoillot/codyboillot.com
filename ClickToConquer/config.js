@@ -36,7 +36,7 @@ const CONFIG = {
     wool:    { name: 'Wool',     icon: [17,5],  source: 'raw',     tier: 0, sell: 2,  desc: 'From Husbandry. Weaver turns 3 into Cloth.' },
     wood:    { name: 'Wood',     icon: [17,0],  source: 'raw',     tier: 0, sell: 1,  desc: 'From the Forest. Buildings and blades.' },
     stone:   { name: 'Stone',    icon: [17,1],  source: 'raw',     tier: 0, sell: 1,  desc: 'From the Mine. Buildings.' },
-    ore:     { name: 'Iron Ore', icon: [17,2],  source: 'raw',     tier: 0, sell: 1,  desc: 'From the Mine. Blacksmith turns 5 into an Ingot.' },
+    ore:     { name: 'Iron Ore', icon: [17,2],  source: 'raw',     tier: 0, sell: 1,  desc: 'Mined once you know Prospecting. Blacksmith turns 5 into an Ingot.' },
     grain:   { name: 'Grain',    icon: [14,13], source: 'raw',     tier: 0, sell: 1,  desc: 'From the Farm. Feeds Husbandry and the Tavern.' },
     fiber:   { name: 'Plant Fiber', icon: [11,15], source: 'raw',  tier: 0, sell: 1,  desc: 'Foraged. Rope, cloth, and the Tailor.' },
     berries: { name: 'Berries',  icon: [14,4],  source: 'raw',     tier: 0, sell: 1,  desc: 'Foraged. Food and, later, potions.' },
@@ -125,7 +125,7 @@ const CONFIG = {
     idle:   { name: 'Rest',      icon: [4,2],  desc: 'Doing nothing but healing. Make a weapon to fight.' },
     fight:  { name: 'Fight',     icon: [5,1],  gear: 'weapon', desc: 'Slay enemies for gold, XP and spoils.' },
     wood:   { name: 'Chop Wood', icon: [4,6],  tool: 'axe',    time: 5, outputs: { wood: 1 },              desc: 'Fell trees in the wild. Needs an axe.' },
-    mine:   { name: 'Mine',      icon: [4,5],  tool: 'pick',   time: 6, outputs: { ore: 1, stone: 1 },     desc: 'Work a rockface. Needs a pickaxe.' },
+    mine:   { name: 'Mine',      icon: [4,5],  tool: 'pick',   time: 6, outputs: { stone: 1, ore: 1 },     desc: 'Work a rockface for stone. Needs a pickaxe. Iron ore once you know Prospecting.' },
     forage: { name: 'Forage',    icon: [11,15], tool: 'sickle', time: 4, outputs: { fiber: 1, berries: 1 }, desc: 'Gather fiber and berries. Needs a sickle.' },
   },
   harvestStrPct: 0.01, // +1% harvest speed per Strength point
@@ -210,12 +210,14 @@ const CONFIG = {
     cost: n => Math.round(300 * Math.pow(2.2, n)), // gold for the (n+1)th plot
   },
   thralls: lvl => lvl - 1,                  // one per founding
+  // Some harvest / building outputs only appear once a tech is known (resource → tech id)
+  harvestGate: { ore: 'prospecting' },
   thrallOutputMult: 5,                      // a built plot always runs (1× output, unmanned); a thrall working it multiplies output
   // A job: consumes inputs, runs `time` seconds, yields outputs. Level: +8% speed and +1 output every 5 levels.
   buildingTypes: [
     // Gathering
     { id: 'forest',    cat: 'gather',  name: 'Forest',      icon: [4,6],  buildCost: { gold: 50 },                         job: { time: 10, inputs: {},                     outputs: { wood: 1 } } },
-    { id: 'mine',      cat: 'gather',  name: 'Mine',        icon: [4,5],  buildCost: { gold: 80, wood: 20 },               job: { time: 10, inputs: {},                     outputs: { ore: 1, stone: 1 } } },
+    { id: 'mine',      cat: 'gather',  name: 'Mine',        icon: [4,5],  buildCost: { gold: 80, wood: 20 },               job: { time: 10, inputs: {},                     outputs: { stone: 1, ore: 1 } } },
     { id: 'farm',      cat: 'gather',  name: 'Farm',        icon: [12,5], buildCost: { gold: 60, wood: 15 },               job: { time: 10, inputs: {},                     outputs: { grain: 1 } } },
     { id: 'husbandry', cat: 'gather',  name: 'Husbandry',   icon: [19,10], buildCost: { gold: 120, wood: 30 },             job: { time: 10, inputs: { grain: 1 },           outputs: { hide: 1, wool: 1 } } },
     // Crafting (refining)
@@ -323,17 +325,22 @@ const CONFIG = {
       steps: [
         { label: 'Let the Forest finish 10 jobs on its own', check: { jobs: 10 } },
       ], reward: { gold: 40 }, focus: { tab: 'kingdom', ksub: 'build', rtab: 'kingdom', el: 'work' } },
-    { id: 'q11', name: 'Pickaxe', text: 'Iron starts with you. A wooden pick is a poor thing, but it will find ore and stone — and stone is what better buildings need.',
+    { id: 'q11', name: 'Pickaxe', text: 'A wooden pick is a poor thing, but it beats picking up pebbles — and stone is what better buildings need. Iron comes later, once you know what to look for.',
       steps: [
         { label: 'Click the Pickaxe slot → Make (10 wood)', check: { tool: 'pick' } },
         { label: 'Activity → Mine', check: { activity: 'mine' } },
-        { label: 'Dig 250 ore', check: { counter: 'ore', need: 250 } },
+        { label: 'Quarry 250 stone', check: { counter: 'stone', need: 250 } },
       ], reward: { gold: 60 }, focus: { tab: 'hero', sub: 'gear', el: 'tool:pick', el2: 'act:mine' } },
-    { id: 'q12', name: 'Quarrying', text: 'You know where the ore is now. Later a thrall can work the mine for you.',
+    { id: 'q12', name: 'Quarrying', text: 'You know the rockface now. A Mine building quarries stone on its own while you do other things.',
       steps: [
         { label: 'Kingdom → Tech → Research Quarrying', check: { tech: 'quarrying' } },
         { label: 'Buildings → build a Mine on a plot', check: { building: 'mine' } },
       ], reward: { gold: 50 }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:quarrying', el2: 'build' } },
+    { id: 'q12b', name: 'Prospecting', text: 'Some of that rock glitters. Learn to tell ore from stone and every swing of the pick — and every Mine — starts turning up iron too.',
+      steps: [
+        { label: 'Kingdom → Tech → Research Prospecting', check: { tech: 'prospecting' }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:prospecting' } },
+        { label: 'Activity → Mine: dig 100 iron ore', check: { counter: 'ore', need: 100 }, focus: { tab: 'hero', sub: 'fight', el: 'act:mine' } },
+      ], reward: { gold: 80 } },
     { id: 'q13', name: 'The First Boss', text: 'Every tenth stage is a boss. Beat one and new roads open.',
       steps: [
         { label: 'Activity → Fight', check: { activity: 'fight' } },
@@ -409,7 +416,8 @@ const CONFIG = {
     { id: 'leatherwork',tier: 0, name: 'Leatherworking',   icon: [7,6],   req: { hide: 40 },             cost: { gold: 60, hide: 15 },           unlocks: { gearTier: 1, slots: ['chest', 'helm', 'boots', 'trinket'] }, desc: 'Forge Leather armor.' },
     { id: 'stoneweapons',tier: 0, name: 'Stone Weapons',    icon: [17,1],  req: { stone: 30 },            cost: { stone: 10, wood: 5 },           unlocks: { gearTier: 1, slots: ['weapon'] }, desc: 'Knap a stone edge onto a wooden haft. Weapons go Wood → Stone → Iron → Steel.' },
     // Tier 1 — Settlement
-    { id: 'quarrying',  tier: 1, name: 'Quarrying',        icon: [4,5],   req: { ore: 250, stone: 250 }, cost: { gold: 200, wood: 100 },         unlocks: { building: 'mine' },      desc: 'Build a Mine for a thrall: stone and iron ore.' },
+    { id: 'quarrying',  tier: 1, name: 'Quarrying',        icon: [4,5],   req: { stone: 250 },           cost: { gold: 200, wood: 100 },         unlocks: { building: 'mine' },      desc: 'Build a Mine: quarries stone on its own (and iron ore, once you know Prospecting).' },
+    { id: 'prospecting',tier: 1, name: 'Prospecting',      icon: [17,2],  req: { stone: 500 },           cost: { gold: 250, stone: 100 },        unlocks: { drop: 'ore' },           desc: 'Tell ore from rock. Mining — by pick or by Mine — now yields Iron Ore as well as stone.' },
     { id: 'husbandry',  tier: 1, name: 'Animal Husbandry', icon: [19,10], req: { grain: 150 },           cost: { gold: 120, grain: 50 },        unlocks: { building: 'husbandry' }, desc: 'Build Husbandry: hide and wool.' },
     { id: 'tanning',    tier: 1, name: 'Tanning',          icon: [8,2],   req: { hide: 60 },             cost: { gold: 150, wood: 40 },         unlocks: { building: 'tannery' },   desc: 'Build a Tannery: hide → leather.' },
     { id: 'bonecraft',  tier: 1, name: 'Bonecraft',        icon: [16,11], req: { bossKills: 1 },         cost: { gold: 100 },                   unlocks: { drop: 'bone' },          desc: 'The undead in the Crypts drop Bone.' },
