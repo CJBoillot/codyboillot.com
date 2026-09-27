@@ -21,17 +21,12 @@ const UI = (() => {
 
   function init() {
     $('version').textContent = CONFIG.version;
+    // Resource grid: fixed 5×3 slots in config order. Locked slots show a padlock and nothing else until the good is first gained.
     const rb = $('res-bar'); rb.innerHTML = '';
-    const groups = {};
-    for (const g in CONFIG.resourceGroups) {
-      const wrap = el('div', 'res-group hidden'); wrap.id = 'resgroup-' + g;
-      wrap.innerHTML = `<div class="res-group-label">${CONFIG.resourceGroups[g]}</div><div class="res-items"></div>`;
-      groups[g] = wrap.querySelector('.res-items'); rb.appendChild(wrap);
-    }
     for (const k in R) {
-      const d = el('div', 'res hidden'); d.id = 'res-' + k; d.title = `${R[k].name} — ${R[k].desc || ''}`;
-      d.innerHTML = `${ico(R[k].icon, 22)}<div class="res-txt"><b data-f="amt">0</b><span class="res-name">${R[k].name}</span></div><span class="rrate" data-f="rate"></span>`;
-      (groups[R[k].source] || rb).appendChild(d);
+      const d = el('div', 'res locked'); d.id = 'res-' + k; d.dataset.tier = R[k].tier;
+      d.innerHTML = `<span class="res-lock">🔒</span><div class="res-body">${ico(R[k].icon, 20)}<b data-f="amt">0</b><span class="rrate" data-f="rate"></span></div>`;
+      rb.appendChild(d);
     }
     document.querySelectorAll('[data-tab]').forEach(b => b.addEventListener('click', () => {
       document.querySelectorAll('[data-tab]').forEach(x => x.classList.toggle('active', x === b));
@@ -50,7 +45,6 @@ const UI = (() => {
     $('wb-claim').addEventListener('click', () => claimWelcome(1));
     $('wb-ad').addEventListener('click', () => claimWelcome(CONFIG.offline.adDoubleMultiplier));
     $('dev-toggle').addEventListener('click', () => $('dev-panel').classList.toggle('hidden'));
-    $('res-toggle').addEventListener('click', () => { Game.S.settings.resCompact = !resCompact(); applyResMode(); applyLayout(); });
     $('dev-close').addEventListener('click', () => $('dev-panel').classList.add('hidden'));
     document.querySelectorAll('[data-speed]').forEach(b => b.addEventListener('click', () => { Game.S.settings.devSpeed = +b.dataset.speed; document.querySelectorAll('[data-speed]').forEach(x => x.classList.toggle('active', x === b)); }));
     $('dev-offline').addEventListener('click', () => showWelcomeBack(Game.applyOffline(4 * 3600)));
@@ -258,7 +252,7 @@ const UI = (() => {
       case 'attr': return S.hero.level >= 2;
       case 'skills': return reached('q13c') || CONFIG.skills.some(s => Game.skillUnlocked(s.id));
       case 'talents': return S.hero.level >= CONFIG.hero.talentPointsFromLevel || reached('q06c');
-      case 'market': return reached('q14') || Object.keys(R).some(k => R[k].tier >= 1 && S.lifetime[k] > 0);
+      case 'market': return reached('q14');
       default: return true;
     }
   }
@@ -317,11 +311,7 @@ const UI = (() => {
   function undock(id) { const h = HOME[id]; if (!h) return; h.parent.insertBefore($(id), h.next); }
   const RIGHT = { kingdom: 'tab-kingdom', attr: 'sub-attr', skills: 'sub-skills', talents: 'sub-talents', market: 'tab-market' };
   let desktop = false;
-  // Resource bar: compact (icon · amount · rate) by default on mobile, expanded (names + groups) on desktop; tap ▾ to toggle
-  function resCompact() { const v = Game.S.settings.resCompact; return typeof v === 'boolean' ? v : !window.matchMedia('(min-width: 1024px)').matches; }
-  function applyResMode() { const c = resCompact(); document.body.classList.toggle('res-compact', c); $('res-toggle').title = c ? 'Show resource names' : 'Compact resources'; }
   function applyLayout() {
-    applyResMode();
     glowKey = '';
     document.documentElement.style.setProperty('--headh', document.querySelector('.sticky-head').offsetHeight + 'px');
     desktop = window.matchMedia('(min-width: 1024px)').matches;
@@ -454,16 +444,15 @@ const UI = (() => {
     const now = performance.now(); if (!force && now - lastRender < 100) return; lastRender = now;
     const S = Game.S, f = Game.fmt, h = S.hero, st = Game.stats();
 
-    const kr = Game.kingdomRates(), hr = Game.heroFighting() ? Game.heroRates() : {}, hrv = Game.heroFighting() ? {} : Game.harvestRates(), groupOn = {};
+    const kr = Game.kingdomRates(), hr = Game.heroFighting() ? Game.heroRates() : {}, hrv = Game.heroFighting() ? {} : Game.harvestRates();
     for (const k in R) {
-      const e = $('res-' + k), show = k === 'gold' || S.lifetime[k] > 0;
-      if (!show) { e.classList.add('hidden'); continue; }
-      e.classList.remove('hidden'); groupOn[R[k].source] = true;
+      const e = $('res-' + k), open = S.lifetime[k] > 0;
+      if (e.classList.contains('locked') === open) { e.classList.toggle('locked', !open); e.title = open ? `${R[k].name} — ${R[k].desc || ''}` : 'Locked — you have not found this yet'; }
+      if (!open) continue;
       setText(e.querySelector('[data-f=amt]'), f(S.res[k]));
       const rate = (kr[k] || 0) + (hr[k] || 0) + (hrv[k] || 0);
       const re = e.querySelector('[data-f=rate]'); setText(re, (rate > 0 ? '+' + f(rate) : '0') + '/s'); re.classList.toggle('zero', !(rate > 0));
     }
-    for (const g in CONFIG.resourceGroups) $('resgroup-' + g).classList.toggle('hidden', !groupOn[g]);
     if (desktop) { const hh = document.querySelector('.sticky-head').offsetHeight + 'px'; if (document.documentElement.style.getPropertyValue('--headh') !== hh) document.documentElement.style.setProperty('--headh', hh); }
 
     // Fight
@@ -513,8 +502,8 @@ const UI = (() => {
     const showLog = S.settings.showLog !== false; $('log-card').classList.toggle('hidden', !showLog); if ($('set-log').checked !== showLog) $('set-log').checked = showLog;
     if (showLog) setHtml($('log'), S.log.slice(0, 8).map(l => `<div>${l}</div>`).join(''));
     for (const ev of Game.drainEvents()) hitPop(ev);
-    const afkGold = (hr.gold || 0) * Game.afkEfficiency(), afkKr = Object.entries(kr).filter(([, v]) => v > 0);
-    setHtml($('afk-info'), `AFK mode: ${Game.pct(Game.afkEfficiency())} of this rate while closed (max ${Game.fmtTime(Game.afkCap())}) → ${f(afkGold * 3600)} gold/h` + (afkKr.length ? `, kingdom ${afkKr.map(([k, v]) => `${ico(R[k].icon, 14)}${f(v * Game.afkEfficiency() * 3600)}/h`).join(' ')}` : ''));
+    const eff = Game.afkEfficiency(), afkHr = Object.entries(hr).filter(([, v]) => v > 0), afkKr = Object.entries(kr).filter(([, v]) => v > 0);
+    setHtml($('afk-info'), `AFK mode: ${Game.pct(eff)} of this rate while closed (max ${Game.fmtTime(Game.afkCap())})` + (afkHr.length ? ` → ${afkHr.map(([k, v]) => `${ico(R[k].icon, 14)}${f(v * eff * 3600)}/h`).join(' ')}` : ' → XP only here') + (afkKr.length ? `, kingdom ${afkKr.map(([k, v]) => `${ico(R[k].icon, 14)}${f(v * eff * 3600)}/h`).join(' ')}` : ''));
 
     // Gear
     let anyGear = false;
@@ -609,9 +598,9 @@ const UI = (() => {
       row.classList.remove('hidden');
       setText(row.querySelector('[data-f=have]'), f(have)); setText(row.querySelector('[data-f=price]'), f(Game.sellPrice(k)));
       row.querySelector('[data-f=s1]').disabled = have < 1; row.querySelector('[data-f=s10]').disabled = have < 10; row.querySelector('[data-f=sall]').disabled = have < 1;
-      if (have >= 1 && R[k].tier >= 1) anySell = true;
+      if (have >= 1 && R[k].tier >= 2 && k !== 'gold') anySell = true;
     }
-    orderRows($('market-list'), Object.keys(rows.market).map(k => ({ el: rows.market[k], rank: (S.res[k] || 0) >= 1 ? (R[k].tier >= 1 ? 0 : 1) : 2 })));
+    orderRows($('market-list'), Object.keys(rows.market).map(k => ({ el: rows.market[k], rank: (S.res[k] || 0) >= 1 ? (R[k].tier >= 2 ? 0 : 1) : 2 })));
     $('badge-market').classList.toggle('hidden', !anySell);
 
     applyTabLocks();
@@ -645,7 +634,7 @@ const UI = (() => {
     for (const id in CONFIG.activities) {
       const b = rows.act[id], a = CONFIG.activities[id], ok = Game.activityAvailable(id);
       b.classList.toggle('active', act === id); b.disabled = !ok;
-      setText(b.querySelector('[data-f=sub]'), id === 'idle' ? 'heals' : id === 'fight' ? (ok ? `${f(hr.gold || 0)} gold/s` : 'needs a weapon') : ok ? Object.entries(Game.harvestRates(id)).map(([k, v]) => `${f(v)} ${R[k].name}/s`).join(', ') : `needs ${CONFIG.toolSlots[a.tool].name.toLowerCase()}`);
+      setText(b.querySelector('[data-f=sub]'), id === 'idle' ? 'heals' : id === 'fight' ? (ok ? (Object.entries(hr).filter(([, v]) => v > 0).slice(0, 2).map(([k, v]) => `${f(v)} ${R[k].name}/s`).join(', ') || 'XP & loot') : 'needs a weapon') : ok ? Object.entries(Game.harvestRates(id)).map(([k, v]) => `${f(v)} ${R[k].name}/s`).join(', ') : `needs ${CONFIG.toolSlots[a.tool].name.toLowerCase()}`);
     }
     setText($('activity-hint'), act === 'fight' || act === 'idle' ? CONFIG.activities[act].desc : CONFIG.activities[act].desc + ' Better tools, more Strength, and practice all speed this up.');
     const fighting = act === 'fight', idle = act === 'idle';
