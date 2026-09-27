@@ -615,3 +615,9 @@ body.desktop #subtab-dock { display: none; }
 .quest.collapsed .quest-foot { grid-column: 2; grid-row: 1 / 4; margin: 0; align-self: center; }
 .quest.collapsed .quest-name { margin: 0; }
 .quest.collapsed .quest-head { margin-bottom: 0; }
+/* collapse arrow pinned top-right in both states */
+.quest { position: relative; }
+.quest-toggle { position: absolute; top: 8px; right: 10px; margin: 0; }
+.quest.collapsed .quest-toggle { top: 8px; right: 10px; }
+.quest.collapsed .quest-foot { margin-right: 32px; }
+.quest-head { padding-right: 32px; }
