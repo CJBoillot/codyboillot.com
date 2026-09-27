@@ -334,6 +334,10 @@ body.desktop.has-dock .panel-center { padding-bottom: 160px; }
 .mini-loot { display: flex; flex-wrap: nowrap; overflow: hidden; gap: 4px; margin-top: 6px; min-height: 18px; }
 .mini-loot .costitem { font-size: 11px; padding: 1px 6px; border: 1px solid var(--line); border-radius: 10px; background: #15110e; }
 .mini-loot .costitem.fresh { animation: lootflash .6s ease-out; }
+.mini-loot-label { align-self: center; margin-right: 2px; letter-spacing: .04em; text-transform: uppercase; font-size: 9px; }
+/* one-hit kills: the bar never visibly drops, so slash it */
+.bar.killed::after { content: ''; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 30%, #fff 50%, transparent 70%); animation: killslash .4s ease-out forwards; pointer-events: none; }
+@keyframes killslash { 0% { transform: translateX(-100%); opacity: .95; } 60% { opacity: .9; } 100% { transform: translateX(100%); opacity: 0; } }
 @keyframes lootflash { from { background: #3a2c14; } to { background: #15110e; } }
 
 /* ---------- grounds ---------- */

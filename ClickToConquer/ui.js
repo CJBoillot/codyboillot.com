@@ -741,13 +741,14 @@ const UI = (() => {
       $('mini-action-bar').style.width = (100 * p) + '%'; setText($('mini-action-text'), `Mastery ${Game.masteryLevel(act)}`);
     }
     const keys = Object.keys(lootTally).filter(k => lootTally[k] > 0);
-    setHtml($('mini-loot'), keys.length ? keys.map(k => `<span class="costitem${lootFresh[k] ? ' fresh' : ''}">${ico(R[k].icon, 14)} +${f(lootTally[k])}</span>`).join('') : '<span class="dim small">Loot gained will show here</span>');
+    setHtml($('mini-loot'), '<span class="dim small mini-loot-label">Gained</span>' + (keys.length ? keys.map(k => `<span class="costitem${lootFresh[k] ? ' fresh' : ''}" title="${R[k].name} gained since you opened the game">${ico(R[k].icon, 14)} ${f(lootTally[k])} ${R[k].name}</span>`).join('') : '<span class="dim small">nothing yet</span>'));
     lootFresh = {};
   }
   function tallyLoot(obj) { for (const k in obj) if (obj[k] > 0) { lootTally[k] = (lootTally[k] || 0) + obj[k]; lootFresh[k] = true; } }
   function hitPop(ev) {
-    if (ev.who === 'loot') tallyLoot(ev.loot); else if (ev.who === 'harvest') tallyLoot(ev.yield);
-    if (!heroScreenVisible() && $('mini-hero').offsetParent) {
+    if (ev.who === 'loot') { tallyLoot(ev.loot); for (const b of [$('enemy-hpbar').parentElement, $('mini-target')]) { b.classList.remove('killed'); void b.offsetWidth; b.classList.add('killed'); setTimeout(() => b.classList.remove('killed'), 450); } }
+    else if (ev.who === 'harvest') tallyLoot(ev.yield);
+    if (!heroScreenVisible() && !$('mini-hero').classList.contains('hidden')) {
       // mini strip is what's on screen: float pops over it
       const a = ev.who === 'enemy' || ev.who === 'heal' ? $('mini-hero-hp').parentElement : $('mini-target'); const r = a.getBoundingClientRect(); if (!r.width) return;
       const txt = ev.who === 'loot' ? Object.entries(ev.loot).filter(([, v]) => v > 0).map(([k, v]) => `${ico(R[k].icon, 14)}+${Game.fmt(v)}`).join(' ')
