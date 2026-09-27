@@ -333,15 +333,15 @@ const UI = (() => {
   const DOLL = [['', 'helm', ''], ['weapon', 'chest', 'trinket'], ['', 'boots', '']];
   function renderDoll() {
     const S = Game.S, d = $('doll'), IS = desktop ? 22 : 28;
-    let html = '';
+    let html = '<div class="doll-tools">';
+    for (const s in CONFIG.toolSlots) { const def = CONFIG.toolSlots[s], it = S.hero.tools[s];
+      html += `<div class="doll-wrap"><div class="doll-slot tool ${it ? 'filled' : 'empty'}" data-kind="tool" data-slot="${s}" title="${it ? CONFIG.toolTiers[it.tier].name + ' ' : ''}${def.name}">${ico(def.icon, IS, it ? '' : 'ghost')}<div class="doll-name">${def.name === 'Skinning Knife' ? 'Knife' : def.name}</div>${it ? `<div class="doll-tier">${CONFIG.toolTiers[it.tier].name}</div>` : ''}</div><div class="doll-lvl">${it ? 'Lv' + it.level : ''}</div></div>`; }
+    html += '</div><div class="doll-gear">';
     for (const rowSlots of DOLL) { html += '<div class="doll-row">'; for (const s of rowSlots) {
       if (!s) { html += '<div class="doll-wrap"><div class="doll-slot blank"></div></div>'; continue; }
       const def = CONFIG.slots[s], it = S.hero.gear[s];
       html += `<div class="doll-wrap"><div class="doll-slot ${it ? 'filled' : 'empty'}" data-kind="gear" data-slot="${s}" title="${it ? Game.tierName(s, it.tier) + ' ' : ''}${def.name}">${ico(def.icon, IS, it ? '' : 'ghost')}<div class="doll-name">${def.name}</div>${it ? `<div class="doll-tier">${Game.tierName(s, it.tier)}</div>` : ''}</div><div class="doll-lvl">${it ? 'Lv' + it.level : ''}</div></div>`;
     } html += '</div>'; }
-    html += '<div class="doll-row tools">';
-    for (const s in CONFIG.toolSlots) { const def = CONFIG.toolSlots[s], it = S.hero.tools[s];
-      html += `<div class="doll-wrap"><div class="doll-slot tool ${it ? 'filled' : 'empty'}" data-kind="tool" data-slot="${s}" title="${it ? CONFIG.toolTiers[it.tier].name + ' ' : ''}${def.name}">${ico(def.icon, IS, it ? '' : 'ghost')}<div class="doll-name">${def.name === 'Skinning Knife' ? 'Knife' : def.name}</div>${it ? `<div class="doll-tier">${CONFIG.toolTiers[it.tier].name}</div>` : ''}</div><div class="doll-lvl">${it ? 'Lv' + it.level : ''}</div></div>`; }
     html += '</div>';
     if (d.__h !== html) { setHtml(d, html); glowKey = ''; }
   }

@@ -260,9 +260,10 @@ button.primary:not(:disabled) { background: linear-gradient(180deg, #4d3a22, #33
 .bar.harvest > span { line-height: 17px; }
 
 /* ---------- paper doll ---------- */
-.doll { display: flex; flex-direction: column; gap: 6px; align-items: center; }
+.doll { display: flex; flex-direction: row; gap: 10px; align-items: flex-start; justify-content: center; }
+.doll-gear { display: flex; flex-direction: column; gap: 6px; align-items: center; }
+.doll-tools { display: flex; flex-direction: column; gap: 4px; align-items: center; padding-right: 10px; border-right: 1px dashed var(--line2); }
 .doll-row { display: flex; gap: 6px; }
-.doll-row.tools { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--line2); }
 .doll-slot { width: 78px; height: 78px; border: 1px solid var(--line2); border-radius: 8px; background: #14100d; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-align: center; }
 .doll-slot.blank { border: none; background: transparent; }
 .doll-slot.filled { border-color: var(--bronze-dim); background: radial-gradient(circle at 50% 30%, #2b2118, #14100d); }
@@ -343,8 +344,6 @@ button.primary:not(:disabled) { background: linear-gradient(180deg, #4d3a22, #33
 .quest-obj .bar > span { line-height: 11px; font-size: 10px; }
 .quest.goal .quest-label::after { content: ' · next step'; letter-spacing: 0; text-transform: none; color: var(--dim); }
 
-.doll-slot.tool { width: 66px; height: 70px; }
-
 /* ---------- quest checklist ---------- */
 .qstep { display: grid; grid-template-columns: 18px 1fr auto; column-gap: 8px; align-items: center; padding: 5px 0; border-top: 1px dashed #2b2118; font-size: 13px; }
 .qstep:first-child { border-top: none; }
@@ -386,7 +385,7 @@ button.primary:not(:disabled) { background: linear-gradient(180deg, #4d3a22, #33
 /* ---------- doll: fit + level under box ---------- */
 .doll-wrap { display: flex; flex-direction: column; align-items: center; gap: 3px; }
 .doll-slot { width: 78px; height: 78px; padding: 4px; gap: 1px; overflow: hidden; }
-.doll-slot.tool { width: 70px; height: 70px; }
+.doll-slot.tool { width: 62px; height: 62px; }
 .doll-name { font-size: 10px; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 .doll-tier { font-size: 9px; color: var(--dim); line-height: 1.1; white-space: nowrap; }
 .doll-lvl { font-size: 10px; color: var(--bronze2); min-height: 12px; font-family: var(--font-body); }
@@ -411,7 +410,9 @@ button.primary:not(:disabled) { background: linear-gradient(180deg, #4d3a22, #33
   .panel-left .doll { gap: 3px; }
   .panel-left .doll-row { gap: 4px; }
   .panel-left .doll-slot { width: 62px; height: 62px; padding: 3px; }
-  .panel-left .doll-slot.tool { width: 58px; height: 58px; }
+  .panel-left .doll-slot.tool { width: 52px; height: 52px; }
+  .panel-left .doll { gap: 6px; }
+  .panel-left .doll-tools { padding-right: 6px; }
     .panel-left .doll-name { font-size: 9px; }
   .panel-left .doll-tier { font-size: 8px; }
   .panel-left .doll-lvl { font-size: 9px; min-height: 10px; }
