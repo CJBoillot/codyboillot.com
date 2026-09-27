@@ -32,16 +32,6 @@
 
   <!-- ===== CENTER: mobile tabs live here ===== -->
   <main class="panel panel-center">
-    <div id="mini-hero" class="card mini-hero hidden">
-      <div class="mini-head"><span class="mini-title" id="mini-title">Fighting · Stage 1</span><span class="dim small" id="mini-sub"></span></div>
-      <div class="mini-bars">
-        <div class="bar hp"><div id="mini-hero-hp"></div><span id="mini-hero-hptext"></span></div>
-        <div class="vs">⚔</div>
-        <div class="bar hp enemy" id="mini-target"><div id="mini-target-bar"></div><span id="mini-target-text"></span></div>
-      </div>
-      <div class="bar kills mini-action"><div id="mini-action-bar"></div><span id="mini-action-text"></span></div>
-      <div class="mini-loot" id="mini-loot"><span class="dim small">No loot yet</span></div>
-    </div>
     <div id="quest-card" class="card quest hidden">
       <div class="quest-head"><span class="quest-label">Quest</span><span class="dim small" id="quest-n"></span></div>
       <div class="quest-name" id="quest-name"></div>
@@ -220,6 +210,16 @@
   </aside>
 </div>
 
+<div id="mini-hero" class="card mini-hero hidden">
+      <div class="mini-head"><span class="mini-title" id="mini-title">Fighting · Stage 1</span><span class="dim small" id="mini-sub"></span></div>
+      <div class="mini-bars">
+        <div class="bar hp"><div id="mini-hero-hp"></div><span id="mini-hero-hptext"></span></div>
+        <div class="vs">⚔</div>
+        <div class="bar hp enemy" id="mini-target"><div id="mini-target-bar"></div><span id="mini-target-text"></span></div>
+      </div>
+      <div class="mini-row"><div class="bar kills mini-action"><div id="mini-action-bar"></div><span id="mini-action-text"></span></div><button id="mini-advance" class="primary mini-adv hidden">Advance ▶</button></div>
+      <div class="mini-loot" id="mini-loot"><span class="dim small">No loot yet</span></div>
+    </div>
 <div id="welcome" class="modal hidden">
   <div class="modal-box">
     <div class="card-title">Welcome back</div>

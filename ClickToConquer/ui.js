@@ -44,6 +44,7 @@ const UI = (() => {
       subs.forEach(t => t.classList.toggle('hidden', t.id !== 'sub-' + b.dataset.sub));
     }));
     $('advance-btn').addEventListener('click', () => Game.advance());
+    $('mini-advance').addEventListener('click', () => Game.advance());
     $('retreat-btn').addEventListener('click', () => Game.retreat());
     $('respec-btn').addEventListener('click', () => { if (confirm('Reset all attribute and talent points?')) Game.respec(); });
     $('wb-claim').addEventListener('click', () => claimWelcome(1));
@@ -713,10 +714,19 @@ const UI = (() => {
   }
   // ---- Mini hero strip: mirrors the fight/harvest screen when that screen is off-tab ----
   const lootTally = {}; let lootFresh = {};
-  function heroScreenVisible() { return !!($('fight-card').offsetParent || $('harvest-card').offsetParent); }
+  // "visible" = the full card's bars are actually inside the viewport, not just on the current tab
+  function heroScreenVisible() {
+    const c = $('fight-card').offsetParent ? $('fight-card') : $('harvest-card').offsetParent ? $('harvest-card') : null; if (!c) return false;
+    const r = c.getBoundingClientRect(), top = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--headh')) || 0;
+    return r.bottom - 40 > top && r.top + 120 < window.innerHeight;
+  }
   function renderMini(fighting, idle, act, st, eMax) {
     const S = Game.S, h = S.hero, f = Game.fmt, show = !idle && !heroScreenVisible();
-    $('mini-hero').classList.toggle('hidden', !show); if (!show) return;
+    $('mini-hero').classList.toggle('hidden', !show); document.body.classList.toggle('has-dock', show); if (!show) return;
+    const m = $('mini-hero');
+    if (desktop) { const cr = document.querySelector('.panel-center').getBoundingClientRect(); m.style.left = cr.left + 'px'; m.style.right = (window.innerWidth - cr.right) + 'px'; }
+    else { m.style.left = ''; m.style.right = ''; }
+    $('mini-advance').classList.toggle('hidden', !(fighting && Game.canAdvance()));
     $('mini-hero-hp').style.width = (100 * h.hp / st.maxHp) + '%'; setText($('mini-hero-hptext'), `${f(h.hp)} / ${f(st.maxHp)}`);
     if (fighting) {
       setText($('mini-title'), `${h.resting ? 'Resting' : 'Fighting'} · Stage ${h.stage}`); setText($('mini-sub'), `${Game.enemyName()} · ${Game.ground().name}`);
