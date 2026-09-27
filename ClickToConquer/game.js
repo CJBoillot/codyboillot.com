@@ -400,6 +400,7 @@ function questCheck(c) {
   if (c.talentSpent) return { done: talentPointsSpent() >= c.talentSpent, have: talentPointsSpent(), need: c.talentSpent };
   if (c.heroLevel) return { done: S.hero.level >= c.heroLevel, have: S.hero.level, need: c.heroLevel };
   if (c.skillEquipped) { const ok = S.hero.loadout.includes(c.skillEquipped); return { done: ok, have: ok ? 1 : 0, need: 1 }; }
+  if (c.perk) return { done: perkRank(c.perk) >= (c.need || 1), have: perkRank(c.perk), need: c.need || 1 };
   if (c.disc) return { done: discLevel(c.disc) >= c.need, have: discLevel(c.disc), need: c.need };
   if (c.node) { const [d, id] = c.node.split(':'), r = nodeRank(d, id); return { done: r >= c.need, have: r, need: c.need }; }
   if (c.casts) { const n = (S.stats.casts && S.stats.casts[c.casts]) || 0; return { done: n >= c.need, have: n, need: c.need }; }
@@ -553,7 +554,7 @@ function claimOffline(data, mult = 1) {
 
 // ---------- Founding (prestige) ----------
 function maxGearTier() { let t = 0; for (const s in S.hero.gear) if (S.hero.gear[s]) t = Math.max(t, S.hero.gear[s].tier + 1); return t; }
-function knowledgeGain() { return CONFIG.legacy.knowledge({ bestStage: bestStageAll(), bossesKilled: S.hero.bossesKilled, maxTier: maxGearTier(), lifetimeGold: S.lifetime.gold || 0 }); }
+function knowledgeGain() { return CONFIG.legacy.knowledge({ foundings: S.legacy.foundings, bestStage: bestStageAll(), bossesKilled: S.hero.bossesKilled, maxTier: maxGearTier(), lifetimeGold: S.lifetime.gold || 0 }); }
 function foundCost() { return { gold: CONFIG.legacy.foundCostGold(S.legacy.kingdomLevel) }; }
 function canFound() { return bestStageAll() >= CONFIG.legacy.foundRequiresStage && canAfford(foundCost()); }
 function pathUnlocked(p) { return S.legacy.kingdomLevel >= (p.unlock || 1); }

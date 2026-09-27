@@ -273,6 +273,7 @@ const UI = (() => {
       else if (kind === 'assign') rows.plot.forEach(d => add(d.querySelector('[data-f=assign]')));
       else if (kind === 'market') add($('market-list'));
       else if (kind === 'ground') { add(rows.ground[id]); add(rows.act.fight); }
+      else if (kind === 'perk') add(rows.perk[id]);
       else if (kind === 'node') { const [d, nid] = id.split(':'); if (curDisc !== d) { curDisc = d; buildTree(); } add(rows.node[nid]); add(rows.disc[d]); }
       else if (kind === 'hand') add(rows.hand[id]);
     }

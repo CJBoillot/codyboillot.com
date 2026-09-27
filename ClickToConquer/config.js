@@ -413,41 +413,21 @@ const CONFIG = {
         { label: 'Kingdom → Tech → Research Stone Weapons', check: { tech: 'stoneweapons' }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:stoneweapons' } },
         { label: 'Click the Weapon slot → Forge Stone', check: { gearTier: 'weapon', need: 1 }, focus: { tab: 'hero', sub: 'gear', el: 'gear:weapon' } },
       ], reward: { stone: 30 }, focus: { tab: 'hero', sub: 'gear', el: 'gear:weapon' } },
-    { id: 'q14', name: 'To Market', text: 'Beasts carry no coin, but everything you gather can be sold. Gold buys land, and later founds kingdoms. Refined goods are worth far more than raw — an ingot sells for ten times its ore.',
-      steps: [
-        { label: 'Market → sell anything for 100 gold in total', check: { sold: 100 } },
-      ], reward: { gold: 50 }, focus: { tab: 'market', rtab: 'market', el: 'market' } },
-    { id: 'q08', name: 'Stake a Claim', text: 'Your kingdom starts with land. Plots are bought with gold — sell what you have gathered. Your first Crystal comes with it: Crystals buy permanent Legacy perks, the only thing that survives founding a new kingdom.',
-      steps: [
-        { label: 'Have 300 gold (sell at the Market)', check: { have: 'gold', need: 300 } },
-        { label: 'Kingdom → Buildings → Buy plot', check: { plots: 1 } },
-      ], reward: { wood: 20, crystal: 1 }, focus: { tab: 'kingdom', ksub: 'build', rtab: 'kingdom', el: 'id:buy-plot' } },
-    { id: 'q09', name: 'Forester', text: 'An empty plot needs a building. A Forest gathers wood without your hero.',
-      steps: [
-        { label: 'Gather 150 wood in total', check: { counter: 'wood', need: 150 } },
-        { label: 'Kingdom → Tech → Research Forestry', check: { tech: 'forestry' } },
-        { label: 'Kingdom → Buildings → tap the empty plot → Forest', check: { building: 'forest' } },
-      ], reward: { wood: 30 }, focus: { tab: 'kingdom', ksub: 'build', rtab: 'kingdom', el: 'tech:forestry', el2: 'build' } },
-    { id: 'q10', name: 'Standing Timber', text: 'A building works on its own once built — slowly, at 1× output, while you fight or gather. Later, a thrall (you gain one each time you found a new kingdom) can be assigned to it for 5× the output.',
-      steps: [
-        { label: 'Let the Forest finish 10 jobs on its own', check: { jobs: 10 } },
-      ], reward: { wood: 40 }, focus: { tab: 'kingdom', ksub: 'build', rtab: 'kingdom', el: 'work' } },
     { id: 'q11', name: 'Pickaxe', text: 'A wooden pick is a poor thing, but it beats picking up pebbles — and stone is what better buildings need. Iron comes later, once you know what to look for.',
       steps: [
         { label: 'Click the Pickaxe slot → Make (10 wood)', check: { tool: 'pick' } },
         { label: 'Activity → Mine', check: { activity: 'mine' } },
         { label: 'Quarry 250 stone', check: { counter: 'stone', need: 250 } },
       ], reward: { stone: 40 }, focus: { tab: 'hero', sub: 'gear', el: 'tool:pick', el2: 'act:mine' } },
-    { id: 'q12', name: 'Quarrying', text: 'You know the rockface now. A Mine building quarries stone on its own while you do other things.',
-      steps: [
-        { label: 'Kingdom → Tech → Research Quarrying', check: { tech: 'quarrying' } },
-        { label: 'Buildings → build a Mine on a plot', check: { building: 'mine' } },
-      ], reward: { stone: 50 }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:quarrying', el2: 'build' } },
     { id: 'q12b', name: 'Prospecting', text: 'Some of that rock glitters. Learn to tell ore from stone and every swing of the pick — and every Mine — starts turning up iron too.',
       steps: [
         { label: 'Kingdom → Tech → Research Prospecting', check: { tech: 'prospecting' }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:prospecting' } },
         { label: 'Activity → Mine: dig 100 iron ore', check: { counter: 'ore', need: 100 }, focus: { tab: 'hero', sub: 'fight', el: 'act:mine' } },
       ], reward: { ore: 20 } },
+    { id: 'q14', name: 'To Market', text: 'Beasts carry no coin, but everything you gather can be sold. Gold buys land, and later founds kingdoms. Refined goods are worth far more than raw — an ingot sells for ten times its ore.',
+      steps: [
+        { label: 'Market → sell anything for 100 gold in total', check: { sold: 100 } },
+      ], reward: { gold: 50 }, focus: { tab: 'market', rtab: 'market', el: 'market' } },
     { id: 'q13', name: 'The First Boss', text: 'The tenth stage of every enemy is its boss. The first kill gives a talent point — spent on the gold capstone at the bottom of a tree — plus a trophy, and beating the Rat King opens the Roads, where bandits carry gold.',
       steps: [
         { label: 'Activity → Fight', check: { activity: 'fight' } },
@@ -476,20 +456,44 @@ const CONFIG = {
         { label: 'Kingdom → Tech → Research Butchery', check: { tech: 'butchery' } },
         { label: 'Take 20 meat in the Wilds', check: { counter: 'meat', need: 20 } },
       ], reward: { meat: 10 }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:butchery', el2: 'ground:wilds' } },
+    { id: 'q16', name: 'Stage 20', text: 'Upgrade your weapon when fights get slow — that is what the hide and stone are for.',
+      steps: [
+        { label: 'Reach stage 20 in any ground', check: { stage: 20 } },
+      ], reward: { gold: 200, crystal: 2 }, focus: { tab: 'hero', sub: 'fight', el: 'act:fight', el2: 'id:advance-btn' } },
+    { id: 'q17', name: 'A New Kingdom', text: 'You have survived the wild alone. Founding a kingdom resets your gear, skills and stage — only Legacy perks and trophies stay — but it brings land, a thrall, and your first Crystal. This is where the kingdom begins.',
+      steps: [
+        { label: 'Kingdom → Throne → Found a New Kingdom (1,000 gold)', check: { founded: 1 } },
+      ], reward: { gold: 100 }, focus: { tab: 'kingdom', ksub: 'throne', rtab: 'kingdom', el: 'id:found-btn' } },
+    // ===== A Kingdom: after the first founding =====
+    { id: 'p01', chain: 'A Kingdom', name: 'What Survives', text: 'Everything reset — except your Crystals. Legacy perks are permanent: they survive every founding. Spend your first Crystal on the Bestiary, so every creature you have ever killed keeps teaching you how to fight it.',
+      steps: [
+        { label: 'Kingdom → Legacy → unlock Bestiary (1 Crystal)', check: { perk: 'bestiary' } },
+      ], reward: { gold: 100 }, focus: { tab: 'kingdom', ksub: 'legacy', rtab: 'kingdom', el: 'perk:bestiary' } },
+    { id: 'q08', name: 'Stake a Claim', text: 'Your kingdom starts with land. Plots are bought with gold — sell what you have gathered.',
+      steps: [
+        { label: 'Have 300 gold (sell at the Market)', check: { have: 'gold', need: 300 } },
+        { label: 'Kingdom → Buildings → Buy plot', check: { plots: 1 } },
+      ], reward: { wood: 20 }, focus: { tab: 'kingdom', ksub: 'build', rtab: 'kingdom', el: 'id:buy-plot' } },
+    { id: 'q09', name: 'Forester', text: 'An empty plot needs a building. A Forest gathers wood without your hero.',
+      steps: [
+        { label: 'Gather 150 wood in total', check: { counter: 'wood', need: 150 } },
+        { label: 'Kingdom → Tech → Research Forestry', check: { tech: 'forestry' } },
+        { label: 'Kingdom → Buildings → tap the empty plot → Forest', check: { building: 'forest' } },
+      ], reward: { wood: 30 }, focus: { tab: 'kingdom', ksub: 'build', rtab: 'kingdom', el: 'tech:forestry', el2: 'build' } },
+    { id: 'q10', name: 'Standing Timber', text: 'A building works on its own once built — slowly, at 1× output, while you fight or gather. Later, a thrall (you gain one each time you found a new kingdom) can be assigned to it for 5× the output.',
+      steps: [
+        { label: 'Let the Forest finish 10 jobs on its own', check: { jobs: 10 } },
+      ], reward: { wood: 40 }, focus: { tab: 'kingdom', ksub: 'build', rtab: 'kingdom', el: 'work' } },
+    { id: 'q12', name: 'Quarrying', text: 'You know the rockface now. A Mine building quarries stone on its own while you do other things.',
+      steps: [
+        { label: 'Kingdom → Tech → Research Quarrying', check: { tech: 'quarrying' } },
+        { label: 'Buildings → build a Mine on a plot', check: { building: 'mine' } },
+      ], reward: { stone: 50 }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:quarrying', el2: 'build' } },
     { id: 'q15', name: 'Farmer', text: 'Grain feeds Husbandry, which gives wool and meat without fighting.',
       steps: [
         { label: 'Kingdom → Tech → Research Farming', check: { tech: 'farming' } },
         { label: 'Buildings → build a Farm', check: { building: 'farm' } },
       ], reward: { gold: 60 }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:farming', el2: 'build' } },
-    { id: 'q16', name: 'Stage 20', text: 'Upgrade your weapon when fights get slow — that is what the hide and stone are for.',
-      steps: [
-        { label: 'Reach stage 20 in any ground', check: { stage: 20 } },
-      ], reward: { gold: 200, crystal: 2 }, focus: { tab: 'hero', sub: 'fight', el: 'act:fight', el2: 'id:advance-btn' } },
-    { id: 'q17', name: 'A New Kingdom', text: 'Found a new kingdom: you lose buildings, gear and skills; only Legacy perks and trophies stay. You gain Crystals, more land, and a thrall joins you.',
-      steps: [
-        { label: 'Have 5,000 gold', check: { have: 'gold', need: 5000 } },
-        { label: 'Kingdom → Throne → Found a New Kingdom', check: { founded: 1 } },
-      ], reward: { gold: 100 }, focus: { tab: 'kingdom', ksub: 'throne', rtab: 'kingdom', el: 'id:found-btn' } },
     { id: 'q18', name: 'Put Them to Work', text: 'Thralls work a plot for you, awake or away.',
       steps: [
         { label: 'Buildings → build anything', check: { plotsBuilt: 1 } },
@@ -524,32 +528,32 @@ const CONFIG = {
     { id: 'fiberclothing', tier: 0, name: 'Fiber Clothing', icon: [7,9], req: { fiber: 10 }, cost: { fiber: 5 }, unlocks: { gearTier: 0, slots: ['chest', 'helm', 'boots', 'trinket'] }, desc: 'Twist plant fiber into clothes. Something between you and the wind.' },
     { id: 'woodensword',   tier: 0, name: 'Wooden Sword',   icon: [5,0], req: { wood: 10 },  cost: { wood: 5 },  unlocks: { gearTier: 0, slots: ['weapon'] },                  desc: 'A sharpened branch. With it, your hero can fight on his own.' },
     { id: 'stonetools', tier: 0, name: 'Woodcraft',        icon: [10,1],  req: { kills: 25 },            cost: { wood: 25 },                     unlocks: { toolTier: 0 },           desc: 'Carve wooden axes, picks, sickles and knives.' },
-    { id: 'forestry',   tier: 0, name: 'Forestry',         icon: [4,6],   req: { wood: 150 },            cost: { wood: 60, stone: 20 },          unlocks: { building: 'forest' },    desc: 'Build a Forest: gathers wood on its own.' },
-    { id: 'farming',    tier: 0, name: 'Farming',          icon: [12,5],  req: { wood: 300 },            cost: { wood: 60, stone: 30 },         unlocks: { building: 'farm' },      desc: 'Build a Farm.' },
+    { id: 'forestry',   tier: 0, name: 'Forestry',         icon: [4,6],   req: { foundings: 1, wood: 150 },            cost: { wood: 60, stone: 20 },          unlocks: { building: 'forest' },    desc: 'Build a Forest: gathers wood on its own.' },
+    { id: 'farming',    tier: 0, name: 'Farming',          icon: [12,5],  req: { foundings: 1, wood: 300 },            cost: { wood: 60, stone: 30 },         unlocks: { building: 'farm' },      desc: 'Build a Farm.' },
     { id: 'leatherwork',tier: 0, name: 'Leatherworking',   icon: [7,6],   req: { hide: 40 },             cost: { hide: 15, wood: 20 },           unlocks: { gearTier: 1, slots: ['chest', 'helm', 'boots', 'trinket'] }, desc: 'Forge Leather armor.' },
     { id: 'stoneweapons',tier: 0, name: 'Stone Weapons',    icon: [17,1],  req: { stone: 30 },            cost: { stone: 10, wood: 5 },           unlocks: { gearTier: 1, slots: ['weapon'] }, desc: 'Knap a stone edge onto a wooden haft. Weapons go Wood → Stone → Iron → Steel.' },
     // Tier 1 — Settlement
-    { id: 'quarrying',  tier: 1, name: 'Quarrying',        icon: [4,5],   req: { stone: 250 },           cost: { wood: 100, stone: 50 },         unlocks: { building: 'mine' },      desc: 'Build a Mine: quarries stone on its own (and iron ore, once you know Prospecting).' },
+    { id: 'quarrying',  tier: 1, name: 'Quarrying',        icon: [4,5],   req: { foundings: 1, stone: 250 },           cost: { wood: 100, stone: 50 },         unlocks: { building: 'mine' },      desc: 'Build a Mine: quarries stone on its own (and iron ore, once you know Prospecting).' },
     { id: 'prospecting',tier: 1, name: 'Prospecting',      icon: [17,2],  req: { stone: 500 },           cost: { stone: 150, wood: 50 },         unlocks: { drop: 'ore' },           desc: 'Tell ore from rock. Mining — by pick or by Mine — now yields Iron Ore as well as stone.' },
-    { id: 'husbandry',  tier: 1, name: 'Animal Husbandry', icon: [19,10], req: { grain: 150 },           cost: { grain: 50, wood: 40 },         unlocks: { building: 'husbandry' }, desc: 'Build Husbandry: wool and meat.' },
-    { id: 'tanning',    tier: 1, name: 'Tanning',          icon: [8,2],   req: { hide: 60 },             cost: { hide: 20, wood: 40 },          unlocks: { building: 'tannery' },   desc: 'Build a Tannery: hide → leather.' },
+    { id: 'husbandry',  tier: 1, name: 'Animal Husbandry', icon: [19,10], req: { foundings: 1, grain: 150 },           cost: { grain: 50, wood: 40 },         unlocks: { building: 'husbandry' }, desc: 'Build Husbandry: wool and meat.' },
+    { id: 'tanning',    tier: 1, name: 'Tanning',          icon: [8,2],   req: { foundings: 1, hide: 60 },             cost: { hide: 20, wood: 40 },          unlocks: { building: 'tannery' },   desc: 'Build a Tannery: hide → leather.' },
     { id: 'butchery',   tier: 1, name: 'Butchery',         icon: [15,1],  req: { kills: 150 },           cost: { hide: 20, wood: 20 },          unlocks: { drop: 'meat' },          desc: 'Beasts in the Wilds drop Meat. Sells well; levels skills.' },
     { id: 'graverobbing',tier: 1, name: 'Grave Robbing',    icon: [0,0],   req: { bossKills: 1 },         cost: { gold: 100 },                   unlocks: { drop: 'ingot' },         desc: 'Open the Crypts: the dead carry gold and rusted iron.' },
     // Tier 2 — Ironworking
-    { id: 'smelting',   tier: 2, name: 'Smelting',         icon: [4,4],   req: { ore: 1000 },             cost: { gold: 300, stone: 100, wood: 50 }, unlocks: { building: 'smith' }, desc: 'Build a Blacksmith: ore → ingots.' },
+    { id: 'smelting',   tier: 2, name: 'Smelting',         icon: [4,4],   req: { foundings: 1, ore: 1000 },             cost: { gold: 300, stone: 100, wood: 50 }, unlocks: { building: 'smith' }, desc: 'Build a Blacksmith: ore → ingots.' },
     { id: 'irongear',   tier: 2, name: 'Iron Gear',        icon: [5,1],   req: { ingot: 50 },            cost: { gold: 400, ingot: 10 },        unlocks: { gearTier: 2 },           desc: 'Forge Iron gear.' },
     { id: 'irontools',  tier: 2, name: 'Iron Tools',       icon: [10,2],  req: { ingot: 20 },            cost: { gold: 200, ingot: 4 },         unlocks: { toolTier: 1 },           desc: 'Forge Iron axes, picks and sickles.' },
-    { id: 'weaving',    tier: 2, name: 'Weaving',          icon: [17,6],  req: { wool: 200 },            cost: { gold: 200, wood: 40 },         unlocks: { building: 'weaver' },    desc: 'Build a Weaver: wool → cloth.' },
-    { id: 'labor1',     tier: 2, name: 'Efficient Labor',  icon: [1,4],   req: { wood: 1000 },           cost: { gold: 500 },                   unlocks: { jobSpeed: 0.15 },        desc: 'All jobs 15% faster.' },
+    { id: 'weaving',    tier: 2, name: 'Weaving',          icon: [17,6],  req: { foundings: 1, wool: 200 },            cost: { gold: 200, wood: 40 },         unlocks: { building: 'weaver' },    desc: 'Build a Weaver: wool → cloth.' },
+    { id: 'labor1',     tier: 2, name: 'Efficient Labor',  icon: [1,4],   req: { foundings: 1, wood: 1000 },           cost: { gold: 500 },                   unlocks: { jobSpeed: 0.15 },        desc: 'All jobs 15% faster.' },
     // Tier 3 — Artisan
-    { id: 'sawmilling', tier: 3, name: 'Sawmilling',       icon: [19,11], req: { ingot: 150, wood: 1000 }, cost: { gold: 800, ingot: 20, wood: 200 }, unlocks: { building: 'sawmill' }, desc: 'Build a Sawmill: wood → planks.' },
-    { id: 'brickmaking',tier: 3, name: 'Brickmaking',      icon: [13,4],  req: { ingot: 150, stone: 1000 }, cost: { gold: 800, ingot: 20, stone: 200 }, unlocks: { building: 'kiln' }, desc: 'Build a Kiln: stone → bricks.' },
+    { id: 'sawmilling', tier: 3, name: 'Sawmilling',       icon: [19,11], req: { foundings: 1, ingot: 150, wood: 1000 }, cost: { gold: 800, ingot: 20, wood: 200 }, unlocks: { building: 'sawmill' }, desc: 'Build a Sawmill: wood → planks.' },
+    { id: 'brickmaking',tier: 3, name: 'Brickmaking',      icon: [13,4],  req: { foundings: 1, ingot: 150, stone: 1000 }, cost: { gold: 800, ingot: 20, stone: 200 }, unlocks: { building: 'kiln' }, desc: 'Build a Kiln: stone → bricks.' },
     { id: 'steelgear',  tier: 3, name: 'Steel Gear',       icon: [7,7],   req: { planks: 20 },           cost: { gold: 2000, planks: 5 },       unlocks: { gearTier: 3 },           desc: 'Forge Steel gear.' },
     { id: 'steeltools', tier: 3, name: 'Steel Tools',      icon: [10,1],  req: { planks: 10 },           cost: { gold: 1500, planks: 2 },       unlocks: { toolTier: 2 },           desc: 'Forge Steel tools.' },
     // Tier 4 — Advanced
     { id: 'hardening',  tier: 4, name: 'Hardening',        icon: [13,4],  req: { bricks: 50, bossKills: 20 }, cost: { gold: 5000, bricks: 20 },  unlocks: { gearTier: 4 },           desc: 'Forge Hardened gear.' },
     { id: 'mythril',    tier: 4, name: 'Mythril Secrets',  icon: [12,15], req: { foundings: 5 },         cost: { gold: 20000, bricks: 20 },     unlocks: { gearTier: 5 },           desc: 'Forge Mythril gear.' },
-    { id: 'labor2',     tier: 4, name: 'Master Laborers',  icon: [1,4],   req: { ingot: 1000 },          cost: { gold: 3000 },                  unlocks: { jobSpeed: 0.25 },        desc: 'All jobs 25% faster.' },
+    { id: 'labor2',     tier: 4, name: 'Master Laborers',  icon: [1,4],   req: { foundings: 1, ingot: 1000 },          cost: { gold: 3000 },                  unlocks: { jobSpeed: 0.25 },        desc: 'All jobs 25% faster.' },
   ],
 
   buildingUpgrade: { base: { gold: 100 }, mult: 1.5, speedPerLevel: 0.08, batchEvery: 5 },
@@ -559,8 +563,8 @@ const CONFIG = {
   // ---------- Legacy: founding (prestige), paths, knowledge, thralls ----------
   legacy: {
     foundRequiresStage: 20,
-    foundCostGold: lvl => Math.round(5000 * Math.pow(2, lvl - 1)),   // gold only; scales per kingdom level
-    knowledge: s => Math.floor(s.bestStage / 4) + Object.keys(s.bossesKilled).length * 2 + s.maxTier * 3 + Math.max(0, Math.floor(Math.log10((s.lifetimeGold || 0) + 1)) - 2),
+    foundCostGold: lvl => Math.round(1000 * Math.pow(2.5, lvl - 1)),  // gold only; the first founding is cheap so the kingdom opens early
+    knowledge: s => s.foundings === 0 ? 1 : Math.floor(s.bestStage / 4) + Object.keys(s.bossesKilled).length * 2 + s.maxTier * 3 + Math.max(0, Math.floor(Math.log10((s.lifetimeGold || 0) + 1)) - 2),
 
     heroPaths: [
       { id: 'warrior', name: 'Warrior King', icon: [7,1], unlock: 1, desc: '+30% attack, +20% HP, +25% boss damage. Skill power −20%.',
