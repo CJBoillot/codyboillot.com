@@ -318,7 +318,8 @@ function jobTime(p) { const kp = kingdomPath(); return btype(p.type).job.time / 
 function jobOutputs(p) {
   const t = btype(p.type), o = {}, bonus = Math.floor((p.level - 1) / CONFIG.buildingUpgrade.batchEvery), kp = kingdomPath();
   const om = kp && kp.outputMult && kp.outputMult[p.type] ? kp.outputMult[p.type] : 1;
-  for (const k in t.job.outputs) o[k] = (t.job.outputs[k] + bonus) * om;
+  const tm = p.worker !== null && p.worker !== undefined ? CONFIG.thrallOutputMult : 1;
+  for (const k in t.job.outputs) o[k] = (t.job.outputs[k] + bonus) * om * tm;
   return o;
 }
 function jobInputs(p) { return btype(p.type).job.inputs; }
@@ -335,20 +336,20 @@ function assign(idx, who) { // who: null | thrall index
 function tickKingdom(dt) {
   S.kingdom.plots.forEach((p, idx) => {
     if (!p.type) return;
-    if (!p.running) { if (p.worker !== null && canStartJob(idx)) startJob(idx); else return; }
+    if (!p.running) { if (canStartJob(idx)) startJob(idx); else return; } // every built plot runs itself
     p.progress += dt;
     const t = jobTime(p);
     if (p.progress >= t) {
       const o = jobOutputs(p); for (const k in o) add(k, o[k]);
       S.stats.jobs++;
       p.running = false; p.progress = 0;
-      if (p.worker !== null && canStartJob(idx)) startJob(idx);
+      if (canStartJob(idx)) startJob(idx);
     }
   });
 }
-// Rates (per second) for display and AFK: only worked plots produce continuously.
+// Rates (per second) for display and AFK: every built plot produces continuously (thralls multiply output).
 function plotRate(p) { const o = jobOutputs(p), t = jobTime(p), r = {}; for (const k in o) r[k] = o[k] / t; return r; }
-function kingdomRates() { const r = {}; for (const p of S.kingdom.plots) { if (!p.type || p.worker === null) continue; const pr = plotRate(p); for (const k in pr) r[k] = (r[k] || 0) + pr[k]; } return r; }
+function kingdomRates() { const r = {}; for (const p of S.kingdom.plots) { if (!p.type) continue; const pr = plotRate(p); for (const k in pr) r[k] = (r[k] || 0) + pr[k]; } return r; }
 
 // ---------- Tech ----------
 function techDef(id) { return CONFIG.techs.find(t => t.id === id); }
@@ -505,7 +506,7 @@ function applyOffline(awaySeconds) {
   const counted = Math.min(awaySeconds, afkCap()), eff = afkEff(), gains = {};
   const order = ['gather', 'craft', 'artisan'], pool = { ...S.res };
   for (const cat of order) for (const p of S.kingdom.plots) {
-    if (!p.type || p.worker === null || btype(p.type).cat !== cat) continue;
+    if (!p.type || btype(p.type).cat !== cat) continue;
     const t = jobTime(p), cycles = Math.floor(counted * eff / t), inp = jobInputs(p), out = jobOutputs(p);
     let n = cycles; for (const k in inp) n = Math.min(n, Math.floor((pool[k] || 0) / inp[k]));
     if (n <= 0) continue;

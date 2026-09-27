@@ -298,7 +298,7 @@ const UI = (() => {
       if (kind === 'tech') add(rows.tech[id]); else if (kind === 'tool') { add(rows.tool[id]); add(document.querySelector(`.doll-slot[data-slot=${id}]`)); } else if (kind === 'gear') { add(rows.gear[id]); add(document.querySelector(`.doll-slot[data-slot=${id}]`)); }
       else if (kind === 'act') add(rows.act[id]); else if (kind === 'id') add($(id));
       else if (kind === 'build') rows.plot.forEach(d => { if (d.classList.contains('empty')) add(d); });
-      else if (kind === 'work') rows.plot.forEach(d => add(d.querySelector('[data-f=work]')));
+      else if (kind === 'work') rows.plot.forEach(d => { if (!d.classList.contains('empty')) add(d); });
       else if (kind === 'assign') rows.plot.forEach(d => add(d.querySelector('[data-f=assign]')));
       else if (kind === 'market') add($('market-list'));
       else if (kind === 'ground') { add(rows.ground[id]); add(rows.act.fight); }
@@ -370,7 +370,7 @@ const UI = (() => {
   // ---- Plots (rebuilt when the plot list changes shape) ----
   rows.plot = [];
   function workerOptions(idx) {
-    const S = Game.S, opts = [['', 'Nobody (manual)']];
+    const S = Game.S, opts = [['', 'Unmanned · 1× output']];
     S.kingdom.thralls.forEach((t, i) => opts.push([String(i), t.name]));
     const cur = S.kingdom.plots[idx].worker; const curVal = cur === null ? '' : String(cur);
     return opts.map(([v, n]) => `<option value="${v}" ${v === curVal ? 'selected' : ''}>${n}</option>`).join('');
@@ -390,9 +390,8 @@ const UI = (() => {
           <div class="plot-job" data-f="job"></div>
           <div class="bar"><div data-f="prog"></div></div>
           <div class="worker-tag" data-f="worker"></div>
-          <select data-f="assign">${workerOptions(idx)}</select>
-          <div class="plot-actions"><button class="buy" data-f="work"><span class="small">Work</span></button><button class="buy" data-f="up"><span class="small">Upgrade</span><br><span class="cost" data-f="upcost"></span></button></div>`;
-        d.querySelector('[data-f=work]').addEventListener('click', () => Game.startJob(idx));
+          <select data-f="assign" class="${S.kingdom.thralls.length ? '' : 'hidden'}">${workerOptions(idx)}</select>
+          <div class="plot-actions"><button class="buy" data-f="up"><span class="small">Upgrade</span><br><span class="cost" data-f="upcost"></span></button></div>`;
         d.querySelector('[data-f=up]').addEventListener('click', () => { if (Game.upgradePlot(idx)) flash(d); });
         d.querySelector('[data-f=assign]').addEventListener('change', e => { const v = e.target.value; Game.assign(idx, v === '' ? null : +v); buildPlots(); });
       }
@@ -438,9 +437,8 @@ const UI = (() => {
       setHtml(d.querySelector('[data-f=job]'), jobHtml(Game.jobInputs(p), Game.jobOutputs(p)) + ` <span class="dim">· ${Game.jobTime(p).toFixed(1)}s</span>`);
       d.querySelector('[data-f=prog]').style.width = (p.running ? 100 * p.progress / Game.jobTime(p) : 0) + '%';
       setText(d.querySelector('[data-f=lvl]'), p.level);
-      const w = p.worker; setText(d.querySelector('[data-f=worker]'), w === null ? 'Manual' : `${S.kingdom.thralls[w] ? S.kingdom.thralls[w].name : 'Thrall'} is working here`);
+      const w = p.worker; setText(d.querySelector('[data-f=worker]'), w === null ? (S.kingdom.thralls.length ? 'Unmanned · 1×' : 'Runs on its own · 1× (a thrall would give ' + CONFIG.thrallOutputMult + '×)') : `${S.kingdom.thralls[w] ? S.kingdom.thralls[w].name : 'Thrall'} works here · ${CONFIG.thrallOutputMult}×`);
       d.classList.toggle('working', p.running);
-      d.querySelector('[data-f=work]').disabled = !Game.canStartJob(idx);
       const uc = Game.upgradeCost(idx); setHtml(d.querySelector('[data-f=upcost]'), costHtml(uc)); d.querySelector('[data-f=up]').disabled = !Game.canAfford(uc);
     });
   }

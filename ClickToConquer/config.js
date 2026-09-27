@@ -210,6 +210,7 @@ const CONFIG = {
     cost: n => Math.round(300 * Math.pow(2.2, n)), // gold for the (n+1)th plot
   },
   thralls: lvl => lvl - 1,                  // one per founding
+  thrallOutputMult: 5,                      // a built plot always runs (1× output, unmanned); a thrall working it multiplies output
   // A job: consumes inputs, runs `time` seconds, yields outputs. Level: +8% speed and +1 output every 5 levels.
   buildingTypes: [
     // Gathering
@@ -318,9 +319,9 @@ const CONFIG = {
         { label: 'Kingdom → Tech → Research Forestry', check: { tech: 'forestry' } },
         { label: 'Kingdom → Buildings → tap the empty plot → Forest', check: { building: 'forest' } },
       ], reward: { gold: 25 }, focus: { tab: 'kingdom', ksub: 'build', rtab: 'kingdom', el: 'tech:forestry', el2: 'build' } },
-    { id: 'q10', name: 'Field Hand', text: 'Buildings only produce when someone works them. For now that is you.',
+    { id: 'q10', name: 'Standing Timber', text: 'A building works on its own once built — slowly, at 1× output, while you fight or gather. Later, a thrall (you gain one each time you found a new kingdom) can be assigned to it for 5× the output.',
       steps: [
-        { label: 'On the Forest plot, press Work — 10 times', check: { jobs: 10 } },
+        { label: 'Let the Forest finish 10 jobs on its own', check: { jobs: 10 } },
       ], reward: { gold: 40 }, focus: { tab: 'kingdom', ksub: 'build', rtab: 'kingdom', el: 'work' } },
     { id: 'q11', name: 'Pickaxe', text: 'Iron starts with you. A wooden pick is a poor thing, but it will find ore and stone — and stone is what better buildings need.',
       steps: [
@@ -384,7 +385,7 @@ const CONFIG = {
       steps: [
         { label: 'Forge 50 ingots', check: { counter: 'ingot', need: 50 } },
         { label: 'Kingdom → Tech → Research Iron Gear', check: { tech: 'irongear' } },
-      ], reward: { ingot: 5, gold: 300 }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:irongear', el2: 'work' } },
+      ], reward: { ingot: 5, gold: 300 }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:irongear' } },
     { id: 'q21', name: 'Armorsmith', text: 'Ingots become armor plates worth 75 gold each — or Steel gear.',
       steps: [
         { label: 'Forge 150 ingots in total', check: { counter: 'ingot', need: 150 } },
