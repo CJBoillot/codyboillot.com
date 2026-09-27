@@ -127,7 +127,10 @@ const UI = (() => {
       if (gain === false) return;
       $('found-modal').classList.add('hidden'); buildLists(); buildPlots();
       document.querySelector('[data-tab=hero]').click();
+      if (Game.S.legacy.foundings === 1 && !Game.S.settings.demoSeen) { $('demo-modal').classList.remove('hidden'); }
     });
+    $('demo-continue').addEventListener('click', () => { Game.S.settings.demoSeen = true; Game.save(); $('demo-modal').classList.add('hidden'); });
+    $('demo-reset').addEventListener('click', () => { $('demo-modal').classList.add('hidden'); ask('Reset all progress?', 'This wipes everything — hero, kingdom, Crystals, Legacy perks, trophies. There is no undo.', 'Wipe everything', () => Game.debug.resetAll()); });
     buildLists();
   }
 

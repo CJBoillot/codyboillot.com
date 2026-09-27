@@ -634,3 +634,8 @@ body.desktop #subtab-dock { display: none; }
 .buy.forging > * { position: relative; }
 .buy.busy { opacity: .5; }
 .pop.craft { color: var(--accent2); font-family: var(--font-head); }
+
+#demo-modal { z-index: 55; }
+.demo-box { max-width: 400px; text-align: left; }
+.demo-box .quest-label { display: block; }
+.demo-box .big { width: 100%; }
