@@ -507,3 +507,7 @@ body.desktop.has-dock .panel-center { padding-bottom: 160px; }
 .hand-card.collapsed .hand-btn .hand-sub { display: none; }
 .hand-card.collapsed .hand-btn:disabled span:not(.hand-sub) { display: none; }
 .hand-card.collapsed .hand-btn:disabled { padding: 6px 0; }
+
+/* cost names: hidden by default, shown inside the forge popup where there's room */
+.cost-name { display: none; margin-left: 3px; font-size: 10px; color: var(--dim); }
+#slot-modal .cost-name { display: inline; }

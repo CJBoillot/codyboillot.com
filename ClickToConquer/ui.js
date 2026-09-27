@@ -12,7 +12,7 @@ const UI = (() => {
   // Sprite icon: [row,col] on the icon sheet. size in px (16/24/32).
   const ico = (rc, size = 16, cls = '') => { if (!rc) return ''; const sc = size / CONFIG.iconSheet.cell; return `<span class="ico ${cls}" style="width:${size}px;height:${size}px;background-position:-${rc[1] * size}px -${rc[0] * size}px;background-size:${512 * sc}px auto"></span>`; };
 
-  const costHtml = cost => Object.entries(cost).map(([k, v]) => `<span class="costitem ${(Game.S.res[k] || 0) >= v ? '' : 'lack'}">${ico(R[k].icon, 16)}${Game.fmt(v)}</span>`).join(' ');
+  const costHtml = cost => Object.entries(cost).map(([k, v]) => `<span class="costitem ${(Game.S.res[k] || 0) >= v ? '' : 'lack'}" title="${Game.fmt(v)} ${R[k].name} (have ${Game.fmt(Game.S.res[k] || 0)})">${ico(R[k].icon, 16)}${Game.fmt(v)}<span class="cost-name">${R[k].name}</span></span>`).join(' ');
   const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
   // DOM writes only when content changes — rewriting a button's children mid-click eats the click.
   const setHtml = (e, v) => { if (e.__h !== v) { e.innerHTML = v; e.__h = v; } };
@@ -273,11 +273,15 @@ const UI = (() => {
   // ---- Quest glow: highlight navigation + the exact control the current quest needs ----
   let glowKey = '';
   function applyQuestGlow(q) {
-    const isQuest = q && q.id; const key = q ? (isQuest ? q.id + (Game.questProgress(q).done ? ':done' : '') : 'goal:' + q.name) : '';
+    const isQuest = q && q.id, pr = isQuest ? Game.questProgress(q) : null;
+    // a step may carry its own focus; the first unfinished step wins
+    let stepF = null, stepIdx = -1;
+    if (isQuest && q.steps && pr && pr.parts) { stepIdx = pr.parts.findIndex(st => !st.done); if (stepIdx >= 0 && q.steps[stepIdx].focus) stepF = q.steps[stepIdx].focus; }
+    const key = q ? (isQuest ? q.id + ':' + stepIdx + (pr.done ? ':done' : '') : 'goal:' + q.name) : '';
     if (key === glowKey) return; glowKey = key;
     document.querySelectorAll('.quest-glow').forEach(e => e.classList.remove('quest-glow'));
-    if (!q || !q.focus || (isQuest && Game.questProgress(q).done)) { if (isQuest && q && Game.questProgress(q).done) $('quest-claim').classList.add('quest-glow'); return; }
-    const F = q.focus, add = e => e && e.classList.add('quest-glow');
+    if (!q || !(q.focus || stepF) || (isQuest && pr.done)) { if (isQuest && q && pr.done) $('quest-claim').classList.add('quest-glow'); return; }
+    const F = stepF || q.focus, add = e => e && e.classList.add('quest-glow');
     if (F.tab && !desktop) add(document.querySelector(`[data-tab=${F.tab}]`));
     if (F.sub) add(document.querySelector(`[data-sub=${F.sub}]`));
     if (F.ksub) add(document.querySelector(`[data-ksub=${F.ksub}]`));

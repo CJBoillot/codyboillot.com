@@ -132,7 +132,7 @@ const CONFIG = {
 
   tiers: [
     { name: 'Crude', mult: 0.5, perSlot: { weapon: { name: 'Wooden', craftCost: { wood: 10 }, upgradeCost: { wood: 4 } }, chest: { name: 'Fiber', craftCost: { fiber: 10 }, upgradeCost: { fiber: 4 } }, helm: { name: 'Fiber', craftCost: { fiber: 6 }, upgradeCost: { fiber: 3 } }, boots: { name: 'Fiber', craftCost: { fiber: 6 }, upgradeCost: { fiber: 3 } }, trinket: { name: 'Fiber', craftCost: { fiber: 4 }, upgradeCost: { fiber: 2 } } }, craftCost: { fiber: 10 }, upgradeCost: { fiber: 4 }, upgradeMult: 1.25 },
-    { name: 'Leather',     mult: 1,   craftCost: { leather: 3, gold: 50 },                       upgradeCost: { leather: 1, gold: 20 },           upgradeMult: 1.25 },
+    { name: 'Leather',     mult: 1,   perSlot: { weapon: { name: 'Stone', craftCost: { stone: 12, wood: 6 }, upgradeCost: { stone: 4, wood: 2 } } }, craftCost: { leather: 3, gold: 50 }, upgradeCost: { leather: 1, gold: 20 }, upgradeMult: 1.25 },
     { name: 'Iron',        mult: 3,   craftCost: { ingot: 5, leather: 3, gold: 300 },            upgradeCost: { ingot: 2, leather: 1 },           upgradeMult: 1.25 },
     { name: 'Steel',       mult: 9,   craftCost: { plate: 2, ingot: 10, gold: 2000 },            upgradeCost: { ingot: 5, plate: 1 },             upgradeMult: 1.25 },
     { name: 'Bone-forged', mult: 27,  craftCost: { plate: 6, blade: 2, garment: 2, bone: 300 },  upgradeCost: { plate: 2, garment: 1, bone: 50 }, upgradeMult: 1.25 },
@@ -301,9 +301,10 @@ const CONFIG = {
         { label: 'Reach hero level 5', check: { heroLevel: 5 } },
         { label: 'Talents → Warrior → Brawn (+4% attack)', check: { talent: 'w1' } },
       ], reward: { gold: 30 }, focus: { tab: 'hero', sub: 'talents', rtab: 'talents', el: 'talent:w1' }, onlyTalent: 'w1' },
-    { id: 'q07', name: 'Leather Blade', text: 'Better gear means faster kills, just as better tools mean faster gathering. Upgrade the wooden sword to Lv15, then forge the Leather tier.',
+    { id: 'q07', name: 'Stone Blade', text: 'Better gear means faster kills, just as better tools mean faster gathering. Gather stone by hand, learn Stone Weapons, upgrade the wooden sword to Lv15, then forge the Stone tier.',
       steps: [
-        { label: 'Click the Weapon slot → Forge Leather', check: { gearTier: 'weapon', need: 1 } },
+        { label: 'Kingdom → Tech → Research Stone Weapons', check: { tech: 'stoneweapons' }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:stoneweapons' } },
+        { label: 'Click the Weapon slot → Forge Stone', check: { gearTier: 'weapon', need: 1 }, focus: { tab: 'hero', sub: 'gear', el: 'gear:weapon' } },
       ], reward: { gold: 30 }, focus: { tab: 'hero', sub: 'gear', el: 'gear:weapon' } },
     { id: 'q08', name: 'Stake a Claim', text: 'Your kingdom starts with land. Plots are bought with gold.',
       steps: [
@@ -403,7 +404,8 @@ const CONFIG = {
     { id: 'stonetools', tier: 0, name: 'Woodcraft',        icon: [10,1],  req: { kills: 25 },            cost: { gold: 25 },                     unlocks: { toolTier: 0 },           desc: 'Carve wooden axes, picks, sickles and knives.' },
     { id: 'forestry',   tier: 0, name: 'Forestry',         icon: [4,6],   req: { wood: 150 },            cost: { gold: 60, wood: 30 },                    unlocks: { building: 'forest' },    desc: 'Build a Forest for a thrall to work.' },
     { id: 'farming',    tier: 0, name: 'Farming',          icon: [12,5],  req: { wood: 150 },            cost: { gold: 80, wood: 40 },          unlocks: { building: 'farm' },      desc: 'Build a Farm.' },
-    { id: 'leatherwork',tier: 0, name: 'Leatherworking',   icon: [7,6],   req: { hide: 40 },             cost: { gold: 60, hide: 15 },           unlocks: { gearTier: 1 },           desc: 'Forge Leather gear.' },
+    { id: 'leatherwork',tier: 0, name: 'Leatherworking',   icon: [7,6],   req: { hide: 40 },             cost: { gold: 60, hide: 15 },           unlocks: { gearTier: 1, slots: ['chest', 'helm', 'boots', 'trinket'] }, desc: 'Forge Leather armor.' },
+    { id: 'stoneweapons',tier: 0, name: 'Stone Weapons',    icon: [17,1],  req: { stone: 30 },            cost: { stone: 10, wood: 5 },           unlocks: { gearTier: 1, slots: ['weapon'] }, desc: 'Knap a stone edge onto a wooden haft. Weapons go Wood → Stone → Iron → Steel.' },
     // Tier 1 — Settlement
     { id: 'quarrying',  tier: 1, name: 'Quarrying',        icon: [4,5],   req: { ore: 250, stone: 250 }, cost: { gold: 200, wood: 100 },         unlocks: { building: 'mine' },      desc: 'Build a Mine for a thrall: stone and iron ore.' },
     { id: 'husbandry',  tier: 1, name: 'Animal Husbandry', icon: [19,10], req: { grain: 150 },           cost: { gold: 120, grain: 50 },        unlocks: { building: 'husbandry' }, desc: 'Build Husbandry: hide and wool.' },
