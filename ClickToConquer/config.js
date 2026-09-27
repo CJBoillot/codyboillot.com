@@ -363,11 +363,11 @@ const CONFIG = {
         { label: 'Fight in The Crypts', check: { activity: 'fight', ground: 'crypts' } },
         { label: 'Take 3 ingots from the dead', check: { counter: 'ingot', need: 3 } },
       ], reward: { gold: 100 }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:graverobbing', el2: 'ground:crypts' } },
-    { id: 'q13c', name: 'A Second Blow', text: 'Abilities come with experience. Power Strike is your first: it fires on its own, and tapping it when it glows makes it hit harder.',
+    { id: 'q13c', name: 'A Second Blow', text: 'Abilities come with experience. Power Strike is your first: equip it and it fires on its own whenever it is off cooldown.',
       steps: [
         { label: 'Reach hero level 12', check: { heroLevel: 12 } },
         { label: 'Skills → Equip Power Strike', check: { skillEquipped: 'strike' } },
-        { label: 'Tap Power Strike when it says TAP', check: { focused: 1 } },
+        { label: 'Use Power Strike 5 times', check: { casts: 'strike', need: 5 } },
       ], reward: { gold: 80 }, focus: { tab: 'hero', sub: 'skills', rtab: 'skills', el: 'skill:strike' } },
     { id: 'q14b', name: 'Butcher', text: 'Beasts are meat as well as hide. Meat sells well — and your skills feed on it.',
       steps: [

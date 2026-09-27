@@ -183,6 +183,7 @@ function castSkill(id, manual = false) {
     case 'buff': h.buffs[d.stat] = { value: p, until: h.time + d.dur }; break;
   }
   h.cds[id] = skillCd(id);
+  S.stats.casts = S.stats.casts || {}; S.stats.casts[id] = (S.stats.casts[id] || 0) + 1;
   if (manual) { S.stats.focused = (S.stats.focused || 0) + 1; log(`Focused ${d.name}!`); }
   return true;
 }
@@ -385,6 +386,7 @@ function questCheck(c) {
   if (c.attrSpent) return { done: attrPointsSpent() >= c.attrSpent, have: attrPointsSpent(), need: c.attrSpent };
   if (c.heroLevel) return { done: S.hero.level >= c.heroLevel, have: S.hero.level, need: c.heroLevel };
   if (c.skillEquipped) { const ok = S.hero.loadout.includes(c.skillEquipped); return { done: ok, have: ok ? 1 : 0, need: 1 }; }
+  if (c.casts) { const n = (S.stats.casts && S.stats.casts[c.casts]) || 0; return { done: n >= c.need, have: n, need: c.need }; }
   if (c.focused) return { done: (S.stats.focused || 0) >= c.focused, have: S.stats.focused || 0, need: c.focused };
   if (c.activity) { const ok = S.hero.activity === c.activity && (!c.ground || S.hero.ground === c.ground); return { done: ok, have: ok ? 1 : 0, need: 1 }; }
   if (c.have) return { done: (S.res[c.have] || 0) >= c.need, have: Math.floor(S.res[c.have] || 0), need: c.need };
