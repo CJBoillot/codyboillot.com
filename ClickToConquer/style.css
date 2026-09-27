@@ -521,3 +521,22 @@ body.desktop.has-dock .panel-center { padding-bottom: 160px; }
 .res-name { display: block; font-size: 9.5px; color: var(--dim); text-transform: uppercase; letter-spacing: .8px; }
 .res-group-label { display: none; }
 @media (max-width: 1023px) { .res { padding: 2px 6px 2px 4px; gap: 4px; } .res-txt b { font-size: 12px; } .res-name { font-size: 8.5px; letter-spacing: .5px; } .rrate { font-size: 9px; } }
+
+/* ---------- inventory ---------- */
+.inv-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 6px; margin-top: 8px; }
+.inv-item { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 2px 6px; border: 1px solid var(--line2); border-radius: 8px; background: #14100d; cursor: pointer; transition: transform .08s; }
+.inv-item:hover { transform: translateY(-1px); }
+.inv-item .inv-n { font-size: 11px; font-weight: 600; }
+.inv-item .inv-name { font-size: 8.5px; color: var(--dim); text-transform: uppercase; letter-spacing: .3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.inv-item.loot-uncommon { border-color: #3f7a52; box-shadow: inset 0 0 0 1px rgba(95,191,122,.25); }
+.inv-item.loot-rare { border-color: var(--bronze); box-shadow: inset 0 0 0 1px rgba(232,192,106,.35), 0 0 10px rgba(232,192,106,.12); }
+.costitem.loot-uncommon { border-color: #3f7a52; } .costitem.loot-rare { border-color: var(--bronze); color: var(--accent2); }
+.pop.loot.loot-uncommon { color: #7fe09a; } .pop.loot.loot-rare { color: var(--accent2); text-shadow: 0 0 8px rgba(232,192,106,.8); } .pop.loot.unique { font-size: 15px; }
+.item-head { display: flex; align-items: center; gap: 10px; text-align: left; margin-bottom: 6px; }
+.item-sec { text-align: left; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); }
+.item-sec .costitem { margin: 2px 2px 0 0; }
+.bestiary-row { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; background: #14100d; margin-top: 6px; }
+.bestiary-row .b-name { font-family: var(--font-head); font-size: 13px; }
+.bestiary-row .b-sub { font-size: 10.5px; color: var(--dim); }
+.bestiary-row.boss .b-name { color: var(--accent2); }
+.bestiary-row .b-pool { display: flex; flex-wrap: wrap; gap: 3px; margin-left: auto; }

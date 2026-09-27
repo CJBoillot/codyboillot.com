@@ -19,6 +19,7 @@
   <nav class="tabs" id="main-tabs">
     <button data-tab="hero" class="active">Character <span id="badge-hero" class="badge hidden">!</span></button>
     <button data-tab="kingdom">Kingdom <span id="badge-kingdom" class="badge hidden">!</span></button>
+    <button data-tab="inventory">Bag <span id="badge-inventory" class="badge hidden">!</span></button>
     <button data-tab="market">Market <span id="badge-market" class="badge hidden">!</span></button>
   </nav>
 </div>
@@ -70,7 +71,7 @@
 
         <div id="fight-card" class="card arena">
           <div class="arena-head">
-            <div class="stage-title">Stage <b id="stage">1</b> <span id="boss-tag" class="boss-tag hidden">BOSS</span></div>
+            <div class="stage-title"><b id="stage">Rat 1/10</b> <span id="boss-tag" class="boss-tag hidden">BOSS</span></div>
             <div><span class="mode-tag">● ACTIVE</span><span class="dim">Best <b id="best-stage">1</b></span></div>
           </div>
           <div class="fighters">
@@ -189,6 +190,15 @@
     </div>
 
     <!-- MARKET -->
+    <div id="tab-inventory" class="tab hidden">
+      <div class="card"><div class="card-title">Inventory</div><p class="dim small">Everything you own. Tap an item to see where it comes from, what it is for, and to sell it.</p>
+        <div id="inv-grid" class="inv-grid"></div>
+        <div id="inv-empty" class="dim small center">Nothing yet — pull some fiber.</div>
+      </div>
+      <div class="card"><div class="card-title">Bestiary</div><p class="dim small">Every enemy you have fought, and what it drops. First boss kills give a talent point and a trophy.</p>
+        <div id="bestiary" class="list"></div>
+      </div>
+    </div>
     <div id="tab-market" class="tab hidden">
       <div class="card"><div class="card-title">Market</div><p class="dim small">Sell goods for gold. Refined and artisan goods fetch far more than raw — an ingot is worth ten ore, a plate ten ingots.</p></div>
       <div id="market-list" class="list"></div>
@@ -202,6 +212,7 @@
       <button data-rtab="attr">Attributes</button>
       <button data-rtab="skills">Skills</button>
       <button data-rtab="talents">Talents</button>
+      <button data-rtab="inventory">Bag</button>
       <button data-rtab="market">Market</button>
     </nav>
     <div id="right-locked" class="card dim small center hidden">Locked. Your quests will open this when you need it.</div>
@@ -230,6 +241,18 @@
   </div>
 </div>
 
+<div id="item-modal" class="modal hidden">
+  <div class="modal-box found-box">
+    <div class="item-head"><span id="item-icon"></span><div><div class="card-title" id="item-name">Item</div><div class="dim small" id="item-rarity"></div></div></div>
+    <p class="small" id="item-desc"></p>
+    <div class="item-sec"><span class="dim small">You have</span> <b id="item-have"></b></div>
+    <div class="item-sec"><div class="dim small">Comes from</div><div id="item-from" class="small"></div></div>
+    <div class="item-sec"><div class="dim small">Used by</div><div id="item-uses" class="small"></div></div>
+    <div class="item-sec" id="item-sell"><span class="dim small">Sells for</span> <b id="item-price"></b> <span class="dim small">gold each</span>
+      <div class="btn-col-h" style="margin-top:6px"><button class="buy" id="item-s1">Sell 1</button><button class="buy" id="item-s10">Sell 10</button><button class="buy" id="item-sall">Sell all</button></div></div>
+    <button id="item-close" class="wide" style="margin-top:12px">Close</button>
+  </div>
+</div>
 <div id="slot-modal" class="modal hidden">
   <div class="modal-box found-box">
     <div class="card-title" id="slot-title">Slot</div>

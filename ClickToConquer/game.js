@@ -252,7 +252,11 @@ function effectiveEnemyDps(st, stage = S.hero.stage) {
 }
 
 // ---------- Enemies ----------
-function isBoss(stage = S.hero.stage) { return stage % H.bossEvery === 0; }
+// Stage → enemy type + sub-stage (1..10). Past the end of a line the last type repeats as "Elder …".
+function stageType(stage = S.hero.stage) { const per = CONFIG.stages.perType; return { t: Math.floor((stage - 1) / per), k: (stage - 1) % per + 1 }; }
+function enemyType(stage = S.hero.stage, gid = S.hero.ground) { const L = CONFIG.grounds[gid].line, { t } = stageType(stage); return L[Math.min(t, L.length - 1)]; }
+function enemyTypeLoops(stage = S.hero.stage, gid = S.hero.ground) { const L = CONFIG.grounds[gid].line, { t } = stageType(stage); return Math.max(0, t - (L.length - 1)); }
+function isBoss(stage = S.hero.stage) { return stageType(stage).k === CONFIG.stages.perType; }
 function enemyMaxHp(stage = S.hero.stage) { return CONFIG.stages.enemyHp(stage) * (isBoss(stage) ? H.bossHpMult : 1); }
 function enemyDps(stage = S.hero.stage)   { return CONFIG.stages.enemyDps(stage) * (isBoss(stage) ? H.bossDmgMult : 1); }
 function ground() { return CONFIG.grounds[S.hero.ground] || CONFIG.grounds.wilds; }
@@ -266,16 +270,29 @@ function setGround(id) {
 }
 function bestStageAll() { let b = S.hero.bestStage; for (const k in S.hero.grounds) b = Math.max(b, S.hero.grounds[k].bestStage || 1); return b; }
 function enemyName(stage = S.hero.stage) {
-  const G = ground(), n = G.enemies, b = G.bosses;
-  if (isBoss(stage)) return b[(stage / H.bossEvery - 1) % b.length];
-  return n[(stage - 1) % n.length] + (stage > n.length ? ` +${Math.floor((stage - 1) / n.length)}` : '');
+  const T = enemyType(stage), loops = enemyTypeLoops(stage), pre = loops ? 'Elder '.repeat(Math.min(loops, 2)) : '';
+  return pre + (isBoss(stage) ? T.boss : T.name);
+}
+function stageLabel(stage = S.hero.stage, gid = S.hero.ground) { const { k } = stageType(stage), T = enemyType(stage, gid); return `${enemyTypeLoops(stage, gid) ? 'Elder ' : ''}${T.name} ${k}/${CONFIG.stages.perType}`; }
+function nextTypeName(stage = S.hero.stage) { const T = enemyType(stage + 1); return (enemyTypeLoops(stage + 1) ? 'Elder ' : '') + T.plural; }
+// Drop table for a stage: current type's pool at its stage chance, earlier types' pools at their stage-10 chance. Gated by tech / tool. Values are expected units per kill.
+function stagePool(stage = S.hero.stage, gid = S.hero.ground) {
+  const G = CONFIG.grounds[gid], L = G.line, { t, k } = stageType(stage), per = CONFIG.stages.perType, cap = CONFIG.stages.dropCap, o = {};
+  const upto = Math.min(t, L.length - 1);
+  for (let i = 0; i <= upto; i++) for (const d of L[i].pool) {
+    const kk = i === upto && i === t ? k : per; // current type uses its sub-stage; earlier (or looped) types are maxed
+    let v = Math.min(cap, d.base + d.growth * (kk - 1)) * (i < upto ? CONFIG.stages.carryOverFloor : 1);
+    if (v > (o[d.k] || 0)) o[d.k] = v;
+  }
+  return o;
 }
 function dropToolMult(slot) { const p = toolPower(slot); return p > 0 ? 1 + 0.6 * p : 0; } // Wooden Lv0 ×1.6, Iron ×2.8, Steel ×6.4
 function groundDrops(stage = S.hero.stage) { // per kill, gated by tech, boosted by tool
-  const G = ground(), o = {}, grow = CONFIG.stages.dropGrowth(stage);
-  for (const k in G.drops) { if (!dropUnlocked(k)) continue; let v = G.drops[k] * grow; const t = G.dropTool && G.dropTool[k]; if (t) { if (!S.hero.tools[t]) continue; v *= dropToolMult(t); } o[k] = v; }
+  const G = ground(), pool = stagePool(stage), o = {};
+  for (const k in pool) { if (!dropUnlocked(k)) continue; let v = pool[k]; const t = G.dropTool && G.dropTool[k]; if (t) { if (!S.hero.tools[t]) continue; v *= dropToolMult(t); } o[k] = v; }
   return o;
 }
+function lootRarity(k) { return (CONFIG.resources[k] && CONFIG.resources[k].rarity) || 'common'; }
 function killsNeeded(stage = S.hero.stage) { return isBoss(stage) ? H.bossKillsToAdvance : H.killsToAdvance; }
 
 // Closed-form farm rate (kills/sec) using sustained stats; 0 if the hero can't survive a fight.
@@ -369,7 +386,8 @@ function canResearch(id) { const t = techDef(id); return t && !hasTech(id) && te
 function research(id) { if (!canResearch(id)) return false; pay(techDef(id).cost); S.tech[id] = true; log(`Researched ${techDef(id).name}`); return true; }
 function buildingUnlocked(typeId) { return CONFIG.techs.some(t => t.unlocks.building === typeId && hasTech(t.id)); }
 function gearTierUnlocked(tier, slot) { return CONFIG.techs.some(t => t.unlocks.gearTier === tier && hasTech(t.id) && (!t.unlocks.slots || !slot || t.unlocks.slots.includes(slot))); }
-function dropUnlocked(res) { return CONFIG.techs.some(t => t.unlocks.drop === res && hasTech(t.id)); }
+function dropGated(res) { return CONFIG.techs.some(t => t.unlocks.drop === res); }
+function dropUnlocked(res) { return !dropGated(res) || CONFIG.techs.some(t => t.unlocks.drop === res && hasTech(t.id)); }
 function techJobSpeed() { let s = 1; for (const t of CONFIG.techs) if (hasTech(t.id) && t.unlocks.jobSpeed) s *= 1 + t.unlocks.jobSpeed; return s; }
 function grantTechTiers(n) { for (const t of CONFIG.techs) if (t.tier < n) S.tech[t.id] = true; }
 
@@ -449,9 +467,9 @@ function onKill(st) {
   const d = groundDrops(s); for (const k in d) exp[k] = d[k] * st.drop;
   const loot = {}; for (const k in exp) { const n = roll(exp[k]); if (n > 0) { add(k, n); loot[k] = n; } }
   if (Object.keys(loot).length) pushEvent({ who: 'loot', loot });
-  gainXp(H.xpPerKill * CONFIG.stages.xpMult(s) * (isBoss(s) ? 10 : 1) * st.xp);
+  gainXp(H.xpPerKill * CONFIG.stages.xpPerKill(s) * (isBoss(s) ? 3 : 1) * st.xp);
   S.hero.kills++; S.hero.totalKills++;
-  if (isBoss(s)) { const bk = S.hero.ground + ':' + s; if (!S.hero.bossesKilled[bk]) { S.hero.bossesKilled[bk] = true; log(`Defeated ${enemyName(s)}! +1 talent point`); } else log(`Defeated ${enemyName(s)}!`); }
+  if (isBoss(s)) { const bk = S.hero.ground + ':' + s; if (!S.hero.bossesKilled[bk]) { S.hero.bossesKilled[bk] = true; const u = enemyType(s).unique; if (u && CONFIG.resources[u]) { add(u, 1); pushEvent({ who: 'loot', loot: { [u]: 1 }, unique: true }); } log(`Defeated ${enemyName(s)}! +1 talent point${u ? ', ' + CONFIG.resources[u].name : ''}`); } else log(`Defeated ${enemyName(s)}!`); }
   if (CONFIG.automation.autoAdvance && canAdvance()) advance();
 }
 function gainXp(x) {
@@ -463,7 +481,7 @@ function gainXp(x) {
   }
 }
 function canAdvance() { return S.hero.kills >= killsNeeded(); }
-function advance() { if (!canAdvance()) return false; S.hero.stage++; S.hero.kills = 0; S.hero.enemyHp = 0; S.hero.carry = 0; S.hero.bestStage = Math.max(S.hero.bestStage, S.hero.stage); log(`Advanced to stage ${S.hero.stage}${isBoss() ? ' — BOSS' : ''}`); return true; }
+function advance() { if (!canAdvance()) return false; S.hero.stage++; S.hero.kills = 0; S.hero.enemyHp = 0; S.hero.carry = 0; S.hero.bestStage = Math.max(S.hero.bestStage, S.hero.stage); log(isBoss() ? `The ${enemyName()} awaits — BOSS` : stageType().k === 1 ? `Now hunting ${enemyType().plural}` : `Advanced: ${stageLabel()}`); return true; }
 function retreat() { if (S.hero.stage <= 1) return false; S.hero.stage--; S.hero.kills = 0; S.hero.enemyHp = 0; S.hero.carry = 0; log(`Retreated to stage ${S.hero.stage}`); return true; }
 function log(msg) { S.log.unshift(msg); if (S.log.length > 30) S.log.length = 30; }
 
@@ -523,7 +541,7 @@ function applyOffline(awaySeconds) {
 }
 function claimOffline(data, mult = 1) {
   for (const k in data.gains) add(k, data.gains[k] > 0 ? data.gains[k] * mult : data.gains[k]); // inputs consumed aren't doubled
-  gainXp(data.kills * H.xpPerKill * CONFIG.stages.xpMult(S.hero.stage) * stats('sustained').xp * mult);
+  gainXp(data.kills * H.xpPerKill * CONFIG.stages.xpPerKill(S.hero.stage) * stats('sustained').xp * mult);
   S.hero.totalKills += data.kills * mult;
 }
 
@@ -622,7 +640,7 @@ window.Game = {
   stats, gearStats, itemStatPreview, gearCraftCost, gearUpgradeCost, canTierUp, craftGear, upgradeGear,
   attrPointsFree, attrPointsTotal, spendAttr, talentPointsFree, talentPointsTotal, talentAvailable, spendTalent, respec, respecCost, talentNode,
   skillDef, skillUnlocked, skillPower, skillLevelCost, levelSkill, toggleSkill, skillCd, skillReady, castSkill, activeBuffs,
-  enemyMaxHp, enemyDps, effectiveEnemyDps, enemyName, isBoss, killsNeeded, farmRate, stageDanger, heroRates,
+  enemyMaxHp, enemyDps, effectiveEnemyDps, enemyName, isBoss, stageType, enemyType, stageLabel, nextTypeName, stagePool, lootRarity, dropGated, killsNeeded, farmRate, stageDanger, heroRates,
   handDef, handUnlocked, grab, tierName,
   toolTierUnlocked, toolPower, toolCraftCost, toolUpgradeCost, canToolTierUp, craftTool, upgradeTool, activityDef, activityAvailable, setActivity, masteryLevel, harvestTime, harvestYield, harvestRates,
   questCurrent, questProgress, questClaim, suggestGoal, ground, setGround, groundUnlocked, dropToolMult, bestStageAll, groundDrops, toolSlotUnlocked,

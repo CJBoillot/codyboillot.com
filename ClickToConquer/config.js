@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Beta 0.1.0',
+  version: 'Beta 0.2.0',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -48,7 +48,27 @@ const CONFIG = {
     cloth:   { name: 'Cloth',    icon: [17,7],  tier: 3, sell: 8,  desc: 'Weaver. Fine armor tiers.' },
     planks:  { name: 'Planks',   icon: [19,11], tier: 3, sell: 12, desc: 'Sawmill turns 5 wood into a plank. Steel tools and gear.' },
     bricks:  { name: 'Bricks',   icon: [13,4],  tier: 3, sell: 12, desc: 'Kiln turns 5 stone into a brick. Hardened gear, grand buildings.' },
+    // ---- Loot (kind: 'loot'): dropped by enemies, shown in the Inventory, not in the header bar ----
+    rattail:   { name: 'Rat Tail',        icon: [16,2],  kind: 'loot', rarity: 'common',   sell: 3,   desc: 'Proof of a rat well killed. Sells for a little.' },
+    ratkingtooth: { name: "Rat King's Tooth", icon: [17,9], kind: 'loot', rarity: 'rare', sell: 60,  desc: 'Trophy from the Rat King. A crafting material for fine trinkets.' },
+    tusk:      { name: 'Boar Tusk',       icon: [17,9],  kind: 'loot', rarity: 'uncommon', sell: 12,  desc: 'Curved ivory. Weapon hilts and trinkets.' },
+    greatboartusk: { name: 'Great Tusk',  icon: [17,9],  kind: 'loot', rarity: 'rare',     sell: 90,  desc: 'Trophy from the Great Boar.' },
+    wolfpelt:  { name: 'Wolf Pelt',       icon: [17,8],  kind: 'loot', rarity: 'uncommon', sell: 15,  desc: 'Thick winter pelt. Warm armor linings.' },
+    alphafang: { name: 'Alpha Fang',      icon: [17,9],  kind: 'loot', rarity: 'rare',     sell: 120, desc: 'Trophy from the Alpha Wolf. Needed for Beast Mastery.' },
+    bearclaw:  { name: 'Bear Claw',       icon: [8,0],   kind: 'loot', rarity: 'uncommon', sell: 20,  desc: 'A claw as long as a finger. Weapon studs.' },
+    cavebearhide: { name: 'Cave Bear Hide', icon: [17,8], kind: 'loot', rarity: 'rare',    sell: 150, desc: 'Trophy from the Cave Bear. Hardened armor.' },
+    saberfang: { name: 'Saber Fang',      icon: [17,9],  kind: 'loot', rarity: 'uncommon', sell: 30,  desc: 'Long curved fang. Blades.' },
+    beastkingcrown: { name: "Beast King's Crown", icon: [12,7], kind: 'loot', rarity: 'rare', sell: 300, desc: 'Trophy from the Beast King.' },
+    rope:      { name: 'Rope',            icon: [11,15], kind: 'loot', rarity: 'common',   sell: 4,   desc: 'Bandit rope. Buildings and traps.' },
+    lockbox:   { name: 'Lockbox',         icon: [16,14], kind: 'loot', rarity: 'uncommon', sell: 40,  desc: 'A bandit strongbox. Sells for a tidy sum.' },
+    banditseal: { name: "Chief's Seal",   icon: [13,11], kind: 'loot', rarity: 'rare',     sell: 200, desc: 'Trophy from the Bandit Chief.' },
+    tollbaronring: { name: "Toll Baron's Ring", icon: [8,4], kind: 'loot', rarity: 'rare', sell: 350, desc: 'Trophy from the Toll Baron.' },
+    bonedust:  { name: 'Bone Dust',       icon: [15,10], kind: 'loot', rarity: 'common',   sell: 3,   desc: 'What is left of the dead. Potions, one day.' },
+    graveiron: { name: 'Grave Iron',      icon: [17,2],  kind: 'loot', rarity: 'uncommon', sell: 25,  desc: 'Rusted armor plate. Melts down to ingots.' },
+    bonelordskull: { name: "Bone Lord's Skull", icon: [0,0], kind: 'loot', rarity: 'rare', sell: 250, desc: 'Trophy from the Bone Lord.' },
+    cultidol:  { name: 'Cult Idol',       icon: [6,9],   kind: 'loot', rarity: 'rare',     sell: 400, desc: 'Trophy from the Cult Priest.' },
   },
+  rarities: { common: { name: 'Common', color: '#b9b0a3' }, uncommon: { name: 'Uncommon', color: '#5fbf7a' }, rare: { name: 'Rare', color: '#e8c06a' } },
 
   // ---------- By hand: instant grabs, one per click, always manual ----------
   hand: [
@@ -68,7 +88,7 @@ const CONFIG = {
     baseCritDmg: 1.5,       // crit multiplier
     baseArmor: 0,           // flat damage reduction per enemy hit-second
     xpPerKill: 1,
-    xpToLevel: lvl => Math.floor(20 * Math.pow(1.25, lvl - 1)),
+    xpToLevel: lvl => lvl <= 10 ? Math.floor(12 * Math.pow(1.22, lvl - 1)) : Math.floor(12 * Math.pow(1.22, 9) * Math.pow(1.35, lvl - 10)), // ~10 min to Lv10, then each level costs ×1.35 more
     attackPerLevel: 1.5,
     hpPerLevel: 12,
     regenPerLevel: 0.15,
@@ -80,7 +100,7 @@ const CONFIG = {
     restUntil: 0.95,
     killsToAdvance: 10,
     bossEvery: 10,
-    bossHpMult: 6,
+    bossHpMult: 4,
     bossDmgMult: 2,
     bossKillsToAdvance: 1,
     manualCastBonus: 1.5,       // tapping a ready skill = ×1.5 power
@@ -189,21 +209,42 @@ const CONFIG = {
   // ---------- Hunting grounds ----------
   // Where the hero fights. Each ground has its own stage, enemies, bosses and loot. Drops need their tech (Skinning, Butchery, Grave Robbing). Beasts carry no gold.
   grounds: {
-    wilds:  { name: 'The Wilds',  icon: [17,8],  desc: 'Beasts. Hide and meat — no gold.',              goldMult: 0,   drops: { hide: 0.15, meat: 0.25 }, dropTool: { hide: 'knife' },
-              enemies: ['Rat', 'Wolf', 'Boar', 'Hyena', 'Bear', 'Stag', 'Panther', 'Dire Wolf', 'Sabercat', 'Mammoth'], bosses: ['Alpha Wolf', 'Great Boar', 'Cave Bear', 'Elder Stag', 'Beast King'] },
-    roads:  { name: 'The Roads',  icon: [5,7],   desc: 'Bandits. The only enemies that carry gold.',     goldMult: 1,   drops: { fiber: 0.1 }, req: { stage: 10 }, reqText: 'Reach stage 10 in the Wilds',
-              enemies: ['Cutpurse', 'Bandit', 'Poacher', 'Highwayman', 'Mercenary', 'Deserter', 'Marauder', 'Raider', 'Warlord', 'Assassin'], bosses: ['Bandit Chief', 'Toll Baron', 'Mercenary Captain', 'Raider Lord', 'The Black Prince'] },
-    crypts: { name: 'The Crypts', icon: [0,0],   desc: 'Undead. Grave gold, and old iron.',              goldMult: 1.6, drops: { ingot: 0.05 }, req: { tech: 'graverobbing' }, reqText: 'Research Grave Robbing',
-              enemies: ['Skeleton', 'Ghoul', 'Cultist', 'Wraith', 'Revenant', 'Bone Knight', 'Lich Acolyte', 'Barrow Wight', 'Death Knight', 'Shade'], bosses: ['Bone Lord', 'Cult Priest', 'Crypt Wight', 'Lich', 'The Sleeper'] },
+    // Each ground is a LINE of enemy types. A type has 10 stages; stage 10 is its boss. Pool: per-kill drop chance = base + growth × (stage−1), capped.
+    // Loot from earlier types carries over at its stage-10 chance. `unique` drops once, on the first boss kill (+1 talent point).
+    // dropTool: the drop needs that tool and scales with it. Tech gating (Skinning → hide, Butchery → meat, Grave Robbing → ingot) applies by resource.
+    wilds:  { name: 'The Wilds',  icon: [17,8],  desc: 'Beasts. Hide and meat — no gold.',              goldMult: 0, dropTool: { hide: 'knife' }, line: [
+      { id: 'rat',   name: 'Rat',      plural: 'Rats',      boss: 'Rat King',    unique: 'ratkingtooth', pool: [{ k: 'hide', base: 0.10, growth: 0.05 }, { k: 'meat', base: 0.10, growth: 0.03 }, { k: 'rattail', base: 0.00, growth: 0.03 }] },
+      { id: 'boar',  name: 'Boar',     plural: 'Boars',     boss: 'Great Boar',  unique: 'greatboartusk', pool: [{ k: 'hide', base: 0.35, growth: 0.04 }, { k: 'meat', base: 0.25, growth: 0.04 }, { k: 'tusk', base: 0.03, growth: 0.03 }] },
+      { id: 'wolf',  name: 'Wolf',     plural: 'Wolves',    boss: 'Alpha Wolf',  unique: 'alphafang',    pool: [{ k: 'hide', base: 0.45, growth: 0.04 }, { k: 'meat', base: 0.30, growth: 0.04 }, { k: 'wolfpelt', base: 0.03, growth: 0.03 }] },
+      { id: 'bear',  name: 'Bear',     plural: 'Bears',     boss: 'Cave Bear',   unique: 'cavebearhide', pool: [{ k: 'hide', base: 0.55, growth: 0.05 }, { k: 'meat', base: 0.40, growth: 0.05 }, { k: 'bearclaw', base: 0.03, growth: 0.03 }] },
+      { id: 'saber', name: 'Sabercat', plural: 'Sabercats', boss: 'Beast King',  unique: 'beastkingcrown', pool: [{ k: 'hide', base: 0.65, growth: 0.05 }, { k: 'meat', base: 0.45, growth: 0.05 }, { k: 'saberfang', base: 0.04, growth: 0.03 }] },
+    ] },
+    roads:  { name: 'The Roads',  icon: [5,7],   desc: 'Bandits. The only enemies that carry gold.',     goldMult: 1, req: { stage: 10 }, reqText: 'Slay the Rat King in the Wilds', line: [
+      { id: 'cutpurse', name: 'Cutpurse',   plural: 'Cutpurses',   boss: 'Bandit Chief',       unique: 'banditseal',    pool: [{ k: 'fiber', base: 0.20, growth: 0.04 }, { k: 'rope', base: 0.05, growth: 0.03 }] },
+      { id: 'bandit',   name: 'Bandit',     plural: 'Bandits',     boss: 'Toll Baron',         unique: 'tollbaronring', pool: [{ k: 'fiber', base: 0.40, growth: 0.04 }, { k: 'rope', base: 0.15, growth: 0.03 }, { k: 'lockbox', base: 0.01, growth: 0.01 }] },
+      { id: 'merc',     name: 'Mercenary',  plural: 'Mercenaries', boss: 'Mercenary Captain',  unique: 'lockbox',       pool: [{ k: 'rope', base: 0.30, growth: 0.03 }, { k: 'lockbox', base: 0.03, growth: 0.02 }, { k: 'ingot', base: 0.02, growth: 0.01 }] },
+      { id: 'raider',   name: 'Raider',     plural: 'Raiders',     boss: 'Raider Lord',        unique: 'lockbox',       pool: [{ k: 'rope', base: 0.40, growth: 0.03 }, { k: 'lockbox', base: 0.06, growth: 0.02 }, { k: 'ingot', base: 0.05, growth: 0.02 }] },
+      { id: 'assassin', name: 'Assassin',   plural: 'Assassins',   boss: 'The Black Prince',   unique: 'lockbox',       pool: [{ k: 'lockbox', base: 0.10, growth: 0.03 }, { k: 'ingot', base: 0.08, growth: 0.02 }] },
+    ] },
+    crypts: { name: 'The Crypts', icon: [0,0],   desc: 'Undead. Grave gold, and old iron.',              goldMult: 1.6, req: { tech: 'graverobbing' }, reqText: 'Research Grave Robbing', line: [
+      { id: 'skeleton', name: 'Skeleton',   plural: 'Skeletons',   boss: 'Bone Lord',    unique: 'bonelordskull', pool: [{ k: 'bonedust', base: 0.20, growth: 0.04 }, { k: 'ingot', base: 0.02, growth: 0.01 }, { k: 'graveiron', base: 0.02, growth: 0.02 }] },
+      { id: 'ghoul',    name: 'Ghoul',      plural: 'Ghouls',      boss: 'Cult Priest',  unique: 'cultidol',      pool: [{ k: 'bonedust', base: 0.40, growth: 0.04 }, { k: 'ingot', base: 0.04, growth: 0.01 }, { k: 'graveiron', base: 0.05, growth: 0.02 }] },
+      { id: 'wraith',   name: 'Wraith',     plural: 'Wraiths',     boss: 'Crypt Wight',  unique: 'cultidol',      pool: [{ k: 'bonedust', base: 0.50, growth: 0.04 }, { k: 'ingot', base: 0.06, growth: 0.02 }, { k: 'graveiron', base: 0.08, growth: 0.02 }] },
+      { id: 'knight',   name: 'Bone Knight',plural: 'Bone Knights',boss: 'Lich',         unique: 'cultidol',      pool: [{ k: 'ingot', base: 0.10, growth: 0.02 }, { k: 'graveiron', base: 0.12, growth: 0.03 }] },
+      { id: 'shade',    name: 'Shade',      plural: 'Shades',      boss: 'The Sleeper',  unique: 'cultidol',      pool: [{ k: 'ingot', base: 0.15, growth: 0.02 }, { k: 'graveiron', base: 0.15, growth: 0.03 }] },
+    ] },
   },
 
   // ---------- Enemies ----------
+  // Stage s → enemy type t = floor((s−1)/10), sub-stage k = 1..10. Inside a type: ×1.18 HP / ×1.12 dmg per sub-stage; each new type ×2 HP / ×1.6 dmg.
   stages: {
-    enemyHp:    s => 30 * Math.pow(1.15, s - 1),
-    enemyDps:   s => 2 * Math.pow(1.10, s - 1),
+    perType: 10,
+    enemyHp:    s => { const t = Math.floor((s - 1) / 10), k = (s - 1) % 10; return 30 * Math.pow(1.18, k) * Math.pow(2, t); },
+    enemyDps:   s => { const t = Math.floor((s - 1) / 10), k = (s - 1) % 10; return 2 * Math.pow(1.12, k) * Math.pow(1.6, t); },
     goldPerKill: s => 1 * Math.pow(1.14, s - 1),
-    xpMult:     s => Math.pow(1.08, s - 1),
-    dropGrowth: s => Math.pow(1.10, s - 1), // multiplies a ground's base drops per kill
+    xpPerKill:  s => { const t = Math.floor((s - 1) / 10), k = (s - 1) % 10 + 1; return (k + 10 * t) * Math.pow(1.3, t); }, // Rat 1 → 1 XP, Rat 10 → 10, Boar 1 → 14
+    dropCap: 0.95,
+    carryOverFloor: 1.0,   // earlier types' loot carries over at (their stage-10 chance × this)
   },
 
   // ---------- Kingdom: plots, buildings, jobs ----------

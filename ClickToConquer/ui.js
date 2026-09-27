@@ -46,6 +46,8 @@ const UI = (() => {
     $('wb-ad').addEventListener('click', () => claimWelcome(CONFIG.offline.adDoubleMultiplier));
     $('dev-toggle').addEventListener('click', () => $('dev-panel').classList.toggle('hidden'));
     $('dev-close').addEventListener('click', () => $('dev-panel').classList.add('hidden'));
+    $('item-close').addEventListener('click', closeItem); $('item-modal').addEventListener('click', e => { if (e.target === $('item-modal')) closeItem(); });
+    $('item-s1').addEventListener('click', () => invItem && Game.sell(invItem, 1)); $('item-s10').addEventListener('click', () => invItem && Game.sell(invItem, 10)); $('item-sall').addEventListener('click', () => invItem && Game.sell(invItem, 'all'));
     document.querySelectorAll('[data-speed]').forEach(b => b.addEventListener('click', () => { Game.S.settings.devSpeed = +b.dataset.speed; document.querySelectorAll('[data-speed]').forEach(x => x.classList.toggle('active', x === b)); }));
     $('dev-offline').addEventListener('click', () => showWelcomeBack(Game.applyOffline(4 * 3600)));
     const devN = () => +$('dev-n').value || 0;
@@ -253,6 +255,7 @@ const UI = (() => {
       case 'skills': return reached('q13c') || CONFIG.skills.some(s => Game.skillUnlocked(s.id));
       case 'talents': return S.hero.level >= CONFIG.hero.talentPointsFromLevel || reached('q06c');
       case 'market': return reached('q14');
+      case 'inventory': return Object.keys(R).some(k => S.lifetime[k] > 0);
       default: return true;
     }
   }
@@ -309,7 +312,7 @@ const UI = (() => {
   function remember(id) { const e = $(id); if (!HOME[id]) HOME[id] = { parent: e.parentNode, next: e.nextSibling }; }
   function dock(id, dockId) { remember(id); $(dockId).appendChild($(id)); }
   function undock(id) { const h = HOME[id]; if (!h) return; h.parent.insertBefore($(id), h.next); }
-  const RIGHT = { kingdom: 'tab-kingdom', attr: 'sub-attr', skills: 'sub-skills', talents: 'sub-talents', market: 'tab-market' };
+  const RIGHT = { kingdom: 'tab-kingdom', attr: 'sub-attr', skills: 'sub-skills', talents: 'sub-talents', inventory: 'tab-inventory', market: 'tab-market' };
   let desktop = false;
   function applyLayout() {
     glowKey = '';
@@ -438,6 +441,75 @@ const UI = (() => {
     });
   }
 
+  // ---- Inventory ----
+  let invKey = '', invItem = null;
+  const rarityOf = k => Game.lootRarity(k);
+  function renderInventory() {
+    const S = Game.S, f = Game.fmt, keys = Object.keys(R).filter(k => S.lifetime[k] > 0);
+    const key = keys.join(',');
+    if (key !== invKey) {
+      invKey = key; const g = $('inv-grid'); g.innerHTML = ''; rows.inv = {};
+      for (const k of keys) {
+        const d = el('div', 'inv-item loot-' + rarityOf(k)); d.title = R[k].name;
+        d.innerHTML = `${ico(R[k].icon, 28)}<span class="inv-n" data-f="n">0</span><span class="inv-name">${R[k].name}</span>`;
+        d.addEventListener('click', () => openItem(k)); rows.inv[k] = d; g.appendChild(d);
+      }
+      $('inv-empty').classList.toggle('hidden', keys.length > 0);
+      renderBestiary();
+    }
+    const bKey = S.hero.ground + ':' + S.hero.bestStage + ':' + Object.keys(S.hero.bossesKilled).length + ':' + Object.values(S.hero.grounds).map(g => g.bestStage).join('/');
+    if (bKey !== renderBestiary.key) { renderBestiary.key = bKey; renderBestiary(); }
+    for (const k of keys) setText(rows.inv[k].querySelector('[data-f=n]'), f(Math.floor(S.res[k] || 0)));
+    if (invItem) { setText($('item-have'), f(Math.floor(S.res[invItem] || 0))); const have = Math.floor(S.res[invItem] || 0); $('item-s1').disabled = have < 1; $('item-s10').disabled = have < 10; $('item-sall').disabled = have < 1; }
+  }
+  // Where does an item come from / what uses it — scanned from config so it stays true as the game changes.
+  function itemSources(k) {
+    const out = [];
+    for (const hb of CONFIG.hand) if (hb.gives === k) out.push(`By hand: ${hb.name}`);
+    for (const a in CONFIG.activities) { const A = CONFIG.activities[a]; if (A.outputs && A.outputs[k]) out.push(`Activity: ${A.name}`); }
+    for (const b of CONFIG.buildingTypes) if (b.job.outputs[k]) out.push(`Building: ${b.name}`);
+    for (const gid in CONFIG.grounds) { const G = CONFIG.grounds[gid], names = []; for (const T of G.line) { if (T.pool.some(p => p.k === k)) names.push(T.plural); if (T.unique === k) names.push(T.boss + ' (first kill)'); } if (names.length) out.push(`${G.name}: ${names.join(', ')}`); }
+    if (k === 'gold') out.push('Market: selling anything', 'Bandits on the Roads, the dead in the Crypts');
+    const gate = CONFIG.techs.find(t => t.unlocks.drop === k); if (gate) out.push(`Needs the ${gate.name} tech`);
+    return out;
+  }
+  function itemUses(k) {
+    const out = [];
+    for (const t of CONFIG.techs) if (t.cost[k]) out.push(`Tech: ${t.name}`);
+    CONFIG.tiers.forEach((t, i) => { const names = new Set(); if (t.craftCost[k] || t.upgradeCost[k]) names.add(t.name); if (t.perSlot) for (const sl in t.perSlot) { const ps = t.perSlot[sl]; if ((ps.craftCost && ps.craftCost[k]) || (ps.upgradeCost && ps.upgradeCost[k])) names.add(ps.name + ' ' + CONFIG.slots[sl].name.toLowerCase()); } if (names.size) out.push(`Gear: ${[...names].join(', ')}`); });
+    for (const t of CONFIG.toolTiers) if (t.craftCost[k] || t.upgradeCost[k]) out.push(`Tools: ${t.name}`);
+    for (const b of CONFIG.buildingTypes) { if (b.buildCost[k]) out.push(`Build: ${b.name}`); if (b.job.inputs[k]) out.push(`${b.name} turns it into ${Object.keys(b.job.outputs).map(o => R[o].name).join(', ')}`); }
+    if (CONFIG.skillLevelCost[k]) out.push('Skill levels');
+    if (k === 'gold') out.push('Plots, founding a kingdom, skill levels, later techs');
+    return out;
+  }
+  function openItem(k) {
+    invItem = k; const S = Game.S, f = Game.fmt, rar = rarityOf(k);
+    setHtml($('item-icon'), ico(R[k].icon, 40)); setText($('item-name'), R[k].name);
+    setText($('item-rarity'), R[k].kind === 'loot' ? CONFIG.rarities[rar].name + ' loot' : `Tier ${R[k].tier} resource`); $('item-rarity').style.color = CONFIG.rarities[rar].color;
+    setText($('item-desc'), R[k].desc || '');
+    setHtml($('item-from'), itemSources(k).map(x => `<div>· ${x}</div>`).join('') || '<span class="dim">—</span>');
+    setHtml($('item-uses'), itemUses(k).map(x => `<div>· ${x}</div>`).join('') || '<span class="dim">Sell it, or keep it as a trophy.</span>');
+    $('item-sell').classList.toggle('hidden', !R[k].sell); if (R[k].sell) setText($('item-price'), f(Game.sellPrice(k)));
+    renderInventory(); $('item-modal').classList.remove('hidden');
+  }
+  function closeItem() { invItem = null; $('item-modal').classList.add('hidden'); }
+  function renderBestiary() {
+    const S = Game.S, box = $('bestiary'); let html = '';
+    for (const gid in CONFIG.grounds) {
+      const G = CONFIG.grounds[gid], gs = gid === S.hero.ground ? { bestStage: S.hero.bestStage } : (S.hero.grounds[gid] || { bestStage: 0 });
+      const best = gs.bestStage || 0; if (!best) continue;
+      html += `<div class="dim small" style="margin-top:8px">${G.name}</div>`;
+      G.line.forEach((T, i) => {
+        const first = i * CONFIG.stages.perType + 1; if (best < first) return;
+        const bossStage = first + CONFIG.stages.perType - 1, bossDone = !!S.hero.bossesKilled[gid + ':' + bossStage];
+        const pool = Game.stagePool(Math.min(best, bossStage), gid);
+        html += `<div class="bestiary-row"><div><div class="b-name">${T.name}</div><div class="b-sub">${best >= bossStage ? 'Boss: ' + T.boss + (bossDone ? ' ✓' : '') : 'Reached ' + Math.min(best, bossStage) - first + 1 + '/' + CONFIG.stages.perType}</div></div><div class="b-pool">${Object.keys(pool).map(k => `<span class="costitem loot-${rarityOf(k)}" title="${R[k].name} ${Math.round(pool[k] * 100)}%">${ico(R[k].icon, 12)}</span>`).join('')}${T.unique && bossDone ? `<span class="costitem loot-rare" title="${R[T.unique].name}">${ico(R[T.unique].icon, 12)}</span>` : ''}</div></div>`;
+      });
+    }
+    setHtml(box, html || '<span class="dim small">Fight something first.</span>');
+  }
+
   // ---- Render ----
   let lastRender = 0;
   function render(force) {
@@ -446,7 +518,7 @@ const UI = (() => {
 
     const kr = Game.kingdomRates(), hr = Game.heroFighting() ? Game.heroRates() : {}, hrv = Game.heroFighting() ? {} : Game.harvestRates();
     for (const k in R) {
-      const e = $('res-' + k), open = S.lifetime[k] > 0;
+      const e = $('res-' + k), open = R[k].kind !== 'loot' && S.lifetime[k] > 0;
       e.classList.toggle('hidden', !open); if (!open) continue;
       setText(e.querySelector('[data-f=amt]'), f(S.res[k]));
       const rate = (kr[k] || 0) + (hr[k] || 0) + (hrv[k] || 0);
@@ -456,9 +528,14 @@ const UI = (() => {
 
     // Fight
     const eMax = Game.enemyMaxHp();
-    setText($('stage'), h.stage); setText($('best-stage'), h.bestStage);
-    for (const id in CONFIG.grounds) { const b = rows.ground[id], G = CONFIG.grounds[id], un = Game.groundUnlocked(id), gs = id === h.ground ? { stage: h.stage } : (h.grounds[id] || { stage: 1 }); b.classList.toggle('active', id === h.ground); b.disabled = !un; b.classList.toggle('locked', !un); setText(b.querySelector('[data-f=st]'), un ? `stage ${gs.stage}` : G.reqText); }
-    { const G = Game.ground(), drops = Game.groundDrops(); setHtml($('ground-desc'), `${G.desc} ` + (Object.keys(drops).length ? 'Drops: ' + Object.entries(drops).map(([k, v]) => `<span class="costitem">${ico(R[k].icon, 14)}${v < 1 ? Math.round(v * 100) + '% chance' : f(v)}</span>`).join(' ') + ' per kill' : Object.keys(G.drops).map(k => `<span class="dim">${R[k].name} needs ${k === 'hide' ? (Game.dropUnlocked('hide') ? 'a Skinning Knife' : 'Skinning') : 'Bonecraft'}</span>`).join(' ')) + (G.dropTool && S.hero.tools.knife && Game.dropUnlocked('hide') ? ` <span class="dim">· knife ×${Game.dropToolMult('knife').toFixed(1)}</span>` : '')); }
+    setText($('stage'), Game.stageLabel()); setText($('best-stage'), Game.stageLabel(h.bestStage));
+    for (const id in CONFIG.grounds) { const b = rows.ground[id], G = CONFIG.grounds[id], un = Game.groundUnlocked(id), gs = id === h.ground ? { stage: h.stage } : (h.grounds[id] || { stage: 1 }); b.classList.toggle('active', id === h.ground); b.disabled = !un; b.classList.toggle('locked', !un); setText(b.querySelector('[data-f=st]'), un ? Game.stageLabel(gs.stage, id) : G.reqText); }
+    { const G = Game.ground(), drops = Game.groundDrops(), pool = Game.stagePool();
+      const why = k => k === 'hide' ? (Game.dropUnlocked('hide') ? 'needs a Skinning Knife' : 'needs Skinning') : !Game.dropUnlocked(k) ? 'needs ' + (CONFIG.techs.find(t => t.unlocks.drop === k) || {}).name : '';
+      const pills = Object.keys(pool).map(k => drops[k] !== undefined
+        ? `<span class="costitem loot-${Game.lootRarity(k)}" title="${R[k].name} (${CONFIG.rarities[Game.lootRarity(k)].name})">${ico(R[k].icon, 14)}${drops[k] < 1 ? Math.round(drops[k] * 100) + '%' : f(drops[k])}</span>`
+        : `<span class="costitem lack" title="${R[k].name}: ${why(k)}">${ico(R[k].icon, 14, 'ghost')}<span class="dim">${why(k)}</span></span>`).join(' ');
+      setHtml($('ground-desc'), `${G.desc} <span class="dim">Loot per kill:</span> ${pills}` + (G.dropTool && S.hero.tools.knife && Game.dropUnlocked('hide') ? ` <span class="dim">· knife ×${Game.dropToolMult('knife').toFixed(1)}</span>` : '')); }
     $('boss-tag').classList.toggle('hidden', !Game.isBoss());
     setText($('hero-lvl'), h.level);
     $('hero-hpbar').style.width = (100 * h.hp / st.maxHp) + '%';
@@ -475,6 +552,7 @@ const UI = (() => {
     $('kills-bar').style.width = Math.min(100, 100 * h.kills / need) + '%';
     setText($('kills-text'), `${Math.min(h.kills, need)} / ${need} kills`);
     $('advance-btn').disabled = !Game.canAdvance();
+    setText($('advance-btn'), Game.isBoss() ? `Hunt ${Game.nextTypeName()} ▶` : Game.isBoss(h.stage + 1) ? `Face the ${Game.enemyName(h.stage + 1)} ▶` : 'Advance ▶');
     $('retreat-btn').disabled = h.stage <= 1;
     const dNext = Game.stageDanger(h.stage + 1), dHere = Game.stageDanger();
     setText($('danger'), dHere >= 1 ? '⚠ You cannot survive here. Retreat or gear up.'
@@ -589,6 +667,8 @@ const UI = (() => {
     $('badge-tech').classList.toggle('hidden', !anyTech);
     $('badge-kingdom').classList.toggle('hidden', !(anyBuild || anyTech || Game.canFound()));
 
+    // Inventory (grid rebuilt only when the set of owned items changes; counts updated in place)
+    renderInventory();
     // Market
     let anySell = false;
     for (const k in rows.market) {
@@ -729,9 +809,10 @@ const UI = (() => {
     if (desktop) { const cr = document.querySelector('.panel-center').getBoundingClientRect(); m.style.left = cr.left + 'px'; m.style.right = (window.innerWidth - cr.right) + 'px'; }
     else { m.style.left = ''; m.style.right = ''; }
     $('mini-advance').classList.toggle('hidden', !(fighting && Game.canAdvance()));
+    if (fighting && Game.canAdvance()) setText($('mini-advance'), Game.isBoss() ? `Hunt ${Game.nextTypeName()} ▶` : 'Advance ▶');
     $('mini-hero-hp').style.width = (100 * h.hp / st.maxHp) + '%'; setText($('mini-hero-hptext'), `${f(h.hp)} / ${f(st.maxHp)}`);
     if (fighting) {
-      setText($('mini-title'), `${h.resting ? 'Resting' : 'Fighting'} · Stage ${h.stage}`); setText($('mini-sub'), `${Game.enemyName()} · ${Game.ground().name}`);
+      setText($('mini-title'), `${h.resting ? 'Resting' : 'Fighting'} · ${Game.stageLabel()}`); setText($('mini-sub'), `${Game.enemyName()} · ${Game.ground().name}`);
       const eHp = h.enemyHp > 0 ? h.enemyHp : eMax; $('mini-target').classList.add('enemy');
       $('mini-target-bar').style.width = (100 * eHp / eMax) + '%'; setText($('mini-target-text'), `${f(eHp)} / ${f(eMax)}`);
       const need = Game.killsNeeded(); $('mini-action-bar').style.width = Math.min(100, 100 * h.kills / need) + '%'; setText($('mini-action-text'), `${Math.min(h.kills, need)} / ${need} kills${Game.canAdvance() ? ' · Advance ready' : ''}`);
@@ -765,7 +846,7 @@ const UI = (() => {
       const a = $('enemy-hpbar').parentElement; if (!a.offsetParent) return; const r = a.getBoundingClientRect();
       let i = 0;
       for (const k in ev.loot) { const v = ev.loot[k]; if (!(v > 0)) continue;
-        const p = el('div', 'pop loot', `${ico(R[k].icon, 18)} +${Game.fmt(v)}`);
+        const p = el('div', 'pop loot loot-' + Game.lootRarity(k) + (ev.unique ? ' unique' : ''), `${ico(R[k].icon, 18)} +${Game.fmt(v)}${ev.unique ? ' ' + R[k].name : ''}`);
         p.style.left = (r.left + r.width * (0.35 + Math.random() * 0.3)) + 'px'; p.style.top = (r.top + 14 + i * 18) + 'px';
         document.body.appendChild(p); setTimeout(() => p.remove(), 1100); i++; }
       return;
