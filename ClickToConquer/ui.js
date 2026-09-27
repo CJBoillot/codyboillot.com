@@ -84,6 +84,7 @@ const UI = (() => {
       document.querySelectorAll('[data-csub]').forEach(x => x.classList.toggle('active', x === b));
       document.querySelectorAll('.csub').forEach(t => t.classList.toggle('hidden', t.id !== 'csub-' + b.dataset.csub));
     }));
+    $('set-reload').addEventListener('click', async () => { Game.save(); try { if (window.caches) { const ks = await caches.keys(); await Promise.all(ks.map(k => caches.delete(k))); } } catch (e) {} location.replace(location.pathname + '?v=' + Date.now()); });
     $('set-reset').addEventListener('click', () => ask('Reset all progress?', 'This wipes everything — hero, kingdom, Crystals, Legacy perks, trophies. There is no undo.', 'Wipe everything', () => Game.debug.resetAll()));
     $('tech-hide-known').addEventListener('change', e => { Game.S.settings.techHideKnown = e.target.checked; render(true); });
     $('item-pin').addEventListener('click', () => { if (invItem) { Game.togglePin(invItem); openItem(invItem); } });
