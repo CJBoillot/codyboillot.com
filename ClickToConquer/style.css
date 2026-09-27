@@ -648,3 +648,5 @@ html, body { max-width: 100%; overflow-x: hidden; }
 @media (max-width: 400px) { .tabs button { font-size: 11px; letter-spacing: .3px; } }
 .subtabs { flex-wrap: nowrap; } .subtabs button { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .res-bar { max-width: 100%; }
+.maxbtn { border-color: var(--bronze-dim); }
+.maxbtn .cost { font-size: 10px; color: var(--bronze2); }

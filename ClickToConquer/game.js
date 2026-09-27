@@ -95,8 +95,8 @@ function craftGear(slot) {
 function finishCraft() {
   const cr = crafting(); if (!cr) return; S.hero.crafting = null;
   if (cr.kind === 'gear') { const it = S.hero.gear[cr.slot]; S.hero.gear[cr.slot] = { tier: it ? it.tier + 1 : 0, level: 0 }; log(`Forged ${cr.name}`); }
-  else if (cr.kind === 'gearUp') { if (S.hero.gear[cr.slot]) S.hero.gear[cr.slot].level++; }
-  else if (cr.kind === 'toolUp') { if (S.hero.tools[cr.slot]) S.hero.tools[cr.slot].level++; }
+  else if (cr.kind === 'gearUp') { if (S.hero.gear[cr.slot]) S.hero.gear[cr.slot].level += cr.levels || 1; }
+  else if (cr.kind === 'toolUp') { if (S.hero.tools[cr.slot]) S.hero.tools[cr.slot].level += cr.levels || 1; }
   else { const it = S.hero.tools[cr.slot]; S.hero.tools[cr.slot] = { tier: it ? it.tier + 1 : 0, level: 0 }; log(`Made a ${cr.name}`); }
   if (cr.kind === 'gear' || cr.kind === 'tool') pushEvent({ who: 'craft', name: cr.name });
 }
@@ -104,6 +104,23 @@ function tickCraft(dt) { const cr = crafting(); if (!cr) return; cr.t += dt; if 
 function upgradeGear(slot) {
   if (crafting()) return false; const c = gearUpgradeCost(slot); if (!c || !canAfford(c)) return false;
   pay(c); const it = S.hero.gear[slot]; S.hero.crafting = { kind: 'gearUp', slot, t: 0, total: CONFIG.upgradeSeconds, name: `${tierName(slot, it.tier)} ${CONFIG.slots[slot].name} Lv${it.level + 1}` }; return true;
+}
+
+// Max: buy as many levels as you can afford (up to the tier-up point) in one timed upgrade.
+function maxUpgradePlan(kind, slot) {
+  const it = kind === 'gear' ? S.hero.gear[slot] : S.hero.tools[slot]; if (!it) return null;
+  const costFn = kind === 'gear' ? gearUpgradeCost : toolUpgradeCost, pool = { ...S.res }, total = {}; let n = 0;
+  const cap = it.level < CONFIG.tierUpAt ? CONFIG.tierUpAt - it.level : 50;
+  const save = it.level;
+  while (n < cap) { const c = costFn(slot); let ok = true; for (const k in c) if ((pool[k] || 0) < c[k]) { ok = false; break; } if (!ok) break; for (const k in c) { pool[k] -= c[k]; total[k] = (total[k] || 0) + c[k]; } it.level++; n++; }
+  it.level = save;
+  return n > 0 ? { levels: n, cost: total } : null;
+}
+function upgradeMax(kind, slot) {
+  if (crafting()) return false; const plan = maxUpgradePlan(kind, slot); if (!plan) return false;
+  pay(plan.cost); const it = kind === 'gear' ? S.hero.gear[slot] : S.hero.tools[slot];
+  const name = kind === 'gear' ? `${tierName(slot, it.tier)} ${CONFIG.slots[slot].name}` : `${CONFIG.toolTiers[it.tier].name} ${CONFIG.toolSlots[slot].name}`;
+  S.hero.crafting = { kind: kind === 'gear' ? 'gearUp' : 'toolUp', slot, t: 0, total: CONFIG.upgradeSeconds, levels: plan.levels, name: `${name} +${plan.levels}` }; return true;
 }
 
 // ---------- By hand ----------
@@ -678,7 +695,7 @@ function boot() {
 window.Game = {
   get S() { return S; }, fmt, pct, fmtTime, drainEvents: () => EVENTS.splice(0), afkEfficiency: () => afkEff(),
   discXp, discLevel, discProgress, treeNode, nodeRank, nodeMax, nodeOpen, treePointsTotal, treePointsSpent, treePointsFree, canRankNode, rankNode, treeMods,
-  crafting, stats, gearStats, itemStatPreview, gearCraftCost, gearUpgradeCost, canTierUp, craftGear, upgradeGear,
+  crafting, maxUpgradePlan, upgradeMax, stats, gearStats, itemStatPreview, gearCraftCost, gearUpgradeCost, canTierUp, craftGear, upgradeGear,
   talentPointsFree, talentPointsTotal, talentPointsSpent, respec, respecCost,
   skillDef, skillUnlocked, skillPower, skillCd, skillReady, castSkill, activeBuffs,
   enemyMaxHp, enemyDps, effectiveEnemyDps, enemyName, isBoss, stageType, enemyType, stageLabel, nextTypeName, stagePool, lootRarity, dropGated, killsNeeded, farmRate, stageDanger, heroRates,

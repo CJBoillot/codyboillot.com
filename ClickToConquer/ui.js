@@ -158,9 +158,11 @@ const UI = (() => {
         </div>
         <div class="btn-col">
           <button class="buy" data-f="up"><span class="small">Upgrade</span><br><span class="cost" data-f="upcost"></span></button>
+          <button class="buy maxbtn" data-f="max"><span class="small">Max</span><br><span class="cost" data-f="maxn"></span></button>
           <button class="buy shard" data-f="forge"><span class="small" data-f="forgelbl">Forge</span><br><span class="cost" data-f="forgecost"></span></button>
         </div>`;
       row.querySelector('[data-f=up]').addEventListener('click', () => { if (Game.upgradeGear(slot)) flash(row); });
+      row.querySelector('[data-f=max]').addEventListener('click', () => { if (Game.upgradeMax('gear', slot)) flash(row); });
       row.querySelector('[data-f=forge]').addEventListener('click', () => { if (Game.craftGear(slot)) flash(row); });
       rows.gear[slot] = row; gl.appendChild(row);
     }
@@ -168,8 +170,9 @@ const UI = (() => {
     for (const slot in CONFIG.toolSlots) {
       const row = el('div', 'row gear-row');
       row.innerHTML = `${ico(CONFIG.toolSlots[slot].icon, 32, 'rowico')}<div class="row-main"><div class="row-title" data-f="title"></div><div class="row-sub" data-f="stats"></div></div>
-        <div class="btn-col"><button class="buy" data-f="up"><span class="small">Upgrade</span><br><span class="cost" data-f="upcost"></span></button><button class="buy shard" data-f="forge"><span class="small" data-f="forgelbl">Make</span><br><span class="cost" data-f="forgecost"></span></button></div>`;
+        <div class="btn-col"><button class="buy" data-f="up"><span class="small">Upgrade</span><br><span class="cost" data-f="upcost"></span></button><button class="buy maxbtn" data-f="max"><span class="small">Max</span><br><span class="cost" data-f="maxn"></span></button><button class="buy shard" data-f="forge"><span class="small" data-f="forgelbl">Make</span><br><span class="cost" data-f="forgecost"></span></button></div>`;
       row.querySelector('[data-f=up]').addEventListener('click', () => { if (Game.upgradeTool(slot)) flash(row); });
+      row.querySelector('[data-f=max]').addEventListener('click', () => { if (Game.upgradeMax('tool', slot)) flash(row); });
       row.querySelector('[data-f=forge]').addEventListener('click', () => { if (Game.craftTool(slot)) flash(row); });
       rows.tool[slot] = row; tl.appendChild(row);
     }
@@ -664,7 +667,7 @@ const UI = (() => {
         setHtml(row.querySelector('[data-f=title]'), `${def.name} <span class="owned">empty</span>`);
         setText(row.querySelector('[data-f=stats]'), `${STAT_LABEL[def.primary]}, ${STAT_LABEL[def.secondary]} from Tier 2`);
         setText(row.querySelector('[data-f=next]'), '');
-        up.classList.add('hidden');
+        up.classList.add('hidden'); row.querySelector('[data-f=max]').classList.add('hidden');
       } else {
         const cur = Game.itemStatPreview(slot, it.tier, it.level), nxt = Game.itemStatPreview(slot, it.tier, it.level + 1);
         setHtml(row.querySelector('[data-f=title]'), `${Game.tierName(slot, it.tier)} ${def.name} <span class="owned">Lv${it.level}</span>`);
@@ -672,6 +675,7 @@ const UI = (() => {
         setText(row.querySelector('[data-f=next]'), 'Next: ' + Object.entries(nxt).map(([k, v]) => fs(k, v)).join(' · '));
         up.classList.remove('hidden');
         if (!forgeState(up, 'gearUp', slot, 'Upgrade')) { const uc = Game.gearUpgradeCost(slot); setHtml(up.querySelector('[data-f=upcost]'), costHtml(uc)); up.disabled = !Game.canAfford(uc) || !!Game.crafting(); if (!up.disabled) anyGear = true; }
+        { const mx = row.querySelector('[data-f=max]'), plan = Game.maxUpgradePlan('gear', slot); mx.classList.toggle('hidden', !it); setText(mx.querySelector('[data-f=maxn]'), plan ? `+${plan.levels} → Lv${it.level + plan.levels}` : '—'); mx.disabled = !plan || plan.levels < 2 || !!Game.crafting(); }
       }
       const fc = Game.gearCraftCost(slot), can = Game.canTierUp(slot);
       if (!fc) forge.classList.add('hidden');
@@ -788,11 +792,12 @@ const UI = (() => {
     for (const slot in CONFIG.toolSlots) {
       const row = rows.tool[slot], def = CONFIG.toolSlots[slot], it = h.tools[slot];
       const up = row.querySelector('[data-f=up]'), forge = row.querySelector('[data-f=forge]');
-      if (!it) { setHtml(row.querySelector('[data-f=title]'), `${def.name} <span class="owned">none</span>`); setText(row.querySelector('[data-f=stats]'), def.activity ? `Needed to ${CONFIG.activities[def.activity].name.toLowerCase()}.` : `Needed to take ${R[def.boosts].name} in the Wilds. Better knife, better chance.`); up.classList.add('hidden'); }
+      if (!it) { setHtml(row.querySelector('[data-f=title]'), `${def.name} <span class="owned">none</span>`); setText(row.querySelector('[data-f=stats]'), def.activity ? `Needed to ${CONFIG.activities[def.activity].name.toLowerCase()}.` : `Needed to take ${R[def.boosts].name} in the Wilds. Better knife, better chance.`); up.classList.add('hidden'); row.querySelector('[data-f=max]').classList.add('hidden'); }
       else {
         setHtml(row.querySelector('[data-f=title]'), `${CONFIG.toolTiers[it.tier].name} ${def.name} <span class="owned">Lv${it.level}</span>`);
         setText(row.querySelector('[data-f=stats]'), def.activity ? `Power ×${Game.toolPower(slot).toFixed(2)} → ${CONFIG.activities[def.activity].name}: ${Object.entries(Game.harvestRates(def.activity)).map(([k, v]) => `${f(v)} ${R[k].name}/s`).join(', ')}` : `Power ×${Game.toolPower(slot).toFixed(2)} → ${R[def.boosts].name} chance ×${Game.dropToolMult(slot).toFixed(2)}`);
         up.classList.remove('hidden'); if (!forgeState(up, 'toolUp', slot, 'Upgrade')) { const uc = Game.toolUpgradeCost(slot); setHtml(up.querySelector('[data-f=upcost]'), costHtml(uc)); up.disabled = !Game.canAfford(uc) || !!Game.crafting(); }
+        { const mx = row.querySelector('[data-f=max]'), plan = Game.maxUpgradePlan('tool', slot); mx.classList.remove('hidden'); setText(mx.querySelector('[data-f=maxn]'), plan ? `+${plan.levels} → Lv${it.level + plan.levels}` : '—'); mx.disabled = !plan || plan.levels < 2 || !!Game.crafting(); }
       }
       const fc = Game.toolCraftCost(slot), can = Game.canToolTierUp(slot), nt = it ? it.tier + 1 : 0;
       if (!fc) forge.classList.add('hidden');
