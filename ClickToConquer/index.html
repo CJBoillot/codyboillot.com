@@ -8,7 +8,7 @@
   <title>Click to Conquer</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=a022">
+  <link rel="stylesheet" href="style.css?v=a022b">
 </head>
 <body>
 
@@ -85,16 +85,6 @@
           </div>
           <div id="danger" class="dim small"></div>
           <div id="afk-info" class="dim small afk-info"></div>
-          <div class="ground-block">
-            <div class="card-title" style="margin-bottom:6px">Where to fight</div>
-            <div id="ground-bar" class="ground-bar"></div>
-            <div id="ground-desc" class="dim small"></div>
-          </div>
-        </div>
-        <div class="card hand-card" id="hand-card">
-          <button class="card-title collapsible" id="hand-toggle" aria-expanded="true">By hand <span class="chev">▾</span></button>
-          <div id="hand-bar" class="hand-bar"></div>
-          <div class="dim small hand-hint">One per click, instantly. Tools and a weapon let your hero do these on his own.</div>
         </div>
         <div class="card">
           <div class="card-title">Your hero is…</div>
@@ -102,6 +92,16 @@
           <div id="activity-hint" class="dim small"></div>
         </div>
 
+        <div class="card" id="ground-card">
+          <div class="card-title">Where to fight</div>
+          <div id="ground-bar" class="ground-bar"></div>
+          <div id="ground-desc" class="dim small"></div>
+        </div>
+        <div class="card hand-card" id="hand-card">
+          <button class="card-title collapsible" id="hand-toggle" aria-expanded="true">By hand <span class="chev">▾</span></button>
+          <div id="hand-bar" class="hand-bar"></div>
+          <div class="dim small hand-hint">One per click, instantly. Tools and a weapon let your hero do these on his own.</div>
+        </div>
         <div class="card"><div class="card-title">Stats</div><div class="stats3" id="stat-grid"></div></div>
         <div class="card" id="log-card"><div class="card-title">Log</div><div id="log" class="log"></div></div>
       </div>
@@ -329,9 +329,9 @@
 </div>
 
 
-<script src="config.js?v=a022"></script>
-<script src="game.js?v=a022"></script>
-<script src="ui.js?v=a022"></script>
+<script src="config.js?v=a022b"></script>
+<script src="game.js?v=a022b"></script>
+<script src="ui.js?v=a022b"></script>
 <script>window.addEventListener("error", e => { const d = document.getElementById("err"); if (d) { d.textContent = "Error: " + e.message; d.classList.remove("hidden"); } });</script>
 </body>
 </html>

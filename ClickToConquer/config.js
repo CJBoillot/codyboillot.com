@@ -363,11 +363,11 @@ const CONFIG = {
       reward: { fiber: 10 }, focus: { tab: 'hero', sub: 'fight', el: 'act:fight' } },
     // ===== Settling In =====
     // Each quest is a checklist of steps. Step checks: activity, ground, tool, gear, tech, counter, plots, building, jobs, sold, stage, boss, founded, thrall.
-    { id: 'q01', chain: 'Settling In', name: 'Onward', text: 'Your hero fights by himself. Deeper stages have tougher enemies but drop more loot and experience — pushing is how you grow.',
+    { id: 'q01', chain: 'Settling In', name: 'Onward', text: 'Your hero fights by himself. Deeper stages have tougher enemies but drop more loot and experience — pushing is how you grow. If he starts losing, Retreat a stage and upgrade.',
       steps: [
         { label: 'Fight in The Wilds', check: { activity: 'fight', ground: 'wilds' } },
         { label: 'Fill the bar (10 kills)', check: { counter: 'kills', need: 10 } },
-        { label: 'Press Advance when it says the next stage looks fine', check: { stage: 2 } },
+        { label: 'Press Advance once the kills bar is full', check: { stage: 2 } },
       ], reward: { wood: 20 }, focus: { tab: 'hero', sub: 'fight', el: 'id:advance-btn' } },
     { id: 'q02', name: 'Woodcraft', text: 'Tools open up the wild. Woodcraft is the first thing you can research: crude tools carved from wood.',
       steps: [

@@ -768,6 +768,7 @@ const UI = (() => {
     setText($('activity-hint'), act === 'fight' || act === 'idle' ? CONFIG.activities[act].desc : CONFIG.activities[act].desc + ' Better tools, more Strength, and practice all speed this up.');
     const fighting = act === 'fight', idle = act === 'idle';
     $('fight-card').classList.toggle('hidden', !fighting); $('harvest-card').classList.toggle('hidden', fighting || idle);
+    $('ground-card').classList.toggle('hidden', !S.hero.gear.weapon);
     if (!fighting && !idle) {
       const a = CONFIG.activities[act], t = Game.harvestTime(act), y = Game.harvestYield(act), tool = h.tools[a.tool];
       setText($('harvest-title'), a.name);
