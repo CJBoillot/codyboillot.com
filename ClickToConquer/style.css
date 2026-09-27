@@ -627,3 +627,10 @@ body.desktop #subtab-dock { display: none; }
 .ad-btn { opacity: .45; cursor: not-allowed; filter: grayscale(.6); }
 .credits b { color: var(--bronze2); }
 #confirm-modal { z-index: 60; }
+
+/* forging progress on the forge button */
+.buy.forging { position: relative; overflow: hidden; border-color: var(--bronze); color: var(--accent2); opacity: 1 !important; }
+.buy.forging::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: var(--p, 0%); background: linear-gradient(90deg, rgba(201,151,63,.35), rgba(232,192,106,.55)); transition: width .1s linear; }
+.buy.forging > * { position: relative; }
+.buy.busy { opacity: .5; }
+.pop.craft { color: var(--accent2); font-family: var(--font-head); }

@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Alpha 0.2.0',
+  version: 'Alpha 0.2.1',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -123,6 +123,7 @@ const CONFIG = {
   // Craft next tier: previous tier level ≥ tierUpAt, pay tier's craftCost. Upgrade: upgradeCost × upgradeMult^level.
   gearGrowth: 1.15,
   tierUpAt: 15,
+  craftSeconds: 5, // forging a gear piece or tool takes this long (one at a time)
   slots: {
     weapon:  { name: 'Weapon', icon: [5,1],  primary: 'attack', base: 3,   secondary: 'crit',    secBase: 0.02 },
     helm:    { name: 'Helm',   icon: [7,1],  primary: 'hp',     base: 25,  secondary: 'regen',   secBase: 0.8 },
@@ -341,22 +342,22 @@ const CONFIG = {
   quests: [
     // ===== First Steps: everything by hand =====
     { id: 'f01', chain: 'First Steps', name: 'Naked in the Wild', text: 'You have nothing. Plants have fiber, and fiber can be twisted into cloth. Pull some by hand — one handful per click.',
-      steps: [ { label: 'Click Plants ten times', check: { counter: 'fiber', need: 10 } } ],
+      steps: [ { label: 'Character → Activity → By hand → tap Plants ×10', check: { counter: 'fiber', need: 10 } } ],
       reward: { fiber: 5 }, focus: { tab: 'hero', sub: 'fight', el: 'hand:plants' } },
     { id: 'f02', chain: 'First Steps', name: 'Twist and Knot', text: 'Knowing how is half of it. Research Fiber Clothing — it costs a little of the fiber you just pulled.',
-      steps: [ { label: 'Kingdom → Tech → Research Fiber Clothing', check: { tech: 'fiberclothing' } } ],
+      steps: [ { label: 'Kingdom → Tech → Fiber Clothing → Research', check: { tech: 'fiberclothing' } } ],
       reward: { fiber: 5 }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:fiberclothing' } },
     { id: 'f03', chain: 'First Steps', name: 'Clothed', text: 'Make a fiber tunic. Your Equipment panel shows what you wear — click the Chest slot.',
-      steps: [ { label: 'Click the Chest slot → Forge (Fiber, 10 fiber)', check: { gear: 'chest' } } ],
+      steps: [ { label: 'Character → Gear → tap the Chest slot → Forge (10 fiber, 5s)', check: { gear: 'chest' } } ],
       reward: { fiber: 4 }, focus: { tab: 'hero', sub: 'gear', el: 'gear:chest' } },
     { id: 'f04', chain: 'First Steps', name: 'A Sharpened Branch', text: 'Trees are open to you now. Snap branches by hand, then research the Wooden Sword.',
-      steps: [ { label: 'Click Trees ten times', check: { counter: 'wood', need: 10 } }, { label: 'Kingdom → Tech → Research Wooden Sword', check: { tech: 'woodensword' } } ],
+      steps: [ { label: 'Character → Activity → By hand → tap Trees ×10', check: { counter: 'wood', need: 10 }, focus: { tab: 'hero', sub: 'fight', el: 'hand:trees' } }, { label: 'Kingdom → Tech → Wooden Sword → Research', check: { tech: 'woodensword' }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:woodensword' } } ],
       reward: { wood: 5 }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:woodensword', el2: 'hand:trees' } },
     { id: 'f05', chain: 'First Steps', name: 'Armed', text: 'Make the sword. Click the Weapon slot.',
-      steps: [ { label: 'Click the Weapon slot → Forge (Wooden, 10 wood)', check: { gear: 'weapon' } } ],
+      steps: [ { label: 'Character → Gear → tap the Weapon slot → Forge (10 wood, 5s)', check: { gear: 'weapon' } } ],
       reward: { wood: 10 }, focus: { tab: 'hero', sub: 'gear', el: 'gear:weapon' } },
     { id: 'f06', chain: 'First Steps', name: 'Let Him Fight', text: 'With a weapon your hero can fight without you. Set him to Fight in the Wilds — he keeps at it even when the game is closed.',
-      steps: [ { label: 'Activity → Fight', check: { activity: 'fight' } }, { label: 'Slay 5 enemies', check: { counter: 'kills', need: 5 } } ],
+      steps: [ { label: 'Character → Activity → Your hero is… → Fight', check: { activity: 'fight' } }, { label: 'Slay 5 enemies (he does this on his own)', check: { counter: 'kills', need: 5 } } ],
       reward: { fiber: 10 }, focus: { tab: 'hero', sub: 'fight', el: 'act:fight' } },
     // ===== Settling In =====
     // Each quest is a checklist of steps. Step checks: activity, ground, tool, gear, tech, counter, plots, building, jobs, sold, stage, boss, founded, thrall.

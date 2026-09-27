@@ -435,6 +435,15 @@ const UI = (() => {
   // ---- Quest card collapse: header, name, next step and Claim only ----
   function applyQuestCollapse() { const col = !!Game.S.settings.questCollapsed; $('quest-card').classList.toggle('collapsed', col); $('quest-toggle').setAttribute('aria-expanded', String(!col)); $('quest-toggle').title = col ? 'Expand' : 'Collapse'; }
 
+  // ---- Forging progress: the forge button becomes a filling bar while the item is being made ----
+  function forgeState(forge, kind, slot, label) {
+    const cr = Game.crafting(), mine = cr && cr.kind === kind && cr.slot === slot;
+    forge.classList.toggle('forging', !!mine); forge.classList.toggle('busy', !!cr && !mine);
+    if (mine) { forge.style.setProperty('--p', (100 * cr.t / cr.total) + '%'); setHtml(forge, `<span class="small">Forging…</span><br><span class="cost">${(cr.total - cr.t).toFixed(1)}s</span>`); forge.disabled = true; return true; }
+    if (forge.dataset.restored !== '1' && !forge.querySelector('[data-f=forgelbl]')) { forge.innerHTML = `<span class="small" data-f="forgelbl">${label}</span><br><span class="cost" data-f="forgecost"></span>`; }
+    forge.style.removeProperty('--p'); return false;
+  }
+
   // ---- Skill trees ----
   let curDisc = 'combat'; rows.disc = {}; rows.node = {}; let treeKey = '';
   function buildDiscBar() {
@@ -661,13 +670,14 @@ const UI = (() => {
       }
       const fc = Game.gearCraftCost(slot), can = Game.canTierUp(slot);
       if (!fc) forge.classList.add('hidden');
+      else if (forgeState(forge, 'gear', slot, 'Forge')) { forge.classList.remove('hidden'); }
       else {
         forge.classList.remove('hidden');
         const nt0 = it ? it.tier + 1 : 0;
         setText(row.querySelector('[data-f=forgelbl]'), it ? `Forge ${Game.tierName(slot, nt0)}` : `Forge ${Game.tierName(slot, 0)}`);
         const nt = it ? it.tier + 1 : 0, techOk = Game.gearTierUnlocked(nt, slot);
         setHtml(forge.querySelector('[data-f=forgecost]'), can ? costHtml(fc) : techOk ? `<span class="dim">needs Lv${CONFIG.tierUpAt}</span>` : `<span class="dim">needs tech</span>`);
-        forge.disabled = !can || !Game.canAfford(fc); if (!forge.disabled) anyGear = true;
+        forge.disabled = !can || !Game.canAfford(fc) || !!Game.crafting(); if (!forge.disabled) anyGear = true;
       }
     }
 
@@ -779,7 +789,8 @@ const UI = (() => {
       }
       const fc = Game.toolCraftCost(slot), can = Game.canToolTierUp(slot), nt = it ? it.tier + 1 : 0;
       if (!fc) forge.classList.add('hidden');
-      else { forge.classList.remove('hidden'); setText(row.querySelector('[data-f=forgelbl]'), it ? `Make ${CONFIG.toolTiers[nt].name}` : 'Make'); setHtml(forge.querySelector('[data-f=forgecost]'), can ? costHtml(fc) : (Game.toolTierUnlocked(nt) && Game.toolSlotUnlocked(slot)) ? `<span class="dim">needs Lv${CONFIG.tierUpAt}</span>` : `<span class="dim">needs tech</span>`); forge.disabled = !can || !Game.canAfford(fc); }
+      else if (forgeState(forge, 'tool', slot, 'Make')) { forge.classList.remove('hidden'); }
+      else { forge.classList.remove('hidden'); setText(row.querySelector('[data-f=forgelbl]'), it ? `Make ${CONFIG.toolTiers[nt].name}` : 'Make'); setHtml(forge.querySelector('[data-f=forgecost]'), can ? costHtml(fc) : (Game.toolTierUnlocked(nt) && Game.toolSlotUnlocked(slot)) ? `<span class="dim">needs Lv${CONFIG.tierUpAt}</span>` : `<span class="dim">needs tech</span>`); forge.disabled = !can || !Game.canAfford(fc) || !!Game.crafting(); }
     }
     renderDoll();
   }
@@ -866,6 +877,7 @@ const UI = (() => {
   }
   function tallyLoot(obj) { for (const k in obj) if (obj[k] > 0) { lootTally[k] = (lootTally[k] || 0) + obj[k]; lootFresh[k] = true; } }
   function hitPop(ev) {
+    if (ev.who === 'craft') { const a = $('doll').offsetParent ? $('doll') : $('mini-hero').offsetParent ? $('mini-hero') : document.querySelector('.top'); const r = a.getBoundingClientRect(); const p = el('div', 'pop craft', `⚒ ${ev.name} forged!`); p.style.left = (r.left + r.width * 0.5) + 'px'; p.style.top = (r.top + Math.min(40, r.height * 0.3)) + 'px'; document.body.appendChild(p); setTimeout(() => p.remove(), 1400); return; }
     if (ev.who === 'loot') { tallyLoot(ev.loot); for (const b of [$('enemy-hpbar').parentElement, $('mini-target')]) { b.classList.remove('killed'); void b.offsetWidth; b.classList.add('killed'); setTimeout(() => b.classList.remove('killed'), 450); } }
     else if (ev.who === 'harvest') tallyLoot(ev.yield);
     if (!heroScreenVisible() && !$('mini-hero').classList.contains('hidden')) {

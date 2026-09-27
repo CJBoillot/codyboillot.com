@@ -82,15 +82,23 @@ function gearUpgradeCost(slot) {
   return ps ? scaleCost(ps.upgradeCost, t.upgradeMult, it.level) : scaleCost(t.upgradeCost, t.upgradeMult, it.level, CONFIG.slotCostMult[slot]);
 }
 function canTierUp(slot) { const it = S.hero.gear[slot], next = it ? it.tier + 1 : 0; return next < CONFIG.tiers.length && gearTierUnlocked(next, slot) && (!it || it.level >= CONFIG.tierUpAt); }
+// Forging takes CONFIG.craftSeconds; cost is paid up front, the item lands when the bar fills. One forge at a time.
+function crafting() { return S.hero.crafting || null; }
 function craftGear(slot) {
-  if (!canTierUp(slot)) return false;
+  if (crafting() || !canTierUp(slot)) return false;
   const c = gearCraftCost(slot); if (!c || !canAfford(c)) return false;
   pay(c);
   const it = S.hero.gear[slot];
-  S.hero.gear[slot] = { tier: it ? it.tier + 1 : 0, level: 0 };
-  log(`Forged ${CONFIG.tiers[S.hero.gear[slot].tier].name} ${CONFIG.slots[slot].name}`);
+  S.hero.crafting = { kind: 'gear', slot, t: 0, total: CONFIG.craftSeconds, name: `${tierName(slot, it ? it.tier + 1 : 0)} ${CONFIG.slots[slot].name}` };
   return true;
 }
+function finishCraft() {
+  const cr = crafting(); if (!cr) return; S.hero.crafting = null;
+  if (cr.kind === 'gear') { const it = S.hero.gear[cr.slot]; S.hero.gear[cr.slot] = { tier: it ? it.tier + 1 : 0, level: 0 }; log(`Forged ${cr.name}`); }
+  else { const it = S.hero.tools[cr.slot]; S.hero.tools[cr.slot] = { tier: it ? it.tier + 1 : 0, level: 0 }; log(`Made a ${cr.name}`); }
+  pushEvent({ who: 'craft', name: cr.name });
+}
+function tickCraft(dt) { const cr = crafting(); if (!cr) return; cr.t += dt; if (cr.t >= cr.total) finishCraft(); }
 function upgradeGear(slot) {
   const c = gearUpgradeCost(slot); if (!c || !canAfford(c)) return false;
   pay(c); S.hero.gear[slot].level++; return true;
@@ -110,7 +118,7 @@ function toolCraftCost(slot) { const it = S.hero.tools[slot], next = it ? it.tie
 function toolUpgradeCost(slot) { const it = S.hero.tools[slot]; if (!it) return null; const t = CONFIG.toolTiers[it.tier]; return scaleCost(t.upgradeCost, t.upgradeMult, it.level); }
 function toolSlotUnlocked(slot) { return !CONFIG.techs.some(t => t.unlocks.tool === slot) || CONFIG.techs.some(t => t.unlocks.tool === slot && hasTech(t.id)); }
 function canToolTierUp(slot) { const it = S.hero.tools[slot], next = it ? it.tier + 1 : 0; return toolSlotUnlocked(slot) && next < CONFIG.toolTiers.length && toolTierUnlocked(next) && (!it || it.level >= CONFIG.tierUpAt); }
-function craftTool(slot) { if (!canToolTierUp(slot)) return false; const c = toolCraftCost(slot); if (!c || !canAfford(c)) return false; pay(c); const it = S.hero.tools[slot]; S.hero.tools[slot] = { tier: it ? it.tier + 1 : 0, level: 0 }; log(`Made a ${CONFIG.toolTiers[S.hero.tools[slot].tier].name} ${CONFIG.toolSlots[slot].name}`); return true; }
+function craftTool(slot) { if (crafting() || !canToolTierUp(slot)) return false; const c = toolCraftCost(slot); if (!c || !canAfford(c)) return false; pay(c); const it = S.hero.tools[slot]; S.hero.crafting = { kind: 'tool', slot, t: 0, total: CONFIG.craftSeconds, name: `${CONFIG.toolTiers[it ? it.tier + 1 : 0].name} ${CONFIG.toolSlots[slot].name}` }; return true; }
 function upgradeTool(slot) { const c = toolUpgradeCost(slot); if (!c || !canAfford(c)) return false; pay(c); S.hero.tools[slot].level++; return true; }
 function activityDef(id) { return CONFIG.activities[id]; }
 function activityAvailable(id) { const a = activityDef(id); return !!a && (!a.tool || !!S.hero.tools[a.tool]) && (!a.gear || !!S.hero.gear[a.gear]); }
@@ -513,7 +521,7 @@ function heroStrike(st) {
   hitEnemy(dmg); pushEvent({ who: 'hero', dmg, crit });
 }
 function simulate(dt) {
-  tickKingdom(dt);
+  tickKingdom(dt); tickCraft(dt);
   const h = S.hero; h.time += dt;
   if (!heroFighting()) { const st0 = stats(); h.hp = Math.min(st0.maxHp, h.hp + st0.regen * dt); tickHarvest(dt); return; }
   for (const id in h.cds) if (h.cds[id] > 0) h.cds[id] -= dt;
@@ -542,6 +550,7 @@ function afkCap() { return CONFIG.offline.capSeconds + perkRank('cellar') * 2 * 
 function afkEff() { return Math.min(1, CONFIG.offline.efficiency + perkRank('memory') * 0.10); }
 // AFK: worked plots run their jobs (in chain order so raw → refined → artisan feed each other); the hero farms only if fighting.
 function applyOffline(awaySeconds) {
+  if (crafting() && awaySeconds >= (crafting().total - crafting().t)) finishCraft();
   const counted = Math.min(awaySeconds, afkCap()), eff = afkEff(), gains = {};
   const order = ['gather', 'craft', 'artisan'], pool = { ...S.res };
   for (const cat of order) for (const p of S.kingdom.plots) {
@@ -662,7 +671,7 @@ function boot() {
 window.Game = {
   get S() { return S; }, fmt, pct, fmtTime, drainEvents: () => EVENTS.splice(0), afkEfficiency: () => afkEff(),
   discXp, discLevel, discProgress, treeNode, nodeRank, nodeMax, nodeOpen, treePointsTotal, treePointsSpent, treePointsFree, canRankNode, rankNode, treeMods,
-  stats, gearStats, itemStatPreview, gearCraftCost, gearUpgradeCost, canTierUp, craftGear, upgradeGear,
+  crafting, stats, gearStats, itemStatPreview, gearCraftCost, gearUpgradeCost, canTierUp, craftGear, upgradeGear,
   talentPointsFree, talentPointsTotal, talentPointsSpent, respec, respecCost,
   skillDef, skillUnlocked, skillPower, skillCd, skillReady, castSkill, activeBuffs,
   enemyMaxHp, enemyDps, effectiveEnemyDps, enemyName, isBoss, stageType, enemyType, stageLabel, nextTypeName, stagePool, lootRarity, dropGated, killsNeeded, farmRate, stageDanger, heroRates,
