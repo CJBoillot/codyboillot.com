@@ -581,3 +581,8 @@ body.desktop.has-dock .panel-center { padding-bottom: 160px; }
 .bestiary-row .b-bonus { font-size: 10px; color: var(--hp2); }
 
 .thrall-xp { height: 4px; margin: 2px 0 4px; } .thrall-xp > div { background: linear-gradient(90deg, var(--bronze2), var(--bronze)); }
+
+.plot-actions { display: flex; gap: 6px; align-items: stretch; }
+.plot-actions .buy { flex: 1 1 auto; }
+.trash { flex: 0 0 auto; width: 34px; padding: 0; display: flex; align-items: center; justify-content: center; color: #b8463a; border: 1px solid #4a2320; background: #1a100e; border-radius: 6px; box-shadow: none; }
+.trash:hover { background: #2a1512; border-color: var(--blood); color: #e05a4c; }

@@ -328,6 +328,7 @@ function build(idx, typeId) {
   const c = buildCost(typeId); if (!canAfford(c)) return false;
   pay(c); p.type = typeId; p.level = 1; p.progress = 0; p.running = false; p.worker = idx; log(`${thrallName(idx)} built a ${btype(typeId).name}`); return true;
 }
+function demolish(idx) { const p = S.kingdom.plots[idx]; if (!p || !p.type) return false; log(`Tore down the ${btype(p.type).name}`); p.type = null; p.level = 0; p.progress = 0; p.running = false; return true; }
 function upgradeCost(idx) { const p = S.kingdom.plots[idx]; return scaleCost(CONFIG.buildingUpgrade.base, CONFIG.buildingUpgrade.mult, p.level - 1, buildingCostMult()); }
 function upgradePlot(idx) { const p = S.kingdom.plots[idx]; if (!p || !p.type) return false; const c = upgradeCost(idx); if (!canAfford(c)) return false; pay(c); p.level++; return true; }
 function jobTime(p) { const kp = kingdomPath(), w = typeof p.worker === 'number' ? thrallSpeed(p.worker) : 1; return btype(p.type).job.time / ((1 + CONFIG.buildingUpgrade.speedPerLevel * (p.level - 1)) * (kp && kp.jobSpeed ? kp.jobSpeed : 1) * techJobSpeed() * w); }
@@ -665,7 +666,7 @@ window.Game = {
   toolTierUnlocked, toolPower, toolCraftCost, toolUpgradeCost, canToolTierUp, craftTool, upgradeTool, activityDef, activityAvailable, setActivity, masteryLevel, harvestTime, harvestYield, harvestRates,
   questCurrent, questProgress, questClaim, suggestGoal, ground, setGround, groundUnlocked, dropToolMult, bestStageAll, groundDrops, toolSlotUnlocked,
   techDef, hasTech, techProgress, canResearch, research, buildingUnlocked, gearTierUnlocked, dropUnlocked, counter,
-  kingdomRates, btype, plotCap, plotCost, canBuyPlot, buyPlot, buildCost, build, upgradeCost, upgradePlot, jobTime, jobOutputs, jobInputs, canStartJob, startJob, assign, heroFighting, thrallCount, sellPrice, sell,
+  kingdomRates, btype, plotCap, plotCost, canBuyPlot, buyPlot, buildCost, build, demolish, upgradeCost, upgradePlot, jobTime, jobOutputs, jobInputs, canStartJob, startJob, assign, heroFighting, thrallCount, sellPrice, sell,
   canAdvance, advance, retreat, canAfford, add, simulate, applyOffline, claimOffline,
   save, load, exportSave, importSave, hardReset,
   thrallName, thrallLevel, thrallProgress, thrallSpeed, typeKey, typeKills, bestiaryTier, bestiaryBonus, trophyTier, trophyCount, pinned, togglePin,

@@ -360,8 +360,9 @@ const UI = (() => {
           <div class="bar"><div data-f="prog"></div></div>
           <div class="worker-tag" data-f="worker"></div>
           <div class="bar xp thrall-xp" title="Thrall XP"><div data-f="txp"></div></div>
-          <div class="plot-actions"><button class="buy" data-f="up"><span class="small">Upgrade</span><br><span class="cost" data-f="upcost"></span></button></div>`;
+          <div class="plot-actions"><button class="buy" data-f="up"><span class="small">Upgrade</span><br><span class="cost" data-f="upcost"></span></button><button class="trash" data-f="trash" title="Tear down this building" aria-label="Tear down"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg></button></div>`;
         d.querySelector('[data-f=up]').addEventListener('click', () => { if (Game.upgradePlot(idx)) flash(d); });
+        d.querySelector('[data-f=trash]').addEventListener('click', () => { if (confirm(`Tear down the ${t.name}? Its level and materials are lost; ${Game.thrallName(idx)} will be free to build something else.`)) { Game.demolish(idx); buildPlots(); render(true); } });
       }
       rows.plot[idx] = d; grid.appendChild(d);
     });
