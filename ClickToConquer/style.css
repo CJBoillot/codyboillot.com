@@ -540,3 +540,30 @@ body.desktop.has-dock .panel-center { padding-bottom: 160px; }
 .bestiary-row .b-sub { font-size: 10.5px; color: var(--dim); }
 .bestiary-row.boss .b-name { color: var(--accent2); }
 .bestiary-row .b-pool { display: flex; flex-wrap: wrap; gap: 3px; margin-left: auto; }
+
+/* ---------- skill trees (top-down) ---------- */
+.disc-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.disc-btn { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 2px; font-size: 11px; font-family: var(--font-head); background: #15110e; }
+.disc-btn .d-lvl { font-size: 10px; color: var(--dim); font-family: var(--font-body); }
+.disc-btn.active { border-color: var(--bronze); background: #1f1812; }
+.disc-btn .dot { position: static; margin-left: 3px; }
+.disc-xp { height: 8px; margin-top: 6px; } .disc-xp > span { font-size: 9px; line-height: 7px; }
+.tree { display: flex; flex-direction: column; align-items: stretch; gap: 0; margin-top: 8px; }
+.tree-row { display: grid; gap: 6px; position: relative; }
+.tree-link { height: 14px; display: grid; }
+.tree-link > i { display: block; width: 2px; height: 100%; margin: 0 auto; background: var(--line2); }
+.tree-link > i.on { background: var(--bronze); }
+.node { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 4px 6px; border: 1px solid var(--line2); border-radius: 8px; background: #14100d; text-align: center; min-width: 0; }
+.node .n-name { font-family: var(--font-head); font-size: 11px; line-height: 1.1; }
+.node .n-rank { font-size: 10px; color: var(--bronze2); }
+.node .n-desc { font-size: 9.5px; color: var(--dim); line-height: 1.2; }
+.node .n-bar { width: 100%; height: 4px; background: #090706; border-radius: 2px; overflow: hidden; margin-top: 2px; }
+.node .n-bar > div { height: 100%; background: linear-gradient(90deg, var(--bronze2), var(--bronze)); }
+.node button { margin-top: 4px; padding: 3px 10px; font-size: 11px; }
+.node.locked { opacity: .45; filter: grayscale(.6); }
+.node.maxed { border-color: var(--bronze-dim); background: radial-gradient(circle at 50% 20%, #2b2118, #14100d); }
+.node.capstone { border-color: var(--bronze); background: radial-gradient(circle at 50% 20%, #33261a, #14100d); box-shadow: 0 0 10px rgba(232,192,106,.12); }
+.node.capstone .n-name { color: var(--accent2); }
+.node.tech .n-name::after { content: ' ⚔'; font-size: 9px; color: var(--dim); }
+.node.can { border-color: var(--bronze); }
+.node.can button { border-color: var(--bronze); color: var(--accent2); }

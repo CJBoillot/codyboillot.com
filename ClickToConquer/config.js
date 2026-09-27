@@ -163,9 +163,64 @@ const CONFIG = {
   // Per-slot cost scaling so armor pieces cost a bit different amounts
   slotCostMult: { weapon: 1, helm: 0.8, chest: 1.1, boots: 0.7, trinket: 0.9 },
 
-  // ---------- Skills: auto-cast on cooldown; tap when ready for bonus ----------
+  // ---------- Disciplines & skill trees ----------
+  // Each discipline levels by doing (kills → Combat XP, swings → gathering XP). Each level = 1 point for that tree.
+  // A tree is drawn top-down; a node has 10 ranks (+`per` of its stat per rank) and unlocks when its parent is maxed.
+  // Capstones (bottom row, 1 rank) cost a TALENT point — earned on the first kill of each enemy-type boss. Trees persist through founding.
+  disciplines: {
+    combat: { name: 'Combat',   icon: [5,1],  desc: 'Every kill gives Combat XP.' },
+    wood:   { name: 'Logging',  icon: [10,1], desc: 'Every swing of the axe gives Logging XP.' },
+    mine:   { name: 'Mining',   icon: [10,2], desc: 'Every swing of the pick gives Mining XP.' },
+    forage: { name: 'Foraging', icon: [5,5],  desc: 'Every swing of the sickle gives Foraging XP.' },
+  },
+  discXpToLevel: lvl => Math.floor(12 * Math.pow(1.3, lvl - 1)),
+  discXpPerSwing: 1,
+  treeRanks: 10,
+  trees: {
+    combat: [
+      { id: 'power',     name: 'Power',       icon: [1,4],  row: 0, per: { attackPct: 0.05 },  desc: '+5% attack per rank' },
+      { id: 'haste',     name: 'Haste',       icon: [2,6],  row: 0, per: { speedPct: 0.03 },   desc: '+3% attack speed per rank' },
+      { id: 'precision', name: 'Precision',   icon: [0,8],  row: 0, per: { crit: 0.01 },       desc: '+1% crit chance per rank' },
+      { id: 'toughness', name: 'Toughness',   icon: [1,0],  row: 0, per: { hpPct: 0.05 },      desc: '+5% max HP per rank' },
+      { id: 'strike',    name: 'Power Strike',icon: [3,0],  row: 1, parent: 'power',     tech: 'strike',  desc: 'Technique. Rank 1 unlocks it; each rank hits harder' },
+      { id: 'cleave',    name: 'Cleave',      icon: [3,2],  row: 1, parent: 'haste',     tech: 'cleave',  desc: 'Technique. Damage carries to the next enemy' },
+      { id: 'plunderer', name: 'Plunderer',   icon: [11,11],row: 1, parent: 'precision', per: { dropPct: 0.03 }, desc: '+3% loot per rank' },
+      { id: 'vigor',     name: 'Vigor',       icon: [1,1],  row: 1, parent: 'toughness', per: { regenPct: 0.08 }, desc: '+8% HP regen per rank' },
+      { id: 'warcry',    name: 'War Cry',     icon: [3,6],  row: 2, parent: 'strike',    tech: 'warcry',  desc: 'Technique. Burst of attack' },
+      { id: 'execute',   name: 'Execute',     icon: [0,0],  row: 2, parent: 'cleave',    tech: 'execute', desc: 'Technique. Huge hit, ×3 vs bosses' },
+      { id: 'focus',     name: 'Focus',       icon: [3,10], row: 2, parent: 'plunderer', tech: 'focus',   desc: 'Technique. Burst of crit' },
+      { id: 'wind',      name: 'Second Wind', icon: [3,5],  row: 2, parent: 'vigor',     tech: 'wind',    desc: 'Technique. Heals in a fight' },
+      { id: 'berserker', name: 'Berserker',   icon: [3,12], row: 3, parent: 'warcry',    capstone: true, per: { attackPct: 0.30, speedPct: 0.15 }, desc: 'Capstone: +30% attack, +15% attack speed' },
+      { id: 'slayer',    name: 'Slayer',      icon: [5,9],  row: 3, parent: 'execute',   capstone: true, per: { bossDmg: 0.50 }, desc: 'Capstone: +50% damage to bosses' },
+      { id: 'hunter',    name: 'Hunter',      icon: [6,3],  row: 3, parent: 'focus',     capstone: true, per: { dropPct: 0.30, xpPct: 0.20 }, desc: 'Capstone: +30% loot, +20% XP' },
+      { id: 'juggernaut',name: 'Juggernaut',  icon: [6,1],  row: 3, parent: 'wind',      capstone: true, per: { dr: 0.15, hpPct: 0.25 }, desc: 'Capstone: −15% damage taken, +25% HP' },
+    ],
+    wood: [
+      { id: 'swing',   name: 'Swift Axe',   icon: [10,1], row: 0, per: { harvestSpeed: 0.05 },  desc: '+5% chop speed per rank' },
+      { id: 'yield',   name: 'Heavy Hand',  icon: [17,0], row: 0, per: { harvestYield: 0.05 },  desc: '+5% wood per swing per rank' },
+      { id: 'edge',    name: 'Keen Edge',   icon: [0,7],  row: 1, parent: 'swing', per: { harvestSpeed: 0.03 }, desc: '+3% chop speed per rank' },
+      { id: 'double',  name: 'Windfall',    icon: [4,6],  row: 1, parent: 'yield', per: { harvestDouble: 0.02 }, desc: '+2% chance of a double swing per rank' },
+      { id: 'sawyer',  name: 'Sawyer',      icon: [19,11],row: 2, parent: 'double', capstone: true, side: { planks: 0.05 }, desc: 'Capstone: 5% of swings also yield a plank' },
+    ],
+    mine: [
+      { id: 'swing',   name: 'Swift Pick',  icon: [10,2], row: 0, per: { harvestSpeed: 0.05 },  desc: '+5% mining speed per rank' },
+      { id: 'yield',   name: 'Deep Cut',    icon: [17,1], row: 0, per: { harvestYield: 0.05 },  desc: '+5% stone & ore per swing per rank' },
+      { id: 'edge',    name: 'Hard Steel',  icon: [0,7],  row: 1, parent: 'swing', per: { harvestSpeed: 0.03 }, desc: '+3% mining speed per rank' },
+      { id: 'double',  name: 'Rich Vein',   icon: [4,5],  row: 1, parent: 'yield', per: { harvestDouble: 0.02 }, desc: '+2% chance of a double swing per rank' },
+      { id: 'prospector', name: 'Prospector', icon: [17,2], row: 2, parent: 'double', capstone: true, side: { ore: 0.25 }, desc: 'Capstone: 25% of swings yield extra iron ore' },
+    ],
+    forage: [
+      { id: 'swing',   name: 'Quick Sickle',icon: [5,5],  row: 0, per: { harvestSpeed: 0.05 },  desc: '+5% foraging speed per rank' },
+      { id: 'yield',   name: 'Full Basket', icon: [11,15],row: 0, per: { harvestYield: 0.05 },  desc: '+5% fiber & berries per swing per rank' },
+      { id: 'edge',    name: 'Light Step',  icon: [0,7],  row: 1, parent: 'swing', per: { harvestSpeed: 0.03 }, desc: '+3% foraging speed per rank' },
+      { id: 'double',  name: 'Bounty',      icon: [14,4], row: 1, parent: 'yield', per: { harvestDouble: 0.02 }, desc: '+2% chance of a double swing per rank' },
+      { id: 'herbalist', name: 'Herbalist', icon: [11,13],row: 2, parent: 'double', capstone: true, side: { berries: 0.5 }, desc: 'Capstone: half of swings yield extra berries' },
+    ],
+  },
+
+  // ---------- Techniques (auto-cast on cooldown). Unlocked and ranked through the Combat tree; rank r → level r−1 ----------
   // Levels cost gold + meat: cost × levelMult^level. power grows +powerPerLevel per level.
-  skillSlots: 4,
+  skillSlots: 6,
   skillLevelCost: { gold: 200, meat: 5 },
   skillLevelMult: 1.4,
   skills: [
@@ -310,11 +365,11 @@ const CONFIG = {
         { label: 'Have 25 wood (Trees box)', check: { have: 'wood', need: 25 } },
         { label: 'Kingdom → Tech → Research Woodcraft', check: { tech: 'stonetools' } },
       ], reward: { wood: 40 }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:stonetools' } },
-    { id: 'q02b', name: 'Growing Stronger', text: 'Kills give experience. Every hero level grants 3 attribute points — Strength for harder hits, Vitality for more health. Unspent points show as a dot on the Attributes tab.',
+    { id: 'q02b', name: 'Growing Stronger', text: 'Kills give Combat XP. Every Combat level grants a point for the Combat tree — the top row is open now; deeper nodes open when the one above is maxed. Unspent points show as a dot on the Skills tab.',
       steps: [
-        { label: 'Reach hero level 2', check: { heroLevel: 2 } },
-        { label: 'Attributes → spend 3 points', check: { attrSpent: 3 } },
-      ], reward: { fiber: 15 }, focus: { tab: 'hero', sub: 'attr', rtab: 'attr', el: 'id:attr-list' } },
+        { label: 'Reach Combat level 2', check: { disc: 'combat', need: 2 } },
+        { label: 'Skills → Combat → put a point in Power', check: { node: 'combat:power', need: 1 } },
+      ], reward: { fiber: 15 }, focus: { tab: 'hero', sub: 'skills', rtab: 'skills', el: 'node:combat:power' } },
     { id: 'q03', name: 'An Axe of Your Own', text: 'You have wood enough for an axe, and the axe will cut the rest. Tools are the row under your armor on the Equipment panel — click a slot to make or upgrade it.',
       steps: [
         { label: 'Click the Axe slot on your Equipment → Make (Wooden)', check: { tool: 'axe' } },
@@ -341,11 +396,11 @@ const CONFIG = {
       steps: [
         { label: 'Kingdom → Tech → Research Leatherworking', check: { tech: 'leatherwork' } },
       ], reward: { hide: 10, talent: 1 }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:leatherwork' } },
-    { id: 'q06c', name: 'Talent', text: 'Talents are permanent bonuses in three branches — Warrior for damage, Survivor for staying alive, Ranger for speed and loot. You earn a point every level from level 5, and one more the first time you slay each boss. Nothing beats hitting harder early: put your first point in Brawn.',
+    { id: 'q06c', name: 'Every Swing Counts', text: 'Gathering has trees too: Logging levels with every swing of the axe. Speed first — a faster axe is more of everything.',
       steps: [
-        { label: 'Reach hero level 5', check: { heroLevel: 5 } },
-        { label: 'Talents → Warrior → Brawn (+4% attack)', check: { talent: 'w1' } },
-      ], reward: { wood: 30 }, focus: { tab: 'hero', sub: 'talents', rtab: 'talents', el: 'talent:w1' }, onlyTalent: 'w1' },
+        { label: 'Reach Logging level 2', check: { disc: 'wood', need: 2 } },
+        { label: 'Skills → Logging → put a point in Swift Axe', check: { node: 'wood:swing', need: 1 } },
+      ], reward: { wood: 30 }, focus: { tab: 'hero', sub: 'skills', rtab: 'skills', el: 'node:wood:swing' } },
     { id: 'q07', name: 'Stone Blade', text: 'Better gear means faster kills, just as better tools mean faster gathering. Stone is picked up by hand — open the By hand row and click Stones. Then learn Stone Weapons, upgrade the wooden sword to Lv15, then forge the Stone tier.',
       steps: [
         { label: 'Character → By hand → Stones: pick up 30 stone', check: { counter: 'stone', need: 30 }, focus: { tab: 'hero', sub: 'fight', el: 'hand:stones' } },
@@ -387,7 +442,7 @@ const CONFIG = {
         { label: 'Kingdom → Tech → Research Prospecting', check: { tech: 'prospecting' }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:prospecting' } },
         { label: 'Activity → Mine: dig 100 iron ore', check: { counter: 'ore', need: 100 }, focus: { tab: 'hero', sub: 'fight', el: 'act:mine' } },
       ], reward: { ore: 20 } },
-    { id: 'q13', name: 'The First Boss', text: 'Every tenth stage is a boss. Beat one and the Roads open — bandits there are the first enemies that carry gold.',
+    { id: 'q13', name: 'The First Boss', text: 'The tenth stage of every enemy is its boss. The first kill gives a talent point — spent on the gold capstone at the bottom of a tree — plus a trophy, and beating the Rat King opens the Roads, where bandits carry gold.',
       steps: [
         { label: 'Activity → Fight', check: { activity: 'fight' } },
         { label: 'Advance to stage 10', check: { stage: 10 } },
@@ -404,12 +459,12 @@ const CONFIG = {
         { label: 'Fight in The Crypts', check: { activity: 'fight', ground: 'crypts' } },
         { label: 'Take 3 ingots from the dead', check: { counter: 'ingot', need: 3 } },
       ], reward: { gold: 100 }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:graverobbing', el2: 'ground:crypts' } },
-    { id: 'q13c', name: 'A Second Blow', text: 'Abilities come with experience. Power Strike is your first: equip it and it fires on its own whenever it is off cooldown.',
+    { id: 'q13c', name: 'A Second Blow', text: 'Max a top-row node and the one below it opens. Power Strike is a technique: rank 1 unlocks it and it fires on its own whenever it is off cooldown.',
       steps: [
-        { label: 'Reach hero level 12', check: { heroLevel: 12 } },
-        { label: 'Skills → Equip Power Strike', check: { skillEquipped: 'strike' } },
+        { label: 'Combat tree → Power 10/10', check: { node: 'combat:power', need: 10 } },
+        { label: 'Combat tree → Power Strike rank 1', check: { node: 'combat:strike', need: 1 } },
         { label: 'Use Power Strike 5 times', check: { casts: 'strike', need: 5 } },
-      ], reward: { gold: 80 }, focus: { tab: 'hero', sub: 'skills', rtab: 'skills', el: 'skill:strike' } },
+      ], reward: { gold: 80 }, focus: { tab: 'hero', sub: 'skills', rtab: 'skills', el: 'node:combat:strike' } },
     { id: 'q14b', name: 'Butcher', text: 'Beasts are meat as well as hide. Meat sells well — and your skills feed on it.',
       steps: [
         { label: 'Kingdom → Tech → Research Butchery', check: { tech: 'butchery' } },
@@ -525,7 +580,7 @@ const CONFIG = {
       { id: 'cellar', name: 'Deep Cellar',        icon: [19,9], max: 4, cost: 8,  costMult: 1.7, desc: 'AFK cap +2h per rank' },
       { id: 'memory', name: 'Long Memory',        icon: [13,8], max: 3, cost: 10, costMult: 1.8, desc: 'AFK efficiency +10% per rank' },
       { id: 'cache', name: "Founder's Cache",     icon: [11,11], max: 5, cost: 6,  costMult: 1.6, desc: 'Begin with 1,000 gold and 50 wood per rank' },
-      { id: 'veteran', name: 'Veteran',           icon: [1,4],  max: 3, cost: 12, costMult: 2,   desc: '+1 attribute point per level per rank' },
+      { id: 'veteran', name: 'Veteran',           icon: [1,4],  max: 3, cost: 12, costMult: 2,   desc: '+3 Combat tree points per rank' },
       { id: 'bloodline', name: 'Bloodline',       icon: [1,0],  max: 5, cost: 10, costMult: 1.8, desc: '+5% attack, HP, regen per rank' },
       { id: 'oldblade', name: 'Old Blade',        icon: [5,1],  max: 1, cost: 25, costMult: 1,   desc: 'Keep your weapon through a founding' },
       { id: 'haggler', name: 'Haggler',           icon: [12,10], max: 5, cost: 8,  costMult: 1.7, desc: 'Sell prices +10% per rank' },

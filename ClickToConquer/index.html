@@ -45,9 +45,7 @@
       <nav class="subtabs" id="hero-subtabs">
         <button data-sub="fight" class="active">Activity</button>
         <button data-sub="gear">Gear <span id="badge-gear" class="dot hidden"></span></button>
-        <button data-sub="attr">Attributes <span id="badge-attr" class="dot hidden"></span></button>
-        <button data-sub="skills">Skills</button>
-        <button data-sub="talents">Talents <span id="badge-talents" class="dot hidden"></span></button>
+        <button data-sub="skills">Skills <span id="badge-skills" class="dot hidden"></span></button>
       </nav>
 
       <!-- Activity (fight / harvest) -->
@@ -122,20 +120,15 @@
         </div>
       </div>
 
-      <div id="sub-attr" class="sub hidden">
-        <div class="card row-between"><div><b>Points</b> <span class="dim">available</span></div><b id="attr-free" class="accent-text">0</b></div>
-        <div id="attr-list" class="list"></div>
-        <button id="respec-btn" class="big" style="margin-top:12px">Respec (<span id="respec-cost"></span> 🪙)</button>
-      </div>
-
       <div id="sub-skills" class="sub hidden">
-        <p class="dim small">Equip up to 4. They auto-cast on cooldown. <b>Tap a ready skill</b> to cast it Focused (×1.5).</p>
-        <div id="skill-list" class="list"></div>
-      </div>
-
-      <div id="sub-talents" class="sub hidden">
-        <div class="card row-between"><div><b>Talent points</b> <span class="dim">1/level from Lv5, +1 per boss</span></div><b id="talent-free" class="accent-text">0</b></div>
-        <div id="talent-tree"></div>
+        <div class="card">
+          <div class="disc-bar" id="disc-bar"></div>
+          <div class="row-between" style="margin-top:8px"><div><b id="disc-name">Combat</b> <span class="dim small" id="disc-desc"></span></div><div class="small"><b id="disc-pts" class="accent-text">0</b> <span class="dim">points</span> · <b id="talent-free" class="accent-text">0</b> <span class="dim">talents</span></div></div>
+          <div class="bar xp disc-xp"><div id="disc-xpbar"></div><span id="disc-xptext"></span></div>
+          <p class="dim small" style="margin:6px 0 0">Each level = 1 point. A node has 10 ranks; the node below opens when it is maxed. Gold capstones cost a talent point (first kill of each boss).</p>
+        </div>
+        <div id="tree" class="tree"></div>
+        <button id="respec-btn" class="wide" style="margin-top:12px">Respec all trees (<span id="respec-cost"></span> 🪙)</button>
       </div>
     </div>
 
@@ -209,9 +202,7 @@
   <aside class="panel panel-right" id="panel-right">
     <nav class="subtabs" id="right-tabs">
       <button data-rtab="kingdom" class="active">Kingdom</button>
-      <button data-rtab="attr">Attributes</button>
       <button data-rtab="skills">Skills</button>
-      <button data-rtab="talents">Talents</button>
       <button data-rtab="inventory">Bag</button>
       <button data-rtab="market">Market</button>
     </nav>

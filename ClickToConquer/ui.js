@@ -41,7 +41,7 @@ const UI = (() => {
     $('advance-btn').addEventListener('click', () => Game.advance());
     $('mini-advance').addEventListener('click', () => Game.advance());
     $('retreat-btn').addEventListener('click', () => Game.retreat());
-    $('respec-btn').addEventListener('click', () => { if (confirm('Reset all attribute and talent points?')) Game.respec(); });
+    $('respec-btn').addEventListener('click', () => { if (confirm('Reset all tree points? Capstones are kept.')) Game.respec(); });
     $('wb-claim').addEventListener('click', () => claimWelcome(1));
     $('wb-ad').addEventListener('click', () => claimWelcome(CONFIG.offline.adDoubleMultiplier));
     $('dev-toggle').addEventListener('click', () => $('dev-panel').classList.toggle('hidden'));
@@ -153,38 +153,7 @@ const UI = (() => {
       row.querySelector('[data-f=forge]').addEventListener('click', () => { if (Game.craftTool(slot)) flash(row); });
       rows.tool[slot] = row; tl.appendChild(row);
     }
-    const al = $('attr-list'); al.innerHTML = '';
-    for (const k in CONFIG.attributes) {
-      const a = CONFIG.attributes[k];
-      const row = el('div', 'row');
-      row.innerHTML = `${ico(a.icon, 32, 'rowico')}<div class="row-main"><div class="row-title">${a.name} <span class="owned" data-f="pts">0</span></div><div class="row-sub">${a.desc}</div></div>
-        <div class="btn-col-h"><button class="buy" data-f="p1">+1</button><button class="buy" data-f="p5">+5</button></div>`;
-      row.querySelector('[data-f=p1]').addEventListener('click', () => Game.spendAttr(k, 1));
-      row.querySelector('[data-f=p5]').addEventListener('click', () => Game.spendAttr(k, 5));
-      rows.attr[k] = row; al.appendChild(row);
-    }
-    const sl = $('skill-list'); sl.innerHTML = '';
-    for (const s of CONFIG.skills) {
-      const row = el('div', 'row');
-      row.innerHTML = `${ico(s.icon, 32, 'rowico')}<div class="row-main"><div class="row-title">${s.name} <span class="owned">Lv<b data-f="lvl">0</b></span> <span class="dim small" data-f="lock"></span></div><div class="row-sub" data-f="desc"></div><div class="row-sub dim small" data-f="cd"></div></div>
-        <div class="btn-col"><button class="buy" data-f="equip">Equip</button><button class="buy" data-f="lvlup"><span class="small">Level</span><br><span class="cost" data-f="cost"></span></button></div>`;
-      row.querySelector('[data-f=equip]').addEventListener('click', () => Game.toggleSkill(s.id));
-      row.querySelector('[data-f=lvlup]').addEventListener('click', () => { if (Game.levelSkill(s.id)) flash(row); });
-      rows.skill[s.id] = row; sl.appendChild(row);
-    }
-    const tt = $('talent-tree'); tt.innerHTML = '';
-    for (const b in CONFIG.talents) {
-      const br = CONFIG.talents[b];
-      tt.appendChild(el('div', 'card-title', br.name));
-      const list = el('div', 'list talent-branch');
-      for (const n of br.nodes) {
-        const row = el('div', 'row');
-        row.innerHTML = `<div class="row-main"><div class="row-title">${n.name} <span class="owned"><b data-f="rank">0</b>/${n.max}</span></div><div class="row-sub">${n.desc}</div></div><button class="buy" data-f="btn">+1</button>`;
-        row.querySelector('[data-f=btn]').addEventListener('click', () => { if (Game.spendTalent(n.id)) flash(row); });
-        rows.talent[n.id] = row; list.appendChild(row);
-      }
-      tt.appendChild(list);
-    }
+    buildDiscBar();
     const pl = $('perk-list'); pl.innerHTML = ''; rows.perk = {};
     for (const p of CONFIG.legacy.perks) {
       const row = el('div', 'row');
@@ -251,9 +220,7 @@ const UI = (() => {
       case 'build': return reached('q08') || S.kingdom.plots.length > 0;
       case 'throne': return reached('q17') || Game.bestStageAll() >= 15 || S.legacy.foundings > 0;
       case 'legacy': return S.legacy.foundings > 0 || S.legacy.knowledge > 0;
-      case 'attr': return S.hero.level >= 2;
-      case 'skills': return reached('q13c') || CONFIG.skills.some(s => Game.skillUnlocked(s.id));
-      case 'talents': return S.hero.level >= CONFIG.hero.talentPointsFromLevel || reached('q06c');
+      case 'skills': return S.hero.level >= 2 || reached('q02b') || Object.values(S.hero.dxp || {}).some(x => x > 0);
       case 'market': return reached('q14');
       case 'inventory': return Object.keys(R).some(k => S.lifetime[k] > 0);
       default: return true;
@@ -292,7 +259,7 @@ const UI = (() => {
     if (F.ksub) add(document.querySelector(`[data-ksub=${F.ksub}]`));
     if (F.rtab && desktop) add(document.querySelector(`[data-rtab=${F.rtab}]`));
     for (const sel of [F.el, F.el2]) {
-      if (!sel) continue; const [kind, id] = sel.split(':');
+      if (!sel) continue; const ci = sel.indexOf(':'), kind = sel.slice(0, ci), id = sel.slice(ci + 1);
       if (kind === 'tech') add(rows.tech[id]); else if (kind === 'tool') { add(rows.tool[id]); add(document.querySelector(`.doll-slot[data-slot=${id}]`)); } else if (kind === 'gear') { add(rows.gear[id]); add(document.querySelector(`.doll-slot[data-slot=${id}]`)); }
       else if (kind === 'act') add(rows.act[id]); else if (kind === 'id') add($(id));
       else if (kind === 'build') rows.plot.forEach(d => { if (d.classList.contains('empty')) add(d); });
@@ -300,8 +267,7 @@ const UI = (() => {
       else if (kind === 'assign') rows.plot.forEach(d => add(d.querySelector('[data-f=assign]')));
       else if (kind === 'market') add($('market-list'));
       else if (kind === 'ground') { add(rows.ground[id]); add(rows.act.fight); }
-      else if (kind === 'skill') add(rows.skill[id]);
-      else if (kind === 'talent') add(rows.talent[id]);
+      else if (kind === 'node') { const [d, nid] = id.split(':'); if (curDisc !== d) { curDisc = d; buildTree(); } add(rows.node[nid]); add(rows.disc[d]); }
       else if (kind === 'hand') add(rows.hand[id]);
     }
   }
@@ -312,7 +278,7 @@ const UI = (() => {
   function remember(id) { const e = $(id); if (!HOME[id]) HOME[id] = { parent: e.parentNode, next: e.nextSibling }; }
   function dock(id, dockId) { remember(id); $(dockId).appendChild($(id)); }
   function undock(id) { const h = HOME[id]; if (!h) return; h.parent.insertBefore($(id), h.next); }
-  const RIGHT = { kingdom: 'tab-kingdom', attr: 'sub-attr', skills: 'sub-skills', talents: 'sub-talents', inventory: 'tab-inventory', market: 'tab-market' };
+  const RIGHT = { kingdom: 'tab-kingdom', skills: 'sub-skills', inventory: 'tab-inventory', market: 'tab-market' };
   let desktop = false;
   function applyLayout() {
     glowKey = '';
@@ -439,6 +405,57 @@ const UI = (() => {
       d.classList.toggle('working', p.running);
       const uc = Game.upgradeCost(idx); setHtml(d.querySelector('[data-f=upcost]'), costHtml(uc)); d.querySelector('[data-f=up]').disabled = !Game.canAfford(uc);
     });
+  }
+
+  // ---- Skill trees ----
+  let curDisc = 'combat'; rows.disc = {}; rows.node = {}; let treeKey = '';
+  function buildDiscBar() {
+    const bar = $('disc-bar'); bar.innerHTML = ''; rows.disc = {};
+    for (const d in CONFIG.disciplines) {
+      const D = CONFIG.disciplines[d], b = el('button', 'disc-btn' + (d === curDisc ? ' active' : ''));
+      b.innerHTML = `${ico(D.icon, 22)}<span>${D.name}<span class="dot hidden" data-f="dot"></span></span><span class="d-lvl" data-f="lvl">Lv1</span>`;
+      b.addEventListener('click', () => { curDisc = d; buildDiscBar(); buildTree(); render(true); });
+      rows.disc[d] = b; bar.appendChild(b);
+    }
+    buildTree();
+  }
+  function buildTree() {
+    const nodes = CONFIG.trees[curDisc] || [], box = $('tree'); box.innerHTML = ''; rows.node = {}; treeKey = '';
+    const rowsN = {}; for (const n of nodes) (rowsN[n.row] = rowsN[n.row] || []).push(n);
+    const rowIdx = Object.keys(rowsN).map(Number).sort((a, b) => a - b);
+    rowIdx.forEach((r, i) => {
+      const list = rowsN[r];
+      if (i > 0) { const link = el('div', 'tree-link'); link.style.gridTemplateColumns = `repeat(${list.length}, 1fr)`; link.innerHTML = list.map(n => `<i data-link="${n.id}"></i>`).join(''); box.appendChild(link); }
+      const row = el('div', 'tree-row'); row.style.gridTemplateColumns = `repeat(${list.length}, 1fr)`;
+      for (const n of list) {
+        const d = el('div', 'node' + (n.capstone ? ' capstone' : '') + (n.tech ? ' tech' : ''));
+        d.innerHTML = `${ico(n.icon, 24)}<div class="n-name">${n.name}</div><div class="n-rank" data-f="rank"></div><div class="n-desc">${n.desc}</div><div class="n-bar"><div data-f="bar"></div></div><button class="buy" data-f="btn">+</button>`;
+        d.title = n.parent ? `Opens when ${(nodes.find(x => x.id === n.parent) || {}).name} is maxed` : '';
+        d.querySelector('[data-f=btn]').addEventListener('click', () => { if (Game.rankNode(curDisc, n.id)) { flash(d); render(true); } });
+        rows.node[n.id] = d; row.appendChild(d);
+      }
+      box.appendChild(row);
+    });
+    glowKey = '';
+  }
+  function renderTrees() {
+    const S = Game.S, f = Game.fmt; let any = false;
+    for (const d in CONFIG.disciplines) { const b = rows.disc[d]; if (!b) continue; const pr = Game.discProgress(d), fr = Game.treePointsFree(d); setText(b.querySelector('[data-f=lvl]'), `Lv${pr.level}`); b.querySelector('[data-f=dot]').classList.toggle('hidden', fr <= 0); if (fr > 0) any = true; }
+    const tfree = Game.talentPointsFree(); if (tfree > 0) any = true;
+    const D = CONFIG.disciplines[curDisc], pr = Game.discProgress(curDisc);
+    setText($('disc-name'), `${D.name} Lv${pr.level}`); setText($('disc-desc'), D.desc);
+    setText($('disc-pts'), Game.treePointsFree(curDisc)); setText($('talent-free'), tfree);
+    $('disc-xpbar').style.width = (100 * pr.have / pr.need) + '%'; setText($('disc-xptext'), `${f(pr.have)} / ${f(pr.need)} XP`);
+    for (const n of CONFIG.trees[curDisc] || []) {
+      const d = rows.node[n.id]; if (!d) continue; const r = Game.nodeRank(curDisc, n.id), max = Game.nodeMax(n), open = Game.nodeOpen(curDisc, n.id), can = Game.canRankNode(curDisc, n.id);
+      d.classList.toggle('locked', !open); d.classList.toggle('maxed', r >= max); d.classList.toggle('can', can);
+      setText(d.querySelector('[data-f=rank]'), n.capstone ? (r ? 'Learned' : '1 talent') : `${r} / ${max}`);
+      d.querySelector('[data-f=bar]').style.width = (100 * r / max) + '%';
+      const b = d.querySelector('[data-f=btn]'); b.disabled = !can; setText(b, r >= max ? '✓' : n.capstone ? '★ Learn' : '+1');
+      const link = $('tree').querySelector(`[data-link="${n.id}"]`); if (link) link.classList.toggle('on', open);
+    }
+    $('badge-skills').classList.toggle('hidden', !any);
+    return any;
   }
 
   // ---- Inventory ----
@@ -613,35 +630,11 @@ const UI = (() => {
     }
 
     orderRows($('gear-list'), Object.keys(CONFIG.slots).map(s => ({ el: rows.gear[s], rank: (!rows.gear[s].querySelector('[data-f=up]').disabled || !rows.gear[s].querySelector('[data-f=forge]').disabled) ? 0 : 1 })));
-    // Attributes
-    const free = Game.attrPointsFree();
-    setText($('attr-free'), free); $('badge-attr').classList.toggle('hidden', free <= 0);
-    for (const k in CONFIG.attributes) { const row = rows.attr[k]; setText(row.querySelector('[data-f=pts]'), h.attr[k]); row.querySelector('[data-f=p1]').disabled = free < 1; row.querySelector('[data-f=p5]').disabled = free < 1; }
+    // Skill trees
     setText($('respec-cost'), f(Game.respecCost())); $('respec-btn').disabled = S.res.gold < Game.respecCost();
-
-    // Skills
-    let anySkill = false;
-    for (const s of CONFIG.skills) {
-      const row = rows.skill[s.id], unlocked = Game.skillUnlocked(s.id), equipped = h.loadout.includes(s.id);
-      row.classList.toggle('owned-row', !unlocked);
-      setText(row.querySelector('[data-f=lock]'), unlocked ? '' : `(unlocks Lv${s.unlock})`);
-      setText(row.querySelector('[data-f=lvl]'), h.skillLv[s.id]);
-      const p = Game.skillPower(s.id) * st.skillPower;
-      setText(row.querySelector('[data-f=desc]'), s.desc.replace('{p%}', Game.pct(p)).replace('{p}', p.toFixed(1)).replace('{d}', s.dur || ''));
-      setText(row.querySelector('[data-f=cd]'), `Cooldown ${Game.skillCd(s.id).toFixed(1)}s`);
-      const eq = row.querySelector('[data-f=equip]'); setText(eq, equipped ? 'Unequip' : 'Equip'); eq.classList.toggle('active', equipped);
-      eq.disabled = !unlocked || (!equipped && h.loadout.length >= CONFIG.skillSlots);
-      const lc = Game.skillLevelCost(s.id), lb = row.querySelector('[data-f=lvlup]'); setHtml(lb.querySelector('[data-f=cost]'), costHtml(lc)); lb.disabled = !unlocked || !Game.canAfford(lc); if (!lb.disabled) anySkill = true;
-    }
-
-    orderRows($('skill-list'), CONFIG.skills.map(s => ({ el: rows.skill[s.id], rank: !Game.skillUnlocked(s.id) ? 2 : (h.loadout.includes(s.id) ? 0 : (h.loadout.length < CONFIG.skillSlots ? 0 : 1)) })));
-    // Talents
-    const tfree = Game.talentPointsFree();
-    setText($('talent-free'), tfree); $('badge-talents').classList.toggle('hidden', tfree <= 0);
-    for (const b in CONFIG.talents) { const nodes = CONFIG.talents[b].nodes, list = rows.talent[nodes[0].id].parentNode; orderRows(list, nodes.map(n => ({ el: rows.talent[n.id], rank: (tfree > 0 && Game.talentAvailable(n.id)) ? 0 : (h.talents[n.id] || 0) >= n.max ? 2 : 1 }))); }
-    for (const id in rows.talent) { const row = rows.talent[id]; setText(row.querySelector('[data-f=rank]'), h.talents[id] || 0); const av = Game.talentAvailable(id); row.classList.toggle('owned-row', !av && !(h.talents[id] > 0)); row.querySelector('[data-f=btn]').disabled = tfree <= 0 || !av; }
+    const anySkill = renderTrees(), free = 0, tfree = Game.talentPointsFree();
     $('badge-gear').classList.toggle('hidden', !anyGear);
-    $('badge-hero').classList.toggle('hidden', !(free > 0 || tfree > 0 || anyGear || anySkill));
+    $('badge-hero').classList.toggle('hidden', !(anyGear || anySkill));
 
     // Kingdom
     renderPlots();
