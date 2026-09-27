@@ -231,11 +231,12 @@ const UI = (() => {
       case 'kingdom': return reached('f02');
       case 'tech': return reached('f02');
       case 'build': return reached('q08') || S.kingdom.plots.length > 0;
-      case 'throne': return reached('q17') || Game.bestStageAll() >= 15 || S.legacy.foundings > 0;
+      case 'throne': return reached('q17') || Game.bestStageAll() >= 20 || S.legacy.foundings > 0;
       case 'legacy': return S.legacy.foundings > 0 || S.legacy.knowledge > 0;
+      case 'gear': return reached('f03');
       case 'skills': return S.hero.level >= 2 || reached('q02b') || Object.values(S.hero.dxp || {}).some(x => x > 0);
       case 'market': return reached('q14');
-      case 'inventory': return Object.keys(R).some(k => S.lifetime[k] > 0);
+      case 'inventory': return reached('q05') || Object.keys(R).some(k => R[k].kind === 'loot' && S.lifetime[k] > 0);
       default: return true;
     }
   }

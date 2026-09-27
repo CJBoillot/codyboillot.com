@@ -384,7 +384,7 @@ const CONFIG = {
     { id: 'q04', name: 'Timber', text: 'A hero does one thing at a time — fight, or work. He keeps working even when the game is closed.',
       steps: [
         { label: 'Activity → Chop Wood', check: { activity: 'wood' } },
-        { label: 'Gather 50 wood', check: { counter: 'wood', need: 50 } },
+        { label: 'Chop 50 wood with the axe', check: { harvested: 'wood', need: 50 } },
         { label: 'Click the Axe slot → Upgrade once (faster swings, more wood)', check: { toolLevel: 'axe', need: 1 } },
       ], reward: { stone: 10 }, focus: { tab: 'hero', sub: 'fight', el: 'act:wood', el2: 'tool:axe' } },
     { id: 'q05', name: 'Skinner', text: 'Beasts have hides, if you know how to take them.',
@@ -397,7 +397,7 @@ const CONFIG = {
       steps: [
         { label: 'Click the Skinning Knife slot → Make (10 wood)', check: { tool: 'knife' } },
         { label: 'Fight in The Wilds', check: { activity: 'fight', ground: 'wilds' } },
-        { label: 'Take 40 hide', check: { counter: 'hide', need: 40 } },
+        { label: 'Take 40 hide from beasts', check: { looted: 'hide', need: 40 } },
       ], reward: { hide: 15 }, focus: { tab: 'hero', sub: 'gear', el: 'tool:knife', el2: 'ground:wilds' } },
     { id: 'q06b', name: 'Leatherworking', text: 'Hide becomes armor once you know how.',
       steps: [
@@ -414,53 +414,54 @@ const CONFIG = {
         { label: 'Kingdom → Tech → Research Stone Weapons', check: { tech: 'stoneweapons' }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:stoneweapons' } },
         { label: 'Click the Weapon slot → Forge Stone', check: { gearTier: 'weapon', need: 1 }, focus: { tab: 'hero', sub: 'gear', el: 'gear:weapon' } },
       ], reward: { stone: 30 }, focus: { tab: 'hero', sub: 'gear', el: 'gear:weapon' } },
-    { id: 'q11', name: 'Pickaxe', text: 'A wooden pick is a poor thing, but it beats picking up pebbles — and stone is what better buildings need. Iron comes later, once you know what to look for.',
-      steps: [
-        { label: 'Click the Pickaxe slot → Make (10 wood)', check: { tool: 'pick' } },
-        { label: 'Activity → Mine', check: { activity: 'mine' } },
-        { label: 'Quarry 250 stone', check: { counter: 'stone', need: 250 } },
-      ], reward: { stone: 40 }, focus: { tab: 'hero', sub: 'gear', el: 'tool:pick', el2: 'act:mine' } },
-    { id: 'q12b', name: 'Prospecting', text: 'Some of that rock glitters. Learn to tell ore from stone and every swing of the pick — and every Mine — starts turning up iron too.',
-      steps: [
-        { label: 'Kingdom → Tech → Research Prospecting', check: { tech: 'prospecting' }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:prospecting' } },
-        { label: 'Activity → Mine: dig 100 iron ore', check: { counter: 'ore', need: 100 }, focus: { tab: 'hero', sub: 'fight', el: 'act:mine' } },
-      ], reward: { ore: 20 } },
-    { id: 'q14', name: 'To Market', text: 'Beasts carry no coin, but everything you gather can be sold. Gold buys land, and later founds kingdoms. Refined goods are worth far more than raw — an ingot sells for ten times its ore.',
-      steps: [
-        { label: 'Market → sell anything for 100 gold in total', check: { sold: 100 } },
-      ], reward: { gold: 50 }, focus: { tab: 'market', rtab: 'market', el: 'market' } },
     { id: 'q13', name: 'The First Boss', text: 'The tenth stage of every enemy is its boss. The first kill gives a talent point — spent on the gold capstone at the bottom of a tree — plus a trophy, and beating the Rat King opens the Roads, where bandits carry gold.',
       steps: [
         { label: 'Activity → Fight', check: { activity: 'fight' } },
         { label: 'Advance to stage 10', check: { stage: 10 } },
         { label: 'Slay the boss', check: { boss: 1 } },
-      ], reward: { gold: 60, crystal: 1 }, focus: { tab: 'hero', sub: 'fight', el: 'act:fight', el2: 'id:advance-btn' } },
+      ], reward: { gold: 60 }, focus: { tab: 'hero', sub: 'fight', el: 'act:fight', el2: 'id:advance-btn' } },
     { id: 'q13a', name: 'Highwayman', text: 'Bandits carry the gold they stole. The Roads pay better the deeper you go.',
       steps: [
         { label: 'Fight on The Roads', check: { activity: 'fight', ground: 'roads' } },
-        { label: 'Loot 100 gold from bandits', check: { counter: 'gold', need: 100 } },
+        { label: 'Loot 100 gold from bandits', check: { looted: 'gold', need: 100 } },
       ], reward: { gold: 60 }, focus: { tab: 'hero', sub: 'fight', el: 'ground:roads' } },
-    { id: 'q13b', name: 'Grave Robber', text: 'The dead were buried with their coin — and their armor. Rusted iron can be melted down.',
+    { id: 'q14', name: 'To Market', text: 'Bandits carry coin — and so does everything you gather, once sold. Gold levels skills, buys buildings, and founds kingdoms. Refined goods are worth far more than raw — an ingot sells for ten times its ore.',
       steps: [
-        { label: 'Kingdom → Tech → Research Grave Robbing', check: { tech: 'graverobbing' } },
-        { label: 'Fight in The Crypts', check: { activity: 'fight', ground: 'crypts' } },
-        { label: 'Take 3 ingots from the dead', check: { counter: 'ingot', need: 3 } },
-      ], reward: { gold: 100 }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:graverobbing', el2: 'ground:crypts' } },
+        { label: 'Market → sell anything for 100 gold in total', check: { sold: 100 } },
+      ], reward: { gold: 50 }, focus: { tab: 'market', rtab: 'market', el: 'market' } },
+    { id: 'q11', name: 'Pickaxe', text: 'A wooden pick is a poor thing, but it beats picking up pebbles — and stone is what better buildings need. Iron comes later, once you know what to look for.',
+      steps: [
+        { label: 'Click the Pickaxe slot → Make (10 wood)', check: { tool: 'pick' } },
+        { label: 'Activity → Mine', check: { activity: 'mine' } },
+        { label: 'Quarry 250 stone with the pick', check: { harvested: 'stone', need: 250 } },
+      ], reward: { stone: 40 }, focus: { tab: 'hero', sub: 'gear', el: 'tool:pick', el2: 'act:mine' } },
+    { id: 'q12b', name: 'Prospecting', text: 'Some of that rock glitters. Learn to tell ore from stone and every swing of the pick — and every Mine — starts turning up iron too.',
+      steps: [
+        { label: 'Kingdom → Tech → Research Prospecting', check: { tech: 'prospecting' }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:prospecting' } },
+        { label: 'Activity → Mine: dig 100 iron ore', check: { harvested: 'ore', need: 100 }, focus: { tab: 'hero', sub: 'fight', el: 'act:mine' } },
+      ], reward: { ore: 20 } },
     { id: 'q13c', name: 'A Second Blow', text: 'Max a top-row node and the one below it opens. Power Strike is a technique: rank 1 unlocks it and it fires on its own whenever it is off cooldown.',
       steps: [
         { label: 'Combat tree → Power 10/10', check: { node: 'combat:power', need: 10 } },
         { label: 'Combat tree → Power Strike rank 1', check: { node: 'combat:strike', need: 1 } },
         { label: 'Use Power Strike 5 times', check: { casts: 'strike', need: 5 } },
       ], reward: { gold: 80 }, focus: { tab: 'hero', sub: 'skills', rtab: 'skills', el: 'node:combat:strike' } },
+    { id: 'q13b', name: 'Grave Robber', text: 'The dead were buried with their coin — and their armor. Rusted iron can be melted down.',
+      steps: [
+        { label: 'Kingdom → Tech → Research Grave Robbing', check: { tech: 'graverobbing' } },
+        { label: 'Fight in The Crypts', check: { activity: 'fight', ground: 'crypts' } },
+        { label: 'Take 3 ingots from the dead', check: { looted: 'ingot', need: 3 } },
+      ], reward: { gold: 100 }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:graverobbing', el2: 'ground:crypts' } },
     { id: 'q14b', name: 'Butcher', text: 'Beasts are meat as well as hide. Meat sells well — and your skills feed on it.',
       steps: [
         { label: 'Kingdom → Tech → Research Butchery', check: { tech: 'butchery' } },
-        { label: 'Take 20 meat in the Wilds', check: { counter: 'meat', need: 20 } },
+        { label: 'Fight in The Wilds', check: { activity: 'fight', ground: 'wilds' } },
+        { label: 'Take 20 meat from beasts', check: { looted: 'meat', need: 20 } },
       ], reward: { meat: 10 }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:butchery', el2: 'ground:wilds' } },
     { id: 'q16', name: 'Stage 20', text: 'Upgrade your weapon when fights get slow — that is what the hide and stone are for.',
       steps: [
         { label: 'Reach stage 20 in any ground', check: { stage: 20 } },
-      ], reward: { gold: 200, crystal: 2 }, focus: { tab: 'hero', sub: 'fight', el: 'act:fight', el2: 'id:advance-btn' } },
+      ], reward: { gold: 200 }, focus: { tab: 'hero', sub: 'fight', el: 'act:fight', el2: 'id:advance-btn' } },
     { id: 'q17', name: 'A New Kingdom', text: 'You have survived the wild alone. Founding a kingdom resets your gear, skills and stage — only Legacy perks and trophies stay — but it brings land, a thrall, and your first Crystal. This is where the kingdom begins.',
       steps: [
         { label: 'Kingdom → Throne → Found a New Kingdom (1,000 gold)', check: { founded: 1 } },
@@ -483,7 +484,7 @@ const CONFIG = {
     { id: 'q10', name: 'Standing Timber', text: 'Your thrall works the Forest on its own, awake or away, while you fight or gather. Every job finished is thrall XP — faster hands over time.',
       steps: [
         { label: 'Let your thrall finish 10 jobs', check: { jobs: 10 } },
-      ], reward: { wood: 40 }, focus: { tab: 'kingdom', ksub: 'build', rtab: 'kingdom', el: 'work' } },
+      ], reward: { wood: 40, crystal: 1 }, focus: { tab: 'kingdom', ksub: 'build', rtab: 'kingdom', el: 'work' } },
     { id: 'q12', name: 'Quarrying', text: 'You know the rockface now. A Mine building quarries stone on its own while you do other things.',
       steps: [
         { label: 'Kingdom → Tech → Research Quarrying', check: { tech: 'quarrying' } },
@@ -510,7 +511,7 @@ const CONFIG = {
         { label: 'Forge 150 ingots in total', check: { counter: 'ingot', need: 150 } },
         { label: 'Kingdom → Tech → Research Sawmilling', check: { tech: 'sawmilling' } },
         { label: 'Buildings → build a Sawmill', check: { building: 'sawmill' } },
-      ], reward: { gold: 800 }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:sawmilling', el2: 'build' } },
+      ], reward: { gold: 800, crystal: 2 }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:sawmilling', el2: 'build' } },
   ],
 
   // ---------- Tech tree ----------

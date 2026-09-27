@@ -125,7 +125,7 @@ function tickHarvest(dt) {
   const id = S.hero.activity; if (id === 'fight' || id === 'idle') return;
   if (!activityAvailable(id)) { S.hero.activity = 'idle'; return; }
   S.hero.harvestTimer += dt; const t = harvestTime(id);
-  while (S.hero.harvestTimer >= t) { S.hero.harvestTimer -= t; const y = harvestYield(id), got = {}; for (const k in y) { const n = Math.floor(y[k]) + (Math.random() < y[k] - Math.floor(y[k]) ? 1 : 0); if (n > 0) { add(k, n); got[k] = n; } } S.hero.mastery[id] = (S.hero.mastery[id] || 0) + 1; gainDiscXp(id, CONFIG.discXpPerSwing); pushEvent({ who: 'harvest', yield: got }); }
+  while (S.hero.harvestTimer >= t) { S.hero.harvestTimer -= t; const y = harvestYield(id), got = {}; for (const k in y) { const n = Math.floor(y[k]) + (Math.random() < y[k] - Math.floor(y[k]) ? 1 : 0); if (n > 0) { add(k, n); got[k] = n; S.stats.harvested = S.stats.harvested || {}; S.stats.harvested[k] = (S.stats.harvested[k] || 0) + n; } } S.hero.mastery[id] = (S.hero.mastery[id] || 0) + 1; gainDiscXp(id, CONFIG.discXpPerSwing); pushEvent({ who: 'harvest', yield: got }); }
 }
 
 // ---------- Disciplines & skill trees ----------
@@ -409,6 +409,8 @@ function questCheck(c) {
   if (c.talentSpent) return { done: talentPointsSpent() >= c.talentSpent, have: talentPointsSpent(), need: c.talentSpent };
   if (c.heroLevel) return { done: S.hero.level >= c.heroLevel, have: S.hero.level, need: c.heroLevel };
   if (c.skillEquipped) { const ok = S.hero.loadout.includes(c.skillEquipped); return { done: ok, have: ok ? 1 : 0, need: 1 }; }
+  if (c.looted) { const n = (S.stats.looted && S.stats.looted[c.looted]) || 0; return { done: n >= c.need, have: n, need: c.need }; }
+  if (c.harvested) { const n = (S.stats.harvested && S.stats.harvested[c.harvested]) || 0; return { done: n >= c.need, have: n, need: c.need }; }
   if (c.perk) return { done: perkRank(c.perk) >= (c.need || 1), have: perkRank(c.perk), need: c.need || 1 };
   if (c.disc) return { done: discLevel(c.disc) >= c.need, have: discLevel(c.disc), need: c.need };
   if (c.node) { const [d, id] = c.node.split(':'), r = nodeRank(d, id); return { done: r >= c.need, have: r, need: c.need }; }
@@ -481,7 +483,7 @@ function onKill(st) {
   const roll = v => Math.floor(v) + (Math.random() < v - Math.floor(v) ? 1 : 0);
   const exp = { gold: CONFIG.stages.goldPerKill(s) * ground().goldMult * st.gold };
   const d = groundDrops(s); for (const k in d) exp[k] = d[k] * st.drop;
-  const loot = {}; for (const k in exp) { const n = roll(exp[k]); if (n > 0) { add(k, n); loot[k] = n; } }
+  const loot = {}; for (const k in exp) { const n = roll(exp[k]); if (n > 0) { add(k, n); loot[k] = n; S.stats.looted = S.stats.looted || {}; S.stats.looted[k] = (S.stats.looted[k] || 0) + n; } }
   if (Object.keys(loot).length) pushEvent({ who: 'loot', loot });
   gainXp(H.xpPerKill * CONFIG.stages.xpPerKill(s) * (isBoss(s) ? 3 : 1) * st.xp);
   S.hero.kills++; S.hero.totalKills++;
