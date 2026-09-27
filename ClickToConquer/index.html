@@ -1,6 +1,10 @@
 <!doctype html>
 <html lang="en">
 <head>
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#14100d">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
   <meta charset="utf-8">
   <meta http-equiv="Cache-Control" content="no-cache">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
@@ -8,7 +12,7 @@
   <title>Click to Conquer</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=a022c">
+  <link rel="stylesheet" href="style.css?v=a022d">
 </head>
 <body>
 
@@ -18,9 +22,9 @@
     <div id="res-bar" class="res-bar"></div>
   </header>
   <nav class="tabs" id="main-tabs">
-    <button data-tab="hero" class="active">Character <span id="badge-hero" class="badge hidden">!</span></button>
+    <button data-tab="hero" class="active">Hero <span id="badge-hero" class="badge hidden">!</span></button>
     <button data-tab="kingdom">Kingdom <span id="badge-kingdom" class="badge hidden">!</span></button>
-    <button data-tab="inventory">Collections <span id="badge-inventory" class="badge hidden">!</span></button>
+    <button data-tab="inventory">Loot <span id="badge-inventory" class="badge hidden">!</span></button>
     <button data-tab="market">Market <span id="badge-market" class="badge hidden">!</span></button>
   </nav>
   <div id="subtab-dock"></div>
@@ -221,7 +225,7 @@
     <nav class="subtabs" id="right-tabs">
       <button data-rtab="kingdom" class="active">Kingdom</button>
       <button data-rtab="skills">Skills</button>
-      <button data-rtab="inventory">Collections</button>
+      <button data-rtab="inventory">Loot</button>
       <button data-rtab="market">Market</button>
     </nav>
     <div id="right-locked" class="card dim small center hidden">Locked. Your quests will open this when you need it.</div>
@@ -329,9 +333,9 @@
 </div>
 
 
-<script src="config.js?v=a022c"></script>
-<script src="game.js?v=a022c"></script>
-<script src="ui.js?v=a022c"></script>
+<script src="config.js?v=a022d"></script>
+<script src="game.js?v=a022d"></script>
+<script src="ui.js?v=a022d"></script>
 <script>window.addEventListener("error", e => { const d = document.getElementById("err"); if (d) { d.textContent = "Error: " + e.message; d.classList.remove("hidden"); } });</script>
 </body>
 </html>

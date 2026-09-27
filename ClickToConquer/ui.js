@@ -24,6 +24,7 @@ const UI = (() => {
   function ask(title, text, yesLabel, cb) { setText($('confirm-title'), title); setText($('confirm-text'), text); setText($('confirm-yes'), yesLabel || 'Yes'); confirmCb = cb; $('confirm-modal').classList.remove('hidden'); }
   function closeAsk() { confirmCb = null; $('confirm-modal').classList.add('hidden'); }
   function init() {
+    try { if (screen.orientation && screen.orientation.lock) screen.orientation.lock('portrait').catch(() => {}); } catch (e) {}
     $('confirm-no').addEventListener('click', closeAsk); $('confirm-modal').addEventListener('click', e => { if (e.target === $('confirm-modal')) closeAsk(); });
     $('confirm-yes').addEventListener('click', () => { const cb = confirmCb; closeAsk(); if (cb) cb(); });
     $('version').textContent = CONFIG.version;
