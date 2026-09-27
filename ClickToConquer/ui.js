@@ -68,6 +68,7 @@ const UI = (() => {
     $('dev-tech').addEventListener('click', () => Game.debug.techAll());
     $('dev-qskip').addEventListener('click', () => Game.debug.questSkip());
     $('set-log').addEventListener('change', e => { Game.S.settings.showLog = e.target.checked; });
+    $('quest-toggle').addEventListener('click', () => { const S = Game.S; S.settings.questCollapsed = !S.settings.questCollapsed; applyQuestCollapse(); });
     $('quest-claim').addEventListener('click', () => { if (Game.questClaim()) flash($('quest-card')); });
     $('dev-export').addEventListener('click', () => { $('dev-io').value = Game.exportSave(); $('dev-io').select(); });
     $('dev-import').addEventListener('click', () => { if (Game.importSave($('dev-io').value)) { buildLists(); alert('Imported.'); } else alert('Bad save string.'); });
@@ -426,6 +427,9 @@ const UI = (() => {
     });
   }
 
+  // ---- Quest card collapse: header, name, next step and Claim only ----
+  function applyQuestCollapse() { const col = !!Game.S.settings.questCollapsed; $('quest-card').classList.toggle('collapsed', col); $('quest-toggle').setAttribute('aria-expanded', String(!col)); $('quest-toggle').title = col ? 'Expand' : 'Collapse'; }
+
   // ---- Skill trees ----
   let curDisc = 'combat'; rows.disc = {}; rows.node = {}; let treeKey = '';
   function buildDiscBar() {
@@ -714,7 +718,7 @@ const UI = (() => {
     if (!q) goal = Game.suggestGoal();
     const showQ = q || goal;
     $('quest-card').classList.toggle('hidden', !showQ); $('quest-done').classList.toggle('hidden', !!showQ);
-    $('quest-card').classList.toggle('goal', !q && !!goal);
+    $('quest-card').classList.toggle('goal', !q && !!goal); applyQuestCollapse();
     const CN = { kills: 'Enemies slain', bossKills: 'Bosses slain', stage: 'Best stage', foundings: 'Foundings' };
     const partHtml = (p, i, arr) => { const lab = p.label || (CN[p.k] || (R[p.k] ? R[p.k].name + ' gathered' : '')); const single = p.need === 1 || p.simple; const current = !p.done && arr.slice(0, i).every(x => x.done);
       return `<div class="qstep ${p.done ? 'done' : ''} ${current ? 'current' : ''}"><span class="qbox">${p.done ? '✓' : ''}</span><span class="qtext">${lab}</span>${single ? '' : `<span class="qcount">${f(Math.min(p.have, p.need))} / ${f(p.need)}</span>`}${single ? '' : `<div class="bar"><div style="width:${Math.min(100, 100 * p.have / p.need)}%"></div></div>`}</div>`; };

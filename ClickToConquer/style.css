@@ -595,3 +595,17 @@ body.desktop.has-dock .panel-center { padding-bottom: 160px; }
 #subtab-dock:empty { display: none; }
 #subtab-dock .subtabs { margin: 0; padding: 4px 8px 6px; }
 body.desktop #subtab-dock { display: none; }
+
+/* quest card collapse */
+.quest-head { align-items: center; }
+.quest-toggle { margin-left: auto; width: 26px; height: 26px; padding: 0; border-radius: 50%; background: rgba(255,255,255,.03); border: 1px solid var(--line); color: var(--dim); box-shadow: none; display: flex; align-items: center; justify-content: center; }
+.quest-toggle .chev { transition: transform .15s; }
+.quest.collapsed .quest-toggle .chev { transform: rotate(-90deg); }
+.quest.collapsed #quest-text, .quest.collapsed #quest-hint, .quest.collapsed #quest-reward { display: none; }
+.quest.collapsed .quest-obj .qstep { display: none; }
+.quest.collapsed .quest-obj .qstep.current { display: grid; border-top: none; padding-top: 2px; }
+.quest.collapsed .quest-obj .qstep.current .bar { display: none; }
+.quest.collapsed .quest-obj .qpart { display: none; }
+.quest.collapsed .quest-name { margin-bottom: 0; font-size: 15px; }
+.quest.collapsed { padding: 8px 12px; }
+.quest.collapsed .quest-foot { margin-top: 4px; justify-content: flex-end; }
