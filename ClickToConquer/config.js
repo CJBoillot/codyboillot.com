@@ -14,7 +14,7 @@ const CONFIG = {
 
   offline: {
     capSeconds: 8 * 3600,
-    efficiency: 0.5,
+    efficiency: 0.10,   // idle runs at 10% of active speed (Long Memory perk adds +10% per rank)
     minSecondsToShow: 60,
     adDoubleMultiplier: 2,
   },
@@ -153,7 +153,7 @@ const CONFIG = {
   harvestStrPct: 0.01, // +1% harvest speed per Strength point
 
   tiers: [
-    { name: 'Crude', mult: 0.5, perSlot: { weapon: { name: 'Wooden', craftCost: { wood: 10 }, upgradeCost: { wood: 4 } }, chest: { name: 'Fiber', craftCost: { fiber: 10 }, upgradeCost: { fiber: 4 } }, helm: { name: 'Fiber', craftCost: { fiber: 6 }, upgradeCost: { fiber: 3 } }, boots: { name: 'Fiber', craftCost: { fiber: 6 }, upgradeCost: { fiber: 3 } }, trinket: { name: 'Fiber', craftCost: { fiber: 4 }, upgradeCost: { fiber: 2 } } }, craftCost: { fiber: 10 }, upgradeCost: { fiber: 4 }, upgradeMult: 1.25 },
+    { name: 'Crude', mult: 0.5, perSlot: { weapon: { name: 'Wooden', craftCost: { wood: 10 }, upgradeCost: { wood: 2 } }, chest: { name: 'Fiber', craftCost: { fiber: 10 }, upgradeCost: { fiber: 2 } }, helm: { name: 'Fiber', craftCost: { fiber: 6 }, upgradeCost: { fiber: 2 } }, boots: { name: 'Fiber', craftCost: { fiber: 6 }, upgradeCost: { fiber: 2 } }, trinket: { name: 'Fiber', craftCost: { fiber: 4 }, upgradeCost: { fiber: 1 } } }, craftCost: { fiber: 10 }, upgradeCost: { fiber: 2 }, upgradeMult: 1.18 },
     { name: 'Leather',     mult: 1,   perSlot: { weapon: { name: 'Stone', craftCost: { stone: 12, wood: 6 }, upgradeCost: { stone: 4, wood: 2 } } }, craftCost: { leather: 3, hide: 5 }, upgradeCost: { leather: 1, hide: 2 }, upgradeMult: 1.25 },
     { name: 'Iron',        mult: 3,   craftCost: { ingot: 5, leather: 3, gold: 300 },            upgradeCost: { ingot: 2, leather: 1 },           upgradeMult: 1.25 },
     { name: 'Steel',       mult: 9,   craftCost: { ingot: 10, planks: 3, leather: 3, gold: 2000 },   upgradeCost: { ingot: 5, planks: 1 },              upgradeMult: 1.25 },
@@ -384,20 +384,20 @@ const CONFIG = {
     { id: 'q04', name: 'Timber', text: 'A hero does one thing at a time — fight, or work. He keeps working even when the game is closed.',
       steps: [
         { label: 'Activity → Chop Wood', check: { activity: 'wood' } },
-        { label: 'Chop 50 wood with the axe', check: { harvested: 'wood', need: 50 } },
+        { label: 'Chop 30 wood with the axe', check: { harvested: 'wood', need: 30 } },
         { label: 'Click the Axe slot → Upgrade once (faster swings, more wood)', check: { toolLevel: 'axe', need: 1 } },
       ], reward: { stone: 10 }, focus: { tab: 'hero', sub: 'fight', el: 'act:wood', el2: 'tool:axe' } },
     { id: 'q05', name: 'Skinner', text: 'Beasts have hides, if you know how to take them.',
       steps: [
         { label: 'Activity → Fight', check: { activity: 'fight' } },
-        { label: 'Slay 75 enemies', check: { counter: 'kills', need: 75 } },
+        { label: 'Slay 50 enemies', check: { counter: 'kills', need: 50 } },
         { label: 'Kingdom → Tech → Research Skinning', check: { tech: 'skinning' } },
       ], reward: { hide: 5 }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:skinning', el2: 'act:fight' } },
     { id: 'q06', name: 'Hunter', text: 'Only beasts have hides, and beasts live in the Wilds. A better knife takes more hide per kill.',
       steps: [
         { label: 'Click the Skinning Knife slot → Make (10 wood)', check: { tool: 'knife' } },
         { label: 'Fight in The Wilds', check: { activity: 'fight', ground: 'wilds' } },
-        { label: 'Take 40 hide from beasts', check: { looted: 'hide', need: 40 } },
+        { label: 'Take 20 hide from beasts', check: { looted: 'hide', need: 20 } },
       ], reward: { hide: 15 }, focus: { tab: 'hero', sub: 'gear', el: 'tool:knife', el2: 'ground:wilds' } },
     { id: 'q06b', name: 'Leatherworking', text: 'Hide becomes armor once you know how.',
       steps: [
@@ -427,18 +427,18 @@ const CONFIG = {
       ], reward: { gold: 60 }, focus: { tab: 'hero', sub: 'fight', el: 'ground:roads' } },
     { id: 'q14', name: 'To Market', text: 'Bandits carry coin — and so does everything you gather, once sold. Gold levels skills, buys buildings, and founds kingdoms. Refined goods are worth far more than raw — an ingot sells for ten times its ore.',
       steps: [
-        { label: 'Market → sell anything for 100 gold in total', check: { sold: 100 } },
+        { label: 'Market → sell anything for 50 gold in total', check: { sold: 50 } },
       ], reward: { gold: 50 }, focus: { tab: 'market', rtab: 'market', el: 'market' } },
     { id: 'q11', name: 'Pickaxe', text: 'A wooden pick is a poor thing, but it beats picking up pebbles — and stone is what better buildings need. Iron comes later, once you know what to look for.',
       steps: [
         { label: 'Click the Pickaxe slot → Make (10 wood)', check: { tool: 'pick' } },
         { label: 'Activity → Mine', check: { activity: 'mine' } },
-        { label: 'Quarry 250 stone with the pick', check: { harvested: 'stone', need: 250 } },
+        { label: 'Quarry 60 stone with the pick', check: { harvested: 'stone', need: 60 } },
       ], reward: { stone: 40 }, focus: { tab: 'hero', sub: 'gear', el: 'tool:pick', el2: 'act:mine' } },
     { id: 'q12b', name: 'Prospecting', text: 'Some of that rock glitters. Learn to tell ore from stone and every swing of the pick — and every Mine — starts turning up iron too.',
       steps: [
         { label: 'Kingdom → Tech → Research Prospecting', check: { tech: 'prospecting' }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:prospecting' } },
-        { label: 'Activity → Mine: dig 100 iron ore', check: { harvested: 'ore', need: 100 }, focus: { tab: 'hero', sub: 'fight', el: 'act:mine' } },
+        { label: 'Activity → Mine: dig 30 iron ore', check: { harvested: 'ore', need: 30 }, focus: { tab: 'hero', sub: 'fight', el: 'act:mine' } },
       ], reward: { ore: 20 } },
     { id: 'q13c', name: 'A Second Blow', text: 'Max a top-row node and the one below it opens. Power Strike is a technique: rank 1 unlocks it and it fires on its own whenever it is off cooldown.',
       steps: [
@@ -456,7 +456,7 @@ const CONFIG = {
       steps: [
         { label: 'Kingdom → Tech → Research Butchery', check: { tech: 'butchery' } },
         { label: 'Fight in The Wilds', check: { activity: 'fight', ground: 'wilds' } },
-        { label: 'Take 20 meat from beasts', check: { looted: 'meat', need: 20 } },
+        { label: 'Take 10 meat from beasts', check: { looted: 'meat', need: 10 } },
       ], reward: { meat: 10 }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:butchery', el2: 'ground:wilds' } },
     { id: 'q16', name: 'Stage 20', text: 'Upgrade your weapon when fights get slow — that is what the hide and stone are for.',
       steps: [
@@ -520,20 +520,20 @@ const CONFIG = {
   techTiers: ['Camp', 'Settlement', 'Ironworking', 'Artisan', 'Advanced'],
   techs: [
     // Tier 0 — Camp
-    { id: 'skinning',   tier: 0, name: 'Skinning',         icon: [17,8],  req: { kills: 75 },            cost: { wood: 30, fiber: 20 },         unlocks: { drop: 'hide', tool: 'knife' }, desc: 'Lets you make a Skinning Knife. With one, beasts in the Wilds drop Hide — better knife, better chance.' },
+    { id: 'skinning',   tier: 0, name: 'Skinning',         icon: [17,8],  req: { kills: 50 },            cost: { wood: 20, fiber: 15 },         unlocks: { drop: 'hide', tool: 'knife' }, desc: 'Lets you make a Skinning Knife. With one, beasts in the Wilds drop Hide — better knife, better chance.' },
     { id: 'fiberclothing', tier: 0, name: 'Fiber Clothing', icon: [7,9], req: { fiber: 10 }, cost: { fiber: 5 }, unlocks: { gearTier: 0, slots: ['chest', 'helm', 'boots', 'trinket'] }, desc: 'Twist plant fiber into clothes. Something between you and the wind.' },
     { id: 'woodensword',   tier: 0, name: 'Wooden Sword',   icon: [5,0], req: { wood: 10 },  cost: { wood: 5 },  unlocks: { gearTier: 0, slots: ['weapon'] },                  desc: 'A sharpened branch. With it, your hero can fight on his own.' },
     { id: 'stonetools', tier: 0, name: 'Woodcraft',        icon: [10,1],  req: { kills: 25 },            cost: { wood: 25 },                     unlocks: { toolTier: 0 },           desc: 'Carve wooden axes, picks, sickles and knives.' },
     { id: 'forestry',   tier: 0, name: 'Forestry',         icon: [4,6],   req: { foundings: 1, wood: 150 },            cost: { wood: 60, stone: 20 },          unlocks: { building: 'forest' },    desc: 'Build a Forest: gathers wood on its own.' },
     { id: 'farming',    tier: 0, name: 'Farming',          icon: [12,5],  req: { foundings: 1, wood: 300 },            cost: { wood: 60, stone: 30 },         unlocks: { building: 'farm' },      desc: 'Build a Farm.' },
-    { id: 'leatherwork',tier: 0, name: 'Leatherworking',   icon: [7,6],   req: { hide: 40 },             cost: { hide: 15, wood: 20 },           unlocks: { gearTier: 1, slots: ['chest', 'helm', 'boots', 'trinket'] }, desc: 'Forge Leather armor.' },
+    { id: 'leatherwork',tier: 0, name: 'Leatherworking',   icon: [7,6],   req: { hide: 20 },             cost: { hide: 10, wood: 10 },           unlocks: { gearTier: 1, slots: ['chest', 'helm', 'boots', 'trinket'] }, desc: 'Forge Leather armor.' },
     { id: 'stoneweapons',tier: 0, name: 'Stone Weapons',    icon: [17,1],  req: { stone: 30 },            cost: { stone: 10, wood: 5 },           unlocks: { gearTier: 1, slots: ['weapon'] }, desc: 'Knap a stone edge onto a wooden haft. Weapons go Wood → Stone → Iron → Steel.' },
     // Tier 1 — Settlement
-    { id: 'quarrying',  tier: 1, name: 'Quarrying',        icon: [4,5],   req: { foundings: 1, stone: 250 },           cost: { wood: 100, stone: 50 },         unlocks: { building: 'mine' },      desc: 'Build a Mine: quarries stone on its own (and iron ore, once you know Prospecting).' },
-    { id: 'prospecting',tier: 1, name: 'Prospecting',      icon: [17,2],  req: { stone: 500 },           cost: { stone: 150, wood: 50 },         unlocks: { drop: 'ore' },           desc: 'Tell ore from rock. Mining — by pick or by Mine — now yields Iron Ore as well as stone.' },
+    { id: 'quarrying',  tier: 1, name: 'Quarrying',        icon: [4,5],   req: { foundings: 1, stone: 100 },           cost: { wood: 60, stone: 30 },         unlocks: { building: 'mine' },      desc: 'Build a Mine: quarries stone on its own (and iron ore, once you know Prospecting).' },
+    { id: 'prospecting',tier: 1, name: 'Prospecting',      icon: [17,2],  req: { stone: 120 },           cost: { stone: 40, wood: 20 },          unlocks: { drop: 'ore' },           desc: 'Tell ore from rock. Mining — by pick or by Mine — now yields Iron Ore as well as stone.' },
     { id: 'husbandry',  tier: 1, name: 'Animal Husbandry', icon: [19,10], req: { foundings: 1, grain: 150 },           cost: { grain: 50, wood: 40 },         unlocks: { building: 'husbandry' }, desc: 'Build Husbandry: wool and meat.' },
     { id: 'tanning',    tier: 1, name: 'Tanning',          icon: [8,2],   req: { foundings: 1, hide: 60 },             cost: { hide: 20, wood: 40 },          unlocks: { building: 'tannery' },   desc: 'Build a Tannery: hide → leather.' },
-    { id: 'butchery',   tier: 1, name: 'Butchery',         icon: [15,1],  req: { kills: 150 },           cost: { hide: 20, wood: 20 },          unlocks: { drop: 'meat' },          desc: 'Beasts in the Wilds drop Meat. Sells well; levels skills.' },
+    { id: 'butchery',   tier: 1, name: 'Butchery',         icon: [15,1],  req: { kills: 100 },           cost: { hide: 10, wood: 10 },          unlocks: { drop: 'meat' },          desc: 'Beasts in the Wilds drop Meat. Sells well; levels skills.' },
     { id: 'graverobbing',tier: 1, name: 'Grave Robbing',    icon: [0,0],   req: { bossKills: 1 },         cost: { gold: 100 },                   unlocks: { drop: 'ingot' },         desc: 'Open the Crypts: the dead carry gold and rusted iron.' },
     // Tier 2 — Ironworking
     { id: 'smelting',   tier: 2, name: 'Smelting',         icon: [4,4],   req: { foundings: 1, ore: 1000 },             cost: { gold: 300, stone: 100, wood: 50 }, unlocks: { building: 'smith' }, desc: 'Build a Blacksmith: ore → ingots.' },

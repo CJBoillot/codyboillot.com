@@ -45,7 +45,7 @@ Crafting ──tools──▶ Kingdom (+% output)
 
 **Debug** (⚙): speed, AFK test, give N of all/one resource, +levels, +stages, +Knowledge, +Kingdom level, export/import, reset run (keeps legacy), RESET ALL.
 
-**Offline.** Both loops run while away: cap 8h, 50% efficiency. Uses a closed-form rate model (no purchases, no advancing), so 8h resolves instantly.
+**Offline.** Both loops run while away: cap 8h, 10% efficiency (+10%/rank Long Memory). Uses a closed-form rate model (no purchases, no advancing), so 8h resolves instantly.
 
 ## Files
 
