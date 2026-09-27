@@ -317,25 +317,24 @@ function pay(cost) { for (const k in cost) S.res[k] -= cost[k]; }
 // ---------- Kingdom: plots, buildings, timed jobs, thralls ----------
 const THRALL_NAMES = ['Brann', 'Ysolde', 'Kettil', 'Marra', 'Osric', 'Thyra', 'Gundar', 'Liv', 'Halvar', 'Sigrun', 'Rurik', 'Eydis'];
 function btype(id) { return CONFIG.buildingTypes.find(b => b.id === id); }
-function plotCap() { return CONFIG.plots.cap(S.legacy.kingdomLevel); }
+function plotCap() { return thrallCount(); } // one plot per thrall — a thrall IS a plot
 function plotCost() { return { gold: CONFIG.plots.cost(S.kingdom.plots.length) }; }
-function canBuyPlot() { return S.kingdom.plots.length < plotCap() && canAfford(plotCost()); }
+function canBuyPlot() { return false; } // plots come with thralls now
 function buyPlot() { if (!canBuyPlot()) return false; pay(plotCost()); S.kingdom.plots.push({ type: null, level: 0, progress: 0, running: false, worker: null }); return true; }
 function buildingCostMult() { const kp = kingdomPath(); return kp ? kp.costMult : 1; }
 function buildCost(typeId) { return scaleCost(btype(typeId).buildCost, 1, 0, buildingCostMult()); }
 function build(idx, typeId) {
-  const p = S.kingdom.plots[idx]; if (!p || p.type || !buildingUnlocked(typeId)) return false;
+  const p = S.kingdom.plots[idx]; if (!p || p.type || !buildingUnlocked(typeId) || idx >= thrallCount()) return false;
   const c = buildCost(typeId); if (!canAfford(c)) return false;
-  pay(c); p.type = typeId; p.level = 1; p.progress = 0; p.running = false; log(`Built ${btype(typeId).name}`); return true;
+  pay(c); p.type = typeId; p.level = 1; p.progress = 0; p.running = false; p.worker = idx; log(`${thrallName(idx)} built a ${btype(typeId).name}`); return true;
 }
 function upgradeCost(idx) { const p = S.kingdom.plots[idx]; return scaleCost(CONFIG.buildingUpgrade.base, CONFIG.buildingUpgrade.mult, p.level - 1, buildingCostMult()); }
 function upgradePlot(idx) { const p = S.kingdom.plots[idx]; if (!p || !p.type) return false; const c = upgradeCost(idx); if (!canAfford(c)) return false; pay(c); p.level++; return true; }
-function jobTime(p) { const kp = kingdomPath(); return btype(p.type).job.time / ((1 + CONFIG.buildingUpgrade.speedPerLevel * (p.level - 1)) * (kp && kp.jobSpeed ? kp.jobSpeed : 1) * techJobSpeed()); }
+function jobTime(p) { const kp = kingdomPath(), w = typeof p.worker === 'number' ? thrallSpeed(p.worker) : 1; return btype(p.type).job.time / ((1 + CONFIG.buildingUpgrade.speedPerLevel * (p.level - 1)) * (kp && kp.jobSpeed ? kp.jobSpeed : 1) * techJobSpeed() * w); }
 function jobOutputs(p) {
   const t = btype(p.type), o = {}, bonus = Math.floor((p.level - 1) / CONFIG.buildingUpgrade.batchEvery), kp = kingdomPath();
   const om = kp && kp.outputMult && kp.outputMult[p.type] ? kp.outputMult[p.type] : 1;
-  const tm = p.worker !== null && p.worker !== undefined ? CONFIG.thrallOutputMult : 1;
-  for (const k in t.job.outputs) { if (outputGated(k)) continue; o[k] = (t.job.outputs[k] + bonus) * om * tm; }
+  for (const k in t.job.outputs) { if (outputGated(k)) continue; o[k] = (t.job.outputs[k] + bonus) * om; }
   return o;
 }
 function jobInputs(p) { return btype(p.type).job.inputs; }
@@ -343,8 +342,17 @@ function canStartJob(idx) { const p = S.kingdom.plots[idx]; return !!(p && p.typ
 function startJob(idx) { if (!canStartJob(idx)) return false; const p = S.kingdom.plots[idx]; pay(jobInputs(p)); p.running = true; p.progress = 0; return true; }
 function plotWorker(idx) { return S.kingdom.plots[idx].worker; } // null | 'hero' | thrall index
 function thrallCount() { return CONFIG.thralls(S.legacy.kingdomLevel); }
-function ensureThralls() { while (S.kingdom.thralls.length < thrallCount()) S.kingdom.thralls.push({ name: THRALL_NAMES[S.kingdom.thralls.length % THRALL_NAMES.length] }); }
-function assign(idx, who) { // who: null | thrall index
+function ensureThralls() {
+  while (S.kingdom.thralls.length < thrallCount()) S.kingdom.thralls.push({ name: THRALL_NAMES[S.kingdom.thralls.length % THRALL_NAMES.length], xp: 0 });
+  while (S.kingdom.plots.length < thrallCount()) S.kingdom.plots.push({ type: null, level: 0, progress: 0, running: false, worker: S.kingdom.plots.length });
+  S.kingdom.plots.forEach((p, i) => { if (p.type) p.worker = i; });
+}
+function thrallName(i) { const t = S.kingdom.thralls[i]; return t ? t.name : 'Thrall'; }
+function thrallLevel(i) { const t = S.kingdom.thralls[i]; if (!t) return 1; let lvl = 1 + perkRank('headstart') * CONFIG.thrallXp.headStartLevels, x = t.xp || 0; while (x >= CONFIG.thrallXp.toLevel(lvl) && lvl < 99) { x -= CONFIG.thrallXp.toLevel(lvl); lvl++; } return lvl; }
+function thrallProgress(i) { const t = S.kingdom.thralls[i]; let lvl = 1 + perkRank('headstart') * CONFIG.thrallXp.headStartLevels, x = (t && t.xp) || 0; while (x >= CONFIG.thrallXp.toLevel(lvl) && lvl < 99) { x -= CONFIG.thrallXp.toLevel(lvl); lvl++; } return { level: lvl, have: x, need: CONFIG.thrallXp.toLevel(lvl) }; }
+function thrallSpeed(i) { return 1 + CONFIG.thrallXp.speedPerLevel * (thrallLevel(i) - 1); }
+function assign(idx, who) { return false; }
+function assignOld(idx, who) { // who: null | thrall index
   const plots = S.kingdom.plots; if (!plots[idx] || !plots[idx].type) return false;
   for (const p of plots) if (p.worker === who && who !== null) p.worker = null; // one job per thrall
   plots[idx].worker = who; return true;
@@ -357,7 +365,7 @@ function tickKingdom(dt) {
     const t = jobTime(p);
     if (p.progress >= t) {
       const o = jobOutputs(p); for (const k in o) add(k, o[k]);
-      S.stats.jobs++;
+      S.stats.jobs++; if (typeof p.worker === 'number' && S.kingdom.thralls[p.worker]) { const t = S.kingdom.thralls[p.worker], b = thrallLevel(p.worker); t.xp = (t.xp || 0) + 1; if (thrallLevel(p.worker) > b) log(`${t.name} is now level ${thrallLevel(p.worker)}`); }
       p.running = false; p.progress = 0;
       if (canStartJob(idx)) startJob(idx);
     }
@@ -573,7 +581,6 @@ function found(heroPathId, kingdomPathId) {
   if (keptWeapon) S.hero.gear.weapon = keptWeapon;
   ensureThralls();
   grantTechTiers(perkRank('blueprints'));
-  for (let i = 0; i < perkRank('headstart'); i++) if (S.kingdom.plots.length < plotCap()) S.kingdom.plots.push({ type: null, level: 0, progress: 0, running: false, worker: null });
   const ca = perkRank('cache'); if (ca) { add('gold', 1000 * ca); add('wood', 50 * ca); }
   log(`Founded Kingdom ${leg.kingdomLevel} as ${hp.name} of a ${kp.name}. +${gain} Knowledge`);
   log(`A new thrall joins you: ${S.kingdom.thralls[S.kingdom.thralls.length - 1].name}`);
@@ -661,7 +668,7 @@ window.Game = {
   kingdomRates, btype, plotCap, plotCost, canBuyPlot, buyPlot, buildCost, build, upgradeCost, upgradePlot, jobTime, jobOutputs, jobInputs, canStartJob, startJob, assign, heroFighting, thrallCount, sellPrice, sell,
   canAdvance, advance, retreat, canAfford, add, simulate, applyOffline, claimOffline,
   save, load, exportSave, importSave, hardReset,
-  typeKey, typeKills, bestiaryTier, bestiaryBonus, trophyTier, trophyCount, pinned, togglePin,
+  thrallName, thrallLevel, thrallProgress, thrallSpeed, typeKey, typeKills, bestiaryTier, bestiaryBonus, trophyTier, trophyCount, pinned, togglePin,
   afkCap, afkEff, perkRank, perkCost, buyPerk, heroPath, kingdomPath,
   knowledgeGain, foundCost, canFound, pathUnlocked, found, maxGearTier,
   // debug helpers

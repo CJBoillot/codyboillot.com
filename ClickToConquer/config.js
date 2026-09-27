@@ -316,7 +316,8 @@ const CONFIG = {
   thralls: lvl => lvl - 1,                  // one per founding
   // Some harvest / building outputs only appear once a tech is known (resource → tech id)
   harvestGate: { ore: 'prospecting' },
-  thrallOutputMult: 5,                      // a built plot always runs (1× output, unmanned); a thrall working it multiplies output
+  // A thrall IS a plot: you can build one building per thrall, and it only runs because a thrall works it. Thralls level by finishing jobs.
+  thrallXp: { toLevel: lvl => Math.floor(10 * Math.pow(1.35, lvl - 1)), speedPerLevel: 0.05, headStartLevels: 3 },
   // A job: consumes inputs, runs `time` seconds, yields outputs. Level: +8% speed and +1 output every 5 levels.
   buildingTypes: [
     // Gathering
@@ -469,20 +470,19 @@ const CONFIG = {
       steps: [
         { label: 'Kingdom → Legacy → unlock Bestiary (1 Crystal)', check: { perk: 'bestiary' } },
       ], reward: { gold: 100 }, focus: { tab: 'kingdom', ksub: 'legacy', rtab: 'kingdom', el: 'perk:bestiary' } },
-    { id: 'q08', name: 'Stake a Claim', text: 'Your kingdom starts with land. Plots are bought with gold — sell what you have gathered.',
+    { id: 'q08', name: 'A Thrall', text: 'A thrall came with the founding. Each thrall works one plot — no thrall, no building. Every founding brings one more, and they stay with you. Thralls level up as they work.',
       steps: [
-        { label: 'Have 300 gold (sell at the Market)', check: { have: 'gold', need: 300 } },
-        { label: 'Kingdom → Buildings → Buy plot', check: { plots: 1 } },
-      ], reward: { wood: 20 }, focus: { tab: 'kingdom', ksub: 'build', rtab: 'kingdom', el: 'id:buy-plot' } },
+        { label: 'Kingdom → Buildings: meet your thrall', check: { plots: 1 } },
+      ], reward: { wood: 40, stone: 20 }, focus: { tab: 'kingdom', ksub: 'build', rtab: 'kingdom', el: 'build' } },
     { id: 'q09', name: 'Forester', text: 'An empty plot needs a building. A Forest gathers wood without your hero.',
       steps: [
         { label: 'Gather 150 wood in total', check: { counter: 'wood', need: 150 } },
         { label: 'Kingdom → Tech → Research Forestry', check: { tech: 'forestry' } },
         { label: 'Kingdom → Buildings → tap the empty plot → Forest', check: { building: 'forest' } },
       ], reward: { wood: 30 }, focus: { tab: 'kingdom', ksub: 'build', rtab: 'kingdom', el: 'tech:forestry', el2: 'build' } },
-    { id: 'q10', name: 'Standing Timber', text: 'A building works on its own once built — slowly, at 1× output, while you fight or gather. Later, a thrall (you gain one each time you found a new kingdom) can be assigned to it for 5× the output.',
+    { id: 'q10', name: 'Standing Timber', text: 'Your thrall works the Forest on its own, awake or away, while you fight or gather. Every job finished is thrall XP — faster hands over time.',
       steps: [
-        { label: 'Let the Forest finish 10 jobs on its own', check: { jobs: 10 } },
+        { label: 'Let your thrall finish 10 jobs', check: { jobs: 10 } },
       ], reward: { wood: 40 }, focus: { tab: 'kingdom', ksub: 'build', rtab: 'kingdom', el: 'work' } },
     { id: 'q12', name: 'Quarrying', text: 'You know the rockface now. A Mine building quarries stone on its own while you do other things.',
       steps: [
@@ -494,11 +494,6 @@ const CONFIG = {
         { label: 'Kingdom → Tech → Research Farming', check: { tech: 'farming' } },
         { label: 'Buildings → build a Farm', check: { building: 'farm' } },
       ], reward: { gold: 60 }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:farming', el2: 'build' } },
-    { id: 'q18', name: 'Put Them to Work', text: 'Thralls work a plot for you, awake or away.',
-      steps: [
-        { label: 'Buildings → build anything', check: { plotsBuilt: 1 } },
-        { label: 'On that plot, choose your thrall in the dropdown', check: { thrall: 1 } },
-      ], reward: { gold: 100 }, focus: { tab: 'kingdom', ksub: 'build', rtab: 'kingdom', el: 'assign' } },
     { id: 'q19', name: 'Ironworking', text: 'Smelting needs a thousand ore. Put a thrall on a Mine and mine yourself.',
       steps: [
         { label: 'Mine 1,000 ore in total', check: { counter: 'ore', need: 1000 } },
@@ -585,7 +580,7 @@ const CONFIG = {
 
     // Permanent perks bought with Crystals. cost = base × costMult^rank.
     perks: [
-      { id: 'headstart', name: 'Head Start',      icon: [4,6],  max: 3, cost: 5,  costMult: 1.6, desc: 'Begin each kingdom with 1 free plot per rank' },
+      { id: 'headstart', name: 'Head Start',      icon: [4,6],  max: 3, cost: 5,  costMult: 1.6, desc: 'Thralls begin each kingdom 3 levels higher per rank' },
       { id: 'blueprints', name: 'Blueprints',     icon: [13,12], max: 4, cost: 12, costMult: 1.8, desc: 'Begin each kingdom with one more tech tier already researched' },
       { id: 'cellar', name: 'Deep Cellar',        icon: [19,9], max: 4, cost: 8,  costMult: 1.7, desc: 'AFK cap +2h per rank' },
       { id: 'memory', name: 'Long Memory',        icon: [13,8], max: 3, cost: 10, costMult: 1.8, desc: 'AFK efficiency +10% per rank' },

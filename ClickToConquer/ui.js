@@ -79,7 +79,6 @@ const UI = (() => {
     $('item-pin').addEventListener('click', () => { if (invItem) { Game.togglePin(invItem); openItem(invItem); } });
     // Founding
     $('found-btn').addEventListener('click', openFound);
-    $('buy-plot').addEventListener('click', () => { if (Game.buyPlot()) buildPlots(); });
     $('build-cancel').addEventListener('click', () => $('build-modal').classList.add('hidden'));
     $('slot-close').addEventListener('click', closeSlot);
     $('doll').addEventListener('click', e => { const s = e.target.closest('.doll-slot'); if (s && s.dataset.slot) openSlot(s.dataset.kind, s.dataset.slot); });
@@ -270,7 +269,6 @@ const UI = (() => {
       else if (kind === 'act') add(rows.act[id]); else if (kind === 'id') add($(id));
       else if (kind === 'build') rows.plot.forEach(d => { if (d.classList.contains('empty')) add(d); });
       else if (kind === 'work') rows.plot.forEach(d => { if (!d.classList.contains('empty')) add(d); });
-      else if (kind === 'assign') rows.plot.forEach(d => add(d.querySelector('[data-f=assign]')));
       else if (kind === 'market') add($('market-list'));
       else if (kind === 'ground') { add(rows.ground[id]); add(rows.act.fight); }
       else if (kind === 'perk') add(rows.perk[id]);
@@ -350,9 +348,9 @@ const UI = (() => {
     glowKey = '';
     const S = Game.S, grid = $('plot-grid'); grid.innerHTML = ''; rows.plot = [];
     S.kingdom.plots.forEach((p, idx) => {
-      const d = el('div', 'plot');
+      const d = el('div', 'plot'), tn = Game.thrallName(idx);
       if (!p.type) {
-        d.classList.add('empty'); d.innerHTML = `<div class="plus">+</div><div class="small">Build</div>`;
+        d.classList.add('empty'); d.innerHTML = `<div class="worker-tag">${tn} <span class="dim">Lv<span data-f="tlvl"></span></span></div><div class="plus">+</div><div class="small">Build</div>`;
         d.addEventListener('click', () => openBuild(idx));
       } else {
         const t = Game.btype(p.type);
@@ -361,16 +359,13 @@ const UI = (() => {
           <div class="plot-job" data-f="job"></div>
           <div class="bar"><div data-f="prog"></div></div>
           <div class="worker-tag" data-f="worker"></div>
-          <select data-f="assign" class="${S.kingdom.thralls.length ? '' : 'hidden'}">${workerOptions(idx)}</select>
+          <div class="bar xp thrall-xp" title="Thrall XP"><div data-f="txp"></div></div>
           <div class="plot-actions"><button class="buy" data-f="up"><span class="small">Upgrade</span><br><span class="cost" data-f="upcost"></span></button></div>`;
         d.querySelector('[data-f=up]').addEventListener('click', () => { if (Game.upgradePlot(idx)) flash(d); });
-        d.querySelector('[data-f=assign]').addEventListener('change', e => { const v = e.target.value; Game.assign(idx, v === '' ? null : +v); buildPlots(); });
       }
       rows.plot[idx] = d; grid.appendChild(d);
     });
-    const cap = Game.plotCap();
-    for (let i = S.kingdom.plots.length; i < cap; i++) { const d = el('div', 'plot locked', `<div class="small">Plot for sale</div>`); grid.appendChild(d); }
-    if (cap < 12) { const d = el('div', 'plot locked', `<div class="small">More land at<br>Kingdom Lv${S.legacy.kingdomLevel + 1}</div>`); grid.appendChild(d); }
+    { const d = el('div', 'plot locked', `<div class="small">Another thrall<br>with the next founding</div>`); grid.appendChild(d); }
   }
   let buildTarget = null;
   function openBuild(idx) {
@@ -398,17 +393,15 @@ const UI = (() => {
   function renderPlots() {
     const S = Game.S, f = Game.fmt;
     if (rows.plot.length !== S.kingdom.plots.length) buildPlots();
-    setText($('plots-count'), `${S.kingdom.plots.length} / ${Game.plotCap()}`);
-    const busy = S.kingdom.plots.filter(p => typeof p.worker === 'number').length;
-    setText($('thrall-summary'), S.kingdom.thralls.length ? `${S.kingdom.thralls.length} (${S.kingdom.thralls.length - busy} idle)` : 'none yet — found a kingdom to gain one');
-    const pc = Game.plotCost(); setHtml($('buy-plot').querySelector('[data-f=cost]'), S.kingdom.plots.length >= Game.plotCap() ? '<span class="dim">no land</span>' : costHtml(pc));
-    $('buy-plot').disabled = !Game.canBuyPlot();
+    setText($('plots-count'), `${S.kingdom.thralls.length}`);
+    const busy = S.kingdom.plots.filter(p => p.type).length;
+    setText($('thrall-summary'), S.kingdom.thralls.length ? `${busy} working, ${S.kingdom.thralls.length - busy} waiting for a building. One plot per thrall; +1 thrall per founding.` : 'none yet — found a kingdom to gain one');
     S.kingdom.plots.forEach((p, idx) => {
-      const d = rows.plot[idx]; if (!p.type || !d) return;
+      const d = rows.plot[idx]; if (!d) return; if (!p.type) { const tl = d.querySelector('[data-f=tlvl]'); if (tl) setText(tl, Game.thrallLevel(idx)); return; }
       setHtml(d.querySelector('[data-f=job]'), jobHtml(Game.jobInputs(p), Game.jobOutputs(p)) + ` <span class="dim">· ${Game.jobTime(p).toFixed(1)}s</span>`);
       d.querySelector('[data-f=prog]').style.width = (p.running ? 100 * p.progress / Game.jobTime(p) : 0) + '%';
       setText(d.querySelector('[data-f=lvl]'), p.level);
-      const w = p.worker; setText(d.querySelector('[data-f=worker]'), w === null ? (S.kingdom.thralls.length ? 'Unmanned · 1×' : 'Runs on its own · 1× (a thrall would give ' + CONFIG.thrallOutputMult + '×)') : `${S.kingdom.thralls[w] ? S.kingdom.thralls[w].name : 'Thrall'} works here · ${CONFIG.thrallOutputMult}×`);
+      { const tp = Game.thrallProgress(idx); setText(d.querySelector('[data-f=worker]'), `${Game.thrallName(idx)} · Lv${tp.level} · ×${Game.thrallSpeed(idx).toFixed(2)} speed`); d.querySelector('[data-f=txp]').style.width = (100 * tp.have / tp.need) + '%'; }
       d.classList.toggle('working', p.running);
       const uc = Game.upgradeCost(idx); setHtml(d.querySelector('[data-f=upcost]'), costHtml(uc)); d.querySelector('[data-f=up]').disabled = !Game.canAfford(uc);
     });
@@ -807,7 +800,7 @@ const UI = (() => {
     }
     orderRows($('perk-list'), CONFIG.legacy.perks.map(p => ({ el: rows.perk[p.id], rank: Game.perkRank(p.id) >= p.max ? 2 : (L.knowledge >= Game.perkCost(p) ? 0 : 1) })));
     $('badge-legacy').classList.toggle('hidden', !anyPerk);
-    setHtml($('thrall-list'), S.kingdom.thralls.length ? S.kingdom.thralls.map((t, i) => { const p = S.kingdom.plots.findIndex(p => p.worker === i); return `<div class="row"><div class="row-main"><div class="row-title">${t.name}</div><div class="row-sub">${p >= 0 ? 'Working the ' + Game.btype(S.kingdom.plots[p].type).name : 'Idle — assign on the Buildings screen'}</div></div></div>`; }).join('') : '<div class="row"><div class="row-main dim">No thralls yet. Your first founding brings one.</div></div>');
+    setHtml($('thrall-list'), S.kingdom.thralls.length ? S.kingdom.thralls.map((t, i) => { const p = S.kingdom.plots[i]; return `<div class="row"><div class="row-main"><div class="row-title">${t.name} <span class="owned">Lv${Game.thrallLevel(i)}</span></div><div class="row-sub">${p && p.type ? 'Working the ' + Game.btype(p.type).name : 'Waiting — build on their plot'}</div></div></div>`; }).join('') : '<div class="row"><div class="row-main dim">No thralls yet. Your first founding brings one.</div></div>');
     setHtml($('history'), L.history.length ? L.history.slice().reverse().map(h => `<div>Kingdom ${h.level}: stage ${h.bestStage}, hero Lv${h.heroLevel} → +${h.knowledge} Crystals</div>`).join('') : '<div class="dim">No foundings yet.</div>');
   }
   // ---- Mini hero strip: mirrors the fight/harvest screen when that screen is off-tab ----

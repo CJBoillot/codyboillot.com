@@ -579,3 +579,5 @@ body.desktop.has-dock .panel-center { padding-bottom: 160px; }
 .trophy .t-sub { font-size: 9.5px; color: var(--dim); }
 .trophy.none { opacity: .5; }
 .bestiary-row .b-bonus { font-size: 10px; color: var(--hp2); }
+
+.thrall-xp { height: 4px; margin: 2px 0 4px; } .thrall-xp > div { background: linear-gradient(90deg, var(--bronze2), var(--bronze)); }

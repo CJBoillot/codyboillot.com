@@ -27,7 +27,7 @@ Crafting ──tools──▶ Kingdom (+% output)
 
 **Layout.** ≥1024px wide: three panels — paper doll left, activity center, Kingdom / Skills / Talents / Market tabs right. Narrower: the mobile tabbed layout.
 
-**Kingdom.** A grid of plots. Buy plots with gold; how many you may own is capped by Kingdom Level (`plots.cap`). Build one building per plot (costs materials). Every built plot runs its timed job on its own (inputs → outputs), awake or AFK, at 1× output. Assign a **thrall** to a plot for `thrallOutputMult`× (5×) output. (The hero doesn't work plots; he harvests in the wild via the Activity screen.) Chains: Forest/Mine/Farm/Husbandry (raw) → Blacksmith/Tannery/Weaver (refined) → Weaponsmith/Armorsmith/Tailor (artisan).
+**Kingdom.** Opens after the first founding. A thrall IS a plot: one building per thrall, and it runs only because a thrall works it (awake or AFK). +1 thrall per founding (thrall count carries over; the thralls themselves start fresh). Thralls gain 1 XP per job and +5% speed per level. Chains: Forest/Mine/Farm/Husbandry (raw) → Blacksmith/Tannery/Weaver (refined) → Sawmill/Kiln (artisan).
 
 **Quests.** A 23-step chain (multi-step quests show one bar per step; the current quest glows its tab, sub-tab and exact control). When the chain is done, the card becomes an auto-generated **Goal**: the tech you're closest to and what it still needs. pinned at the top of the center panel doubles as the tutorial: each step names an objective, tracks it from game state, points to the screen ("Kingdom → Tech"), and pays a reward on Claim. Survives founding (it's the player's progress, not the kingdom's). Debug has Skip quest.
 
@@ -39,7 +39,7 @@ Crafting ──tools──▶ Kingdom (+% output)
 
 **Founding (prestige).** Kingdom → Throne. Available at best stage 20; costs gold only (5K, doubling per kingdom level). You gain **Knowledge** from accomplishments (best stage, bosses, gear tier, gold magnitude), pick a **hero path** (Warrior King / Archmage / Ranger Lord at Lv4) and a **kingdom path** (Benevolent / Iron Empire / Merchant Republic at Lv4), and the run resets. Kingdom Level +1, one new **thrall**, more land.
 
-**Thralls** (one per founding) are the only automation: assign one to a plot and it works that building forever, awake or AFK.
+**Founding** costs 1,000 gold the first time (×2.5 each after) at best stage 20 and gives 1 Crystal the first time (formula after). Kingdom quests (A Kingdom chain) start after P1: unlock Bestiary → build on your thrall's plot → …
 
 **Legacy** (Kingdom → Legacy): **Crystals** (from founding and milestone quests) buy permanent perks — the only thing that survives founding, besides Bestiary kill counts/trophies. Info perks gate UI readouts (Ledger = AFK forecast, Bestiary, Danger Sense, Chronicler = Stats card, Surveyor, Almanac = header rates). Also — Head Start (free plots), Blueprints, Deep Cellar, Long Memory, Founder's Cache, Veteran, Bloodline, Old Blade, Haggler (sell prices).
 
