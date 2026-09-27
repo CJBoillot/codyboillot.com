@@ -626,3 +626,4 @@ body.desktop #subtab-dock { display: none; }
 .danger-btn:hover { background: linear-gradient(180deg, #a13a31, #6e241e); }
 .ad-btn { opacity: .45; cursor: not-allowed; filter: grayscale(.6); }
 .credits b { color: var(--bronze2); }
+#confirm-modal { z-index: 60; }
