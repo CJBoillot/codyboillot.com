@@ -35,7 +35,7 @@ Crafting ──tools──▶ Kingdom (+% output)
 
 **Tech** (Kingdom → Tech). No research currency: each tech has a mastery gate (a lifetime counter — ore mined, enemies slain, bosses, foundings) plus a one-time cost in goods/gold. Techs unlock buildings, gear tiers, hero drops (Skinning → hide, Bonecraft → bone) and job-speed bonuses. Five tiers: Camp, Settlement, Ironworking, Artisan, Advanced. Resets on founding; the Blueprints perk pre-researches one tier per rank.
 
-**Resources.** 15 goods in three tiers of five, shown as a fixed 5×3 grid in the header (locked = padlock until first gained): T1 Fiber, Wood, Hide, Stone, Berries · T2 Gold, Iron Ore, Leather, Ingot, Meat · T3 Grain, Wool, Cloth, Planks, Bricks. Beasts drop no gold — gold comes from the Market, bandits on the Roads (Wilds stage 10) and the Crypts.
+**Resources.** 15 goods in three tiers of five, shown as chips in the header once first gained: T1 Fiber, Wood, Hide, Stone, Berries · T2 Gold, Iron Ore, Leather, Ingot, Meat · T3 Grain, Wool, Cloth, Planks, Bricks. Beasts drop no gold — gold comes from the Market, bandits on the Roads (Wilds stage 10) and the Crypts.
 
 **Market.** Unlocks right before Stake a Claim. Sell any good for gold. Prices climb down the chain (ore 1 → ingot 10 → planks/bricks 12). Gear tiers cost refined goods, so the chain feeds both gold and power.
 

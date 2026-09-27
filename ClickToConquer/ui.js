@@ -21,11 +21,11 @@ const UI = (() => {
 
   function init() {
     $('version').textContent = CONFIG.version;
-    // Resource grid: fixed 5×3 slots in config order. Locked slots show a padlock and nothing else until the good is first gained.
+    // Resource chips: icon · amount · name · rate, in config order; a good appears once first gained.
     const rb = $('res-bar'); rb.innerHTML = '';
     for (const k in R) {
-      const d = el('div', 'res locked'); d.id = 'res-' + k; d.dataset.tier = R[k].tier;
-      d.innerHTML = `<span class="res-lock">🔒</span><div class="res-body">${ico(R[k].icon, 20)}<b data-f="amt">0</b><span class="rrate" data-f="rate"></span></div>`;
+      const d = el('div', 'res hidden'); d.id = 'res-' + k; d.title = `${R[k].name} — ${R[k].desc || ''}`;
+      d.innerHTML = `${ico(R[k].icon, 22)}<div class="res-txt"><b data-f="amt">0</b><span class="res-name">${R[k].name}</span></div><span class="rrate" data-f="rate"></span>`;
       rb.appendChild(d);
     }
     document.querySelectorAll('[data-tab]').forEach(b => b.addEventListener('click', () => {
@@ -447,8 +447,7 @@ const UI = (() => {
     const kr = Game.kingdomRates(), hr = Game.heroFighting() ? Game.heroRates() : {}, hrv = Game.heroFighting() ? {} : Game.harvestRates();
     for (const k in R) {
       const e = $('res-' + k), open = S.lifetime[k] > 0;
-      if (e.classList.contains('locked') === open) { e.classList.toggle('locked', !open); e.title = open ? `${R[k].name} — ${R[k].desc || ''}` : 'Locked — you have not found this yet'; }
-      if (!open) continue;
+      e.classList.toggle('hidden', !open); if (!open) continue;
       setText(e.querySelector('[data-f=amt]'), f(S.res[k]));
       const rate = (kr[k] || 0) + (hr[k] || 0) + (hrv[k] || 0);
       const re = e.querySelector('[data-f=rate]'); setText(re, (rate > 0 ? '+' + f(rate) : '0') + '/s'); re.classList.toggle('zero', !(rate > 0));

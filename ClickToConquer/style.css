@@ -513,15 +513,11 @@ body.desktop.has-dock .panel-center { padding-bottom: 160px; }
 .cost-name { display: none; margin-left: 3px; font-size: 10px; color: var(--dim); }
 #slot-modal .cost-name { display: inline; }
 
-/* ---------- resource grid: 5 columns × 3 tiers, fixed slots ---------- */
-.res-bar { display: grid !important; grid-template-columns: repeat(5, 1fr); gap: 4px !important; flex: 1 1 auto; min-width: 0; }
-.res { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; min-width: 0; min-height: 44px; padding: 3px 2px; border-radius: 8px; background: #17120fcc; border: 1px solid var(--line); }
-.res .res-body { display: flex; flex-direction: column; align-items: center; gap: 0; line-height: 1.05; }
-.res .res-body b { font-size: 11.5px; }
-.res .rrate { font-size: 8.5px; }
-.res .res-lock { display: none; font-size: 12px; opacity: .35; filter: grayscale(1); }
-.res.locked { background: #0f0c0a; border-style: dashed; border-color: #2a221b; }
-.res.locked .res-body { display: none; }
-.res.locked .res-lock { display: block; }
-.res-name, .res-group-label, .res-txt { display: none; }
-@media (min-width: 1024px) { .res { min-height: 46px; flex-direction: row; gap: 6px; } .res .res-body { flex-direction: row; gap: 5px; align-items: baseline; } .res .res-body b { font-size: 13px; } .res .rrate { font-size: 10px; } .res-bar { max-width: 560px; } }
+/* ---------- resource chips (mobile-first): wrap freely, no group labels ---------- */
+.res-bar { display: flex !important; flex-wrap: wrap; gap: 4px 6px !important; flex: 1 1 auto; min-width: 0; align-content: flex-start; }
+.res { display: flex; align-items: center; gap: 5px; background: #17120fcc; border: 1px solid var(--line); border-radius: 6px; padding: 3px 8px 3px 5px; font-variant-numeric: tabular-nums; }
+.res-txt { display: flex; flex-direction: column; line-height: 1.05; }
+.res-txt b { font-size: 13px; }
+.res-name { display: block; font-size: 9.5px; color: var(--dim); text-transform: uppercase; letter-spacing: .8px; }
+.res-group-label { display: none; }
+@media (max-width: 1023px) { .res { padding: 2px 6px 2px 4px; gap: 4px; } .res-txt b { font-size: 12px; } .res-name { font-size: 8.5px; letter-spacing: .5px; } .rrate { font-size: 9px; } }
