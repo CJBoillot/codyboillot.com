@@ -50,6 +50,7 @@ const UI = (() => {
     $('wb-claim').addEventListener('click', () => claimWelcome(1));
     $('wb-ad').addEventListener('click', () => claimWelcome(CONFIG.offline.adDoubleMultiplier));
     $('dev-toggle').addEventListener('click', () => $('dev-panel').classList.toggle('hidden'));
+    $('res-toggle').addEventListener('click', () => { Game.S.settings.resCompact = !resCompact(); applyResMode(); applyLayout(); });
     $('dev-close').addEventListener('click', () => $('dev-panel').classList.add('hidden'));
     document.querySelectorAll('[data-speed]').forEach(b => b.addEventListener('click', () => { Game.S.settings.devSpeed = +b.dataset.speed; document.querySelectorAll('[data-speed]').forEach(x => x.classList.toggle('active', x === b)); }));
     $('dev-offline').addEventListener('click', () => showWelcomeBack(Game.applyOffline(4 * 3600)));
@@ -316,7 +317,11 @@ const UI = (() => {
   function undock(id) { const h = HOME[id]; if (!h) return; h.parent.insertBefore($(id), h.next); }
   const RIGHT = { kingdom: 'tab-kingdom', attr: 'sub-attr', skills: 'sub-skills', talents: 'sub-talents', market: 'tab-market' };
   let desktop = false;
+  // Resource bar: compact (icon · amount · rate) by default on mobile, expanded (names + groups) on desktop; tap ▾ to toggle
+  function resCompact() { const v = Game.S.settings.resCompact; return typeof v === 'boolean' ? v : !window.matchMedia('(min-width: 1024px)').matches; }
+  function applyResMode() { const c = resCompact(); document.body.classList.toggle('res-compact', c); $('res-toggle').title = c ? 'Show resource names' : 'Compact resources'; }
   function applyLayout() {
+    applyResMode();
     glowKey = '';
     document.documentElement.style.setProperty('--headh', document.querySelector('.sticky-head').offsetHeight + 'px');
     desktop = window.matchMedia('(min-width: 1024px)').matches;
