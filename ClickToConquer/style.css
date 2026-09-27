@@ -586,3 +586,7 @@ body.desktop.has-dock .panel-center { padding-bottom: 160px; }
 .plot-actions .buy { flex: 1 1 auto; }
 .trash { flex: 0 0 auto; width: 34px; padding: 0; display: flex; align-items: center; justify-content: center; color: #b8463a; border: 1px solid #4a2320; background: #1a100e; border-radius: 6px; box-shadow: none; }
 .trash:hover { background: #2a1512; border-color: var(--blood); color: #e05a4c; }
+
+.primary.danger { border-color: var(--blood); color: #e05a4c; }
+#confirm-modal .btn-row { margin-top: 14px; }
+.build-opt .lack { color: var(--blood); font-size: 10px; }

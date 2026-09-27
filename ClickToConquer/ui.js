@@ -19,7 +19,13 @@ const UI = (() => {
   const setText = (e, v) => { if (e.__t !== v) { e.textContent = v; e.__t = v; } };
   const flash = row => { row.classList.remove('flash'); void row.offsetWidth; row.classList.add('flash'); };
 
+  // In-game confirmation (no browser popups)
+  let confirmCb = null;
+  function ask(title, text, yesLabel, cb) { setText($('confirm-title'), title); setText($('confirm-text'), text); setText($('confirm-yes'), yesLabel || 'Yes'); confirmCb = cb; $('confirm-modal').classList.remove('hidden'); }
+  function closeAsk() { confirmCb = null; $('confirm-modal').classList.add('hidden'); }
   function init() {
+    $('confirm-no').addEventListener('click', closeAsk); $('confirm-modal').addEventListener('click', e => { if (e.target === $('confirm-modal')) closeAsk(); });
+    $('confirm-yes').addEventListener('click', () => { const cb = confirmCb; closeAsk(); if (cb) cb(); });
     $('version').textContent = CONFIG.version;
     // Resource chips: icon · amount · name · rate, in config order; a good appears once first gained.
     const rb = $('res-bar'); rb.innerHTML = '';
@@ -41,7 +47,7 @@ const UI = (() => {
     $('advance-btn').addEventListener('click', () => Game.advance());
     $('mini-advance').addEventListener('click', () => Game.advance());
     $('retreat-btn').addEventListener('click', () => Game.retreat());
-    $('respec-btn').addEventListener('click', () => { if (confirm('Reset all tree points? Capstones are kept.')) Game.respec(); });
+    $('respec-btn').addEventListener('click', () => ask('Respec', 'Reset all tree points across every discipline? Capstones are kept. Costs ' + Game.fmt(Game.respecCost()) + ' gold.', 'Respec', () => Game.respec()));
     $('wb-claim').addEventListener('click', () => claimWelcome(1));
     $('wb-ad').addEventListener('click', () => claimWelcome(CONFIG.offline.adDoubleMultiplier));
     $('dev-toggle').addEventListener('click', () => $('dev-panel').classList.toggle('hidden'));
@@ -64,8 +70,8 @@ const UI = (() => {
     $('quest-claim').addEventListener('click', () => { if (Game.questClaim()) flash($('quest-card')); });
     $('dev-export').addEventListener('click', () => { $('dev-io').value = Game.exportSave(); $('dev-io').select(); });
     $('dev-import').addEventListener('click', () => { if (Game.importSave($('dev-io').value)) { buildLists(); alert('Imported.'); } else alert('Bad save string.'); });
-    $('dev-reset-run').addEventListener('click', () => { if (confirm('Reset this run? Kingdom level, Crystals, perks and workers are kept.')) { Game.debug.resetRun(); buildLists(); } });
-    $('dev-reset').addEventListener('click', () => { if (confirm('RESET ALL progress? This wipes everything, including Crystals and Kingdom level.')) Game.debug.resetAll(); });
+    $('dev-reset-run').addEventListener('click', () => ask('Reset this run', 'Reset this run? Kingdom level, Crystals, perks and workers are kept.', 'Reset run', () => { { Game.debug.resetRun(); buildLists(); } }));
+    $('dev-reset').addEventListener('click', () => ask('RESET ALL', 'RESET ALL progress? This wipes everything, including Crystals and Kingdom level.', 'Wipe everything', () => { Game.debug.resetAll(); }));
     // Kingdom sub-tabs
     document.querySelectorAll('[data-ksub]').forEach(b => b.addEventListener('click', () => {
       document.querySelectorAll('[data-ksub]').forEach(x => x.classList.toggle('active', x === b));
@@ -362,7 +368,7 @@ const UI = (() => {
           <div class="bar xp thrall-xp" title="Thrall XP"><div data-f="txp"></div></div>
           <div class="plot-actions"><button class="buy" data-f="up"><span class="small">Upgrade</span><br><span class="cost" data-f="upcost"></span></button><button class="trash" data-f="trash" title="Tear down this building" aria-label="Tear down"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg></button></div>`;
         d.querySelector('[data-f=up]').addEventListener('click', () => { if (Game.upgradePlot(idx)) flash(d); });
-        d.querySelector('[data-f=trash]').addEventListener('click', () => { if (confirm(`Tear down the ${t.name}? Its level and materials are lost; ${Game.thrallName(idx)} will be free to build something else.`)) { Game.demolish(idx); buildPlots(); render(true); } });
+        d.querySelector('[data-f=trash]').addEventListener('click', () => ask(`Tear down the ${t.name}?`, `Its level and the materials spent are lost. ${Game.thrallName(idx)} will be free to build something else on this plot.`, 'Tear it down', () => { Game.demolish(idx); buildPlots(); render(true); }));
       }
       rows.plot[idx] = d; grid.appendChild(d);
     });
@@ -379,8 +385,9 @@ const UI = (() => {
         const cost = Game.buildCost(t.id), j = t.job;
         const b = el('button', 'build-opt');
         b.innerHTML = `${ico(t.icon, 28)}<div class="bo-main"><div class="bo-name">${t.name}</div><div class="bo-desc">${jobHtml(j.inputs, j.outputs)} · ${j.time}s</div></div><div class="cost">${costHtml(cost)}</div>`;
-        b.disabled = !Game.canAfford(cost);
-        b.addEventListener('click', () => { if (Game.build(idx, t.id)) { $('build-modal').classList.add('hidden'); buildPlots(); } });
+        const noThrall = idx >= Game.S.kingdom.thralls.length, cant = noThrall ? 'No thrall for this plot — found a kingdom to gain one' : !Game.canAfford(cost) ? 'Not enough materials' : '';
+        b.disabled = !!cant; if (cant) b.title = cant, b.querySelector('.bo-desc').innerHTML += ` <span class="lack">· ${cant}</span>`;
+        b.addEventListener('click', () => { if (Game.build(idx, t.id)) { $('build-modal').classList.add('hidden'); buildPlots(); render(true); } });
         list.appendChild(b);
       }
     }
