@@ -650,3 +650,45 @@ html, body { max-width: 100%; overflow-x: hidden; }
 .res-bar { max-width: 100%; }
 .maxbtn { border-color: var(--bronze-dim); }
 .maxbtn .cost { font-size: 10px; color: var(--bronze2); }
+
+/* v0.3 caps */
+.res .capn { font-size: .72em; color: var(--dim); font-weight: 400; margin-left: 1px; }
+.res.full { border-color: #b8862b; background: #2a1e0c; }
+.res.full .capn { color: #e0a13a; }
+
+/* ---------- v0.3 kingdom lines ---------- */
+.kbar { margin: 4px 0 8px; }
+.seg.kbuy button { padding: 4px 10px; font-size: 12px; }
+.seg.kbuy button.active { background: #2d2218; color: var(--accent2); }
+.kstep { display: flex; flex-direction: column; gap: 8px; }
+.kstep-head { display: flex; align-items: center; gap: 8px; }
+.kstep-name { font-family: var(--font-head); font-size: 14px; }
+.kout { margin-left: auto; text-align: right; }
+.kout b { font-size: 15px; }
+.kin { display: flex; align-items: center; gap: 8px; } .kin .bar { flex: 1; margin: 0; height: 12px; }
+.green-bar > div { background: linear-gradient(90deg, #2f7a46, var(--hp)); }
+.purple-bar > div { background: linear-gradient(90deg, #6b55b0, var(--shard)); }
+.ktracks { display: flex; flex-direction: column; gap: 6px; }
+.ktrack { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; background: #15110e; }
+.ktrack .ktl { font-weight: 600; font-size: 13px; }
+.ktrack.bottleneck { border-color: #e0a13a; background: #1f170d; }
+.kflag { color: #e0a13a; font-size: 10.5px; font-weight: 700; letter-spacing: .4px; text-transform: uppercase; }
+.kcart { height: 12px; margin: 0; } .kcart > span { font-size: 9.5px; line-height: 11px; }
+.kstaff { display: flex; flex-direction: column; gap: 6px; padding: 6px 8px; border: 1px dashed var(--line2); border-radius: 8px; }
+.kslot { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.kslot select { font-size: 12px; background: #1d1612; color: var(--text); border: 1px solid var(--line2); border-radius: 6px; padding: 4px 6px; max-width: 100%; }
+.kchip { display: inline-flex; align-items: center; gap: 2px; padding: 1px 4px 1px 8px; border: 1px solid var(--line2); border-radius: 10px; background: #1b1511; }
+.kx { padding: 0 5px; border: 0; background: transparent; color: var(--dim); box-shadow: none; font-size: 13px; line-height: 1; }
+.small-btn { padding: 4px 8px; font-size: 11px; margin-left: auto; }
+.stars { color: var(--accent2); letter-spacing: 1px; font-size: 11px; }
+.warn { color: #e0a13a; }
+.good { color: var(--hp2); }
+.kflow { text-align: center; color: var(--bronze-dim); font-size: 11px; margin: -2px 0 6px; }
+.locked-step { border-style: dashed; opacity: .65; }
+.locked-step .kstep-name { color: var(--dim); }
+.korder { display: flex; flex-direction: column; gap: 5px; padding: 8px; border: 1px solid var(--line); border-radius: 8px; background: #15110e; }
+.kob { height: 12px; margin: 0; } .kob > span { font-size: 9.5px; line-height: 11px; }
+.store-list { display: flex; flex-direction: column; gap: 3px; }
+#kingdom-subtabs button { font-size: 11px; padding: 7px 1px; }
+
+.kswap { min-width: 40px; padding: 6px 8px; font-size: 16px; }

@@ -7,11 +7,12 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Alpha 0.2.2',
+  version: 'Alpha 0.3.0',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
 
+  caps: { pack: 100, leatherPack: 150, store: 200 },
   offline: {
     capSeconds: 8 * 3600,
     efficiency: 0.10,   // idle runs at 10% of active speed (Long Memory perk adds +10% per rank)
@@ -47,6 +48,10 @@ const CONFIG = {
     wool:    { name: 'Wool',     icon: [17,5],  tier: 3, sell: 2,  desc: 'From Husbandry. Weaver turns 3 into Cloth.' },
     cloth:   { name: 'Cloth',    icon: [17,7],  tier: 3, sell: 8,  desc: 'Weaver. Fine armor tiers.' },
     planks:  { name: 'Planks',   icon: [19,11], tier: 3, sell: 12, desc: 'Sawmill turns 5 wood into a plank. Steel tools and gear.' },
+    lumber:  { name: 'Treated Lumber', icon: [19,11], tier: 3, sell: 30, desc: 'Carpenter: 2 planks into 1 treated beam. Wanted by the Empire for forts and ships.' },
+    flour:   { name: 'Flour',    icon: [15,10], tier: 3, sell: 4,  desc: 'Mill: 2 grain into 1 flour.' },
+    bread:   { name: 'Bread',    icon: [14,14], tier: 3, sell: 12, desc: 'Baker: 2 flour into 1 loaf. Armies march on it.' },
+    swords:  { name: 'Iron Swords', icon: [5,1], tier: 3, sell: 45, desc: 'Forge: 2 ingots into 1 sword. The Legion always needs more.' },
     bricks:  { name: 'Bricks',   icon: [13,4],  tier: 3, sell: 12, desc: 'Kiln turns 5 stone into a brick. Hardened gear, grand buildings.' },
     // ---- Loot (kind: 'loot'): dropped by enemies, shown in the Inventory, not in the header bar ----
     rattail:   { name: 'Rat Tail',        icon: [16,2],  kind: 'loot', rarity: 'common',   sell: 3,   desc: 'Proof of a rat well killed. Sells for a little.' },
@@ -80,18 +85,19 @@ const CONFIG = {
 
   // ---------- Character: base ----------
   hero: {
-    baseAttack: 5,
-    baseHp: 100,
-    baseRegen: 2,
+    baseAttack: 0,          // v0.3: damage comes from the Weapon slot (fists = 1.0)
+    baseHp: 0,              // HP comes from the Chest slot (10 × value)
+    regenPctOfMax: 0.02,    // regen = 2% of max HP per second
+    restMult: 5,            // resting heals 5× faster
     baseAttackSpeed: 1,     // hits per second
     baseCrit: 0.05,         // crit chance
-    baseCritDmg: 1.5,       // crit multiplier
+    baseCritDmg: 2,       // crit multiplier
     baseArmor: 0,           // flat damage reduction per enemy hit-second
     xpPerKill: 1,
     xpToLevel: lvl => lvl <= 10 ? Math.floor(12 * Math.pow(1.22, lvl - 1)) : Math.floor(12 * Math.pow(1.22, 9) * Math.pow(1.35, lvl - 10)), // ~10 min to Lv10, then each level costs ×1.35 more
-    attackPerLevel: 1.5,
-    hpPerLevel: 12,
-    regenPerLevel: 0.15,
+    attackPerLevel: 0,
+    hpPerLevel: 0,
+    regenPerLevel: 0,
     attrPointsPerLevel: 3,
     talentPointsFromLevel: 5,   // 1 talent point per level from this level
     talentPointsPerBoss: 1,     // first kill of each boss stage
@@ -104,7 +110,7 @@ const CONFIG = {
     bossDmgMult: 2,
     bossKillsToAdvance: 1,
     manualCastBonus: 1.5,       // tapping a ready skill = ×1.5 power
-    enemyAttackInterval: 1.0,   // seconds between enemy swings
+    enemyAttackInterval: 1.5,   // seconds between enemy swings
   },
 
   // ---------- Attributes (per point) ----------
@@ -122,17 +128,20 @@ const CONFIG = {
   // stat = base × tierMult × gearGrowth^level. Secondary stat opens at tier ≥ 2.
   // Craft next tier: previous tier level ≥ tierUpAt, pay tier's craftCost. Upgrade: upgradeCost × upgradeMult^level.
   gearGrowth: 1.15,
-  tierUpAt: 15,
+  tierUpAt: 9,   // levels 0..9 (value x.0 → x.9); at Lv9 forge the next tier. Levels cap at 9.
   researchSeconds: 5, // researching a tech takes this long (one at a time)
   upgradeSeconds: 2, // each gear/tool upgrade level takes this long (shares the one-at-a-time forge)
   craftSeconds: 5, // forging a gear piece or tool takes this long (one at a time)
+  // v0.3 squish: every slot value = tier + 0.1 × level (bare/fists = 1). One stat per slot; `per` turns the value into the stat.
   slots: {
-    weapon:  { name: 'Weapon', icon: [5,1],  primary: 'attack', base: 3,   secondary: 'crit',    secBase: 0.02 },
-    helm:    { name: 'Helm',   icon: [7,1],  primary: 'hp',     base: 25,  secondary: 'regen',   secBase: 0.8 },
-    chest:   { name: 'Chest',  icon: [7,7],  primary: 'armor',  base: 0.5, secondary: 'hp',      secBase: 20 },
-    boots:   { name: 'Boots',  icon: [8,3],  primary: 'speed',  base: 0.03, secondary: 'dodge',  secBase: 0.01 },
-    trinket: { name: 'Trinket', icon: [8,6], primary: 'drop',   base: 0.05, secondary: 'xp',     secBase: 0.03 },
+    weapon:  { name: 'Weapon',  icon: [5,1],  primary: 'attack', per: 1,    bare: 'Fists' },   // damage per hit = value
+    helm:    { name: 'Helm',    icon: [7,1],  primary: 'armor',  per: 0.1,  bare: 'Bare' },    // −0.1 × value per enemy hit
+    chest:   { name: 'Chest',   icon: [7,7],  primary: 'hp',     per: 10,   bare: 'Rags' },    // max HP = 10 × value
+    gloves:  { name: 'Gloves',  icon: [8,1],  primary: 'speed',  per: 0.1,  bare: 'Bare' },    // attack speed = 1 + 0.1 × value
+    boots:   { name: 'Boots',   icon: [8,3],  primary: 'dodge',  per: 0.02, bare: 'Bare' },    // dodge = 2% × value
+    trinket: { name: 'Trinket', icon: [8,6],  primary: 'crit',   per: 0.02, bare: 'None' },    // crit = 2% × value
   },
+  fistKillsPerLevel: 10,
   // Tools: worn like gear, drive harvesting. stat = base × toolTiers[t].mult × gearGrowth^level.
   toolSlots: {
     axe:    { name: 'Axe',     icon: [10,1], activity: 'wood',   base: 1 },
@@ -148,7 +157,7 @@ const CONFIG = {
   // What the hero can spend his time on. Harvest: one swing per `time` s (÷ tool speed), yields outputs × tool power.
   activities: {
     idle:   { name: 'Rest',      icon: [4,2],  desc: 'Doing nothing but healing. Make a weapon to fight.' },
-    fight:  { name: 'Fight',     icon: [5,1],  gear: 'weapon', desc: 'Slay enemies for XP and loot. Bandits on the Roads carry gold.' },
+    fight:  { name: 'Fight',     icon: [5,1],  desc: 'Slay enemies for XP and loot. Bandits on the Roads carry gold.' },
     wood:   { name: 'Chop Wood', icon: [4,6],  tool: 'axe',    time: 5, outputs: { wood: 1 },              desc: 'Fell trees in the wild. Needs an axe.' },
     mine:   { name: 'Mine',      icon: [4,5],  tool: 'pick',   time: 6, outputs: { stone: 1, ore: 1 },     desc: 'Work a rockface for stone. Needs a pickaxe. Iron ore once you know Prospecting.' },
     forage: { name: 'Forage',    icon: [11,15], tool: 'sickle', time: 4, outputs: { fiber: 1, berries: 1 }, desc: 'Gather fiber and berries. Needs a sickle.' },
@@ -156,7 +165,7 @@ const CONFIG = {
   harvestStrPct: 0.01, // +1% harvest speed per Strength point
 
   tiers: [
-    { name: 'Crude', mult: 0.5, perSlot: { weapon: { name: 'Wooden', craftCost: { wood: 10 }, upgradeCost: { wood: 2 } }, chest: { name: 'Fiber', craftCost: { fiber: 10 }, upgradeCost: { fiber: 2 } }, helm: { name: 'Fiber', craftCost: { fiber: 6 }, upgradeCost: { fiber: 2 } }, boots: { name: 'Fiber', craftCost: { fiber: 6 }, upgradeCost: { fiber: 2 } }, trinket: { name: 'Fiber', craftCost: { fiber: 4 }, upgradeCost: { fiber: 1 } } }, craftCost: { fiber: 10 }, upgradeCost: { fiber: 2 }, upgradeMult: 1.18 },
+    { name: 'Crude', mult: 0.5, perSlot: { weapon: { name: 'Wooden', craftCost: { wood: 10 }, upgradeCost: { wood: 2 } }, chest: { name: 'Fiber', craftCost: { fiber: 10 }, upgradeCost: { fiber: 2 } }, gloves: { name: 'Fiber', craftCost: { fiber: 6 }, upgradeCost: { fiber: 2 } }, helm: { name: 'Fiber', craftCost: { fiber: 6 }, upgradeCost: { fiber: 2 } }, boots: { name: 'Fiber', craftCost: { fiber: 6 }, upgradeCost: { fiber: 2 } }, trinket: { name: 'Fiber', craftCost: { fiber: 4 }, upgradeCost: { fiber: 1 } } }, craftCost: { fiber: 10 }, upgradeCost: { fiber: 2 }, upgradeMult: 1.18 },
     { name: 'Leather',     mult: 1,   perSlot: { weapon: { name: 'Stone', craftCost: { stone: 12, wood: 6 }, upgradeCost: { stone: 4, wood: 2 } } }, craftCost: { leather: 3, hide: 5 }, upgradeCost: { leather: 1, hide: 2 }, upgradeMult: 1.25 },
     { name: 'Iron',        mult: 3,   craftCost: { ingot: 5, leather: 3, gold: 300 },            upgradeCost: { ingot: 2, leather: 1 },           upgradeMult: 1.25 },
     { name: 'Steel',       mult: 9,   craftCost: { ingot: 10, planks: 3, leather: 3, gold: 2000 },   upgradeCost: { ingot: 5, planks: 1 },              upgradeMult: 1.25 },
@@ -164,7 +173,7 @@ const CONFIG = {
     { name: 'Mythril',     mult: 81,  craftCost: { ingot: 40, planks: 10, bricks: 10, cloth: 10, gold: 20000 }, upgradeCost: { ingot: 15, bricks: 4, gold: 500 }, upgradeMult: 1.25 },
   ],
   // Per-slot cost scaling so armor pieces cost a bit different amounts
-  slotCostMult: { weapon: 1, helm: 0.8, chest: 1.1, boots: 0.7, trinket: 0.9 },
+  slotCostMult: { weapon: 1, helm: 0.8, chest: 1.1, gloves: 0.8, boots: 0.7, trinket: 0.9 },
 
   // ---------- Disciplines & skill trees ----------
   // Each discipline levels by doing (kills → Combat XP, swings → gathering XP). Each level = 1 point for that tree.
@@ -303,15 +312,54 @@ const CONFIG = {
   // Stage s → enemy type t = floor((s−1)/10), sub-stage k = 1..10. Inside a type: ×1.18 HP / ×1.12 dmg per sub-stage; each new type ×2 HP / ×1.6 dmg.
   stages: {
     perType: 10,
-    enemyHp:    s => { const t = Math.floor((s - 1) / 10), k = (s - 1) % 10; return 30 * Math.pow(1.18, k) * Math.pow(2, t); },
-    enemyDps:   s => { const t = Math.floor((s - 1) / 10), k = (s - 1) % 10; return 2 * Math.pow(1.12, k) * Math.pow(1.6, t); },
+    // v0.3 battle model: each enemy type t is balanced against the weapon value you usually hold there (t+2: rats vs a wooden sword) at Lv0 × reference passives P(t).
+    // Normal HP = RefHit × (2 + (k−1)/8) → 2 hits at stage 1, 3 at stage 9. Boss = RefHit × 8.
+    refP: [1.00, 1.15, 1.30, 1.50, 1.75, 2.00, 2.30, 2.60, 3.00, 3.40],
+    refHit: t => (t + 2) * (CONFIG.stages.refP[Math.min(t, CONFIG.stages.refP.length - 1)] * Math.pow(1.15, Math.max(0, t - CONFIG.stages.refP.length + 1))),
+    refHeroHp: t => 10 * (t + 1.5),
+    groundOffset: { wilds: 0, roads: 1, crypts: 2 },
     goldPerKill: s => 1 * Math.pow(1.14, s - 1),
     xpPerKill:  s => { const t = Math.floor((s - 1) / 10), k = (s - 1) % 10 + 1; return (k + 10 * t) * Math.pow(1.3, t); }, // Rat 1 → 1 XP, Rat 10 → 10, Boar 1 → 14
     dropCap: 0.95,
-    carryOverFloor: 1.0,   // earlier types' loot carries over at (their stage-10 chance × this)
+    carryOverFloor: 1.0,
   },
 
-  // ---------- Kingdom: plots, buildings, jobs ----------
+
+  // ---------- Kingdom v0.3: production lines ----------
+  // Each line is a chain: gather → refine → craft. Kingdom N (the Nth founding) unlocks the steps with unlock ≤ N.
+  // A step: Rate (units/s) = base × (1 + rateGrowth × (Lv−1)); RoundTrip = max(haulMin, haulBase − haulStep × (Lv−1)) s; Cart = cartBase + cartStep × Lv.
+  // Output = min(Rate, Cart / RoundTrip). Carts deliver to the next step's input, or to the Storehouse for the last unlocked step.
+  kingdom: {
+    lines: {
+      forest: { name: 'Forest', icon: [4,6], steps: [
+        { id: 'logging',   name: 'Logging',    icon: [17,0],  make: 'wood',   base: 0.5,  unlock: 1, desc: 'Thralls fell trees.' },
+        { id: 'sawmill',   name: 'Sawmill',    icon: [19,11], make: 'planks', from: 'wood',   ratio: 2, base: 0.3,  unlock: 4, desc: '2 logs → 1 plank.' },
+        { id: 'carpenter', name: 'Carpenter',  icon: [10,4],  make: 'lumber', from: 'planks', ratio: 2, base: 0.15, unlock: 7, desc: '2 planks → 1 treated lumber.' } ] },
+      farm: { name: 'Grain Farm', icon: [12,5], steps: [
+        { id: 'fields', name: 'Fields', icon: [14,13], make: 'grain', base: 0.5,  unlock: 2, desc: 'Thralls sow and reap.' },
+        { id: 'mill',   name: 'Mill',   icon: [15,10], make: 'flour', from: 'grain', ratio: 2, base: 0.3,  unlock: 5, desc: '2 grain → 1 flour.' },
+        { id: 'baker',  name: 'Baker',  icon: [14,14], make: 'bread', from: 'flour', ratio: 2, base: 0.15, unlock: 8, desc: '2 flour → 1 bread.' } ] },
+      mine: { name: 'Iron Mine', icon: [4,5], steps: [
+        { id: 'shaft',   name: 'Mine Shaft', icon: [17,2], make: 'ore',    base: 0.5,  unlock: 3, desc: 'Thralls dig iron ore.' },
+        { id: 'smelter', name: 'Smelter',    icon: [17,3], make: 'ingot',  from: 'ore',   ratio: 2, base: 0.3,  unlock: 6, desc: '2 ore → 1 ingot.' },
+        { id: 'forge',   name: 'Forge',      icon: [5,1],  make: 'swords', from: 'ingot', ratio: 2, base: 0.15, unlock: 9, desc: '2 ingots → 1 iron sword.' } ] },
+    },
+    startGold: 50, foundRenown: 500, swapCooldown: 120, rateGrowth: 0.15, haulBase: 24, haulStep: 1.6, haulMin: 4, cartBase: 4, cartStep: 2,
+    costBase: 40, costExp: 1.6, haulCostMult: 0.8,
+    bufferCap: 200,                          // most input a refiner can hold waiting
+    workerMilestones: [10, 25, 50],          // +1 worker slot at these step levels (highest track)
+    extraWorker: 0.25,                       // each worker after the first: +25% rate
+    starMult: [1, 1.2, 1.5, 1.8, 2.0, 2.5],  // Overseer multiplier by stars (index = stars)
+    abilitySeconds: 30, abilityCooldown: 600,
+    hirePrice: [0, 40, 120, 350, 900, 2200], offerRefresh: 300, refreshCost: 25,
+    ranks: [ { name: 'Reeve', renown: 0, perk: 'Start' }, { name: 'Baron', renown: 500, perk: '+1 worker slot everywhere · Storehouse ×2 · can found a new fief' }, { name: 'Count', renown: 2000, perk: '4★ thralls in the Hiring Hall · bigger Orders' }, { name: 'Duke', renown: 6000, perk: '5★ thralls · the biggest Orders' } ],
+    orderFrom: ['The Northern Legion', 'The Merchant Guild', 'The Village of Ashford', 'The Imperial Court', 'The Border Garrison'],
+    orderBase: { wood: 40, grain: 40, ore: 30, planks: 20, flour: 20, ingot: 15, lumber: 10, bread: 10, swords: 6 },
+    renownPer: { wood: 0.5, grain: 0.5, ore: 0.7, planks: 1.5, flour: 1.5, ingot: 2, lumber: 4, bread: 4, swords: 6 },
+    orderGoldMult: 1.5, orderBonusSeconds: 600, speedBonus: 0.2,
+  },
+
+  // ---------- Kingdom (pre-0.3, unused): plots, buildings, jobs ----------
   plots: {
     cap: lvl => 2 + (lvl - 1) * 2,          // plots you may own at this Kingdom Level (balance later)
     cost: n => Math.round(300 * Math.pow(2.2, n)), // gold for the (n+1)th plot
@@ -327,7 +375,6 @@ const CONFIG = {
     { id: 'forest',    cat: 'gather',  name: 'Forest',      icon: [4,6],  buildCost: { wood: 40, stone: 10 },                         job: { time: 10, inputs: {},                     outputs: { wood: 1 } } },
     { id: 'mine',      cat: 'gather',  name: 'Mine',        icon: [4,5],  buildCost: { wood: 40, stone: 30 },               job: { time: 10, inputs: {},                     outputs: { stone: 1, ore: 1 } } },
     { id: 'farm',      cat: 'gather',  name: 'Farm',        icon: [12,5], buildCost: { wood: 30, stone: 10, fiber: 10 },               job: { time: 10, inputs: {},                     outputs: { grain: 1 } } },
-    { id: 'husbandry', cat: 'gather',  name: 'Husbandry',   icon: [19,10], buildCost: { wood: 60, stone: 20, fiber: 20 },  job: { time: 10, inputs: { grain: 1 },           outputs: { wool: 1, meat: 1 } } },
     // Crafting (refining)
     { id: 'smith',     cat: 'craft',   name: 'Blacksmith',  icon: [4,4],  buildCost: { gold: 200, stone: 40, wood: 40 },   job: { time: 10, inputs: { ore: 5 },             outputs: { ingot: 1 } } },
     { id: 'tannery',   cat: 'craft',   name: 'Tannery',     icon: [8,2],  buildCost: { wood: 40, stone: 20, hide: 10 },              job: { time: 10, inputs: { hide: 3 },            outputs: { leather: 1 } } },
@@ -346,6 +393,9 @@ const CONFIG = {
     { id: 'f01', chain: 'First Steps', name: 'Naked in the Wild', text: 'You have nothing. Plants have fiber, and fiber can be twisted into cloth. Pull some by hand — one handful per click.',
       steps: [ { label: 'Character → Activity → By hand → tap Plants ×10', check: { counter: 'fiber', need: 10 } } ],
       reward: { fiber: 5 }, focus: { tab: 'hero', sub: 'fight', el: 'hand:plants' } },
+    { id: 'f01b', chain: 'First Steps', name: 'Bare Knuckles', text: 'Rats are bold here. You have no weapon, but you have fists — and fists harden with every kill. Punch a few rats.',
+      steps: [ { label: 'Character → Activity → Your hero is… → Fight', check: { activity: 'fight' } }, { label: 'Slay 10 rats with your fists', check: { counter: 'kills', need: 10 } } ],
+      reward: { fiber: 5 }, focus: { tab: 'hero', sub: 'fight', el: 'act:fight' } },
     { id: 'f02', chain: 'First Steps', name: 'Twist and Knot', text: 'Knowing how is half of it. Research Fiber Clothing — it costs a little of the fiber you just pulled.',
       steps: [ { label: 'Kingdom → Tech → Fiber Clothing → Research', check: { tech: 'fiberclothing' } } ],
       reward: { fiber: 5 }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:fiberclothing' } },
@@ -358,8 +408,8 @@ const CONFIG = {
     { id: 'f05', chain: 'First Steps', name: 'Armed', text: 'Make the sword. Click the Weapon slot.',
       steps: [ { label: 'Character → Gear → tap the Weapon slot → Forge (10 wood, 5s)', check: { gear: 'weapon' } } ],
       reward: { wood: 10 }, focus: { tab: 'hero', sub: 'gear', el: 'gear:weapon' } },
-    { id: 'f06', chain: 'First Steps', name: 'Let Him Fight', text: 'With a weapon your hero can fight without you. Set him to Fight in the Wilds — he keeps at it even when the game is closed.',
-      steps: [ { label: 'Character → Activity → Your hero is… → Fight', check: { activity: 'fight' } }, { label: 'Slay 5 enemies (he does this on his own)', check: { counter: 'kills', need: 5 } } ],
+    { id: 'f06', chain: 'First Steps', name: 'Let Him Fight', text: 'A sharpened branch hits twice as hard as a fist. Set him back to Fight — he keeps at it even when the game is closed.',
+      steps: [ { label: 'Character → Activity → Your hero is… → Fight', check: { activity: 'fight' } }, { label: 'Slay 20 enemies in total (he does this on his own)', check: { counter: 'kills', need: 20 } } ],
       reward: { fiber: 10 }, focus: { tab: 'hero', sub: 'fight', el: 'act:fight' } },
     // ===== Settling In =====
     // Each quest is a checklist of steps. Step checks: activity, ground, tool, gear, tech, counter, plots, building, jobs, sold, stage, boss, founded, thrall.
@@ -465,56 +515,29 @@ const CONFIG = {
       steps: [
         { label: 'Reach stage 20 in any ground', check: { stage: 20 } },
       ], reward: { gold: 200 }, focus: { tab: 'hero', sub: 'fight', el: 'act:fight', el2: 'id:advance-btn' } },
-    { id: 'q17', name: 'A New Kingdom', text: 'You have survived the wild alone. Founding a kingdom resets your gear, skills and stage — only Legacy perks and trophies stay — but it brings land, a thrall, and your first Crystal. This is where the kingdom begins.',
+    { id: 'q17', name: 'A New Kingdom', text: 'You have survived the wild alone. Pay tribute to the Empire — 100 gold and the Rat King\'s Tooth — and it grants you land. Founding resets your stage and gear progress in the wild; your hero keeps his levels and skills. This is where the kingdom begins.',
       steps: [
-        { label: 'Kingdom → Throne → Found a New Kingdom (1,000 gold)', check: { founded: 1 } },
+        { label: 'Kingdom → Throne → Pay tribute (100 gold + Rat King\'s Tooth)', check: { founded: 1 } },
       ], reward: { gold: 100 }, focus: { tab: 'kingdom', ksub: 'throne', rtab: 'kingdom', el: 'id:found-btn' } },
     // ===== A Kingdom: after the first founding =====
     { id: 'p01', chain: 'A Kingdom', name: 'What Survives', text: 'Everything reset — except your Crystals. Legacy perks are permanent: they survive every founding. Spend your first Crystal on the Bestiary, so every creature you have ever killed keeps teaching you how to fight it.',
       steps: [
         { label: 'Kingdom → Legacy → unlock Bestiary (1 Crystal)', check: { perk: 'bestiary' } },
       ], reward: { gold: 100 }, focus: { tab: 'kingdom', ksub: 'legacy', rtab: 'kingdom', el: 'perk:bestiary' } },
-    { id: 'q08', name: 'A Thrall', text: 'A thrall came with the founding. Each thrall works one plot — no thrall, no building. Every founding brings one more, and they stay with you. Thralls level up as they work.',
-      steps: [
-        { label: 'Kingdom → Buildings: meet your thrall', check: { plots: 1 } },
-      ], reward: { wood: 40, stone: 20 }, focus: { tab: 'kingdom', ksub: 'build', rtab: 'kingdom', el: 'build' } },
-    { id: 'q09', name: 'Forester', text: 'An empty plot needs a building. A Forest gathers wood without your hero.',
-      steps: [
-        { label: 'Gather 150 wood in total', check: { counter: 'wood', need: 150 } },
-        { label: 'Kingdom → Tech → Research Forestry', check: { tech: 'forestry' } },
-        { label: 'Kingdom → Buildings → tap the empty plot → Forest', check: { building: 'forest' } },
-      ], reward: { wood: 30 }, focus: { tab: 'kingdom', ksub: 'build', rtab: 'kingdom', el: 'tech:forestry', el2: 'build' } },
-    { id: 'q10', name: 'Standing Timber', text: 'Your thrall works the Forest on its own, awake or away, while you fight or gather. Every job finished is thrall XP — faster hands over time.',
-      steps: [
-        { label: 'Let your thrall finish 10 jobs', check: { jobs: 10 } },
-      ], reward: { wood: 40, crystal: 1 }, focus: { tab: 'kingdom', ksub: 'build', rtab: 'kingdom', el: 'work' } },
-    { id: 'q12', name: 'Quarrying', text: 'You know the rockface now. A Mine building quarries stone on its own while you do other things.',
-      steps: [
-        { label: 'Kingdom → Tech → Research Quarrying', check: { tech: 'quarrying' } },
-        { label: 'Buildings → build a Mine on a plot', check: { building: 'mine' } },
-      ], reward: { stone: 50 }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:quarrying', el2: 'build' } },
-    { id: 'q15', name: 'Farmer', text: 'Grain feeds Husbandry, which gives wool and meat without fighting.',
-      steps: [
-        { label: 'Kingdom → Tech → Research Farming', check: { tech: 'farming' } },
-        { label: 'Buildings → build a Farm', check: { building: 'farm' } },
-      ], reward: { gold: 60 }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:farming', el2: 'build' } },
-    { id: 'q19', name: 'Ironworking', text: 'Smelting needs a thousand ore. Put a thrall on a Mine and mine yourself.',
-      steps: [
-        { label: 'Mine 1,000 ore in total', check: { counter: 'ore', need: 1000 } },
-        { label: 'Kingdom → Tech → Research Smelting', check: { tech: 'smelting' } },
-        { label: 'Buildings → build a Blacksmith', check: { building: 'smith' } },
-      ], reward: { gold: 300 }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:smelting', el2: 'act:mine' } },
-    { id: 'q20', name: 'Ingots', text: 'Ore becomes ingots at the Blacksmith. Fifty of them unlock Iron Gear.',
-      steps: [
-        { label: 'Forge 50 ingots', check: { counter: 'ingot', need: 50 } },
-        { label: 'Kingdom → Tech → Research Iron Gear', check: { tech: 'irongear' } },
-      ], reward: { ingot: 5, gold: 300 }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:irongear' } },
-    { id: 'q21', name: 'Sawmill', text: 'Five wood become a plank worth twelve gold — and planks are what Steel gear and tools are built on.',
-      steps: [
-        { label: 'Forge 150 ingots in total', check: { counter: 'ingot', need: 150 } },
-        { label: 'Kingdom → Tech → Research Sawmilling', check: { tech: 'sawmilling' } },
-        { label: 'Buildings → build a Sawmill', check: { building: 'sawmill' } },
-      ], reward: { gold: 800, crystal: 2 }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:sawmilling', el2: 'build' } },
+    { id: 'k01', chain: 'A Kingdom', name: 'Hands for Hire', text: 'A kingdom needs hands. The Hiring Hall always has three thralls on offer — each has a role (Foreman, Carter, Packer), stars and stats. Hire one.',
+      steps: [ { label: 'Kingdom → Keep → Hiring Hall → Hire', check: { hired: 1 } } ], reward: { gold: 40 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:hire-list' } },
+    { id: 'k02', chain: 'A Kingdom', name: 'Fell the Forest', text: 'A step only runs while a thrall works it. Put your thrall to work at Logging: the logs fill a cart, the cart hauls them to the Storehouse.',
+      steps: [ { label: 'Kingdom → Forest → Logging → Assign a worker', check: { working: 'logging' } }, { label: 'Haul 40 wood to the Storehouse', check: { made: 'wood', need: 40 } } ], reward: { gold: 60 }, focus: { tab: 'kingdom', ksub: 'forest', rtab: 'kingdom', el: 'step:logging' } },
+    { id: 'k03', chain: 'A Kingdom', name: 'Faster Hands', text: 'Each step has three upgrades: Work rate (how fast it makes), Haul speed (how fast the cart comes back) and Cart size. Output is whichever is slower. Without an overseer, you have to work out which one that is.',
+      steps: [ { label: 'Logging → Work rate to Lv 3', check: { stepLv: 'logging:rate', need: 3 } }, { label: 'Logging → Haul speed to Lv 3', check: { stepLv: 'logging:haul', need: 3 } } ], reward: { gold: 80 }, focus: { tab: 'kingdom', ksub: 'forest', rtab: 'kingdom', el: 'step:logging' } },
+    { id: 'k04', chain: 'A Kingdom', name: 'Imperial Orders', text: 'The Empire, the Guild and the villages post Orders at your Keep. There is no deadline — but finishing inside the speed window pays 20% more. Orders pay gold and Renown.',
+      steps: [ { label: 'Kingdom → Keep → Orders → Deliver one', check: { orders: 1 } } ], reward: { gold: 100 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:order-list' } },
+    { id: 'k05', chain: 'A Kingdom', name: 'An Overseer', text: 'Only an overseer tells you what holds a step back. Put your best thrall in the Overseer slot: their role boosts one upgrade track, and they can call a Double Shift.',
+      steps: [ { label: 'Hire a second thrall', check: { hired: 2 } }, { label: 'Logging → Overseer → assign a thrall', check: { overseer: 1 } } ], reward: { gold: 150 }, focus: { tab: 'kingdom', ksub: 'forest', rtab: 'kingdom', el: 'step:logging' } },
+    { id: 'k06', chain: 'A Kingdom', name: 'Baron', text: 'Renown only comes from Orders. At 500 Renown you become a Baron: more workers, a bigger Storehouse — and you may found a new fief, which brings the next step of a production line.',
+      steps: [ { label: 'Earn 500 Renown from Orders', check: { renown: 500 } } ], reward: { gold: 200 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:order-list' } },
+    { id: 'k07', chain: 'A Kingdom', name: 'A New Fief', text: 'Found a new fief. The kingdom starts over — your hero, his gear and skills, and your Legacy stay — and you gain Crystals and the next step: Fields for grain.',
+      steps: [ { label: 'Kingdom → Keep → Found a new fief', check: { founded: 2 } } ], reward: { gold: 100 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:found-btn' } },
   ],
 
   // ---------- Tech tree ----------
@@ -524,35 +547,24 @@ const CONFIG = {
   techs: [
     // Tier 0 — Camp
     { id: 'skinning',   tier: 0, name: 'Skinning',         icon: [17,8],  req: { kills: 50 },            cost: { wood: 20, fiber: 15 },         unlocks: { drop: 'hide', tool: 'knife' }, desc: 'Lets you make a Skinning Knife. With one, beasts in the Wilds drop Hide — better knife, better chance.' },
-    { id: 'fiberclothing', tier: 0, name: 'Fiber Clothing', icon: [7,9], req: { fiber: 10 }, cost: { fiber: 5 }, unlocks: { gearTier: 0, slots: ['chest', 'helm', 'boots', 'trinket'] }, desc: 'Twist plant fiber into clothes. Something between you and the wind.' },
+    { id: 'fiberclothing', tier: 0, name: 'Fiber Clothing', icon: [7,9], req: { fiber: 10 }, cost: { fiber: 5 }, unlocks: { gearTier: 0, slots: ['chest', 'helm', 'gloves', 'boots', 'trinket'] }, desc: 'Twist plant fiber into clothes. Something between you and the wind.' },
     { id: 'woodensword',   tier: 0, name: 'Wooden Sword',   icon: [5,0], req: { wood: 10 },  cost: { wood: 5 },  unlocks: { gearTier: 0, slots: ['weapon'] },                  desc: 'A sharpened branch. With it, your hero can fight on his own.' },
     { id: 'stonetools', tier: 0, name: 'Woodcraft',        icon: [10,1],  req: { kills: 25 },            cost: { wood: 25 },                     unlocks: { toolTier: 0 },           desc: 'Carve wooden axes, picks, sickles and knives.' },
-    { id: 'forestry',   tier: 0, name: 'Forestry',         icon: [4,6],   req: { foundings: 1, wood: 150 },            cost: { wood: 60, stone: 20 },          unlocks: { building: 'forest' },    desc: 'Build a Forest: gathers wood on its own.' },
-    { id: 'farming',    tier: 0, name: 'Farming',          icon: [12,5],  req: { foundings: 1, wood: 300 },            cost: { wood: 60, stone: 30 },         unlocks: { building: 'farm' },      desc: 'Build a Farm.' },
-    { id: 'leatherwork',tier: 0, name: 'Leatherworking',   icon: [7,6],   req: { hide: 20 },             cost: { hide: 10, wood: 10 },           unlocks: { gearTier: 1, slots: ['chest', 'helm', 'boots', 'trinket'] }, desc: 'Forge Leather armor.' },
+    { id: 'leatherwork',tier: 0, name: 'Leatherworking',   icon: [7,6],   req: { hide: 20 },             cost: { hide: 10, wood: 10 },           unlocks: { gearTier: 1, slots: ['chest', 'helm', 'gloves', 'boots', 'trinket'] }, desc: 'Forge Leather armor.' },
     { id: 'stoneweapons',tier: 0, name: 'Stone Weapons',    icon: [17,1],  req: { stone: 30 },            cost: { stone: 10, wood: 5 },           unlocks: { gearTier: 1, slots: ['weapon'] }, desc: 'Knap a stone edge onto a wooden haft. Weapons go Wood → Stone → Iron → Steel.' },
     // Tier 1 — Settlement
-    { id: 'quarrying',  tier: 1, name: 'Quarrying',        icon: [4,5],   req: { foundings: 1, stone: 100 },           cost: { wood: 60, stone: 30 },         unlocks: { building: 'mine' },      desc: 'Build a Mine: quarries stone on its own (and iron ore, once you know Prospecting).' },
     { id: 'prospecting',tier: 1, name: 'Prospecting',      icon: [17,2],  req: { stone: 120 },           cost: { stone: 40, wood: 20 },          unlocks: { drop: 'ore' },           desc: 'Tell ore from rock. Mining — by pick or by Mine — now yields Iron Ore as well as stone.' },
-    { id: 'husbandry',  tier: 1, name: 'Animal Husbandry', icon: [19,10], req: { foundings: 1, grain: 150 },           cost: { grain: 50, wood: 40 },         unlocks: { building: 'husbandry' }, desc: 'Build Husbandry: wool and meat.' },
-    { id: 'tanning',    tier: 1, name: 'Tanning',          icon: [8,2],   req: { foundings: 1, hide: 60 },             cost: { hide: 20, wood: 40 },          unlocks: { building: 'tannery' },   desc: 'Build a Tannery: hide → leather.' },
     { id: 'butchery',   tier: 1, name: 'Butchery',         icon: [15,1],  req: { kills: 100 },           cost: { hide: 10, wood: 10 },          unlocks: { drop: 'meat' },          desc: 'Beasts in the Wilds drop Meat. Sells well; levels skills.' },
     { id: 'graverobbing',tier: 1, name: 'Grave Robbing',    icon: [0,0],   req: { bossKills: 1 },         cost: { gold: 100 },                   unlocks: { drop: 'ingot' },         desc: 'Open the Crypts: the dead carry gold and rusted iron.' },
     // Tier 2 — Ironworking
-    { id: 'smelting',   tier: 2, name: 'Smelting',         icon: [4,4],   req: { foundings: 1, ore: 1000 },             cost: { gold: 300, stone: 100, wood: 50 }, unlocks: { building: 'smith' }, desc: 'Build a Blacksmith: ore → ingots.' },
     { id: 'irongear',   tier: 2, name: 'Iron Gear',        icon: [5,1],   req: { ingot: 50 },            cost: { gold: 400, ingot: 10 },        unlocks: { gearTier: 2 },           desc: 'Forge Iron gear.' },
     { id: 'irontools',  tier: 2, name: 'Iron Tools',       icon: [10,2],  req: { ingot: 20 },            cost: { gold: 200, ingot: 4 },         unlocks: { toolTier: 1 },           desc: 'Forge Iron axes, picks and sickles.' },
-    { id: 'weaving',    tier: 2, name: 'Weaving',          icon: [17,6],  req: { foundings: 1, wool: 200 },            cost: { gold: 200, wood: 40 },         unlocks: { building: 'weaver' },    desc: 'Build a Weaver: wool → cloth.' },
-    { id: 'labor1',     tier: 2, name: 'Efficient Labor',  icon: [1,4],   req: { foundings: 1, wood: 1000 },           cost: { gold: 500 },                   unlocks: { jobSpeed: 0.15 },        desc: 'All jobs 15% faster.' },
     // Tier 3 — Artisan
-    { id: 'sawmilling', tier: 3, name: 'Sawmilling',       icon: [19,11], req: { foundings: 1, ingot: 150, wood: 1000 }, cost: { gold: 800, ingot: 20, wood: 200 }, unlocks: { building: 'sawmill' }, desc: 'Build a Sawmill: wood → planks.' },
-    { id: 'brickmaking',tier: 3, name: 'Brickmaking',      icon: [13,4],  req: { foundings: 1, ingot: 150, stone: 1000 }, cost: { gold: 800, ingot: 20, stone: 200 }, unlocks: { building: 'kiln' }, desc: 'Build a Kiln: stone → bricks.' },
     { id: 'steelgear',  tier: 3, name: 'Steel Gear',       icon: [7,7],   req: { planks: 20 },           cost: { gold: 2000, planks: 5 },       unlocks: { gearTier: 3 },           desc: 'Forge Steel gear.' },
     { id: 'steeltools', tier: 3, name: 'Steel Tools',      icon: [10,1],  req: { planks: 10 },           cost: { gold: 1500, planks: 2 },       unlocks: { toolTier: 2 },           desc: 'Forge Steel tools.' },
     // Tier 4 — Advanced
     { id: 'hardening',  tier: 4, name: 'Hardening',        icon: [13,4],  req: { bricks: 50, bossKills: 20 }, cost: { gold: 5000, bricks: 20 },  unlocks: { gearTier: 4 },           desc: 'Forge Hardened gear.' },
     { id: 'mythril',    tier: 4, name: 'Mythril Secrets',  icon: [12,15], req: { foundings: 5 },         cost: { gold: 20000, bricks: 20 },     unlocks: { gearTier: 5 },           desc: 'Forge Mythril gear.' },
-    { id: 'labor2',     tier: 4, name: 'Master Laborers',  icon: [1,4],   req: { foundings: 1, ingot: 1000 },          cost: { gold: 3000 },                  unlocks: { jobSpeed: 0.25 },        desc: 'All jobs 25% faster.' },
   ],
 
   buildingUpgrade: { base: { gold: 100 }, mult: 1.5, speedPerLevel: 0.08, batchEvery: 5 },
@@ -562,6 +574,7 @@ const CONFIG = {
   // ---------- Legacy: founding (prestige), paths, knowledge, thralls ----------
   legacy: {
     foundRequiresStage: 20,
+    tribute: { gold: 100, ratkingtooth: 1 },   // the first founding: pay tribute to the Empire
     foundCostGold: lvl => Math.round(1000 * Math.pow(2.5, lvl - 1)),  // gold only; the first founding is cheap so the kingdom opens early
     knowledge: s => s.foundings === 0 ? 1 : Math.floor(s.bestStage / 4) + Object.keys(s.bossesKilled).length * 2 + s.maxTier * 3 + Math.max(0, Math.floor(Math.log10((s.lifetimeGold || 0) + 1)) - 2),
 

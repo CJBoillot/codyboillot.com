@@ -5,14 +5,15 @@
 const UI = (() => {
   const $ = id => document.getElementById(id);
   const R = CONFIG.resources;
-  const STAT_LABEL = { attack: 'Attack', hp: 'Max HP', armor: 'Armor', speed: 'Atk speed', drop: 'Drops', crit: 'Crit', regen: 'Regen', dodge: 'Dodge', xp: 'XP' };
-  const isPct = k => ['speed', 'drop', 'crit', 'dodge', 'xp'].includes(k);
-  const fs = (k, v) => isPct(k) ? '+' + Game.pct(v, 1) : '+' + Game.fmt(v);
+  const STAT_LABEL = { attack: 'Damage', hp: 'Max HP', armor: 'Armor', speed: 'Atk speed', drop: 'Drops', crit: 'Crit', regen: 'Regen', dodge: 'Dodge', xp: 'XP' };
+  const isPct = k => ['drop', 'crit', 'dodge', 'xp'].includes(k);
+  // v0.3 gear readout: slot value (tier.level) and what it gives
+  const fs = (k, v) => k === 'attack' ? v.toFixed(1) : k === 'speed' ? (1 + v).toFixed(2) + '/s' : k === 'hp' ? Math.round(v) + '' : k === 'armor' ? '−' + v.toFixed(2) + '/hit' : isPct(k) ? Game.pct(v, 0) : Game.fmt(v);
   let welcomeData = null;
   // Sprite icon: [row,col] on the icon sheet. size in px (16/24/32).
   const ico = (rc, size = 16, cls = '') => { if (!rc) return ''; const sc = size / CONFIG.iconSheet.cell; return `<span class="ico ${cls}" style="width:${size}px;height:${size}px;background-position:-${rc[1] * size}px -${rc[0] * size}px;background-size:${512 * sc}px auto"></span>`; };
 
-  const costHtml = cost => Object.entries(cost).map(([k, v]) => `<span class="costitem ${(Game.S.res[k] || 0) >= v ? '' : 'lack'}" title="${Game.fmt(v)} ${R[k].name} (have ${Game.fmt(Game.S.res[k] || 0)})">${ico(R[k].icon, 16)}${Game.fmt(v)}<span class="cost-name">${R[k].name}</span></span>`).join(' ');
+  const costHtml = cost => !cost ? '<span class="dim">max level</span>' : Object.entries(cost).map(([k, v]) => `<span class="costitem ${(Game.S.res[k] || 0) >= v ? '' : 'lack'}" title="${Game.fmt(v)} ${R[k].name} (have ${Game.fmt(Game.S.res[k] || 0)})">${ico(R[k].icon, 16)}${Game.fmt(v)}<span class="cost-name">${R[k].name}</span></span>`).join(' ');
   const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
   // DOM writes only when content changes — rewriting a button's children mid-click eats the click.
   const setHtml = (e, v) => { if (e.__h !== v) { e.innerHTML = v; e.__h = v; } };
@@ -21,6 +22,8 @@ const UI = (() => {
 
   // In-game confirmation (no browser popups)
   let confirmCb = null;
+  let infoFlag = null;
+  function showInfo(label, title, html, flag) { infoFlag = flag; setText($('demo-label'), label); setText($('demo-title'), title); $('demo-text').innerHTML = html; $('demo-modal').classList.remove('hidden'); }
   function ask(title, text, yesLabel, cb) { setText($('confirm-title'), title); setText($('confirm-text'), text); setText($('confirm-yes'), yesLabel || 'Yes'); confirmCb = cb; $('confirm-modal').classList.remove('hidden'); }
   function closeAsk() { confirmCb = null; $('confirm-modal').classList.add('hidden'); }
   function init() {
@@ -88,6 +91,8 @@ const UI = (() => {
     $('set-reload').addEventListener('click', async () => { Game.save(); try { if (window.caches) { const ks = await caches.keys(); await Promise.all(ks.map(k => caches.delete(k))); } } catch (e) {} location.replace(location.pathname + '?v=' + Date.now()); });
     $('set-reset').addEventListener('click', () => ask('Reset all progress?', 'This wipes everything — hero, kingdom, Crystals, Legacy perks, trophies. There is no undo.', 'Wipe everything', () => Game.debug.resetAll()));
     $('tech-hide-known').addEventListener('change', e => { Game.S.settings.techHideKnown = e.target.checked; render(true); });
+    $('offer-refresh').addEventListener('click', () => { if (Game.refreshOffers(true)) { $('hire-list').__h = ''; render(true); } });
+    $('store-up').addEventListener('click', () => { if (Game.upgradeStore()) render(true); });
     $('item-pin').addEventListener('click', () => { if (invItem) { Game.togglePin(invItem); openItem(invItem); } });
     // Founding
     $('found-btn').addEventListener('click', openFound);
@@ -126,12 +131,12 @@ const UI = (() => {
     $('fm-confirm').addEventListener('click', () => {
       const gain = Game.found(fmPick.hero, fmPick.kingdom);
       if (gain === false) return;
-      $('found-modal').classList.add('hidden'); buildLists(); buildPlots();
+      $('found-modal').classList.add('hidden'); buildLists(); for (const l in lineKey) lineKey[l] = '';
       document.querySelector('[data-tab=hero]').click();
-      if (Game.S.legacy.foundings === 1 && !Game.S.settings.demoSeen) { $('demo-modal').classList.remove('hidden'); }
+      if (Game.S.legacy.foundings === 1 && !Game.S.settings.demoSeen) showInfo('Kingdom 1', 'You founded a kingdom.', '<p class="small">The wild is behind you. From here on your land works while you are away.</p><p class="small"><b>Forest</b> — hire thralls in the Keep and put them to work at the Logging camp. Upgrade Work rate, Haul speed and Cart size with gold.</p><p class="small"><b>Keep</b> — fill Imperial Orders for gold and Renown. Earn <b>500 Renown</b> to found a new fief: each fief unlocks one new step, and pays out Crystals.</p><p class="small dim">Alpha 0.3 — numbers are rough and will change.</p>', 'demoSeen');
     });
-    $('demo-continue').addEventListener('click', () => { Game.S.settings.demoSeen = true; Game.save(); $('demo-modal').classList.add('hidden'); });
-    $('demo-reset').addEventListener('click', () => { $('demo-modal').classList.add('hidden'); ask('Reset all progress?', 'This wipes everything — hero, kingdom, Crystals, Legacy perks, trophies. There is no undo.', 'Wipe everything', () => Game.debug.resetAll()); });
+    $('demo-continue').addEventListener('click', () => { if (infoFlag) Game.S.settings[infoFlag] = true; Game.save(); $('demo-modal').classList.add('hidden'); });
+    if (Game.S.migrated03 && !Game.S.settings.migSeen) showInfo('Alpha 0.3', 'The kingdom has been rebuilt.', '<p class="small">Combat, gear and the whole kingdom were redesigned for 0.3, so your old run could not carry over. Your <b>Crystals, Legacy perks and Bestiary kills</b> are kept.</p><p class="small">The wild now starts with bare fists, a 100-item pack and a tribute to the Empire. Past it lies a new idle kingdom of production lines, thralls and Imperial Orders.</p>', 'migSeen');
     buildLists();
   }
 
@@ -192,12 +197,11 @@ const UI = (() => {
         const row = el('div', 'row tech');
         row.innerHTML = `${ico(t.icon, 32, 'rowico')}<div class="row-main"><div class="row-title">${t.name}</div><div class="row-sub">${t.desc}</div><div class="req" data-f="req"></div></div>
           <button class="buy shard" data-f="btn"><span class="small">Research</span><br><span class="cost" data-f="cost"></span></button>`;
-        row.querySelector('[data-f=btn]').addEventListener('click', () => { if (Game.research(t.id)) { flash(row); buildPlots(); } });
+        row.querySelector('[data-f=btn]').addEventListener('click', () => { if (Game.research(t.id)) { flash(row); } });
         rows.tech[t.id] = row; list.appendChild(row);
       }
       wrap.appendChild(list); tx.appendChild(wrap);
     });
-    buildPlots();
     const ml = $('market-list'); ml.innerHTML = ''; rows.market = {};
     for (const k in R) {
       if (!R[k].sell) continue;
@@ -238,14 +242,14 @@ const UI = (() => {
   function tabUnlocked(key) {
     const S = Game.S;
     switch (key) {
-      case 'kingdom': return reached('f02');
+      case 'kingdom': return reached('f02') || S.legacy.foundings > 0;
       case 'tech': return reached('f02');
-      case 'build': return reached('q08') || S.kingdom.plots.length > 0;
-      case 'throne': return reached('q17') || Game.bestStageAll() >= 20 || S.legacy.foundings > 0;
+      case 'forest': case 'farm': case 'mine': return Game.lineUnlocked(key);
+      case 'keep': return reached('q17') || Game.bestStageAll() >= 20 || S.legacy.foundings > 0;
       case 'legacy': return S.legacy.foundings > 0 || S.legacy.knowledge > 0;
       case 'gear': return reached('f03');
       case 'skills': return S.hero.level >= 2 || reached('q02b') || Object.values(S.hero.dxp || {}).some(x => x > 0);
-      case 'market': return reached('q14');
+      case 'market': return reached('q14') || S.legacy.foundings > 0;
       case 'inventory': return reached('q05') || Object.keys(R).some(k => R[k].kind === 'loot' && S.lifetime[k] > 0);
       default: return true;
     }
@@ -254,7 +258,7 @@ const UI = (() => {
   function applyTabLocks() {
     document.querySelectorAll('[data-tab],[data-sub],[data-ksub],[data-rtab]').forEach(b => {
       const key = TABKEY(b), ok = tabUnlocked(key);
-      b.disabled = !ok; b.classList.toggle('locked-tab', !ok);
+      b.disabled = !ok; b.classList.toggle('locked-tab', !ok); if (b.classList.contains('kline')) b.classList.toggle('hidden', !ok);
     });
     // hide content behind a locked active tab
     const ra = document.querySelector('[data-rtab].active'), rlocked = desktop && ra && !tabUnlocked(ra.dataset.rtab);
@@ -286,8 +290,7 @@ const UI = (() => {
       if (!sel) continue; const ci = sel.indexOf(':'), kind = sel.slice(0, ci), id = sel.slice(ci + 1);
       if (kind === 'tech') add(rows.tech[id]); else if (kind === 'tool') { add(rows.tool[id]); add(document.querySelector(`.doll-slot[data-slot=${id}]`)); } else if (kind === 'gear') { add(rows.gear[id]); add(document.querySelector(`.doll-slot[data-slot=${id}]`)); }
       else if (kind === 'act') add(rows.act[id]); else if (kind === 'id') add($(id));
-      else if (kind === 'build') rows.plot.forEach(d => { if (d.classList.contains('empty')) add(d); });
-      else if (kind === 'work') rows.plot.forEach(d => { if (!d.classList.contains('empty')) add(d); });
+      else if (kind === 'step') { const d = Game.stepDef(id); if (d && rows.step[d.line]) add(rows.step[d.line][id]); }
       else if (kind === 'market') add($('market-list'));
       else if (kind === 'ground') { add(rows.ground[id]); add(rows.act.fight); }
       else if (kind === 'perk') add(rows.perk[id]);
@@ -340,7 +343,7 @@ const UI = (() => {
   function rightShow(key) { for (const k in RIGHT) $(RIGHT[k]).classList.toggle('hidden', k !== key); }
 
   // ---- Paper doll ----
-  const DOLL = [['', 'helm', ''], ['weapon', 'chest', 'trinket'], ['', 'boots', '']];
+  const DOLL = [['', 'helm', ''], ['weapon', 'chest', 'gloves'], ['trinket', 'boots', '']];
   function renderDoll() {
     const S = Game.S, d = $('doll'), IS = desktop ? 22 : 28;
     let html = '<div class="doll-tools">';
@@ -365,78 +368,123 @@ const UI = (() => {
   }
   function closeSlot() { if (!slotOpen) return; slotOpen.home.insertBefore(slotOpen.row, slotOpen.next); slotOpen = null; $('slot-modal').classList.add('hidden'); }
 
-  // ---- Plots (rebuilt when the plot list changes shape) ----
-  rows.plot = [];
-  function workerOptions(idx) {
-    const S = Game.S, opts = [['', 'Unmanned · 1× output']];
-    S.kingdom.thralls.forEach((t, i) => opts.push([String(i), t.name]));
-    const cur = S.kingdom.plots[idx].worker; const curVal = cur === null ? '' : String(cur);
-    return opts.map(([v, n]) => `<option value="${v}" ${v === curVal ? 'selected' : ''}>${n}</option>`).join('');
+  // ---- Kingdom v0.3: production line screens + Keep ----
+  let kBuy = 1; const lineKey = {}; rows.step = {};
+  const TRACK = { rate: 'Work rate', haul: 'Haul speed', cart: 'Cart size' };
+  const ROLE = { foreman: 'Foreman · boosts Work rate', carter: 'Carter · boosts Haul speed', packer: 'Packer · boosts Cart size' };
+  const roleShort = r => r[0].toUpperCase() + r.slice(1);
+  const stars = n => '★'.repeat(n);
+  function kbarHtml() { return `<div class="row-between"><span class="small dim">Upgrade by</span><span class="seg kbuy">${[1, 10, 'max'].map(v => `<button data-kbuy="${v}" class="${String(v) === String(kBuy) ? 'active' : ''}">${v === 'max' ? 'Max' : '×' + v}</button>`).join('')}</span></div>`; }
+  function thrallOptions(sel, filterPost) {
+    const S = Game.S; let o = `<option value="">— choose —</option>`;
+    S.kingdom.thralls.forEach((t, i) => { const p = Game.thrallPost(i); o += `<option value="${i}" ${sel === i ? 'selected' : ''}>${t.name} ${stars(t.stars)} ${roleShort(t.role)}${p ? ' (at ' + Game.stepDef(p.id).name + ')' : ''}</option>`; });
+    return o;
   }
-  function buildPlots() {
+  function buildLine(lid) {
+    const S = Game.S, L = CONFIG.kingdom.lines[lid], box = $('line-' + lid); if (!box) return;
+    let h = '';
+    L.steps.forEach((st, i) => {
+      const open = Game.stepUnlocked(st.id);
+      if (i > 0) h += `<div class="kflow">▼ ${R[L.steps[i - 1].make].name}${open ? ' feed the ' + st.name : ''}</div>`;
+      if (!open) { h += `<div class="card kstep locked-step"><div class="kstep-head">${ico(st.icon, 24)}<div><div class="kstep-name">${st.name}</div><div class="tiny dim">Makes ${R[st.make].name}${st.from ? ' from ' + R[st.from].name : ''}</div></div><div class="kout dim small">Unlocks with<br><b>Kingdom ${st.unlock}</b></div></div></div>`; return; }
+      const ss = Game.stepState(st.id);
+      h += `<div class="card kstep" data-step="${st.id}">
+        <div class="kstep-head">${ico(st.icon, 24)}<div><div class="kstep-name">${st.name}</div><div class="tiny dim">${st.from ? `${st.ratio} ${R[st.from].name} → 1 ${R[st.make].name}` : 'Gathers ' + R[st.make].name}</div></div><div class="kout"><b data-f="out"></b> <span class="small dim">/s</span><div class="tiny" data-f="lim"></div></div></div>
+        ${st.from ? `<div class="kin"><span class="small dim">${R[st.from].name} in</span><div class="bar green-bar"><div data-f="inbar"></div><span data-f="inlab"></span></div></div>` : ''}
+        <div class="ktracks">${['rate', 'haul', 'cart'].map(t => `<div class="ktrack" data-t="${t}"><div><div class="ktl">${t === 'rate' && st.from ? 'Craft rate' : TRACK[t]} <span class="dim small">Lv <b data-f="lv"></b></span></div><div class="small dim" data-f="v"></div><div class="kflag hidden">Bottleneck</div></div><button class="buy" data-f="up"><span class="small" data-f="uplab">Upgrade</span><br><span class="cost" data-f="cost"></span></button></div>`).join('')}</div>
+        <div class="bar kcart"><div data-f="cartbar"></div><span data-f="cartlab"></span></div>
+        <div class="kstaff">
+          <div class="kslot"><span class="small dim">Workers <b data-f="wn"></b></span><span data-f="wlist" class="small"></span><select data-f="wadd" aria-label="Add a worker"></select></div>
+          <div class="kslot"><span class="small dim">Overseer</span><span data-f="ov" class="small"></span><select data-f="ovsel" aria-label="Choose an overseer"></select><button data-f="ab" class="buy small-btn">Double shift</button></div>
+        </div>
+      </div>`;
+    });
+    const steps = Game.lineSteps(lid), last = steps[steps.length - 1];
+    if (last) h += `<div class="kflow">▼ ${R[last.make].name} to the Storehouse</div>`;
+    box.innerHTML = h; rows.step[lid] = {};
+    box.querySelectorAll('[data-step]').forEach(card => {
+      const id = card.dataset.step; rows.step[lid][id] = card;
+      card.querySelectorAll('[data-t]').forEach(tr => tr.querySelector('[data-f=up]').addEventListener('click', () => { if (Game.upgradeStep(id, tr.dataset.t, kBuy)) { flash(tr); render(true); } }));
+      card.querySelector('[data-f=wadd]').addEventListener('change', e => { const v = e.target.value; if (v !== '') Game.assignWorker(id, +v); e.target.value = ''; lineKey[lid] = ''; render(true); });
+      card.querySelector('[data-f=ovsel]').addEventListener('change', e => { const v = e.target.value; if (v === '') { const s = Game.stepState(id); s.overseer = null; } else Game.assignOverseer(id, +v); lineKey[lid] = ''; render(true); });
+      card.querySelector('[data-f=ab]').addEventListener('click', () => { if (Game.useAbility(id)) flash(card); });
+    });
+    box.closest('.ksub').querySelector('[data-kbar]').innerHTML = kbarHtml();
+    box.closest('.ksub').querySelectorAll('[data-kbuy]').forEach(b => b.addEventListener('click', () => { kBuy = b.dataset.kbuy === 'max' ? 'max' : +b.dataset.kbuy; for (const l in lineKey) lineKey[l] = ''; render(true); }));
     glowKey = '';
-    const S = Game.S, grid = $('plot-grid'); grid.innerHTML = ''; rows.plot = [];
-    S.kingdom.plots.forEach((p, idx) => {
-      const d = el('div', 'plot'), tn = Game.thrallName(idx);
-      if (!p.type) {
-        d.classList.add('empty'); d.innerHTML = `<div class="worker-tag">${tn} <span class="dim">Lv<span data-f="tlvl"></span></span></div><div class="plus">+</div><div class="small">Build</div>`;
-        d.addEventListener('click', () => openBuild(idx));
-      } else {
-        const t = Game.btype(p.type);
-        d.innerHTML = `
-          <div class="plot-title">${ico(t.icon, 20)} ${t.name} <span class="owned">Lv<b data-f="lvl">${p.level}</b></span></div>
-          <div class="plot-job" data-f="job"></div>
-          <div class="bar"><div data-f="prog"></div></div>
-          <div class="worker-tag" data-f="worker"></div>
-          <div class="bar xp thrall-xp" title="Thrall XP"><div data-f="txp"></div></div>
-          <div class="plot-actions"><button class="buy" data-f="up"><span class="small">Upgrade</span><br><span class="cost" data-f="upcost"></span></button><button class="trash" data-f="trash" title="Tear down this building" aria-label="Tear down"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg></button></div>`;
-        d.querySelector('[data-f=up]').addEventListener('click', () => { if (Game.upgradePlot(idx)) flash(d); });
-        d.querySelector('[data-f=trash]').addEventListener('click', () => ask(`Tear down the ${t.name}?`, `Its level and the materials spent are lost. ${Game.thrallName(idx)} will be free to build something else on this plot.`, 'Tear it down', () => { Game.demolish(idx); buildPlots(); render(true); }));
-      }
-      rows.plot[idx] = d; grid.appendChild(d);
-    });
-    { const d = el('div', 'plot locked', `<div class="small">Another thrall<br>with the next founding</div>`); grid.appendChild(d); }
   }
-  let buildTarget = null;
-  function openBuild(idx) {
-    buildTarget = idx; const list = $('build-list'); list.innerHTML = '';
-    for (const cat in CONFIG.buildingCats) {
-      list.appendChild(el('div', 'cat-title', CONFIG.buildingCats[cat]));
-      const avail = CONFIG.buildingTypes.filter(t => t.cat === cat && Game.buildingUnlocked(t.id));
-      if (!avail.length) { list.appendChild(el('div', 'dim small', 'Nothing researched yet.')); }
-      for (const t of avail) {
-        const cost = Game.buildCost(t.id), j = t.job;
-        const b = el('button', 'build-opt');
-        b.innerHTML = `${ico(t.icon, 28)}<div class="bo-main"><div class="bo-name">${t.name}</div><div class="bo-desc">${jobHtml(j.inputs, j.outputs)} · ${j.time}s</div></div><div class="cost">${costHtml(cost)}</div>`;
-        const noThrall = idx >= Game.S.kingdom.thralls.length, cant = noThrall ? 'No thrall for this plot — found a kingdom to gain one' : !Game.canAfford(cost) ? 'Not enough materials' : '';
-        b.disabled = !!cant; if (cant) b.title = cant, b.querySelector('.bo-desc').innerHTML += ` <span class="lack">· ${cant}</span>`;
-        b.addEventListener('click', () => { if (Game.build(idx, t.id)) { $('build-modal').classList.add('hidden'); buildPlots(); render(true); } });
-        list.appendChild(b);
-      }
-    }
-    $('build-modal').classList.remove('hidden');
-  }
-  function jobHtml(inputs, outputs) {
-    const inp = Object.entries(inputs).map(([k, v]) => `<span class="costitem">${ico(R[k].icon, 14)}${Game.fmt(v)}</span>`).join(' ');
-    const out = Object.entries(outputs).map(([k, v]) => `<span class="costitem">${ico(R[k].icon, 14)}${Game.fmt(v)}</span>`).join(' ');
-    return (inp ? inp + ' <span class="arrow">→</span> ' : '') + out;
-  }
-  function renderPlots() {
+  function renderLine(lid) {
     const S = Game.S, f = Game.fmt;
-    if (rows.plot.length !== S.kingdom.plots.length) buildPlots();
-    setText($('plots-count'), `${S.kingdom.thralls.length}`);
-    const busy = S.kingdom.plots.filter(p => p.type).length;
-    setText($('thrall-summary'), S.kingdom.thralls.length ? `${busy} working, ${S.kingdom.thralls.length - busy} waiting for a building. One plot per thrall; +1 thrall per founding.` : 'none yet — found a kingdom to gain one');
-    S.kingdom.plots.forEach((p, idx) => {
-      const d = rows.plot[idx]; if (!d) return; if (!p.type) { const tl = d.querySelector('[data-f=tlvl]'); if (tl) setText(tl, Game.thrallLevel(idx)); return; }
-      setHtml(d.querySelector('[data-f=job]'), jobHtml(Game.jobInputs(p), Game.jobOutputs(p)) + ` <span class="dim">· ${Game.jobTime(p).toFixed(1)}s</span>`);
-      d.querySelector('[data-f=prog]').style.width = (p.running ? 100 * p.progress / Game.jobTime(p) : 0) + '%';
-      setText(d.querySelector('[data-f=lvl]'), p.level);
-      { const tp = Game.thrallProgress(idx); setText(d.querySelector('[data-f=worker]'), `${Game.thrallName(idx)} · Lv${tp.level} · ×${Game.thrallSpeed(idx).toFixed(2)} speed`); d.querySelector('[data-f=txp]').style.width = (100 * tp.have / tp.need) + '%'; }
-      d.classList.toggle('working', p.running);
-      const uc = Game.upgradeCost(idx); setHtml(d.querySelector('[data-f=upcost]'), costHtml(uc)); d.querySelector('[data-f=up]').disabled = !Game.canAfford(uc);
-    });
+    const key = Game.kingdomNo() + '|' + S.kingdom.thralls.length + '|' + kBuy + '|' + Game.lineSteps(lid).map(st => { const s = Game.stepState(st.id); return s.workers.join(',') + '/' + s.overseer + '/' + Game.stepWorkerSlots(st.id); }).join(';');
+    if (lineKey[lid] !== key) { lineKey[lid] = key; buildLine(lid); }
+    let anyUp = false;
+    for (const st of Game.lineSteps(lid)) {
+      const card = rows.step[lid] && rows.step[lid][st.id]; if (!card) continue;
+      const s = Game.stepState(st.id), m = Game.stepMods(st.id), hasOv = s.overseer !== null, lim = Game.stepLimit(st.id);
+      setText(card.querySelector('[data-f=out]'), m.working ? Game.stepOutput(st.id).toFixed(2) : '0');
+      const limTxt = !m.working ? '<span class="warn">No workers</span>' : !hasOv ? '<span class="dim">no overseer to report</span>'
+        : lim === 'starved' ? `<span class="warn">Waiting for ${R[st.from].name.toLowerCase()}</span>` : lim === 'full' ? '<span class="warn">Storehouse full</span>' : `<span class="dim">limited by ${lim === 'rate' ? (st.from ? 'craft rate' : 'work rate') : 'haul'}</span>`;
+      setHtml(card.querySelector('[data-f=lim]'), limTxt);
+      for (const t of ['rate', 'haul', 'cart']) {
+        const tr = card.querySelector(`[data-t=${t}]`); setText(tr.querySelector('[data-f=lv]'), s[t]);
+        setText(tr.querySelector('[data-f=v]'), t === 'rate' ? `${Game.stepRate(st.id).toFixed(2)} made /s` : t === 'haul' ? `${Game.stepRoundTrip(st.id).toFixed(1)}s round trip` : `${Game.stepCart(st.id)} per cart`);
+        const bn = hasOv && m.working && ((lim === 'rate' && t === 'rate') || (lim === 'haul' && t !== 'rate'));
+        tr.classList.toggle('bottleneck', bn); tr.querySelector('.kflag').classList.toggle('hidden', !bn);
+        const p = Game.stepUpPlan(st.id, t, kBuy), btn = tr.querySelector('[data-f=up]');
+        setText(tr.querySelector('[data-f=uplab]'), p.n > 1 ? `Upgrade +${p.n}` : 'Upgrade');
+        setHtml(tr.querySelector('[data-f=cost]'), costHtml(p.n ? p.cost : Game.stepUpCost(st.id, t)));
+        btn.disabled = !p.n; if (p.n) anyUp = true;
+      }
+      const cap = Game.stepCart(st.id), T = Game.stepRoundTrip(st.id);
+      card.querySelector('[data-f=cartbar]').style.width = (s.trip > 0 ? 100 * (1 - s.trip / T) : 100 * s.load / cap) + '%';
+      setText(card.querySelector('[data-f=cartlab]'), !m.working ? 'Idle — no workers' : s.trip > 0 ? `Cart on the road · ${Math.max(0, s.trip).toFixed(1)}s` : `Cart loading · ${Math.floor(s.load)} / ${cap} ${R[st.make].name.toLowerCase()}`);
+      if (st.from) { card.querySelector('[data-f=inbar]').style.width = Math.min(100, 100 * s.inBuf / Math.max(8, cap * 2)) + '%'; setText(card.querySelector('[data-f=inlab]'), `${Math.floor(s.inBuf)} waiting`); }
+      setText(card.querySelector('[data-f=wn]'), `${s.workers.length}/${Game.stepWorkerSlots(st.id)}`);
+      setHtml(card.querySelector('[data-f=wlist]'), s.workers.map(i => `<span class="kchip">${S.kingdom.thralls[i].name} <button class="kx" data-rm="${i}" aria-label="Remove">×</button></span>`).join(' ') || '<span class="warn">none</span>');
+      card.querySelectorAll('[data-rm]').forEach(b => b.onclick = () => { Game.unassign(+b.dataset.rm); lineKey[lid] = ''; render(true); });
+      const wsel = card.querySelector('[data-f=wadd]'); const wo = `<option value="">+ Add worker</option>` + S.kingdom.thralls.map((t, i) => s.workers.includes(i) ? '' : `<option value="${i}">${t.name} ${stars(t.stars)}${Game.thrallPost(i) ? ' (busy)' : ''}</option>`).join('');
+      if (wsel.__o !== wo) { wsel.innerHTML = wo; wsel.__o = wo; } wsel.disabled = s.workers.length >= Game.stepWorkerSlots(st.id) || !S.kingdom.thralls.length;
+      const ov = s.overseer !== null ? S.kingdom.thralls[s.overseer] : null;
+      setHtml(card.querySelector('[data-f=ov]'), ov ? `<b>${ov.name}</b> <span class="stars">${stars(ov.stars)}</span> <span class="dim">${roleShort(ov.role)} ×${CONFIG.kingdom.starMult[ov.stars]}</span>` : '<span class="dim">empty</span>');
+      const osel = card.querySelector('[data-f=ovsel]'); const oo = `<option value="">${ov ? 'Remove overseer' : 'Choose…'}</option>` + S.kingdom.thralls.map((t, i) => i === s.overseer ? '' : `<option value="${i}">${t.name} ${stars(t.stars)} ${roleShort(t.role)}${Game.thrallPost(i) ? ' (busy)' : ''}</option>`).join('');
+      if (osel.__o !== oo) { osel.innerHTML = oo; osel.__o = oo; }
+      const ab = card.querySelector('[data-f=ab]'), now = S.hero.time; ab.classList.toggle('hidden', !ov);
+      if (ov) { ab.disabled = s.abilityReady > now; setText(ab, s.abilityUntil > now ? `Active ${Math.ceil(s.abilityUntil - now)}s` : s.abilityReady > now ? `Ready in ${Game.fmtTime(s.abilityReady - now)}` : 'Double shift'); }
+    }
+    return anyUp;
   }
+  function buildKeepLists() {}
+  function renderKeep() {
+    const S = Game.S, f = Game.fmt, K = S.kingdom, inK = Game.kingdomNo() > 0;
+    $('keep-kingdom').classList.toggle('hidden', !inK); if (!inK) return false;
+    const ri = Game.rankInfo();
+    setText($('rank-now'), `${ri.cur.name}${ri.next ? '' : ' (highest)'}`);
+    $('rank-bar').style.width = (ri.next ? 100 * (ri.renown - ri.cur.renown) / (ri.next.renown - ri.cur.renown) : 100) + '%';
+    setText($('rank-text'), ri.next ? `${f(ri.renown)} / ${f(ri.next.renown)} to ${ri.next.name}` : f(ri.renown));
+    setText($('rank-next'), ri.next ? `${ri.next.name}: ${ri.next.perk}` : ri.cur.perk);
+    // orders
+    let anyOrder = false;
+    const oh = (K.orders || []).map((o, i) => { const can = Game.canDeliver(i); if (can) anyOrder = true; const left = o.bonusBy - S.hero.time;
+      return `<div class="korder"><div class="row-between"><b>${o.from}</b><span class="small ${left > 0 ? 'good' : 'dim'}">${left > 0 ? 'Speed bonus ' + Game.fmtTime(left) : 'No bonus'}</span></div>
+      ${Object.entries(o.wants).map(([k, n]) => `<div class="bar kob"><div style="width:${Math.min(100, 100 * (S.res[k] || 0) / n)}%"></div><span>${R[k].name} ${f(Math.min(S.res[k] || 0, n))} / ${n}</span></div>`).join('')}
+      <div class="row-between"><span class="small">Pays <b class="accent-inline">${f(o.gold)} gold · ${o.renown} Renown</b></span><span style="display:flex;gap:6px"><button class="buy kswap" data-swap="${i}" ${Game.swapReady() ? '' : 'disabled'} title="Swap for a different order (every 2 min)">⇄</button><button class="buy" data-deliver="${i}" ${can ? '' : 'disabled'}><span class="small">Deliver</span></button></span></div></div>`; }).join('');
+    const ol = $('order-list'); if (ol.__h !== oh) { ol.innerHTML = oh || '<div class="dim small">No orders yet — produce something first.</div>'; ol.__h = oh; ol.querySelectorAll('[data-deliver]').forEach(b => b.onclick = () => { if (Game.deliver(+b.dataset.deliver)) { ol.__h = ''; render(true); } }); ol.querySelectorAll('[data-swap]').forEach(b => b.onclick = () => { if (Game.swapOrder(+b.dataset.swap)) { ol.__h = ''; render(true); } }); }
+    // hiring
+    setText($('offer-timer'), Game.fmtTime(Math.max(0, K.offerTimer || 0))); setText($('refresh-cost'), CONFIG.kingdom.refreshCost); $('offer-refresh').disabled = (S.res.gold || 0) < CONFIG.kingdom.refreshCost;
+    const hh = (K.offers || []).map((o, i) => `<div class="row koffer"><div class="row-main"><div class="row-title">${o.name} <span class="stars">${stars(o.stars)}</span></div><div class="row-sub">${ROLE[o.role]} ×${CONFIG.kingdom.starMult[o.stars]}</div><div class="row-sub dim">Strength ${o.str} (cart) · Speed ${o.spd} (rate)</div></div><button class="buy" data-hire="${i}" ${(S.res.gold || 0) >= o.price ? '' : 'disabled'}><span class="small">Hire</span><br><span class="cost">${costHtml({ gold: o.price })}</span></button></div>`).join('');
+    const hl = $('hire-list'); if (hl.__h !== hh) { hl.innerHTML = hh; hl.__h = hh; hl.querySelectorAll('[data-hire]').forEach(b => b.onclick = () => { if (Game.hire(+b.dataset.hire)) { hl.__h = ''; for (const l in lineKey) lineKey[l] = ''; render(true); } }); }
+    // roster
+    setText($('roster-count'), `${K.thralls.length} hired`);
+    const rh = K.thralls.map((t, i) => { const p = Game.thrallPost(i); return `<div class="row"><div class="row-main"><div class="row-title">${t.name} <span class="stars">${stars(t.stars)}</span> <span class="owned">${roleShort(t.role)}</span></div><div class="row-sub">${p ? (p.as === 'overseer' ? 'Overseer' : 'Worker') + ' at the ' + Game.stepDef(p.id).name : '<span class="warn">Idle — assign on a production line</span>'} · Str ${t.str} · Spd ${t.spd} · ${f(t.xp || 0)} jobs</div></div></div>`; }).join('');
+    const rl = $('roster'); if (rl.__h !== rh) { rl.innerHTML = rh || '<div class="dim small">Nobody yet. Hire from the Hiring Hall.</div>'; rl.__h = rh; }
+    // storehouse
+    setText($('store-lv'), K.storeLv || 0); setText($('store-cap'), f(Game.storeCap('wood')));
+    const goods = Game.allSteps().filter(st => Game.stepUnlocked(st.id)).map(st => st.make);
+    setHtml($('store-list'), goods.map(k => `<div class="row-between small"><span>${ico(R[k].icon, 14)} ${R[k].name}</span><span class="${Game.atCap(k) ? 'warn' : ''}">${f(S.res[k] || 0)} / ${f(Game.resCap(k))}</span></div>`).join(''));
+    const sc = Game.storeUpCost(); setHtml($('store-cost'), costHtml(sc)); $('store-up').disabled = !Game.canAfford(sc);
+    return anyOrder || (K.offers || []).some(o => (S.res.gold || 0) >= o.price) && K.thralls.length < 2;
+  }
+
 
   const techHideKnown = () => Game.S.settings.techHideKnown !== false; // default on
   // ---- Quest card collapse: header, name, next step and Claim only ----
@@ -595,7 +643,7 @@ const UI = (() => {
       const e = $('res-' + k), open = R[k].kind !== 'loot' && S.lifetime[k] > 0 && Game.pinned(k);
       e.classList.toggle('hidden', !open); if (!open) continue;
       e.querySelector('.rrate').classList.toggle('hidden', !Game.perkRank('almanac'));
-      setText(e.querySelector('[data-f=amt]'), f(S.res[k]));
+      { const cap = Game.resCap(k), full = (S.res[k] || 0) >= cap - 1e-9; setHtml(e.querySelector('[data-f=amt]'), `${f(S.res[k])}<span class="capn">/${f(cap)}</span>`); e.classList.toggle('full', full); }
       const rate = (kr[k] || 0) + (hr[k] || 0) + (hrv[k] || 0);
       const re = e.querySelector('[data-f=rate]'); setText(re, (rate > 0 ? '+' + f(rate) : '0') + '/s'); re.classList.toggle('zero', !(rate > 0));
     }
@@ -664,17 +712,18 @@ const UI = (() => {
       const row = rows.gear[slot], def = CONFIG.slots[slot], it = h.gear[slot];
       const up = row.querySelector('[data-f=up]'), forge = row.querySelector('[data-f=forge]');
       if (!it) {
-        setHtml(row.querySelector('[data-f=title]'), `${def.name} <span class="owned">empty</span>`);
-        setText(row.querySelector('[data-f=stats]'), `${STAT_LABEL[def.primary]}, ${STAT_LABEL[def.secondary]} from Tier 2`);
-        setText(row.querySelector('[data-f=next]'), '');
+        const bv = Game.slotValue(slot), bst = Game.itemStatPreview(slot, -1, 0); bst[def.primary] = CONFIG.slots[slot].per * bv;
+        setHtml(row.querySelector('[data-f=title]'), `${def.bare} <span class="owned">${bv.toFixed(1)}</span>`);
+        setText(row.querySelector('[data-f=stats]'), `${STAT_LABEL[def.primary]} ${fs(def.primary, bst[def.primary])}`);
+        setText(row.querySelector('[data-f=next]'), slot === 'weapon' && bv < 1.9 ? `Fists grow +0.1 every ${CONFIG.fistKillsPerLevel} kills (${(Game.S.hero.fistKills || 0) % CONFIG.fistKillsPerLevel}/${CONFIG.fistKillsPerLevel})` : '');
         up.classList.add('hidden'); row.querySelector('[data-f=max]').classList.add('hidden');
       } else {
         const cur = Game.itemStatPreview(slot, it.tier, it.level), nxt = Game.itemStatPreview(slot, it.tier, it.level + 1);
-        setHtml(row.querySelector('[data-f=title]'), `${Game.tierName(slot, it.tier)} ${def.name} <span class="owned">Lv${it.level}</span>`);
+        setHtml(row.querySelector('[data-f=title]'), `${Game.tierName(slot, it.tier)} ${def.name} <span class="owned">${Game.slotValue(slot).toFixed(1)} · Lv${it.level}</span>`);
         setText(row.querySelector('[data-f=stats]'), Object.entries(cur).map(([k, v]) => `${STAT_LABEL[k]} ${fs(k, v)}`).join(' · '));
-        setText(row.querySelector('[data-f=next]'), 'Next: ' + Object.entries(nxt).map(([k, v]) => fs(k, v)).join(' · '));
+        setText(row.querySelector('[data-f=next]'), it.level < CONFIG.tierUpAt - 1 ? 'Next: ' + Object.entries(nxt).map(([k, v]) => fs(k, v)).join(' · ') : `Lv${it.level} — forge the next tier to go higher`);
         up.classList.remove('hidden');
-        if (!forgeState(up, 'gearUp', slot, 'Upgrade')) { const uc = Game.gearUpgradeCost(slot); setHtml(up.querySelector('[data-f=upcost]'), costHtml(uc)); up.disabled = !Game.canAfford(uc) || !!Game.crafting(); if (!up.disabled) anyGear = true; }
+        if (!forgeState(up, 'gearUp', slot, 'Upgrade')) { const uc = Game.gearUpgradeCost(slot); setHtml(up.querySelector('[data-f=upcost]'), costHtml(uc)); up.disabled = !uc || !Game.canAfford(uc) || !!Game.crafting(); if (!up.disabled) anyGear = true; }
         { const mx = row.querySelector('[data-f=max]'), plan = Game.maxUpgradePlan('gear', slot); mx.classList.toggle('hidden', !it); setText(mx.querySelector('[data-f=maxn]'), plan ? `+${plan.levels} → Lv${it.level + plan.levels}` : '—'); mx.disabled = !plan || plan.levels < 2 || !!Game.crafting(); }
       }
       const fc = Game.gearCraftCost(slot), can = Game.canTierUp(slot);
@@ -698,9 +747,8 @@ const UI = (() => {
     $('badge-hero').classList.toggle('hidden', !(anyGear || anySkill));
 
     // Kingdom
-    renderPlots();
-    const anyBuild = Game.canBuyPlot() || S.kingdom.plots.some((p, i) => !p.type ? CONFIG.buildingTypes.some(t => Game.buildingUnlocked(t.id) && Game.canAfford(Game.buildCost(t.id))) : false);
-    $('badge-build').classList.toggle('hidden', !anyBuild);
+    for (const lid in CONFIG.kingdom.lines) { const any = Game.lineUnlocked(lid) ? renderLine(lid) : false; $('badge-' + lid).classList.toggle('hidden', !any); }
+    const keepAct = renderKeep();
     renderThrone();
 
     // Tech
@@ -720,7 +768,7 @@ const UI = (() => {
       orderRows(list, CONFIG.techs.filter(t => t.tier === tier).map(t => ({ el: rows.tech[t.id], rank: Game.hasTech(t.id) ? 2 : Game.canResearch(t.id) ? 0 : 1 })));
     });
     $('badge-tech').classList.toggle('hidden', !anyTech); if ($('tech-hide-known').checked !== techHideKnown()) $('tech-hide-known').checked = techHideKnown();
-    $('badge-kingdom').classList.toggle('hidden', !(anyBuild || anyTech || Game.canFound()));
+    $('badge-kingdom').classList.toggle('hidden', !(keepAct || anyTech || Game.canFound()));
 
     // Inventory (grid rebuilt only when the set of owned items changes; counts updated in place)
     renderInventory();
@@ -796,7 +844,7 @@ const UI = (() => {
       else {
         setHtml(row.querySelector('[data-f=title]'), `${CONFIG.toolTiers[it.tier].name} ${def.name} <span class="owned">Lv${it.level}</span>`);
         setText(row.querySelector('[data-f=stats]'), def.activity ? `Power ×${Game.toolPower(slot).toFixed(2)} → ${CONFIG.activities[def.activity].name}: ${Object.entries(Game.harvestRates(def.activity)).map(([k, v]) => `${f(v)} ${R[k].name}/s`).join(', ')}` : `Power ×${Game.toolPower(slot).toFixed(2)} → ${R[def.boosts].name} chance ×${Game.dropToolMult(slot).toFixed(2)}`);
-        up.classList.remove('hidden'); if (!forgeState(up, 'toolUp', slot, 'Upgrade')) { const uc = Game.toolUpgradeCost(slot); setHtml(up.querySelector('[data-f=upcost]'), costHtml(uc)); up.disabled = !Game.canAfford(uc) || !!Game.crafting(); }
+        up.classList.remove('hidden'); if (!forgeState(up, 'toolUp', slot, 'Upgrade')) { const uc = Game.toolUpgradeCost(slot); setHtml(up.querySelector('[data-f=upcost]'), costHtml(uc)); up.disabled = !uc || !Game.canAfford(uc) || !!Game.crafting(); }
         { const mx = row.querySelector('[data-f=max]'), plan = Game.maxUpgradePlan('tool', slot); mx.classList.remove('hidden'); setText(mx.querySelector('[data-f=maxn]'), plan ? `+${plan.levels} → Lv${it.level + plan.levels}` : '—'); mx.disabled = !plan || plan.levels < 2 || !!Game.crafting(); }
       }
       const fc = Game.toolCraftCost(slot), can = Game.canToolTierUp(slot), nt = it ? it.tier + 1 : 0;
@@ -813,7 +861,7 @@ const UI = (() => {
     const L = Game.S.legacy;
     fmPick.hero = L.heroPath || 'warrior'; fmPick.kingdom = L.kingdomPath || 'benevolent';
     setText($('fm-gain'), Game.knowledgeGain());
-    setText($('fm-worker'), 'a new thrall');
+    setText($('fm-worker'), (() => { const n = Game.allSteps().find(st => st.unlock === Game.S.legacy.foundings + 1); return n ? 'a new step: ' + n.name : 'a fresh kingdom'; })());
     const build = (holder, list, key) => {
       holder.innerHTML = '';
       for (const p of list) {
@@ -837,9 +885,13 @@ const UI = (() => {
     $('crystal-chip').classList.toggle('hidden', !(L.knowledge > 0 || L.foundings > 0)); setText($('crystal-n'), L.knowledge);
     setText($('knowledge'), L.knowledge); setText($('knowledge2'), L.knowledge); setText($('foundings'), L.foundings); setText($('throne-best'), S.hero.bestStage);
     setText($('found-gain'), '+' + Game.knowledgeGain());
-    const cost = Game.foundCost(); setHtml($('found-cost'), costHtml(cost));
-    const reqStage = CONFIG.legacy.foundRequiresStage, okStage = S.hero.bestStage >= reqStage;
-    setText($('found-req'), okStage ? (Game.canAfford(cost) ? 'Ready.' : 'Sell goods to raise the gold.') : `Reach stage ${reqStage} to found (best: ${S.hero.bestStage}).`);
+    const cost = Game.foundCost(); setHtml($('found-cost'), Object.keys(cost).length ? costHtml(cost) : '<span class="dim">free — Renown is the price</span>');
+    const first = S.legacy.foundings === 0, nextStep = Game.allSteps().find(st => st.unlock === S.legacy.foundings + 1);
+    setText($('found-title'), first ? 'Pay Tribute to the Empire' : 'Found a New Fief');
+    setText($('found-text'), first ? 'Pay tribute and the Empire grants you land: your first kingdom, with a Forest to work. Your hero keeps everything.' : `Start a new fief. The kingdom starts over; your hero, Legacy and trophies stay. New here: ${nextStep ? nextStep.name + ' (' + CONFIG.kingdom.lines[nextStep.line].name + ')' : 'nothing new yet'}.`);
+    $('found-btn').textContent = first ? 'Pay Tribute' : 'Found a New Fief';
+    if (first) { const reqStage = CONFIG.legacy.foundRequiresStage, okStage = Game.bestStageAll() >= reqStage; setText($('found-req'), okStage ? (Game.canAfford(cost) ? 'Ready.' : 'Gather the tribute: 100 gold and the Rat King\'s Tooth.') : `Reach stage ${reqStage} to pay tribute (best: ${Game.bestStageAll()}).`); }
+    else { const need = Game.foundRenownNeed(), have = S.kingdom.renown || 0; setText($('found-req'), have >= need ? 'Ready.' : `Earn ${Game.fmt(need)} Renown in this kingdom to found a new fief — you have ${Game.fmt(have)}.`); }
     $('found-btn').disabled = !Game.canFound();
     $('badge-throne').classList.toggle('hidden', !Game.canFound());
     let anyPerk = false;
@@ -851,7 +903,6 @@ const UI = (() => {
     }
     orderRows($('perk-list'), CONFIG.legacy.perks.map(p => ({ el: rows.perk[p.id], rank: Game.perkRank(p.id) >= p.max ? 2 : (L.knowledge >= Game.perkCost(p) ? 0 : 1) })));
     $('badge-legacy').classList.toggle('hidden', !anyPerk);
-    setHtml($('thrall-list'), S.kingdom.thralls.length ? S.kingdom.thralls.map((t, i) => { const p = S.kingdom.plots[i]; return `<div class="row"><div class="row-main"><div class="row-title">${t.name} <span class="owned">Lv${Game.thrallLevel(i)}</span></div><div class="row-sub">${p && p.type ? 'Working the ' + Game.btype(p.type).name : 'Waiting — build on their plot'}</div></div></div>`; }).join('') : '<div class="row"><div class="row-main dim">No thralls yet. Your first founding brings one.</div></div>');
     setHtml($('history'), L.history.length ? L.history.slice().reverse().map(h => `<div>Kingdom ${h.level}: stage ${h.bestStage}, hero Lv${h.heroLevel} → +${h.knowledge} Crystals</div>`).join('') : '<div class="dim">No foundings yet.</div>');
   }
   // ---- Mini hero strip: mirrors the fight/harvest screen when that screen is off-tab ----
