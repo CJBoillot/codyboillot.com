@@ -79,6 +79,7 @@ const UI = (() => {
     $('build-cancel').addEventListener('click', () => $('build-modal').classList.add('hidden'));
     $('slot-close').addEventListener('click', closeSlot);
     $('doll').addEventListener('click', e => { const s = e.target.closest('.doll-slot'); if (s && s.dataset.slot) openSlot(s.dataset.kind, s.dataset.slot); });
+    $('hand-toggle').addEventListener('click', () => { const S = Game.S; S.settings.handCollapsed = !handCollapsed(); });
     // By hand
     const hb = $('hand-bar'); hb.innerHTML = ''; rows.hand = {};
     for (const hd of CONFIG.hand) {
@@ -226,6 +227,12 @@ const UI = (() => {
     const cur = [...container.children].filter(e => want.includes(e));
     if (cur.length === want.length && cur.every((e, i) => e === want[i])) return;
     want.forEach(e => container.appendChild(e));
+  }
+
+  // By-hand row: auto-collapses once the hero can do anything on his own; the player can override either way.
+  function handCollapsed() {
+    const S = Game.S; if (typeof S.settings.handCollapsed === 'boolean') return S.settings.handCollapsed;
+    return !!S.hero.gear.weapon || Object.values(S.hero.tools).some(Boolean);
   }
 
   // ---- Tab unlocks: screens appear when the quests / game state first need them ----
@@ -615,6 +622,7 @@ const UI = (() => {
     }
     applyQuestGlow(q || goal);
 
+    { const col = handCollapsed(); $('hand-card').classList.toggle('collapsed', col); $('hand-toggle').setAttribute('aria-expanded', String(!col)); }
     // By hand
     for (const hd of CONFIG.hand) { const b = rows.hand[hd.id], ok = Game.handUnlocked(hd.id); b.disabled = !ok; b.classList.toggle('locked', !ok); setText(b.querySelector('[data-f=sub]'), ok ? `+1 ${R[hd.gives].name}` : (hd.unlock.tech ? 'needs ' + Game.techDef(hd.unlock.tech).name : hd.unlock.gear ? 'needs clothing' : 'locked')); }
     // Activity
