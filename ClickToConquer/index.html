@@ -150,7 +150,8 @@
       </div>
       <div id="ksub-locked" class="card dim small center hidden">Locked. Your quests will open this when you need it.</div>
       <div id="ksub-tech" class="ksub">
-        <div class="card"><div class="card-title">Tech</div><p class="dim small">No research points. Each tech unlocks once you've <b>done</b> the thing it needs and paid its cost. Resets when you found a new kingdom; the Blueprints perk keeps tiers.</p></div>
+        <div class="card"><div class="card-title">Tech</div><p class="dim small">No research points. Each tech unlocks once you've <b>done</b> the thing it needs and paid its cost. Resets when you found a new kingdom; the Blueprints perk keeps tiers.</p>
+          <label class="set-row small" style="margin-top:6px"><span>Hide known tech</span><input type="checkbox" id="tech-hide-known"></label></div>
         <div id="tech-tree"></div>
       </div>
       <div id="ksub-throne" class="ksub hidden">
@@ -303,6 +304,8 @@
   <label class="set-row"><span>Game speed</span><span class="seg"><button data-speed="1" class="active">1×</button><button data-speed="10">10×</button><button data-speed="100">100×</button></span></label>
   <div class="set-row"><span>Save</span><span class="seg"><button id="dev-export">Export</button><button id="dev-import">Import</button></span></div>
   <textarea id="dev-io" placeholder="save string"></textarea>
+  <div class="set-row"><span>More resources</span><button class="ad-btn" disabled title="Coming soon">▶ Watch ad <span class="small dim">· coming soon</span></button></div>
+  <div class="set-row"><span>Start over</span><button id="set-reset" class="danger-btn">Reset all progress</button></div>
   <details class="devtools">
     <summary>Developer tools</summary>
     <div class="dev-row"><button id="dev-offline">AFK test 4h</button><button id="dev-tech">All tech</button><button id="dev-qskip">Skip quest</button></div>
@@ -310,7 +313,7 @@
     <div class="dev-row"><button id="dev-lvl">+5 levels</button><button id="dev-stage10">+10 stages</button><button id="dev-know">+50 Crystals</button><button id="dev-klvl">+1 Kingdom Lv</button></div>
     <div class="dev-row"><button id="dev-reset-run" class="danger">Reset run (keep legacy)</button><button id="dev-reset" class="danger">RESET ALL</button></div>
   </details>
-  <div class="dim small credits">Icons: Shikashi's Fantasy Icons (CC-BY, Matt Firth / game-icons.net)</div>
+  <div class="dim small credits">Click to Conquer — created by <b>Cody J. Boillot</b>. © 2026 Cody J. Boillot. All rights reserved.<br>Icons: Shikashi's Fantasy Icons (CC-BY, Matt Firth / game-icons.net)</div>
 </div>
 
 

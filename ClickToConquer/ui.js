@@ -84,6 +84,8 @@ const UI = (() => {
       document.querySelectorAll('[data-csub]').forEach(x => x.classList.toggle('active', x === b));
       document.querySelectorAll('.csub').forEach(t => t.classList.toggle('hidden', t.id !== 'csub-' + b.dataset.csub));
     }));
+    $('set-reset').addEventListener('click', () => ask('Reset all progress?', 'This wipes everything — hero, kingdom, Crystals, Legacy perks, trophies. There is no undo.', 'Wipe everything', () => Game.debug.resetAll()));
+    $('tech-hide-known').addEventListener('change', e => { Game.S.settings.techHideKnown = e.target.checked; render(true); });
     $('item-pin').addEventListener('click', () => { if (invItem) { Game.togglePin(invItem); openItem(invItem); } });
     // Founding
     $('found-btn').addEventListener('click', openFound);
@@ -685,7 +687,7 @@ const UI = (() => {
     const CNAME = { kills: 'Enemies slain', bossKills: 'Bosses slain', stage: 'Best stage', foundings: 'Foundings' };
     for (const t of CONFIG.techs) {
       const row = rows.tech[t.id], done = Game.hasTech(t.id), pr = Game.techProgress(t);
-      row.classList.toggle('done', done); row.classList.toggle('gated', !done && !pr.ok);
+      row.classList.toggle('done', done); row.classList.toggle('gated', !done && !pr.ok); row.classList.toggle('hidden', done && !!S.settings.techHideKnown);
       setHtml(row.querySelector('[data-f=req]'), done ? '' : pr.parts.map(p => `<div class="req-line"><span>${CNAME[p.k] || (R[p.k] ? R[p.k].name + ' gathered' : p.k)}</span><span>${f(Math.min(p.have, p.need))} / ${f(p.need)}</span></div><div class="bar"><div style="width:${Math.min(100, 100 * p.have / p.need)}%"></div></div>`).join(''));
       const btn = row.querySelector('[data-f=btn]');
       setHtml(btn.querySelector('[data-f=cost]'), done ? 'Known' : costHtml(t.cost));
@@ -695,7 +697,7 @@ const UI = (() => {
       const list = rows.tech[CONFIG.techs.find(t => t.tier === tier).id].parentNode;
       orderRows(list, CONFIG.techs.filter(t => t.tier === tier).map(t => ({ el: rows.tech[t.id], rank: Game.hasTech(t.id) ? 2 : Game.canResearch(t.id) ? 0 : 1 })));
     });
-    $('badge-tech').classList.toggle('hidden', !anyTech);
+    $('badge-tech').classList.toggle('hidden', !anyTech); if ($('tech-hide-known').checked !== !!S.settings.techHideKnown) $('tech-hide-known').checked = !!S.settings.techHideKnown;
     $('badge-kingdom').classList.toggle('hidden', !(anyBuild || anyTech || Game.canFound()));
 
     // Inventory (grid rebuilt only when the set of owned items changes; counts updated in place)

@@ -621,3 +621,8 @@ body.desktop #subtab-dock { display: none; }
 .quest.collapsed .quest-toggle { top: 8px; right: 10px; }
 .quest.collapsed .quest-foot { margin-right: 32px; }
 .quest-head { padding-right: 32px; }
+
+.danger-btn { color: #fff; background: linear-gradient(180deg, #8a2f28, #5e1e19); border: 1px solid #b8463a; padding: 6px 12px; font-family: var(--font-head); letter-spacing: .5px; box-shadow: none; }
+.danger-btn:hover { background: linear-gradient(180deg, #a13a31, #6e241e); }
+.ad-btn { opacity: .45; cursor: not-allowed; filter: grayscale(.6); }
+.credits b { color: var(--bronze2); }
