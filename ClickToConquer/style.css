@@ -317,6 +317,7 @@ button.primary:not(:disabled) { background: linear-gradient(180deg, #4d3a22, #33
 
 /* ---------- grounds ---------- */
 .ground-bar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 6px; }
+.ground-block { margin-top: 10px; border-top: 1px solid var(--line); padding-top: 10px; }
 .ground-btn { display: flex; align-items: center; gap: 6px; justify-content: center; padding: 7px 4px; font-size: 12px; font-family: var(--font-head); background: #15110e; }
 .ground-btn.active { border-color: var(--bronze2); background: radial-gradient(circle at 50% 20%, #4a361d, #241b12); color: var(--bronze2); }
 .ground-btn .g-stage { font-family: var(--font-body); font-size: 10px; color: var(--dim); }
