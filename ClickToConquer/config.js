@@ -301,8 +301,9 @@ const CONFIG = {
         { label: 'Reach hero level 5', check: { heroLevel: 5 } },
         { label: 'Talents → Warrior → Brawn (+4% attack)', check: { talent: 'w1' } },
       ], reward: { gold: 30 }, focus: { tab: 'hero', sub: 'talents', rtab: 'talents', el: 'talent:w1' }, onlyTalent: 'w1' },
-    { id: 'q07', name: 'Stone Blade', text: 'Better gear means faster kills, just as better tools mean faster gathering. Gather stone by hand, learn Stone Weapons, upgrade the wooden sword to Lv15, then forge the Stone tier.',
+    { id: 'q07', name: 'Stone Blade', text: 'Better gear means faster kills, just as better tools mean faster gathering. Stone is picked up by hand — open the By hand row and click Stones. Then learn Stone Weapons, upgrade the wooden sword to Lv15, then forge the Stone tier.',
       steps: [
+        { label: 'Character → By hand → Stones: pick up 30 stone', check: { counter: 'stone', need: 30 }, focus: { tab: 'hero', sub: 'fight', el: 'hand:stones' } },
         { label: 'Kingdom → Tech → Research Stone Weapons', check: { tech: 'stoneweapons' }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:stoneweapons' } },
         { label: 'Click the Weapon slot → Forge Stone', check: { gearTier: 'weapon', need: 1 }, focus: { tab: 'hero', sub: 'gear', el: 'gear:weapon' } },
       ], reward: { gold: 30 }, focus: { tab: 'hero', sub: 'gear', el: 'gear:weapon' } },

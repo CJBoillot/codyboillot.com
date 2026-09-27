@@ -233,7 +233,14 @@ const UI = (() => {
   // By-hand row: auto-collapses once the hero can do anything on his own; the player can override either way.
   function handCollapsed() {
     const S = Game.S; if (typeof S.settings.handCollapsed === 'boolean') return S.settings.handCollapsed;
+    if (questWantsHand()) return false; // a quest is pointing at a hand box: keep it open
     return !!S.hero.gear.weapon || Object.values(S.hero.tools).some(Boolean);
+  }
+  function questWantsHand() {
+    const q = Game.questCurrent(); if (!q || !q.steps) return false;
+    const pr = Game.questProgress(q); if (pr.done) return false;
+    const i = pr.parts.findIndex(st => !st.done), F = (i >= 0 && q.steps[i].focus) || q.focus;
+    return !!(F && ((F.el || '').startsWith('hand:') || (F.el2 || '').startsWith('hand:')));
   }
 
   // ---- Tab unlocks: screens appear when the quests / game state first need them ----
