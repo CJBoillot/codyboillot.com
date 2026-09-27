@@ -64,13 +64,19 @@ const UI = (() => {
     $('quest-claim').addEventListener('click', () => { if (Game.questClaim()) flash($('quest-card')); });
     $('dev-export').addEventListener('click', () => { $('dev-io').value = Game.exportSave(); $('dev-io').select(); });
     $('dev-import').addEventListener('click', () => { if (Game.importSave($('dev-io').value)) { buildLists(); alert('Imported.'); } else alert('Bad save string.'); });
-    $('dev-reset-run').addEventListener('click', () => { if (confirm('Reset this run? Kingdom level, Knowledge, perks and workers are kept.')) { Game.debug.resetRun(); buildLists(); } });
-    $('dev-reset').addEventListener('click', () => { if (confirm('RESET ALL progress? This wipes everything, including Knowledge and Kingdom level.')) Game.debug.resetAll(); });
+    $('dev-reset-run').addEventListener('click', () => { if (confirm('Reset this run? Kingdom level, Crystals, perks and workers are kept.')) { Game.debug.resetRun(); buildLists(); } });
+    $('dev-reset').addEventListener('click', () => { if (confirm('RESET ALL progress? This wipes everything, including Crystals and Kingdom level.')) Game.debug.resetAll(); });
     // Kingdom sub-tabs
     document.querySelectorAll('[data-ksub]').forEach(b => b.addEventListener('click', () => {
       document.querySelectorAll('[data-ksub]').forEach(x => x.classList.toggle('active', x === b));
       document.querySelectorAll('.ksub').forEach(t => t.classList.toggle('hidden', t.id !== 'ksub-' + b.dataset.ksub));
     }));
+    document.querySelectorAll('[data-csub]').forEach(b => b.addEventListener('click', () => {
+      if (b.dataset.csub === 'best' && !Game.perkRank('bestiary')) { /* still show the locked card */ }
+      document.querySelectorAll('[data-csub]').forEach(x => x.classList.toggle('active', x === b));
+      document.querySelectorAll('.csub').forEach(t => t.classList.toggle('hidden', t.id !== 'csub-' + b.dataset.csub));
+    }));
+    $('item-pin').addEventListener('click', () => { if (invItem) { Game.togglePin(invItem); openItem(invItem); } });
     // Founding
     $('found-btn').addEventListener('click', openFound);
     $('buy-plot').addEventListener('click', () => { if (Game.buyPlot()) buildPlots(); });
@@ -474,7 +480,7 @@ const UI = (() => {
       $('inv-empty').classList.toggle('hidden', keys.length > 0);
       renderBestiary();
     }
-    const bKey = S.hero.ground + ':' + S.hero.bestStage + ':' + Object.keys(S.hero.bossesKilled).length + ':' + Object.values(S.hero.grounds).map(g => g.bestStage).join('/');
+    const bKey = S.hero.ground + ':' + S.hero.bestStage + ':' + Object.keys(S.hero.bossesKilled).length + ':' + Object.values(S.hero.grounds).map(g => g.bestStage).join('/') + ':' + Game.perkRank('bestiary') + ':' + Math.floor(S.hero.totalKills / 10);
     if (bKey !== renderBestiary.key) { renderBestiary.key = bKey; renderBestiary(); }
     for (const k of keys) setText(rows.inv[k].querySelector('[data-f=n]'), f(Math.floor(S.res[k] || 0)));
     if (invItem) { setText($('item-have'), f(Math.floor(S.res[invItem] || 0))); const have = Math.floor(S.res[invItem] || 0); $('item-s1').disabled = have < 1; $('item-s10').disabled = have < 10; $('item-sall').disabled = have < 1; }
@@ -508,23 +514,35 @@ const UI = (() => {
     setHtml($('item-from'), itemSources(k).map(x => `<div>· ${x}</div>`).join('') || '<span class="dim">—</span>');
     setHtml($('item-uses'), itemUses(k).map(x => `<div>· ${x}</div>`).join('') || '<span class="dim">Sell it, or keep it as a trophy.</span>');
     $('item-sell').classList.toggle('hidden', !R[k].sell); if (R[k].sell) setText($('item-price'), f(Game.sellPrice(k)));
+    const pinnable = R[k].kind !== 'loot'; $('item-pin').classList.toggle('hidden', !pinnable); if (pinnable) setText($('item-pin'), Game.pinned(k) ? 'Unpin from top bar' : 'Pin to top bar');
     renderInventory(); $('item-modal').classList.remove('hidden');
   }
   function closeItem() { invItem = null; $('item-modal').classList.add('hidden'); }
   function renderBestiary() {
-    const S = Game.S, box = $('bestiary'); let html = '';
-    for (const gid in CONFIG.grounds) {
+    const S = Game.S, box = $('bestiary'), has = !!Game.perkRank('bestiary'); let html = '';
+    $('bestiary-locked').classList.toggle('hidden', has); box.classList.toggle('hidden', !has);
+    document.querySelector('[data-csub=best] .lock-ico').textContent = has ? '' : '🔒';
+    if (has) for (const gid in CONFIG.grounds) {
       const G = CONFIG.grounds[gid], gs = gid === S.hero.ground ? { bestStage: S.hero.bestStage } : (S.hero.grounds[gid] || { bestStage: 0 });
-      const best = gs.bestStage || 0; if (!best) continue;
+      const best = gs.bestStage || 0; const seen = G.line.filter((T, i) => best >= i * CONFIG.stages.perType + 1 || Game.typeKills(gid + ':' + T.id) > 0);
+      if (!seen.length) continue;
       html += `<div class="dim small" style="margin-top:8px">${G.name}</div>`;
       G.line.forEach((T, i) => {
-        const first = i * CONFIG.stages.perType + 1; if (best < first) return;
+        const key = gid + ':' + T.id, kills = Game.typeKills(key), first = i * CONFIG.stages.perType + 1; if (best < first && !kills) return;
         const bossStage = first + CONFIG.stages.perType - 1, bossDone = !!S.hero.bossesKilled[gid + ':' + bossStage];
-        const pool = Game.stagePool(Math.min(best, bossStage), gid);
-        html += `<div class="bestiary-row"><div><div class="b-name">${T.name}</div><div class="b-sub">${best >= bossStage ? 'Boss: ' + T.boss + (bossDone ? ' ✓' : '') : 'Reached ' + Math.min(best, bossStage) - first + 1 + '/' + CONFIG.stages.perType}</div></div><div class="b-pool">${Object.keys(pool).map(k => `<span class="costitem loot-${rarityOf(k)}" title="${R[k].name} ${Math.round(pool[k] * 100)}%">${ico(R[k].icon, 12)}</span>`).join('')}${T.unique && bossDone ? `<span class="costitem loot-rare" title="${R[T.unique].name}">${ico(R[T.unique].icon, 12)}</span>` : ''}</div></div>`;
+        const pool = Game.stagePool(Math.max(first, Math.min(best, bossStage)), gid), bt = Game.bestiaryTier(key), tiers = CONFIG.bestiary.tiers, next = tiers[bt + 1];
+        html += `<div class="bestiary-row"><div><div class="b-name">${T.name} <span class="dim small">× ${Game.fmt(kills)}</span></div><div class="b-sub">${bt >= 0 ? tiers[bt].name : 'Unknown'}${next ? ` · ${next.name} at ${Game.fmt(next.kills)}` : ''}${best >= bossStage ? ' · Boss: ' + T.boss + (bossDone ? ' ✓' : '') : ''}</div>${bt >= 0 ? `<div class="b-bonus">+${Math.round(tiers[bt].bonus * 100)}% damage dealt, −${Math.round(tiers[bt].bonus * 100)}% taken</div>` : ''}</div><div class="b-pool">${Object.keys(pool).map(k => `<span class="costitem loot-${rarityOf(k)}" title="${R[k].name} ${Math.round(pool[k] * 100)}%">${ico(R[k].icon, 12)}<span class="small">${Math.round(pool[k] * 100)}%</span></span>`).join('')}${T.unique ? `<span class="costitem loot-rare" title="${R[T.unique].name} — first boss kill">${ico(R[T.unique].icon, 12)}★</span>` : ''}</div></div>`;
       });
     }
     setHtml(box, html || '<span class="dim small">Fight something first.</span>');
+    // Trophies
+    const tg = $('trophy-grid'); let th = '', anyT = false;
+    for (const gid in CONFIG.grounds) for (const T of CONFIG.grounds[gid].line) {
+      const key = gid + ':' + T.id, kills = Game.typeKills(key); if (!kills) continue;
+      const tt = Game.trophyTier(key), tiers = CONFIG.trophies.tiers, cur = tiers[tt], next = tiers[tt + 1]; if (tt >= 0) anyT = true;
+      th += `<div class="trophy ${tt < 0 ? 'none' : ''}" title="${T.name}: ${Game.fmt(kills)} kills"><div class="t-head" style="border-color:${cur ? cur.color : 'var(--line2)'}">${ico([0,0], 24, tt < 0 ? 'ghost' : '')}</div><div class="t-name">${T.name}</div><div class="t-tier" style="color:${cur ? cur.color : 'var(--dim)'}">${cur ? cur.name + ' head' : 'No trophy'}</div><div class="t-sub">${next ? `${Game.fmt(kills)} / ${Game.fmt(next.kills)} for ${next.name}` : 'All trophies earned'}</div></div>`;
+    }
+    setHtml(tg, th); $('trophy-empty').classList.toggle('hidden', anyT || th.length > 0);
   }
 
   // ---- Render ----
@@ -535,8 +553,9 @@ const UI = (() => {
 
     const kr = Game.kingdomRates(), hr = Game.heroFighting() ? Game.heroRates() : {}, hrv = Game.heroFighting() ? {} : Game.harvestRates();
     for (const k in R) {
-      const e = $('res-' + k), open = R[k].kind !== 'loot' && S.lifetime[k] > 0;
+      const e = $('res-' + k), open = R[k].kind !== 'loot' && S.lifetime[k] > 0 && Game.pinned(k);
       e.classList.toggle('hidden', !open); if (!open) continue;
+      e.querySelector('.rrate').classList.toggle('hidden', !Game.perkRank('almanac'));
       setText(e.querySelector('[data-f=amt]'), f(S.res[k]));
       const rate = (kr[k] || 0) + (hr[k] || 0) + (hrv[k] || 0);
       const re = e.querySelector('[data-f=rate]'); setText(re, (rate > 0 ? '+' + f(rate) : '0') + '/s'); re.classList.toggle('zero', !(rate > 0));
@@ -572,7 +591,7 @@ const UI = (() => {
     setText($('advance-btn'), Game.isBoss() ? `Hunt ${Game.nextTypeName()} ▶` : Game.isBoss(h.stage + 1) ? `Face the ${Game.enemyName(h.stage + 1)} ▶` : 'Advance ▶');
     $('retreat-btn').disabled = h.stage <= 1;
     const dNext = Game.stageDanger(h.stage + 1), dHere = Game.stageDanger();
-    setText($('danger'), dHere >= 1 ? '⚠ You cannot survive here. Retreat or gear up.'
+    setText($('danger'), !Game.perkRank('danger') ? (dHere >= 1 ? '⚠ You cannot survive here.' : '') : dHere >= 1 ? '⚠ You cannot survive here. Retreat or gear up.'
       : Game.canAdvance() ? (dNext >= 1 ? '⚠ Next stage would kill you. Gear up first.' : dNext > 0.6 ? 'Next stage looks dangerous.' : 'Next stage looks fine.')
       : `Lose ${Math.round(dHere * 100)}% HP per fight here.`);
     setText(rows.basic.querySelector('[data-f=dps]'), `${f(st.attack)}/hit · ${f(st.dps)} DPS`);
@@ -588,7 +607,8 @@ const UI = (() => {
       setText(b.querySelector('.sk-cd'), ready ? 'TAP' : cd.toFixed(1) + 's');
       b.style.setProperty('--cd', ready ? 0 : (cd / Game.skillCd(id)));
     }
-    setHtml($('stat-grid'), [
+    $('stat-grid').parentElement.classList.toggle('hidden', !Game.perkRank('chronicler'));
+    if (Game.perkRank('chronicler')) setHtml($('stat-grid'), [
       ['Attack', f(st.attack)], ['DPS', f(st.dps)], ['Atk speed', st.speed.toFixed(2) + '/s'],
       ['Crit', Game.pct(st.crit) + ' ×' + st.critDmg.toFixed(1)], ['Max HP', f(st.maxHp)], ['Regen', f(st.regen) + '/s'],
       ['Armor', f(st.armor) + (st.dr ? ' −' + Game.pct(st.dr) : '')], ['Drops', '×' + st.drop.toFixed(2)], ['Kills/s', Game.farmRate().toFixed(2)],
@@ -690,7 +710,7 @@ const UI = (() => {
       { const chain = q.chain || (CONFIG.quests.slice(0, S.quests.index).reverse().find(x => x.chain) || {}).chain || ''; const inChain = CONFIG.quests.filter((x, i) => (x.chain || (CONFIG.quests.slice(0, i).reverse().find(y => y.chain) || {}).chain) === chain); setText($('quest-n'), `${chain} · ${inChain.indexOf(q) + 1} / ${inChain.length}`); }
       setText($('quest-name'), q.name); setText($('quest-text'), q.text); setText($('quest-hint'), q.hint || ''); $('quest-hint').classList.toggle('hidden', !q.hint);
       setHtml($('quest-obj'), pr.parts.map(partHtml).join(''));
-      setHtml($('quest-reward'), 'Reward: ' + Object.entries(q.reward).map(([k, v]) => k === 'talent' ? `<span class="costitem">★ ${v} talent point</span>` : `<span class="costitem">${ico(R[k].icon, 14)}${f(v)}</span>`).join(' '));
+      setHtml($('quest-reward'), 'Reward: ' + Object.entries(q.reward).map(([k, v]) => k === 'crystal' ? `<span class="costitem">💎 ${v} Crystal</span>` : k === 'talent' ? `<span class="costitem">★ ${v} talent point</span>` : `<span class="costitem">${ico(R[k].icon, 14)}${f(v)}</span>`).join(' '));
       $('quest-claim').classList.remove('hidden'); $('quest-claim').disabled = !pr.done; $('quest-card').classList.toggle('ready', pr.done);
     } else if (goal) {
       setText($('quest-n'), ''); setText($('quest-name'), goal.name); setText($('quest-text'), goal.text); setText($('quest-hint'), goal.hint); $('quest-hint').classList.remove('hidden');
@@ -717,7 +737,8 @@ const UI = (() => {
       setHtml($('harvest-icon'), ico(a.icon, 48));
       setHtml($('harvest-yield'), 'Each swing: ' + Object.entries(y).map(([k, v]) => `<span class="costitem">${ico(R[k].icon, 16)}${f(v)}</span>`).join(' '));
       $('harvest-bar').style.width = Math.min(100, 100 * h.harvestTimer / t) + '%';
-      setText($('harvest-time'), t.toFixed(1) + 's per swing');
+      setText($('harvest-time'), Game.perkRank('surveyor') ? t.toFixed(1) + 's per swing' : '');
+      $('harvest-yield').classList.toggle('hidden', !Game.perkRank('surveyor'));
       setText($('harvest-tool'), `${CONFIG.toolTiers[tool.tier].name} ${CONFIG.toolSlots[a.tool].name} Lv${tool.level} · power ×${Game.toolPower(a.tool).toFixed(2)}`);
       setText($('harvest-mastery'), `Mastery ${Game.masteryLevel(act)} (${h.mastery[act] || 0} swings)`);
       const hrv = Game.harvestRates(act);
@@ -768,6 +789,7 @@ const UI = (() => {
     setText($('kingdom-level'), `Level ${L.kingdomLevel}`);
     const hp = Game.heroPath(), kp = Game.kingdomPath();
     setHtml($('paths-now'), hp || kp ? `${hp ? ico(hp.icon, 16) + ' ' + hp.name : ''} ${hp && kp ? '·' : ''} ${kp ? ico(kp.icon, 16) + ' ' + kp.name : ''}` : 'No path chosen yet — your first founding decides who you become.');
+    $('crystal-chip').classList.toggle('hidden', !(L.knowledge > 0 || L.foundings > 0)); setText($('crystal-n'), L.knowledge);
     setText($('knowledge'), L.knowledge); setText($('knowledge2'), L.knowledge); setText($('foundings'), L.foundings); setText($('throne-best'), S.hero.bestStage);
     setText($('found-gain'), '+' + Game.knowledgeGain());
     const cost = Game.foundCost(); setHtml($('found-cost'), costHtml(cost));
@@ -785,7 +807,7 @@ const UI = (() => {
     orderRows($('perk-list'), CONFIG.legacy.perks.map(p => ({ el: rows.perk[p.id], rank: Game.perkRank(p.id) >= p.max ? 2 : (L.knowledge >= Game.perkCost(p) ? 0 : 1) })));
     $('badge-legacy').classList.toggle('hidden', !anyPerk);
     setHtml($('thrall-list'), S.kingdom.thralls.length ? S.kingdom.thralls.map((t, i) => { const p = S.kingdom.plots.findIndex(p => p.worker === i); return `<div class="row"><div class="row-main"><div class="row-title">${t.name}</div><div class="row-sub">${p >= 0 ? 'Working the ' + Game.btype(S.kingdom.plots[p].type).name : 'Idle — assign on the Buildings screen'}</div></div></div>`; }).join('') : '<div class="row"><div class="row-main dim">No thralls yet. Your first founding brings one.</div></div>');
-    setHtml($('history'), L.history.length ? L.history.slice().reverse().map(h => `<div>Kingdom ${h.level}: stage ${h.bestStage}, hero Lv${h.heroLevel} → +${h.knowledge} Knowledge</div>`).join('') : '<div class="dim">No foundings yet.</div>');
+    setHtml($('history'), L.history.length ? L.history.slice().reverse().map(h => `<div>Kingdom ${h.level}: stage ${h.bestStage}, hero Lv${h.heroLevel} → +${h.knowledge} Crystals</div>`).join('') : '<div class="dim">No foundings yet.</div>');
   }
   // ---- Mini hero strip: mirrors the fight/harvest screen when that screen is off-tab ----
   const lootTally = {}; let lootFresh = {};

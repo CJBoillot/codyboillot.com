@@ -218,6 +218,12 @@ const CONFIG = {
     ],
   },
 
+  // ---------- Bestiary & trophies (kill counts per enemy type; persist through founding) ----------
+  // Bestiary: the more you kill a type, the better you fight it — bonus = ×damage dealt and −damage taken vs that type.
+  bestiary: { tiers: [ { kills: 10, name: 'Familiar', bonus: 0.02 }, { kills: 50, name: 'Studied', bonus: 0.05 }, { kills: 200, name: 'Known', bonus: 0.10 }, { kills: 1000, name: 'Mastered', bonus: 0.15 } ] },
+  // Trophies: mounted heads for kill milestones. Each trophy owned = +lootPerTrophy loot and XP, permanently.
+  trophies: { lootPerTrophy: 0.01, tiers: [ { kills: 1000, name: 'Wood', color: '#8a6a3a' }, { kills: 2000, name: 'Stone', color: '#9a9a9a' }, { kills: 5000, name: 'Bronze', color: '#c08040' }, { kills: 10000, name: 'Silver', color: '#d8dce0' }, { kills: 25000, name: 'Gold', color: '#e8c06a' } ] },
+
   // ---------- Techniques (auto-cast on cooldown). Unlocked and ranked through the Combat tree; rank r → level r−1 ----------
   // Levels cost gold + meat: cost × levelMult^level. power grows +powerPerLevel per level.
   skillSlots: 6,
@@ -411,11 +417,11 @@ const CONFIG = {
       steps: [
         { label: 'Market → sell anything for 100 gold in total', check: { sold: 100 } },
       ], reward: { gold: 50 }, focus: { tab: 'market', rtab: 'market', el: 'market' } },
-    { id: 'q08', name: 'Stake a Claim', text: 'Your kingdom starts with land. Plots are bought with gold — sell what you have gathered.',
+    { id: 'q08', name: 'Stake a Claim', text: 'Your kingdom starts with land. Plots are bought with gold — sell what you have gathered. Your first Crystal comes with it: Crystals buy permanent Legacy perks, the only thing that survives founding a new kingdom.',
       steps: [
         { label: 'Have 300 gold (sell at the Market)', check: { have: 'gold', need: 300 } },
         { label: 'Kingdom → Buildings → Buy plot', check: { plots: 1 } },
-      ], reward: { wood: 20 }, focus: { tab: 'kingdom', ksub: 'build', rtab: 'kingdom', el: 'id:buy-plot' } },
+      ], reward: { wood: 20, crystal: 1 }, focus: { tab: 'kingdom', ksub: 'build', rtab: 'kingdom', el: 'id:buy-plot' } },
     { id: 'q09', name: 'Forester', text: 'An empty plot needs a building. A Forest gathers wood without your hero.',
       steps: [
         { label: 'Gather 150 wood in total', check: { counter: 'wood', need: 150 } },
@@ -447,7 +453,7 @@ const CONFIG = {
         { label: 'Activity → Fight', check: { activity: 'fight' } },
         { label: 'Advance to stage 10', check: { stage: 10 } },
         { label: 'Slay the boss', check: { boss: 1 } },
-      ], reward: { gold: 60 }, focus: { tab: 'hero', sub: 'fight', el: 'act:fight', el2: 'id:advance-btn' } },
+      ], reward: { gold: 60, crystal: 1 }, focus: { tab: 'hero', sub: 'fight', el: 'act:fight', el2: 'id:advance-btn' } },
     { id: 'q13a', name: 'Highwayman', text: 'Bandits carry the gold they stole. The Roads pay better the deeper you go.',
       steps: [
         { label: 'Fight on The Roads', check: { activity: 'fight', ground: 'roads' } },
@@ -478,8 +484,8 @@ const CONFIG = {
     { id: 'q16', name: 'Stage 20', text: 'Upgrade your weapon when fights get slow — that is what the hide and stone are for.',
       steps: [
         { label: 'Reach stage 20 in any ground', check: { stage: 20 } },
-      ], reward: { gold: 200 }, focus: { tab: 'hero', sub: 'fight', el: 'act:fight', el2: 'id:advance-btn' } },
-    { id: 'q17', name: 'A New Kingdom', text: 'Found a new kingdom: you lose buildings and gear, keep Knowledge, gain land, and a thrall joins you.',
+      ], reward: { gold: 200, crystal: 2 }, focus: { tab: 'hero', sub: 'fight', el: 'act:fight', el2: 'id:advance-btn' } },
+    { id: 'q17', name: 'A New Kingdom', text: 'Found a new kingdom: you lose buildings, gear and skills; only Legacy perks and trophies stay. You gain Crystals, more land, and a thrall joins you.',
       steps: [
         { label: 'Have 5,000 gold', check: { have: 'gold', need: 5000 } },
         { label: 'Kingdom → Throne → Found a New Kingdom', check: { founded: 1 } },
@@ -573,7 +579,7 @@ const CONFIG = {
         costMult: 1, jobSpeed: 1, sellMult: 1.4, mods: { attackPct: -0.10 }, freeRespec: true },
     ],
 
-    // Permanent perks bought with Knowledge. cost = base × costMult^rank.
+    // Permanent perks bought with Crystals. cost = base × costMult^rank.
     perks: [
       { id: 'headstart', name: 'Head Start',      icon: [4,6],  max: 3, cost: 5,  costMult: 1.6, desc: 'Begin each kingdom with 1 free plot per rank' },
       { id: 'blueprints', name: 'Blueprints',     icon: [13,12], max: 4, cost: 12, costMult: 1.8, desc: 'Begin each kingdom with one more tech tier already researched' },
@@ -584,7 +590,12 @@ const CONFIG = {
       { id: 'bloodline', name: 'Bloodline',       icon: [1,0],  max: 5, cost: 10, costMult: 1.8, desc: '+5% attack, HP, regen per rank' },
       { id: 'oldblade', name: 'Old Blade',        icon: [5,1],  max: 1, cost: 25, costMult: 1,   desc: 'Keep your weapon through a founding' },
       { id: 'haggler', name: 'Haggler',           icon: [12,10], max: 5, cost: 8,  costMult: 1.7, desc: 'Sell prices +10% per rank' },
-      { id: 'ledger', name: 'The Ledger',        icon: [13,11], max: 1, cost: 4,  costMult: 1,   desc: 'See your AFK forecast (gold and goods per hour while away) on the fight and harvest screens' },
+      { id: 'ledger', name: 'The Ledger',        icon: [13,11], max: 1, cost: 3,  costMult: 1,   desc: 'See your AFK forecast (gold and goods per hour while away) on the fight and harvest screens' },
+      { id: 'bestiary', name: 'Bestiary',        icon: [13,6],  max: 1, cost: 1,  costMult: 1,   desc: 'Unlock the Bestiary: kill counts, what each enemy drops and at what odds, and how well you know it' },
+      { id: 'danger', name: 'Danger Sense',      icon: [0,9],   max: 1, cost: 2,  costMult: 1,   desc: 'See how much HP each fight costs and whether the next stage is safe' },
+      { id: 'chronicler', name: 'Chronicler',    icon: [13,8],  max: 1, cost: 2,  costMult: 1,   desc: 'Unlock the Stats card: DPS, crit, kills per second, loot multiplier' },
+      { id: 'surveyor', name: 'Surveyor',        icon: [10,7],  max: 1, cost: 2,  costMult: 1,   desc: 'See swing times and yield per swing on the harvest screen' },
+      { id: 'almanac', name: 'Almanac',          icon: [13,3],  max: 1, cost: 2,  costMult: 1,   desc: 'See per-second rates next to every resource in the header' },
     ],
   },
 };

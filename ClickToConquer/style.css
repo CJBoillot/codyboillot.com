@@ -567,3 +567,15 @@ body.desktop.has-dock .panel-center { padding-bottom: 160px; }
 .node.tech .n-name::after { content: ' ⚔'; font-size: 9px; color: var(--dim); }
 .node.can { border-color: var(--bronze); }
 .node.can button { border-color: var(--bronze); color: var(--accent2); }
+
+/* ---------- collections ---------- */
+.crystal-chip { font-size: 11px; color: var(--accent2); margin-top: 2px; }
+.lock-ico:empty::after { content: ''; }
+.trophy-grid { grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); }
+.trophy { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 10px 4px 8px; border: 1px solid var(--line2); border-radius: 8px; background: #14100d; text-align: center; }
+.trophy .t-head { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 3px solid var(--line2); background: #0f0c0a; }
+.trophy .t-name { font-family: var(--font-head); font-size: 11px; }
+.trophy .t-tier { font-size: 10px; font-weight: 700; }
+.trophy .t-sub { font-size: 9.5px; color: var(--dim); }
+.trophy.none { opacity: .5; }
+.bestiary-row .b-bonus { font-size: 10px; color: var(--hp2); }

@@ -43,7 +43,7 @@ function freshState() {
   };
 }
 function freshLegacy() {
-  return { kingdomLevel: 1, knowledge: 0, perks: {}, heroPath: null, kingdomPath: null, foundings: 0, history: [] };
+  return { kingdomLevel: 1, knowledge: 0, perks: {}, heroPath: null, kingdomPath: null, foundings: 0, history: [], kills: {} }; // kills: bestiary counts per enemy type (persist — trophies)
 }
 function perkRank(id) { return (S.legacy.perks || {})[id] || 0; }
 function heroPath() { return CONFIG.legacy.heroPaths.find(p => p.id === S.legacy.heroPath) || null; }
@@ -99,6 +99,8 @@ function upgradeGear(slot) {
 // ---------- By hand ----------
 function handDef(id) { return CONFIG.hand.find(h => h.id === id); }
 function handUnlocked(id) { const u = handDef(id).unlock; if (u.tech) return hasTech(u.tech); if (u.gear) return !!S.hero.gear[u.gear]; return true; }
+function pinned(k) { return !(S.settings.unpinned && S.settings.unpinned[k]); }
+function togglePin(k) { S.settings.unpinned = S.settings.unpinned || {}; if (S.settings.unpinned[k]) delete S.settings.unpinned[k]; else S.settings.unpinned[k] = true; return pinned(k); }
 function grab(id) { if (!handUnlocked(id)) return false; const h = handDef(id); add(h.gives, 1); S.hero.hand[id] = (S.hero.hand[id] || 0) + 1; pushEvent({ who: 'hand', id, res: h.gives }); return true; }
 
 // ---------- Tools & activities ----------
@@ -138,7 +140,7 @@ function nodeOpen(d, id) { const n = treeNode(d, id); if (!n) return false; if (
 function treePointsTotal(d) { return discLevel(d) - 1 + (d === 'combat' ? perkRank('veteran') * 3 : 0); }
 function treePointsSpent(d) { let n = 0; for (const node of CONFIG.trees[d] || []) if (!node.capstone) n += nodeRank(d, node.id); return n; }
 function treePointsFree(d) { return treePointsTotal(d) - treePointsSpent(d); }
-function talentPointsTotal() { return Object.keys(S.hero.bossesKilled).length * H.talentPointsPerBoss + (S.hero.bonusTalent || 0) + (S.legacy.talentBank || 0); }
+function talentPointsTotal() { return Object.keys(S.hero.bossesKilled).length * H.talentPointsPerBoss + (S.hero.bonusTalent || 0); }
 function talentPointsSpent() { let n = 0; for (const d in CONFIG.trees) for (const node of CONFIG.trees[d]) if (node.capstone) n += nodeRank(d, node.id); return n; }
 function talentPointsFree() { return talentPointsTotal() - talentPointsSpent(); }
 function canRankNode(d, id) { const n = treeNode(d, id); if (!n || !nodeOpen(d, id) || nodeRank(d, id) >= nodeMax(n)) return false; return n.capstone ? talentPointsFree() > 0 : treePointsFree(d) > 0; }
@@ -212,6 +214,7 @@ function rawMods() { // attributes + talents only
   if (hp) for (const e in hp.mods) add(e, hp.mods[e]);
   if (kp && kp.mods) for (const e in kp.mods) add(e, kp.mods[e]);
   const bl = perkRank('bloodline') * 0.05; if (bl) { add('attackPct', bl); add('hpPct', bl); add('regenPct', bl); }
+  const tr = trophyCount() * CONFIG.trophies.lootPerTrophy; if (tr) { add('dropPct', tr); add('xpPct', tr); }
   return m;
 }
 function stats(mode = 'live') {
@@ -241,7 +244,7 @@ function stats(mode = 'live') {
   return st;
 }
 function effectiveEnemyDps(st, stage = S.hero.stage) {
-  const raw = enemyDps(stage);
+  const raw = enemyDps(stage) * (1 - bestiaryBonus(typeKey(stage)));
   return Math.max(raw * 0.2, raw - st.armor) * (1 - st.dr) * (1 - st.dodge);
 }
 
@@ -435,7 +438,8 @@ function suggestGoal() {
 }
 function questClaim() {
   const q = questCurrent(); if (!q || !questProgress(q).done) return false;
-  for (const k in q.reward) { if (k === 'talent') S.hero.bonusTalent = (S.hero.bonusTalent || 0) + q.reward[k]; else add(k, q.reward[k]); }
+  for (const k in q.reward) { if (k === 'talent') S.hero.bonusTalent = (S.hero.bonusTalent || 0) + q.reward[k]; else if (k === 'crystal') {} else add(k, q.reward[k]); }
+  if (q.reward && q.reward.crystal) { S.legacy.knowledge += q.reward.crystal; log(`+${q.reward.crystal} Crystal`); }
   S.quests.done[q.id] = true; S.quests.index++; log(`Quest complete: ${q.name}`); return true;
 }
 
@@ -453,7 +457,14 @@ function heroRates(stage = S.hero.stage) {
   const d = groundDrops(stage); for (const k in d) r[k] = d[k] * kps * st.drop;
   return r;
 }
-function hitEnemy(dmg) { if (S.hero.enemyHp <= 0) S.hero.enemyHp = enemyMaxHp(); S.hero.enemyHp -= dmg; }
+// ---------- Bestiary & trophies (persist through founding) ----------
+function typeKey(stage = S.hero.stage, gid = S.hero.ground) { return gid + ':' + enemyType(stage, gid).id; }
+function typeKills(key) { return (S.legacy.kills && S.legacy.kills[key]) || 0; }
+function bestiaryTier(key) { const k = typeKills(key), T = CONFIG.bestiary.tiers; let t = -1; for (let i = 0; i < T.length; i++) if (k >= T[i].kills) t = i; return t; }
+function bestiaryBonus(key) { const t = bestiaryTier(key); return t < 0 ? 0 : CONFIG.bestiary.tiers[t].bonus; } // ×dmg dealt, −dmg taken vs this type
+function trophyTier(key) { const k = typeKills(key), T = CONFIG.trophies.tiers; let t = -1; for (let i = 0; i < T.length; i++) if (k >= T[i].kills) t = i; return t; }
+function trophyCount() { let n = 0; for (const key in (S.legacy.kills || {})) n += trophyTier(key) + 1; return n; }
+function hitEnemy(dmg) { if (S.hero.enemyHp <= 0) S.hero.enemyHp = enemyMaxHp(); S.hero.enemyHp -= dmg * (1 + bestiaryBonus(typeKey())); }
 function onKill(st) {
   const s = S.hero.stage;
   // Whole-unit loot: expected value v → floor(v) plus a (v − floor) chance of one more. Averages match the AFK rate model.
@@ -464,6 +475,7 @@ function onKill(st) {
   if (Object.keys(loot).length) pushEvent({ who: 'loot', loot });
   gainXp(H.xpPerKill * CONFIG.stages.xpPerKill(s) * (isBoss(s) ? 3 : 1) * st.xp);
   S.hero.kills++; S.hero.totalKills++;
+  { const key = typeKey(s); S.legacy.kills = S.legacy.kills || {}; const before = trophyTier(key), bt = bestiaryTier(key); S.legacy.kills[key] = (S.legacy.kills[key] || 0) + 1; const after = trophyTier(key); if (after > before) { log(`Trophy earned: ${CONFIG.trophies.tiers[after].name} ${enemyType(s).name} head!`); pushEvent({ who: 'trophy', key, tier: after }); } if (bestiaryTier(key) > bt) log(`Bestiary: ${enemyType(s).plural} — ${CONFIG.bestiary.tiers[bestiaryTier(key)].name}`); }
   if (isBoss(s)) { const bk = S.hero.ground + ':' + s; if (!S.hero.bossesKilled[bk]) { S.hero.bossesKilled[bk] = true; const u = enemyType(s).unique; if (u && CONFIG.resources[u]) { add(u, 1); pushEvent({ who: 'loot', loot: { [u]: 1 }, unique: true }); } log(`Defeated ${enemyName(s)}! +1 talent point${u ? ', ' + CONFIG.resources[u].name : ''}`); } else log(`Defeated ${enemyName(s)}!`); }
   if (CONFIG.automation.autoAdvance && canAdvance()) advance();
 }
@@ -554,10 +566,9 @@ function found(heroPathId, kingdomPathId) {
   leg.knowledge += gain; leg.kingdomLevel++; leg.foundings++;
   leg.heroPath = hp.id; leg.kingdomPath = kp.id;
   const keptWeapon = perkRank('oldblade') ? S.hero.gear.weapon : null;
-  const keptTree = S.hero.tree || {}, keptDxp = S.hero.dxp || {}, keptSkillLv = S.hero.skillLv, keptLoadout = S.hero.loadout, keptBonus = S.hero.bonusTalent || 0;
-  leg.talentBank = (leg.talentBank || 0) + Object.keys(S.hero.bossesKilled).length + keptBonus; // talent points already earned stay spendable
+  // Only Legacy carries over: Crystals, perks, paths, history and the Bestiary kill counts (trophies). Trees, talents, gear, stage, tech, plots all reset.
   const fresh = freshState(); fresh.legacy = leg; fresh.settings = S.settings; fresh.quests = S.quests;
-  S = fresh; S.hero.tree = keptTree; S.hero.dxp = keptDxp; S.hero.skillLv = { ...S.hero.skillLv, ...keptSkillLv }; S.hero.loadout = keptLoadout.slice();
+  S = fresh;
   if (keptWeapon) S.hero.gear.weapon = keptWeapon;
   ensureThralls();
   grantTechTiers(perkRank('blueprints'));
@@ -583,7 +594,7 @@ function load() {
     const d = JSON.parse(raw), b = freshState();
     S = { ...b, ...d, res: { ...b.res, ...d.res }, kingdom: { ...b.kingdom, ...(d.kingdom || {}) }, tech: { ...(d.tech || {}) }, quests: { ...b.quests, ...(d.quests || {}) }, stats: { ...b.stats, ...(d.stats || {}) }, settings: { ...b.settings, ...d.settings },
       hero: { ...b.hero, ...d.hero, attr: { ...b.hero.attr, ...(d.hero || {}).attr }, gear: { ...b.hero.gear, ...(d.hero || {}).gear }, tools: { ...b.hero.tools, ...((d.hero || {}).tools || {}) }, grounds: { ...((d.hero || {}).grounds || {}) }, skillLv: { ...b.hero.skillLv, ...(d.hero || {}).skillLv } },
-      legacy: { ...b.legacy, ...(d.legacy || {}), perks: { ...((d.legacy || {}).perks || {}) } } };
+      legacy: { ...b.legacy, ...(d.legacy || {}), perks: { ...((d.legacy || {}).perks || {}) }, kills: { ...((d.legacy || {}).kills || {}) } } };
     ensureThralls();
     // Techniques come from the Combat tree now: rebuild loadout / levels from ranks (migrates old Skills-tab saves)
     S.hero.tree = S.hero.tree || {}; S.hero.dxp = S.hero.dxp || {}; S.hero.loadout = []; for (const s of CONFIG.skills) S.hero.skillLv[s.id] = 0;
@@ -649,6 +660,7 @@ window.Game = {
   kingdomRates, btype, plotCap, plotCost, canBuyPlot, buyPlot, buildCost, build, upgradeCost, upgradePlot, jobTime, jobOutputs, jobInputs, canStartJob, startJob, assign, heroFighting, thrallCount, sellPrice, sell,
   canAdvance, advance, retreat, canAfford, add, simulate, applyOffline, claimOffline,
   save, load, exportSave, importSave, hardReset,
+  typeKey, typeKills, bestiaryTier, bestiaryBonus, trophyTier, trophyCount, pinned, togglePin,
   afkCap, afkEff, perkRank, perkCost, buyPerk, heroPath, kingdomPath,
   knowledgeGain, foundCost, canFound, pathUnlocked, found, maxGearTier,
   // debug helpers
