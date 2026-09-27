@@ -49,6 +49,7 @@ const UI = (() => {
     $('wb-claim').addEventListener('click', () => claimWelcome(1));
     $('wb-ad').addEventListener('click', () => claimWelcome(CONFIG.offline.adDoubleMultiplier));
     $('dev-toggle').addEventListener('click', () => $('dev-panel').classList.toggle('hidden'));
+    $('dev-close').addEventListener('click', () => $('dev-panel').classList.add('hidden'));
     document.querySelectorAll('[data-speed]').forEach(b => b.addEventListener('click', () => { Game.S.settings.devSpeed = +b.dataset.speed; document.querySelectorAll('[data-speed]').forEach(x => x.classList.toggle('active', x === b)); }));
     $('dev-offline').addEventListener('click', () => showWelcomeBack(Game.applyOffline(4 * 3600)));
     const devN = () => +$('dev-n').value || 0;

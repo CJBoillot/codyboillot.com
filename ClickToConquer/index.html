@@ -12,7 +12,11 @@
 <body>
 
 <div class="sticky-head">
-  <header class="top"><div class="brand"><img src="assets/logo.png" alt="Click to Conquer" class="logo"><div id="version" class="version"></div></div><div id="res-bar" class="res-bar"></div></header>
+  <header class="top">
+    <div class="brand"><img src="assets/logo.png" alt="Click to Conquer" class="logo"><div id="version" class="version"></div></div>
+    <div id="res-bar" class="res-bar"></div>
+    <button id="dev-toggle" class="gear-btn" title="Settings" aria-label="Settings"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+  </header>
   <nav class="tabs" id="main-tabs">
     <button data-tab="hero" class="active">Character <span id="badge-hero" class="badge hidden">!</span></button>
     <button data-tab="kingdom">Kingdom <span id="badge-kingdom" class="badge hidden">!</span></button>
@@ -243,23 +247,22 @@
 </div>
 
 <div id="err" class="errbar hidden"></div>
-<button id="dev-toggle" class="dev-toggle" title="Dev tools">⚙</button>
 <div id="dev-panel" class="dev hidden">
-  <div class="card-title small-title">Settings</div>
-  <label class="reserve-row"><input type="checkbox" id="set-log" checked> <span>Show combat log</span></label>
-  <div class="card-title small-title">Debug <span class="dim" style="font-family:var(--font-body);letter-spacing:0;text-transform:none">build </span></div>
-  <div class="dev-row">Speed
-    <button data-speed="1" class="active">1×</button><button data-speed="10">10×</button><button data-speed="100">100×</button>
-    <button id="dev-offline">AFK test 4h</button>
-  </div>
-  <div class="dev-row"><input id="dev-n" type="number" value="1000" class="dev-input"> <button id="dev-give-all">Give all</button>
-    <select id="dev-res" class="dev-input"></select><button id="dev-give-one">Give</button></div>
-  <div class="dev-row"><button id="dev-lvl">+5 levels</button><button id="dev-stage10">+10 stages</button><button id="dev-know">+50 Knowledge</button><button id="dev-klvl">+1 Kingdom Lv</button><button id="dev-tech">All tech</button><button id="dev-qskip">Skip quest</button></div>
-  <div class="dev-row"><button id="dev-export">Export</button><button id="dev-import">Import</button></div>
-  <div class="dev-row"><button id="dev-reset-run" class="danger">Reset run (keep legacy)</button><button id="dev-reset" class="danger">RESET ALL</button></div>
+  <div class="dev-head"><span>Settings</span><button id="dev-close" class="dev-x" aria-label="Close">✕</button></div>
+  <label class="set-row"><span>Show combat log</span><input type="checkbox" id="set-log" checked></label>
+  <label class="set-row"><span>Game speed</span><span class="seg"><button data-speed="1" class="active">1×</button><button data-speed="10">10×</button><button data-speed="100">100×</button></span></label>
+  <div class="set-row"><span>Save</span><span class="seg"><button id="dev-export">Export</button><button id="dev-import">Import</button></span></div>
   <textarea id="dev-io" placeholder="save string"></textarea>
-  <div class="dim small">Icons: Shikashi's Fantasy Icons (CC-BY, Matt Firth / game-icons.net)</div>
+  <details class="devtools">
+    <summary>Developer tools</summary>
+    <div class="dev-row"><button id="dev-offline">AFK test 4h</button><button id="dev-tech">All tech</button><button id="dev-qskip">Skip quest</button></div>
+    <div class="dev-row"><input id="dev-n" type="number" value="1000" class="dev-input"> <button id="dev-give-all">Give all</button><select id="dev-res" class="dev-input"></select><button id="dev-give-one">Give</button></div>
+    <div class="dev-row"><button id="dev-lvl">+5 levels</button><button id="dev-stage10">+10 stages</button><button id="dev-know">+50 Knowledge</button><button id="dev-klvl">+1 Kingdom Lv</button></div>
+    <div class="dev-row"><button id="dev-reset-run" class="danger">Reset run (keep legacy)</button><button id="dev-reset" class="danger">RESET ALL</button></div>
+  </details>
+  <div class="dim small credits">Icons: Shikashi's Fantasy Icons (CC-BY, Matt Firth / game-icons.net)</div>
 </div>
+
 
 <script src="config.js"></script>
 <script src="game.js"></script>
