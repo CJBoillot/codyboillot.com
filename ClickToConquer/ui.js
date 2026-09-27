@@ -647,6 +647,7 @@ const UI = (() => {
       const hrv = Game.harvestRates(act);
       setHtml($('harvest-afk'), `AFK: ${Game.pct(Game.afkEff())} of this while closed (max ${Game.fmtTime(Game.afkCap())}) → ` + Object.entries(hrv).map(([k, v]) => `<span class="costitem">${ico(R[k].icon, 14)}${f(v * Game.afkEff() * 3600)}/h</span>`).join(' '));
     }
+    renderMini(fighting, idle, act, st, eMax);
     // Tools
     for (const slot in CONFIG.toolSlots) {
       const row = rows.tool[slot], def = CONFIG.toolSlots[slot], it = h.tools[slot];
@@ -710,7 +711,43 @@ const UI = (() => {
     setHtml($('thrall-list'), S.kingdom.thralls.length ? S.kingdom.thralls.map((t, i) => { const p = S.kingdom.plots.findIndex(p => p.worker === i); return `<div class="row"><div class="row-main"><div class="row-title">${t.name}</div><div class="row-sub">${p >= 0 ? 'Working the ' + Game.btype(S.kingdom.plots[p].type).name : 'Idle — assign on the Buildings screen'}</div></div></div>`; }).join('') : '<div class="row"><div class="row-main dim">No thralls yet. Your first founding brings one.</div></div>');
     setHtml($('history'), L.history.length ? L.history.slice().reverse().map(h => `<div>Kingdom ${h.level}: stage ${h.bestStage}, hero Lv${h.heroLevel} → +${h.knowledge} Knowledge</div>`).join('') : '<div class="dim">No foundings yet.</div>');
   }
+  // ---- Mini hero strip: mirrors the fight/harvest screen when that screen is off-tab ----
+  const lootTally = {}; let lootFresh = {};
+  function heroScreenVisible() { return !!($('fight-card').offsetParent || $('harvest-card').offsetParent); }
+  function renderMini(fighting, idle, act, st, eMax) {
+    const S = Game.S, h = S.hero, f = Game.fmt, show = !idle && !heroScreenVisible();
+    $('mini-hero').classList.toggle('hidden', !show); if (!show) return;
+    $('mini-hero-hp').style.width = (100 * h.hp / st.maxHp) + '%'; setText($('mini-hero-hptext'), `${f(h.hp)} / ${f(st.maxHp)}`);
+    if (fighting) {
+      setText($('mini-title'), `${h.resting ? 'Resting' : 'Fighting'} · Stage ${h.stage}`); setText($('mini-sub'), `${Game.enemyName()} · ${Game.ground().name}`);
+      const eHp = h.enemyHp > 0 ? h.enemyHp : eMax; $('mini-target').classList.add('enemy');
+      $('mini-target-bar').style.width = (100 * eHp / eMax) + '%'; setText($('mini-target-text'), `${f(eHp)} / ${f(eMax)}`);
+      const need = Game.killsNeeded(); $('mini-action-bar').style.width = Math.min(100, 100 * h.kills / need) + '%'; setText($('mini-action-text'), `${Math.min(h.kills, need)} / ${need} kills${Game.canAdvance() ? ' · Advance ready' : ''}`);
+    } else {
+      const a = CONFIG.activities[act], t = Game.harvestTime(act), rates = Game.harvestRates(act);
+      setText($('mini-title'), a.name); setText($('mini-sub'), Object.entries(rates).map(([k, v]) => `${f(v)} ${R[k].name}/s`).join(', '));
+      $('mini-target').classList.remove('enemy'); const p = Math.min(1, h.harvestTimer / t);
+      $('mini-target-bar').style.width = (100 * (1 - p)) + '%'; setText($('mini-target-text'), `${a.name} · ${Math.max(0, t - h.harvestTimer).toFixed(1)}s`);
+      $('mini-action-bar').style.width = (100 * p) + '%'; setText($('mini-action-text'), `Mastery ${Game.masteryLevel(act)}`);
+    }
+    const keys = Object.keys(lootTally).filter(k => lootTally[k] > 0);
+    setHtml($('mini-loot'), keys.length ? keys.map(k => `<span class="costitem${lootFresh[k] ? ' fresh' : ''}">${ico(R[k].icon, 14)} +${f(lootTally[k])}</span>`).join('') : '<span class="dim small">Loot gained will show here</span>');
+    lootFresh = {};
+  }
+  function tallyLoot(obj) { for (const k in obj) if (obj[k] > 0) { lootTally[k] = (lootTally[k] || 0) + obj[k]; lootFresh[k] = true; } }
   function hitPop(ev) {
+    if (ev.who === 'loot') tallyLoot(ev.loot); else if (ev.who === 'harvest') tallyLoot(ev.yield);
+    if (!heroScreenVisible() && $('mini-hero').offsetParent) {
+      // mini strip is what's on screen: float pops over it
+      const a = ev.who === 'enemy' || ev.who === 'heal' ? $('mini-hero-hp').parentElement : $('mini-target'); const r = a.getBoundingClientRect(); if (!r.width) return;
+      const txt = ev.who === 'loot' ? Object.entries(ev.loot).filter(([, v]) => v > 0).map(([k, v]) => `${ico(R[k].icon, 14)}+${Game.fmt(v)}`).join(' ')
+        : ev.who === 'harvest' ? Object.entries(ev.yield).map(([k, v]) => `${ico(R[k].icon, 14)}+${Game.fmt(v)}`).join(' ')
+        : (ev.who === 'heal' ? '+' : ev.who === 'enemy' ? '−' : '') + Game.fmt(ev.dmg) + (ev.crit ? '!' : '');
+      if (!txt) return;
+      const p = el('div', 'pop ' + (ev.who === 'loot' ? 'loot' : ev.who === 'hero' ? (ev.crit ? 'crit' : '') : ev.who === 'enemy' ? 'taken' : 'heal'), txt);
+      p.style.left = (r.left + r.width * (0.3 + Math.random() * 0.4)) + 'px'; p.style.top = (r.top - 16) + 'px';
+      document.body.appendChild(p); setTimeout(() => p.remove(), ev.who === 'loot' ? 1100 : 700); return;
+    }
     if (ev.who === 'loot') {
       const a = $('enemy-hpbar').parentElement; if (!a.offsetParent) return; const r = a.getBoundingClientRect();
       let i = 0;

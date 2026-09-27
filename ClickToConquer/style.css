@@ -315,6 +315,20 @@ button.primary:not(:disabled) { background: linear-gradient(180deg, #4d3a22, #33
 .quest-glow { animation: questpulse 1.6s ease-in-out infinite; border-color: var(--bronze2) !important; position: relative; z-index: 1; }
 .dot.quest-glow, .badge.quest-glow { animation: none; }
 
+/* ---------- mini hero strip (shown when the hero screen is off-tab) ---------- */
+.mini-hero { padding: 10px 12px; }
+.mini-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+.mini-title { font-family: var(--font-head); letter-spacing: .06em; font-size: 12px; text-transform: uppercase; color: var(--accent2); }
+.mini-bars { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; align-items: center; }
+.mini-bars .bar { height: 16px; }
+.mini-bars .vs { font-size: 14px; }
+.mini-action { height: 10px; margin-top: 6px; }
+.bar.kills.mini-action { height: 12px; } .bar.kills.mini-action > span { font-size: 9px; line-height: 11px; }
+.mini-loot { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; min-height: 20px; }
+.mini-loot .costitem { font-size: 11px; padding: 1px 6px; border: 1px solid var(--line); border-radius: 10px; background: #15110e; }
+.mini-loot .costitem.fresh { animation: lootflash .6s ease-out; }
+@keyframes lootflash { from { background: #3a2c14; } to { background: #15110e; } }
+
 /* ---------- grounds ---------- */
 .ground-bar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 6px; }
 .ground-block { margin-top: 10px; border-top: 1px solid var(--line); padding-top: 10px; }
