@@ -397,7 +397,11 @@ function techProgress(t) { // {ok, parts:[{k, have, need}]}
   return { ok: parts.every(p => p.have >= p.need), parts };
 }
 function canResearch(id) { const t = techDef(id); return t && !hasTech(id) && techProgress(t).ok && canAfford(t.cost); }
-function research(id) { if (!canResearch(id)) return false; pay(techDef(id).cost); S.tech[id] = true; log(`Researched ${techDef(id).name}`); return true; }
+// Research takes CONFIG.researchSeconds; cost paid up front, tech lands when the bar fills. One at a time.
+function researching() { return S.researching || null; }
+function research(id) { if (researching() || !canResearch(id)) return false; pay(techDef(id).cost); S.researching = { id, t: 0, total: CONFIG.researchSeconds }; return true; }
+function finishResearch() { const r = researching(); if (!r) return; S.researching = null; S.tech[r.id] = true; log(`Researched ${techDef(r.id).name}`); pushEvent({ who: 'research', name: techDef(r.id).name }); }
+function tickResearch(dt) { const r = researching(); if (!r) return; r.t += dt; if (r.t >= r.total) finishResearch(); }
 function buildingUnlocked(typeId) { return CONFIG.techs.some(t => t.unlocks.building === typeId && hasTech(t.id)); }
 function gearTierUnlocked(tier, slot) { return CONFIG.techs.some(t => t.unlocks.gearTier === tier && hasTech(t.id) && (!t.unlocks.slots || !slot || t.unlocks.slots.includes(slot))); }
 function dropGated(res) { return CONFIG.techs.some(t => t.unlocks.drop === res); }
@@ -521,7 +525,7 @@ function heroStrike(st) {
   hitEnemy(dmg); pushEvent({ who: 'hero', dmg, crit });
 }
 function simulate(dt) {
-  tickKingdom(dt); tickCraft(dt);
+  tickKingdom(dt); tickCraft(dt); tickResearch(dt);
   const h = S.hero; h.time += dt;
   if (!heroFighting()) { const st0 = stats(); h.hp = Math.min(st0.maxHp, h.hp + st0.regen * dt); tickHarvest(dt); return; }
   for (const id in h.cds) if (h.cds[id] > 0) h.cds[id] -= dt;
@@ -551,6 +555,7 @@ function afkEff() { return Math.min(1, CONFIG.offline.efficiency + perkRank('mem
 // AFK: worked plots run their jobs (in chain order so raw → refined → artisan feed each other); the hero farms only if fighting.
 function applyOffline(awaySeconds) {
   if (crafting() && awaySeconds >= (crafting().total - crafting().t)) finishCraft();
+  if (researching() && awaySeconds >= (researching().total - researching().t)) finishResearch();
   const counted = Math.min(awaySeconds, afkCap()), eff = afkEff(), gains = {};
   const order = ['gather', 'craft', 'artisan'], pool = { ...S.res };
   for (const cat of order) for (const p of S.kingdom.plots) {
@@ -678,7 +683,7 @@ window.Game = {
   handDef, handUnlocked, grab, tierName,
   toolTierUnlocked, toolPower, toolCraftCost, toolUpgradeCost, canToolTierUp, craftTool, upgradeTool, activityDef, activityAvailable, setActivity, masteryLevel, harvestTime, harvestYield, harvestRates,
   questCurrent, questProgress, questClaim, suggestGoal, ground, setGround, groundUnlocked, dropToolMult, bestStageAll, groundDrops, toolSlotUnlocked,
-  techDef, hasTech, techProgress, canResearch, research, buildingUnlocked, gearTierUnlocked, dropUnlocked, counter,
+  techDef, hasTech, techProgress, canResearch, research, researching, buildingUnlocked, gearTierUnlocked, dropUnlocked, counter,
   kingdomRates, btype, plotCap, plotCost, canBuyPlot, buyPlot, buildCost, build, demolish, upgradeCost, upgradePlot, jobTime, jobOutputs, jobInputs, canStartJob, startJob, assign, heroFighting, thrallCount, sellPrice, sell,
   canAdvance, advance, retreat, canAfford, add, simulate, applyOffline, claimOffline,
   save, load, exportSave, importSave, hardReset,

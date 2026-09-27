@@ -701,9 +701,10 @@ const UI = (() => {
       const row = rows.tech[t.id], done = Game.hasTech(t.id), pr = Game.techProgress(t);
       row.classList.toggle('done', done); row.classList.toggle('gated', !done && !pr.ok); row.classList.toggle('hidden', done && techHideKnown());
       setHtml(row.querySelector('[data-f=req]'), done ? '' : pr.parts.map(p => `<div class="req-line"><span>${CNAME[p.k] || (R[p.k] ? R[p.k].name + ' gathered' : p.k)}</span><span>${f(Math.min(p.have, p.need))} / ${f(p.need)}</span></div><div class="bar"><div style="width:${Math.min(100, 100 * p.have / p.need)}%"></div></div>`).join(''));
-      const btn = row.querySelector('[data-f=btn]');
-      setHtml(btn.querySelector('[data-f=cost]'), done ? 'Known' : costHtml(t.cost));
-      btn.disabled = !Game.canResearch(t.id); if (!btn.disabled) anyTech = true;
+      const btn = row.querySelector('[data-f=btn]'), rs = Game.researching(), mine = rs && rs.id === t.id;
+      btn.classList.toggle('forging', !!mine); btn.classList.toggle('busy', !!rs && !mine);
+      if (mine) { btn.style.setProperty('--p', (100 * rs.t / rs.total) + '%'); setHtml(btn, `<span class="small">Researching…</span><br><span class="cost">${(rs.total - rs.t).toFixed(1)}s</span>`); btn.disabled = true; }
+      else { if (!btn.querySelector('[data-f=cost]')) btn.innerHTML = `<span class="small">Research</span><br><span class="cost" data-f="cost"></span>`; btn.style.removeProperty('--p'); setHtml(btn.querySelector('[data-f=cost]'), done ? 'Known' : costHtml(t.cost)); btn.disabled = !Game.canResearch(t.id) || !!rs; if (!btn.disabled) anyTech = true; }
     }
     CONFIG.techTiers.forEach((name, tier) => {
       const list = rows.tech[CONFIG.techs.find(t => t.tier === tier).id].parentNode;
@@ -877,6 +878,7 @@ const UI = (() => {
   }
   function tallyLoot(obj) { for (const k in obj) if (obj[k] > 0) { lootTally[k] = (lootTally[k] || 0) + obj[k]; lootFresh[k] = true; } }
   function hitPop(ev) {
+    if (ev.who === 'research') { const a = $('tech-tree').offsetParent ? $('tech-tree') : document.querySelector('.top'); const r = a.getBoundingClientRect(); const p = el('div', 'pop craft', `✦ ${ev.name} researched!`); p.style.left = (r.left + r.width * 0.5) + 'px'; p.style.top = (Math.max(r.top, 80) + 20) + 'px'; document.body.appendChild(p); setTimeout(() => p.remove(), 1400); return; }
     if (ev.who === 'craft') { const a = $('doll').offsetParent ? $('doll') : $('mini-hero').offsetParent ? $('mini-hero') : document.querySelector('.top'); const r = a.getBoundingClientRect(); const p = el('div', 'pop craft', `⚒ ${ev.name} forged!`); p.style.left = (r.left + r.width * 0.5) + 'px'; p.style.top = (r.top + Math.min(40, r.height * 0.3)) + 'px'; document.body.appendChild(p); setTimeout(() => p.remove(), 1400); return; }
     if (ev.who === 'loot') { tallyLoot(ev.loot); for (const b of [$('enemy-hpbar').parentElement, $('mini-target')]) { b.classList.remove('killed'); void b.offsetWidth; b.classList.add('killed'); setTimeout(() => b.classList.remove('killed'), 450); } }
     else if (ev.who === 'harvest') tallyLoot(ev.yield);
