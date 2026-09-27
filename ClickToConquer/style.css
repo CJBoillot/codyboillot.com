@@ -609,3 +609,9 @@ body.desktop #subtab-dock { display: none; }
 .quest.collapsed .quest-name { margin-bottom: 0; font-size: 15px; }
 .quest.collapsed { padding: 8px 12px; }
 .quest.collapsed .quest-foot { margin-top: 4px; justify-content: flex-end; }
+/* collapsed quest: claim button sits to the right of the info */
+.quest.collapsed { display: grid; grid-template-columns: 1fr auto; column-gap: 10px; align-items: center; }
+.quest.collapsed .quest-head, .quest.collapsed .quest-name, .quest.collapsed .quest-obj { grid-column: 1; }
+.quest.collapsed .quest-foot { grid-column: 2; grid-row: 1 / 4; margin: 0; align-self: center; }
+.quest.collapsed .quest-name { margin: 0; }
+.quest.collapsed .quest-head { margin-bottom: 0; }
