@@ -141,7 +141,7 @@ button.primary:not(:disabled) { background: linear-gradient(180deg, #4d3a22, #33
 .log div:first-child { color: var(--text); }
 
 /* ---------- skill bar ---------- */
-.skill-bar { display: grid; grid-template-columns: 1.3fr repeat(4, 1fr); gap: 6px; margin-top: 10px; }
+.skill-bar { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; } .skill-bar .skill-btn { flex: 1 1 64px; max-width: 120px; } .skill-bar .skill-btn.basic { flex-basis: 84px; }
 .skill-btn { position: relative; padding: 6px 2px; font-size: 10.5px; line-height: 1.2; border-radius: 6px; overflow: hidden; display: flex; flex-direction: column; align-items: center; gap: 2px; background: #15110e; }
 .skill-btn.empty { opacity: .3; border-style: dashed; }
 .skill-btn.ready { border-color: var(--bronze2); background: radial-gradient(circle at 50% 20%, #4a361d, #241b12); color: var(--bronze2); font-weight: 700; box-shadow: 0 0 10px rgba(232,192,106,.35); }
@@ -590,3 +590,8 @@ body.desktop.has-dock .panel-center { padding-bottom: 160px; }
 .primary.danger { border-color: var(--blood); color: #e05a4c; }
 #confirm-modal .btn-row { margin-top: 14px; }
 .build-opt .lack { color: var(--blood); font-size: 10px; }
+
+/* sub-tabs docked under the main tabs on mobile */
+#subtab-dock:empty { display: none; }
+#subtab-dock .subtabs { margin: 0; padding: 4px 8px 6px; }
+body.desktop #subtab-dock { display: none; }

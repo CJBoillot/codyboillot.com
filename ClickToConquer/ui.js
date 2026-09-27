@@ -38,6 +38,7 @@ const UI = (() => {
       document.querySelectorAll('[data-tab]').forEach(x => x.classList.toggle('active', x === b));
       if (desktop) return;
       document.querySelectorAll('.tab').forEach(t => t.classList.toggle('hidden', t.id !== 'tab-' + b.dataset.tab));
+      placeSubtabs();
     }));
     document.querySelectorAll('[data-sub]').forEach(b => b.addEventListener('click', () => {
       document.querySelectorAll('[data-sub]').forEach(x => x.classList.toggle('active', x === b));
@@ -291,6 +292,15 @@ const UI = (() => {
   function undock(id) { const h = HOME[id]; if (!h) return; h.parent.insertBefore($(id), h.next); }
   const RIGHT = { kingdom: 'tab-kingdom', skills: 'sub-skills', inventory: 'tab-inventory', market: 'tab-market' };
   let desktop = false;
+  // Mobile: the active tab's sub-tab strip sits directly under the main tabs (in the sticky header)
+  const SUBNAV = { hero: 'hero-subtabs', kingdom: 'kingdom-subtabs', inventory: 'csub-tabs' };
+  function placeSubtabs() {
+    for (const k in SUBNAV) undock(SUBNAV[k]);
+    if (desktop) return;
+    const t = document.querySelector('[data-tab].active'); const id = t && SUBNAV[t.dataset.tab];
+    if (id) { $(id).classList.remove('hidden'); dock(id, 'subtab-dock'); }
+    document.documentElement.style.setProperty('--headh', document.querySelector('.sticky-head').offsetHeight + 'px');
+  }
   function applyLayout() {
     glowKey = '';
     document.documentElement.style.setProperty('--headh', document.querySelector('.sticky-head').offsetHeight + 'px');
@@ -313,6 +323,7 @@ const UI = (() => {
       const s = document.querySelector('[data-sub].active') || document.querySelector('[data-sub]');
       document.querySelectorAll('.sub').forEach(x => x.classList.toggle('hidden', x.id !== 'sub-' + s.dataset.sub));
     }
+    placeSubtabs();
   }
   function rightShow(key) { for (const k in RIGHT) $(RIGHT[k]).classList.toggle('hidden', k !== key); }
 
@@ -600,7 +611,7 @@ const UI = (() => {
     rows.basic.style.setProperty('--cd', h.resting ? 0 : Math.min(1, (h.atkTimer || 0) * st.speed));
     for (let i = 0; i < CONFIG.skillSlots; i++) {
       const b = rows.sbar[i], id = h.loadout[i];
-      if (!id) { b.className = 'skill-btn empty'; b.dataset.id = ''; b.dataset.icon = ''; setHtml(b.querySelector('.sk-ico'), ''); setText(b.querySelector('.sk-name'), '—'); setText(b.querySelector('.sk-cd'), ''); b.disabled = true; continue; }
+      if (!id) { b.className = 'skill-btn empty hidden'; b.dataset.id = ''; b.dataset.icon = ''; setHtml(b.querySelector('.sk-ico'), ''); setText(b.querySelector('.sk-name'), '—'); setText(b.querySelector('.sk-cd'), ''); b.disabled = true; continue; }
       const d = Game.skillDef(id), cd = Math.max(0, h.cds[id] || 0), ready = cd <= 0 && !h.resting;
       b.dataset.id = id; b.disabled = !ready;
       b.className = 'skill-btn' + (ready ? ' ready' : '');

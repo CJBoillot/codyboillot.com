@@ -604,6 +604,8 @@ function load() {
     S = { ...b, ...d, res: { ...b.res, ...d.res }, kingdom: { ...b.kingdom, ...(d.kingdom || {}) }, tech: { ...(d.tech || {}) }, quests: { ...b.quests, ...(d.quests || {}) }, stats: { ...b.stats, ...(d.stats || {}) }, settings: { ...b.settings, ...d.settings },
       hero: { ...b.hero, ...d.hero, attr: { ...b.hero.attr, ...(d.hero || {}).attr }, gear: { ...b.hero.gear, ...(d.hero || {}).gear }, tools: { ...b.hero.tools, ...((d.hero || {}).tools || {}) }, grounds: { ...((d.hero || {}).grounds || {}) }, skillLv: { ...b.hero.skillLv, ...(d.hero || {}).skillLv } },
       legacy: { ...b.legacy, ...(d.legacy || {}), perks: { ...((d.legacy || {}).perks || {}) }, kills: { ...((d.legacy || {}).kills || {}) } } };
+    // Migration: saves that reached the kingdom quests before the kingdom moved behind the first founding get that founding for free
+    { const qi = CONFIG.quests.findIndex(q => q.id === 'q17'); if (S.legacy.foundings === 0 && qi >= 0 && S.quests.index > qi) { S.legacy.foundings = 1; S.legacy.kingdomLevel = Math.max(2, S.legacy.kingdomLevel); S.legacy.knowledge += 1; log('Your kingdom is recognised as founded: a thrall and a Crystal join you.'); } }
     ensureThralls();
     // Techniques come from the Combat tree now: rebuild loadout / levels from ranks (migrates old Skills-tab saves)
     S.hero.tree = S.hero.tree || {}; S.hero.dxp = S.hero.dxp || {}; S.hero.loadout = []; for (const s of CONFIG.skills) S.hero.skillLv[s.id] = 0;

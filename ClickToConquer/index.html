@@ -22,6 +22,7 @@
     <button data-tab="inventory">Collections <span id="badge-inventory" class="badge hidden">!</span></button>
     <button data-tab="market">Market <span id="badge-market" class="badge hidden">!</span></button>
   </nav>
+  <div id="subtab-dock"></div>
 </div>
 
 <div class="layout">
@@ -50,17 +51,6 @@
 
       <!-- Activity (fight / harvest) -->
       <div id="sub-fight" class="sub">
-        <div class="card hand-card" id="hand-card">
-          <button class="card-title collapsible" id="hand-toggle" aria-expanded="true">By hand <span class="chev">▾</span></button>
-          <div id="hand-bar" class="hand-bar"></div>
-          <div class="dim small hand-hint">One per click, instantly. Tools and a weapon let your hero do these on his own.</div>
-        </div>
-        <div class="card">
-          <div class="card-title">Your hero is…</div>
-          <div id="activity-bar" class="activity-bar"></div>
-          <div id="activity-hint" class="dim small"></div>
-        </div>
-
         <div id="harvest-card" class="card hidden">
           <div class="arena-head"><div class="stage-title" id="harvest-title"></div><div><span class="mode-tag">● ACTIVE</span><span class="dim small" id="harvest-mastery"></span></div></div>
           <div class="harvest-scene"><div id="harvest-icon"></div><div class="harvest-info"><div id="harvest-yield" class="row-sub"></div><div class="bar harvest"><div id="harvest-bar"></div><span id="harvest-time"></span></div><div id="harvest-tool" class="dim small"></div></div></div>
@@ -100,6 +90,17 @@
             <div id="ground-desc" class="dim small"></div>
           </div>
         </div>
+        <div class="card hand-card" id="hand-card">
+          <button class="card-title collapsible" id="hand-toggle" aria-expanded="true">By hand <span class="chev">▾</span></button>
+          <div id="hand-bar" class="hand-bar"></div>
+          <div class="dim small hand-hint">One per click, instantly. Tools and a weapon let your hero do these on his own.</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Your hero is…</div>
+          <div id="activity-bar" class="activity-bar"></div>
+          <div id="activity-hint" class="dim small"></div>
+        </div>
+
         <div class="card"><div class="card-title">Stats</div><div class="stats3" id="stat-grid"></div></div>
         <div class="card" id="log-card"><div class="card-title">Log</div><div id="log" class="log"></div></div>
       </div>
@@ -134,7 +135,7 @@
 
     <!-- KINGDOM -->
     <div id="tab-kingdom" class="tab hidden">
-      <nav class="subtabs">
+      <nav class="subtabs" id="kingdom-subtabs">
         <button data-ksub="tech" class="active">Tech <span id="badge-tech" class="dot hidden"></span></button>
         <button data-ksub="build">Buildings <span id="badge-build" class="dot hidden"></span></button>
         <button data-ksub="throne">Throne <span id="badge-throne" class="dot hidden"></span></button>
