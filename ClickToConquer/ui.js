@@ -386,8 +386,9 @@ const UI = (() => {
 
   // ---- Kingdom v0.3: production line screens + Keep ----
   let kBuy = 1; const lineKey = {}; rows.step = {};
-  const TRACK = { rate: 'Work rate', haul: 'Haul speed', cart: 'Cart size' };
-  const ROLE = { foreman: 'Foreman · boosts Work rate', carter: 'Carter · boosts Haul speed', packer: 'Packer · boosts Cart size' };
+  const TRACK = { rate: 'Work', cart: 'Cart', haul: 'Haul' };
+  const PH = ['Work', 'Cart', 'Haul'];
+  const ROLE = { foreman: 'Foreman · speeds up Work', carter: 'Carter · speeds up Haul', packer: 'Packer · speeds up Cart' };
   const roleShort = r => r[0].toUpperCase() + r.slice(1);
   const stars = n => '★'.repeat(n);
   function kbarHtml() { return `<div class="row-between"><span class="small dim">Upgrade by</span><span class="seg kbuy">${[1, 10, 'max'].map(v => `<button data-kbuy="${v}" class="${String(v) === String(kBuy) ? 'active' : ''}">${v === 'max' ? 'Max' : '×' + v}</button>`).join('')}</span></div>`; }
@@ -407,8 +408,8 @@ const UI = (() => {
       h += `<div class="card kstep" data-step="${st.id}">
         <div class="kstep-head">${ico(st.icon, 24)}<div><div class="kstep-name">${st.name}</div><div class="tiny dim">${st.from ? `${st.ratio} ${R[st.from].name} → 1 ${R[st.make].name}` : 'Gathers ' + R[st.make].name}</div></div><div class="kout"><b data-f="out"></b> <span class="small dim">/s</span><div class="tiny" data-f="lim"></div></div></div>
         ${st.from ? `<div class="kin"><span class="small dim">${R[st.from].name} in</span><div class="bar green-bar"><div data-f="inbar"></div><span data-f="inlab"></span></div></div>` : ''}
-        <div class="ktracks">${['rate', 'haul', 'cart'].map(t => `<div class="ktrack" data-t="${t}"><div><div class="ktl">${t === 'rate' && st.from ? 'Craft rate' : TRACK[t]} <span class="dim small">Lv <b data-f="lv"></b></span></div><div class="small dim" data-f="v"></div><div class="kflag hidden">Bottleneck</div></div><button class="buy" data-f="up"><span class="small" data-f="uplab">Upgrade</span><br><span class="cost" data-f="cost"></span></button></div>`).join('')}</div>
-        <div class="bar kcart"><div data-f="cartbar"></div><span data-f="cartlab"></span></div>
+        <div class="ktracks">${['rate', 'cart', 'haul'].map(t => `<div class="ktrack" data-t="${t}"><div><div class="ktl">${t === 'rate' && st.from ? 'Craft' : TRACK[t]} <span class="dim small">Lv <b data-f="lv"></b></span></div><div class="small dim" data-f="v"></div><div class="kflag hidden">Bottleneck</div></div><button class="buy" data-f="up"><span class="small" data-f="uplab">Upgrade</span><br><span class="cost" data-f="cost"></span></button></div>`).join('')}</div>
+        <div class="kcycle">${[0, 1, 2].map(i => `<div class="kseg kseg${i}" data-seg="${i}"><div class="kfill"></div><span>${i === 0 && st.from ? "Craft" : PH[i]}</span></div>`).join("")}</div><div class="tiny dim kcyc-lab" data-f="cartlab"></div>
         <div class="kstaff">
           <div class="kslot"><span class="small dim">Workers <b data-f="wn"></b></span><span data-f="wlist" class="small"></span><button data-f="wadd" class="buy kpick">+ Add worker</button></div>
           <div class="kslot"><span class="small dim">Overseer</span><span data-f="ov" class="small"></span><button data-f="ovsel" class="buy kpick">Choose</button><button data-f="ab" class="buy small-btn">Double shift</button></div>
@@ -439,22 +440,23 @@ const UI = (() => {
       const s = Game.stepState(st.id), m = Game.stepMods(st.id), hasOv = s.overseer !== null, lim = Game.stepLimit(st.id);
       setText(card.querySelector('[data-f=out]'), m.working ? Game.stepOutput(st.id).toFixed(2) : '0');
       const limTxt = !m.working ? '<span class="warn">No workers</span>' : !hasOv ? '<span class="dim">no overseer to report</span>'
-        : lim === 'starved' ? `<span class="warn">Waiting for ${R[st.from].name.toLowerCase()}</span>` : lim === 'full' ? '<span class="warn">Storehouse full</span>' : `<span class="dim">limited by ${lim === 'rate' ? (st.from ? 'craft rate' : 'work rate') : 'haul'}</span>`;
+        : lim === 'starved' ? `<span class="warn">Waiting for ${R[st.from].name.toLowerCase()}</span>` : lim === 'full' ? '<span class="warn">Storehouse full</span>' : `<span class="dim">slowest: ${lim === 'rate' ? (st.from ? 'craft' : 'work') : lim}</span>`;
       setHtml(card.querySelector('[data-f=lim]'), limTxt);
       for (const t of ['rate', 'haul', 'cart']) {
         const tr = card.querySelector(`[data-t=${t}]`); setText(tr.querySelector('[data-f=lv]'), s[t]);
-        setText(tr.querySelector('[data-f=v]'), t === 'rate' ? `${Game.stepRate(st.id).toFixed(2)} made /s` : t === 'haul' ? `${Game.stepRoundTrip(st.id).toFixed(1)}s round trip` : `${Game.stepCart(st.id)} per cart`);
-        const bn = hasOv && m.working && ((lim === 'rate' && t === 'rate') || (lim === 'haul' && t !== 'rate'));
+        const PHS = Game.stepPhases(st.id), pi = { rate: 0, cart: 1, haul: 2 }[t];
+        setText(tr.querySelector('[data-f=v]'), t === 'rate' ? `${PHS[0].toFixed(1)}s to ${st.from ? 'make' : 'gather'} ${Game.stepBatch(st.id)}` : t === 'cart' ? `${PHS[1].toFixed(1)}s to load the cart` : `${PHS[2].toFixed(1)}s to deliver`);
+        const bn = hasOv && m.working && lim === t;
         tr.classList.toggle('bottleneck', bn); tr.querySelector('.kflag').classList.toggle('hidden', !bn);
         const p = Game.stepUpPlan(st.id, t, kBuy), btn = tr.querySelector('[data-f=up]');
         setText(tr.querySelector('[data-f=uplab]'), p.n > 1 ? `Upgrade +${p.n}` : 'Upgrade');
         setHtml(tr.querySelector('[data-f=cost]'), costHtml(p.n ? p.cost : Game.stepUpCost(st.id, t)));
         btn.disabled = !p.n; if (p.n) anyUp = true;
       }
-      const cap = Game.stepCart(st.id), T = Game.stepRoundTrip(st.id);
-      card.querySelector('[data-f=cartbar]').style.width = (s.trip > 0 ? 100 * (1 - s.trip / T) : 100 * s.load / cap) + '%';
-      setText(card.querySelector('[data-f=cartlab]'), !m.working ? 'Idle — no workers' : s.trip > 0 ? `Cart on the road · ${Math.max(0, s.trip).toFixed(1)}s` : `Cart loading · ${Math.floor(s.load)} / ${cap} ${R[st.make].name.toLowerCase()}`);
-      if (st.from) { card.querySelector('[data-f=inbar]').style.width = Math.min(100, 100 * s.inBuf / Math.max(8, cap * 2)) + '%'; setText(card.querySelector('[data-f=inlab]'), `${Math.floor(s.inBuf)} waiting`); }
+      { const PHS = Game.stepPhases(st.id), cyc = PHS[0] + PHS[1] + PHS[2];
+        card.querySelectorAll('[data-seg]').forEach(seg => { const i = +seg.dataset.seg; seg.style.flexGrow = (PHS[i] / cyc).toFixed(4); const fill = !m.working ? 0 : i < s.phase ? 100 : i > s.phase ? 0 : 100 * Math.min(1, s.t / PHS[i]); seg.firstChild.style.width = fill + '%'; seg.classList.toggle('on', m.working && i === s.phase); });
+        setText(card.querySelector('[data-f=cartlab]'), !m.working ? 'Idle — no workers' : `${Game.stepBatch(st.id)} ${R[st.make].name.toLowerCase()} every ${cyc.toFixed(1)}s · now: ${[st.from ? 'crafting' : 'working', 'loading the cart', 'hauling'][s.phase]}${s.phase === 0 && lim === 'starved' ? ' (waiting for ' + R[st.from].name.toLowerCase() + ')' : ''}`); }
+      if (st.from) { card.querySelector('[data-f=inbar]').style.width = Math.min(100, 100 * s.inBuf / CONFIG.kingdom.bufferCap) + '%'; setText(card.querySelector('[data-f=inlab]'), `${Math.floor(s.inBuf)} waiting`); }
       setText(card.querySelector('[data-f=wn]'), `${s.workers.length}/${Game.stepWorkerSlots(st.id)}`);
       setHtml(card.querySelector('[data-f=wlist]'), s.workers.map(i => `<span class="kchip">${S.kingdom.thralls[i].name} <button class="kx" data-rm="${i}" aria-label="Remove">×</button></span>`).join(' ') || '<span class="warn">none</span>');
       card.querySelectorAll('[data-rm]').forEach(b => b.onclick = () => { Game.unassign(+b.dataset.rm); lineKey[lid] = ''; render(true); });
@@ -472,7 +474,7 @@ const UI = (() => {
   function openPicker(stepId, as, lid) {
     const S = Game.S, K = S.kingdom, st = Game.stepDef(stepId), ss = Game.stepState(stepId), list = $('pick-list');
     setText($('pick-title'), as === 'worker' ? `Worker for the ${st.name}` : `Overseer for the ${st.name}`);
-    setText($('pick-sub'), as === 'worker' ? 'Workers run the step. Strength adds to cart size, Speed to work rate.' : 'An Overseer reports the bottleneck and boosts one track by role: Foreman → work rate, Carter → haul speed, Packer → cart size.');
+    setText($('pick-sub'), as === 'worker' ? 'Workers run the step. Speed shortens Work, Strength shortens Cart. Thralls level up as they work.' : 'An Overseer reports the bottleneck and boosts one track by role: Foreman → work rate, Carter → haul speed, Packer → cart size.');
     const close = () => { $('pick-modal').classList.add('hidden'); lineKey[lid] = ''; render(true); };
     let h = '';
     if (as === 'overseer' && ss.overseer !== null) h += `<button class="pick-row danger-btn" data-pick="remove"><div class="row-main"><b>Remove ${K.thralls[ss.overseer].name}</b><div class="small dim">Leave the Overseer slot empty</div></div></button>`;
@@ -480,7 +482,7 @@ const UI = (() => {
       .sort((a, b) => (!!a.p - !!b.p) || (b.t.stars - a.t.stars));
     for (const c of cand) {
       const where = c.p ? `${c.p.as === 'overseer' ? 'Overseer' : 'Worker'} at the ${Game.stepDef(c.p.id).name}` : 'Idle';
-      const perk = as === 'worker' ? `Str ${c.t.str} · Spd ${c.t.spd}` : `${ROLE[c.t.role]} ×${CONFIG.kingdom.starMult[c.t.stars]}`;
+      const perk = `Lv ${Game.thrallLevel(c.t)} · ` + (as === 'worker' ? `Str ${c.t.str} · Spd ${c.t.spd}` : `${ROLE[c.t.role]} ×${CONFIG.kingdom.starMult[c.t.stars]}`);
       h += `<button class="pick-row" data-pick="${c.i}"><div class="row-main"><b>${c.t.name}</b> <span class="stars">${stars(c.t.stars)}</span> <span class="owned">${roleShort(c.t.role)}</span><div class="small dim">${perk}</div></div><span class="tag ${c.p ? '' : 'idle'}">${c.p ? 'Move from ' + Game.stepDef(c.p.id).name : 'Idle'}</span></button>`;
     }
     if (!cand.length) h += `<div class="dim small center" style="padding:8px 0">${K.thralls.length ? 'Every thrall is already here.' : 'You have no thralls yet.'}</div><button class="pick-row" data-pick="tavern"><div class="row-main"><b>Go to the Tavern</b><div class="small dim">Market → Tavern: hire a thrall</div></div><span class="tag">▶</span></button>`;
@@ -515,18 +517,19 @@ const UI = (() => {
     const ol = $('order-list'); if (ol.__h !== oh) { ol.innerHTML = oh || '<div class="dim small">No orders yet — produce something first.</div>'; ol.__h = oh; ol.querySelectorAll('[data-deliver]').forEach(b => b.onclick = () => { if (Game.deliver(+b.dataset.deliver)) { ol.__h = ''; render(true); } }); ol.querySelectorAll('[data-swap]').forEach(b => b.onclick = () => { if (Game.swapOrder(+b.dataset.swap)) { ol.__h = ''; render(true); } }); }
     // hiring
     setText($('offer-timer'), Game.fmtTime(Math.max(0, K.offerTimer || 0))); setText($('refresh-cost'), CONFIG.kingdom.refreshCost); $('offer-refresh').disabled = (S.res.gold || 0) < CONFIG.kingdom.refreshCost;
-    const hh = (K.offers || []).map((o, i) => `<div class="row koffer"><div class="row-main"><div class="row-title">${o.name} <span class="stars">${stars(o.stars)}</span></div><div class="row-sub">${ROLE[o.role]} ×${CONFIG.kingdom.starMult[o.stars]}</div><div class="row-sub dim">Strength ${o.str} (cart) · Speed ${o.spd} (rate)</div></div><button class="buy" data-hire="${i}" ${(S.res.gold || 0) >= o.price ? '' : 'disabled'}><span class="small">Hire</span><br><span class="cost">${costHtml({ gold: o.price })}</span></button></div>`).join('');
+    const hh = (K.offers || []).map((o, i) => `<div class="row koffer"><div class="row-main"><div class="row-title">${o.name} <span class="stars">${stars(o.stars)}</span></div><div class="row-sub">${ROLE[o.role]} ×${CONFIG.kingdom.starMult[o.stars]}</div><div class="row-sub dim">Strength ${o.str} (Cart) · Speed ${o.spd} (Work)</div></div><button class="buy" data-hire="${i}" ${(S.res.gold || 0) >= o.price && K.thralls.length < Game.thrallCap() ? '' : 'disabled'}><span class="small">Hire</span><br><span class="cost">${costHtml({ gold: o.price })}</span></button></div>`).join('');
     const hl = $('hire-list'); if (hl.__h !== hh) { hl.innerHTML = hh; hl.__h = hh; hl.querySelectorAll('[data-hire]').forEach(b => b.onclick = () => { if (Game.hire(+b.dataset.hire)) { hl.__h = ''; for (const l in lineKey) lineKey[l] = ''; render(true); } }); }
     // roster
-    setText($('roster-count'), `${K.thralls.length} hired`);
-    const rh = K.thralls.map((t, i) => { const p = Game.thrallPost(i); return `<div class="row"><div class="row-main"><div class="row-title">${t.name} <span class="stars">${stars(t.stars)}</span> <span class="owned">${roleShort(t.role)}</span></div><div class="row-sub">${p ? (p.as === 'overseer' ? 'Overseer' : 'Worker') + ' at the ' + Game.stepDef(p.id).name : '<span class="warn">Idle — Kingdom → a line → + Add worker</span>'} · Str ${t.str} · Spd ${t.spd} · ${f(t.xp || 0)} jobs</div></div></div>`; }).join('');
-    const rl = $('roster'); if (rl.__h !== rh) { rl.innerHTML = rh || '<div class="dim small">Nobody yet. Hire someone above.</div>'; rl.__h = rh; }
+    setText($('roster-count'), `${K.thralls.length} / ${Game.thrallCap()} · room for one more each new land`);
+    const rh = K.thralls.map((t, i) => { const p = Game.thrallPost(i); return `<div class="row"><div class="row-main"><div class="row-title">${t.name} <span class="stars">${stars(t.stars)}</span> <span class="owned">${roleShort(t.role)} · Lv ${Game.thrallLevel(t)}</span></div><div class="row-sub">${p ? (p.as === 'overseer' ? 'Overseer' : 'Worker') + ' at the ' + Game.stepDef(p.id).name : '<span class="warn">Idle — Kingdom → a line → + Add worker</span>'} · Str ${t.str} · Spd ${t.spd} · ${f(t.xp || 0)} loads hauled</div></div><button class="kx big-x" data-dis="${i}" aria-label="Dismiss">×</button></div>`; }).join('');
+    const rl = $('roster'); if (rl.__h !== rh) { rl.innerHTML = rh || '<div class="dim small">Nobody yet. Hire someone above.</div>'; rl.__h = rh; rl.querySelectorAll('[data-dis]').forEach(b => b.onclick = () => { const t = K.thralls[+b.dataset.dis]; ask('Dismiss ' + t.name + '?', `${t.name} (Lv ${Game.thrallLevel(t)}) leaves for good. This frees a place for someone new.`, 'Dismiss', () => { Game.dismiss(+b.dataset.dis); rl.__h = ''; for (const l in lineKey) lineKey[l] = ''; render(true); }); }); }
     // storehouse
     setText($('store-lv'), K.storeLv || 0); setText($('store-cap'), f(Game.storeCap('wood')));
     const goods = Game.allSteps().filter(st => Game.stepUnlocked(st.id)).map(st => st.make);
     setHtml($('store-list'), goods.map(k => `<div class="row-between small"><span>${ico(R[k].icon, 14)} ${R[k].name}</span><span class="${Game.atCap(k) ? 'warn' : ''}">${f(S.res[k] || 0)} / ${f(Game.resCap(k))}</span></div>`).join(''));
+    setHtml($('store-auto'), `Surplus that won't fit is sold to passing merchants at ¼ price${K.autoSold ? ` · <b>${f(K.autoSold)}</b> gold so far` : ''}. Gold holds up to ${f(Game.resCap('gold'))}.`);
     const sc = Game.storeUpCost(); setHtml($('store-cost'), costHtml(sc)); $('store-up').disabled = !Game.canAfford(sc);
-    const canHire = (K.offers || []).some(o => (S.res.gold || 0) >= o.price) && K.thralls.length < 2;
+    const canHire = (K.offers || []).some(o => (S.res.gold || 0) >= o.price) && K.thralls.length < Math.min(2, Game.thrallCap());
     $('badge-tavern').classList.toggle('hidden', !canHire);
     return anyOrder;
   }
@@ -910,7 +913,8 @@ const UI = (() => {
     if (!Game.canFound()) return;
     const L = Game.S.legacy;
     fmPick.hero = L.heroPath || 'warrior'; fmPick.kingdom = L.kingdomPath || 'benevolent';
-    setText($('fm-gain'), Game.knowledgeGain());
+    { const g = Game.knowledgeGain(); setText($('fm-gain'), `${g} Crystal${g === 1 ? '' : 's'}`); }
+    { const first = Game.S.legacy.foundings === 0; setText($('fm-title'), first ? 'Found Your Kingdom' : 'Settle New Lands'); setText($('fm-confirm'), first ? 'Found' : 'Ride out'); }
     setText($('fm-worker'), (() => { const n = Game.allSteps().find(st => st.unlock === Game.S.legacy.foundings + 1); return n ? 'a new step: ' + n.name : 'a fresh kingdom'; })());
     const build = (holder, list, key) => {
       holder.innerHTML = '';
@@ -937,11 +941,11 @@ const UI = (() => {
     setText($('found-gain'), '+' + Game.knowledgeGain());
     const cost = Game.foundCost(); setHtml($('found-cost'), Object.keys(cost).length ? costHtml(cost) : '<span class="dim">free — Renown is the price</span>');
     const first = S.legacy.foundings === 0, nextStep = Game.allSteps().find(st => st.unlock === S.legacy.foundings + 1);
-    setText($('found-title'), first ? 'Pay Tribute to the Empire' : 'Found a New Fief');
-    setText($('found-text'), first ? 'Pay tribute and the Empire grants you land: your first kingdom, with a Forest to work. Your hero keeps everything.' : `Start a new fief. The kingdom starts over; your hero, Legacy and trophies stay. New here: ${nextStep ? nextStep.name + ' (' + CONFIG.kingdom.lines[nextStep.line].name + ')' : 'nothing new yet'}.`);
-    $('found-btn').textContent = first ? 'Pay Tribute' : 'Found a New Fief';
+    setText($('found-title'), first ? 'Pay Tribute to the Empire' : 'Settle New Lands');
+    setText($('found-text'), first ? 'Pay tribute and the Empire grants you land: your first kingdom, with a Forest to work. Your hero keeps everything.' : `Conquer this land, then move on. Your hero, your thralls, Legacy and trophies go with you; the lands, stores and gold stay behind. Next lands bring: ${nextStep ? nextStep.name + ' (' + CONFIG.kingdom.lines[nextStep.line].name + ')' : 'nothing new yet'}, and room for one more thrall.`);
+    $('found-btn').textContent = first ? 'Pay Tribute' : 'Settle New Lands';
     if (first) { const reqStage = CONFIG.legacy.foundRequiresStage, okStage = Game.bestStageAll() >= reqStage; setText($('found-req'), okStage ? (Game.canAfford(cost) ? 'Ready.' : 'Gather the tribute: 100 gold and the Rat King\'s Tooth.') : `Reach stage ${reqStage} to pay tribute (best: ${Game.bestStageAll()}).`); }
-    else { const need = Game.foundRenownNeed(), have = S.kingdom.renown || 0; setText($('found-req'), have >= need ? 'Ready.' : `Earn ${Game.fmt(need)} Renown in this kingdom to found a new fief — you have ${Game.fmt(have)}.`); }
+    else { const need = Game.foundRenownNeed(), have = S.kingdom.renown || 0; setText($('found-req'), have >= need ? 'Ready.' : `Earn ${Game.fmt(need)} Renown to conquer this land — you have ${Game.fmt(have)}.`); }
     $('found-btn').disabled = !Game.canFound();
     $('badge-throne').classList.toggle('hidden', !Game.canFound());
     let anyPerk = false;

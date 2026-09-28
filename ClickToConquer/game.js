@@ -340,8 +340,9 @@ function stageDanger(stage = S.hero.stage) {
 
 // ---------- Resources ----------
 // Caps: P0 = the Pack (100, Leather Pack 150). P1+ = the Storehouse (§7.6 of the v0.3 design).
+function resId(k) { return k; }
 function resCap(k) {
-  if (S.legacy.foundings === 0) return hasTech('leatherwork') ? CONFIG.caps.leatherPack : CONFIG.caps.pack;
+  if (S.legacy.foundings === 0) { const pk = hasTech('leatherwork') ? CONFIG.caps.leatherPack : CONFIG.caps.pack; return resId(k) === 'gold' ? pk * CONFIG.caps.goldMult : pk; }
   return storeCap(k);
 }
 function atCap(k) { return (S.res[k] || 0) >= resCap(k) - 1e-9; }
@@ -353,7 +354,9 @@ function add(resId, amt) {
   if (got > 0) S.lifetime[resId] = (S.lifetime[resId] || 0) + got;
   return got;
 }
-function storeCap(k) { if (k === 'gold') return Infinity; return Math.round(CONFIG.caps.store * (1 + (S.kingdom.storeLv || 0) * 0.5) * (rankIndex() >= 1 ? 2 : 1) * (1 + 0.25 * perkRank('cellar'))); }
+function storeCap(k) { const c = Math.round(CONFIG.caps.store * (1 + (S.kingdom.storeLv || 0) * 0.5) * (rankIndex() >= 1 ? 2 : 1) * (1 + 0.25 * perkRank('cellar'))); return k === 'gold' ? c * CONFIG.caps.goldMult : c; }
+// Storehouse delivery: whatever does not fit is sold to passing merchants, cheaply.
+function storeDeliver(k, n) { const got = add(k, n), extra = n - got; if (extra > 0 && CONFIG.resources[k].sell) { const g = extra * CONFIG.resources[k].sell * KC().autoSell; add('gold', g); S.kingdom.autoSold = (S.kingdom.autoSold || 0) + g; } S.stats.made = S.stats.made || {}; S.stats.made[k] = (S.stats.made[k] || 0) + n; return got; }
 function canAfford(cost) { if (!cost) return false; for (const k in cost) if ((S.res[k] || 0) < cost[k]) return false; return true; }
 function pay(cost) { for (const k in cost) S.res[k] -= cost[k]; }
 
@@ -366,34 +369,39 @@ function stepDef(id) { return allSteps().find(s => s.id === id); }
 function stepUnlocked(id) { const d = stepDef(id); return !!d && kingdomNo() >= d.unlock; }
 function lineUnlocked(lid) { return KC().lines[lid].steps.some(s => kingdomNo() >= s.unlock); }
 function lineSteps(lid) { return KC().lines[lid].steps.map((s, i) => ({ ...s, line: lid, index: i })).filter(s => kingdomNo() >= s.unlock); }
-function stepState(id) { const K = S.kingdom; K.steps = K.steps || {}; if (!K.steps[id]) K.steps[id] = { rate: 1, haul: 1, cart: 1, inBuf: 0, load: 0, trip: 0, workers: [], overseer: null, abilityUntil: 0, abilityReady: 0, lvlSum: 3 }; return K.steps[id]; }
+function stepState(id) { const K = S.kingdom; K.steps = K.steps || {}; if (!K.steps[id]) K.steps[id] = { rate: 1, haul: 1, cart: 1, inBuf: 0, phase: 0, t: 0, workers: [], overseer: null, abilityUntil: 0, abilityReady: 0 }; const st = K.steps[id]; if (st.phase === undefined) { st.phase = 0; st.t = 0; } return st; }
 function nextStep(id) { const d = stepDef(id); const n = KC().lines[d.line].steps[d.index + 1]; return n && stepUnlocked(n.id) ? n : null; }
 function thrall(i) { return S.kingdom.thralls[i]; }
 function thrallName(i) { const t = thrall(i); return t ? t.name : 'Thrall'; }
-function roleMult(t, role) { if (!t || t.role !== role) return 1; return KC().starMult[t.stars] || 1; }
+function thrallLevel(t) { return t ? 1 + Math.floor(Math.sqrt((t.xp || 0) / KC().thrallXpDiv)) : 1; }
+function thrallLvMult(t) { return 1 + KC().thrallLvBonus * (thrallLevel(t) - 1); }
+function thrallCap() { return KC().thrallCapBase + kingdomNo(); }
+function roleMult(t, role) { if (!t || t.role !== role) return 1; return (KC().starMult[t.stars] || 1) * (1 + 0.02 * (thrallLevel(t) - 1)); }
 function stepWorkerSlots(id) { const s = stepState(id), lv = Math.max(s.rate, s.haul, s.cart); let n = 1; for (const m of KC().workerMilestones) if (lv >= m) n++; if (rankIndex() >= 1) n++; return n; }
 function stepMods(id) {
   const s = stepState(id), ov = s.overseer !== null ? thrall(s.overseer) : null, now = S.hero.time;
   const ws = s.workers.map(thrall).filter(Boolean);
   const boost = s.abilityUntil > now ? 2 : 1;
-  const spd = ws.reduce((a, t) => a + t.spd, 0), str = ws.reduce((a, t) => a + t.str, 0);
+  const spd = ws.reduce((a, t) => a + t.spd * thrallLvMult(t), 0), str = ws.reduce((a, t) => a + t.str * thrallLvMult(t), 0);
   return {
     rate: (1 + KC().extraWorker * Math.max(0, ws.length - 1) + 0.02 * spd) * roleMult(ov, 'foreman') * boost,
     haul: roleMult(ov, 'carter') * boost,
-    cart: (1 + 0.02 * str) * roleMult(ov, 'packer'),
+    cart: (1 + 0.02 * str) * roleMult(ov, 'packer') * boost,
     working: ws.length > 0,
   };
 }
-function stepRate(id) { const d = stepDef(id), s = stepState(id); return d.base * (1 + KC().rateGrowth * (s.rate - 1)) * stepMods(id).rate; }
-function stepRoundTrip(id) { const s = stepState(id); return Math.max(KC().haulMin, KC().haulBase - KC().haulStep * (s.haul - 1)) / stepMods(id).haul; }
-function stepCart(id) { const s = stepState(id); return Math.round((KC().cartBase + KC().cartStep * s.cart) * stepMods(id).cart); }
-function stepOutput(id) { if (!stepMods(id).working) return 0; return Math.min(stepRate(id), stepCart(id) / stepRoundTrip(id)); }
+// One production cycle = Work (make a batch) → Cart (load it) → Haul (deliver it). Each track shortens its own phase, forever.
+const trackGrow = lv => 1 + KC().trackGrowth * (lv - 1);
+function stepBatch(id) { return stepDef(id).batch; }
+function stepRate(id) { const d = stepDef(id), s = stepState(id); return d.base * trackGrow(s.rate) * stepMods(id).rate; }
+function stepPhases(id) { const s = stepState(id), m = stepMods(id); return [stepBatch(id) / stepRate(id), KC().loadBase / trackGrow(s.cart) / m.cart, KC().haulBase / trackGrow(s.haul) / m.haul]; }
+function stepCycle(id) { return stepPhases(id).reduce((a, b) => a + b, 0); }
+function stepOutput(id) { if (!stepMods(id).working) return 0; return stepBatch(id) / stepCycle(id); }
 function stepLimit(id) { // what holds the step back — shown only when an Overseer is present
   const s = stepState(id), d = stepDef(id);
   if (!stepMods(id).working) return 'idle';
-  if (d.from && s.inBuf < d.ratio && s.load < 1) return 'starved';
-  const nx = nextStep(id); if (!nx && atCap(d.make) && s.load >= stepCart(id)) return 'full';
-  return stepRate(id) < stepCart(id) / stepRoundTrip(id) ? 'rate' : 'haul';
+  if (d.from && s.phase === 0 && s.inBuf < d.ratio * 0.5) return 'starved';
+  const p = stepPhases(id), mx = Math.max(...p); return ['rate', 'cart', 'haul'][p.indexOf(mx)];
 }
 function stepUpCost(id, track, level) { const l = level || stepState(id)[track]; return { gold: Math.round(KC().costBase * Math.pow(l, KC().costExp) * (track === 'rate' ? 1 : KC().haulCostMult)) }; }
 function stepUpPlan(id, track, n) { let g = 0, k = 0, l = stepState(id)[track]; const lim = n === 'max' ? 999 : n; while (k < lim) { const c = stepUpCost(id, track, l + k).gold; if ((S.res.gold || 0) < g + c) break; g += c; k++; } return { n: k, cost: { gold: g } }; }
@@ -414,8 +422,11 @@ function rollThrall() {
   return { name, role: roles[Math.floor(Math.random() * 3)], stars, str: st(), spd: st(), price: KC().hirePrice[stars], xp: 0 };
 }
 function refreshOffers(pay_ = false) { if (pay_) { const c = { gold: KC().refreshCost }; if (!canAfford(c)) return false; pay(c); } S.kingdom.offers = []; for (let k = 0; k < 3; k++) S.kingdom.offers.push(rollThrall()); if (!S.kingdom.thralls.length) { const o = S.kingdom.offers[0]; o.stars = 1; o.str = 1 + Math.floor(Math.random() * 3); o.spd = 1 + Math.floor(Math.random() * 3); o.price = KC().hirePrice[1]; } S.kingdom.offerTimer = KC().offerRefresh; return true; }
-function hire(i) { const o = (S.kingdom.offers || [])[i]; if (!o) return false; const c = { gold: o.price }; if (!canAfford(c)) return false; pay(c); S.kingdom.thralls.push({ ...o, price: undefined }); S.kingdom.offers.splice(i, 1); S.kingdom.offers.splice(i, 0, rollThrall()); log(`Hired ${o.name}, ${'★'.repeat(o.stars)} ${o.role}`); return true; }
+function hire(i) { const o = (S.kingdom.offers || [])[i]; if (!o || S.kingdom.thralls.length >= thrallCap()) return false; const c = { gold: o.price }; if (!canAfford(c)) return false; pay(c); S.kingdom.thralls.push({ ...o, price: undefined }); S.kingdom.offers.splice(i, 1); S.kingdom.offers.splice(i, 0, rollThrall()); log(`Hired ${o.name}, ${'★'.repeat(o.stars)} ${o.role}`); return true; }
 function thrallCount() { return S.kingdom.thralls.length; }
+function dismiss(i) { const t = thrall(i); if (!t) return false; unassign(i); S.kingdom.thralls.splice(i, 1);
+  for (const id in S.kingdom.steps) { const s = S.kingdom.steps[id]; s.workers = s.workers.map(x => x > i ? x - 1 : x); if (s.overseer !== null && s.overseer > i) s.overseer--; }
+  log(`${t.name} was sent on his way.`); return true; }
 function ensureThralls() { const K = S.kingdom; K.steps = K.steps || {}; K.thralls = K.thralls || []; if (!K.offers || !K.offers.length) refreshOffers(); K.orders = K.orders || []; while (kingdomNo() > 0 && K.orders.length < 3 && orderGoods(true).length) K.orders.push(makeOrder()); }
 // Storehouse level
 function storeUpCost() { return { gold: Math.round(150 * Math.pow((S.kingdom.storeLv || 0) + 1, 1.8)) }; }
@@ -429,21 +440,25 @@ function tickKingdom(dt) {
   for (const lid in KC().lines) {
     for (const st of lineSteps(lid)) {
       const s = stepState(st.id), m = stepMods(st.id); if (!m.working) continue;
-      const cap = stepCart(st.id), nx = nextStep(st.id);
-      if (s.trip > 0) {
-        s.trip -= dt;
-        if (s.trip <= 0) {
-          if (nx && stepMods(nx.id).working) { stepState(nx.id).inBuf = Math.min(stepState(nx.id).inBuf + s.load, KC().bufferCap); }
-          else { add(st.make, s.load); S.stats.made = S.stats.made || {}; S.stats.made[st.make] = (S.stats.made[st.make] || 0) + s.load; }
-          s.load = 0; s.trip = 0;
-          for (const w of s.workers) { const t = thrall(w); if (t) t.xp = (t.xp || 0) + 1; }
+      const P = stepPhases(st.id), nx = nextStep(st.id), batch = stepBatch(st.id);
+      let left = dt, guard = 0;
+      while (left > 1e-9 && guard++ < 200) {
+        const dur = P[s.phase];
+        if (s.t >= dur) {} // an upgrade can shorten a phase below the time already spent: finish it now
+        else if (s.phase === 0 && st.from) { // crafting eats its input as it goes
+          const perSec = st.ratio * batch / dur, can = s.inBuf / perSec, adv = Math.min(left, dur - s.t, can);
+          if (adv <= 1e-9) break; s.inBuf -= adv * perSec; s.t += adv; left -= adv;
+        } else { const adv = Math.min(left, dur - s.t); s.t += adv; left -= adv; }
+        if (s.t >= dur - 1e-9) {
+          if (s.phase === 2) { // delivered
+            if (nx && stepMods(nx.id).working) { const b = stepState(nx.id); if (b.inBuf + batch > KC().bufferCap) { s.t = dur; break; } b.inBuf += batch; }
+            else storeDeliver(st.make, batch);
+            for (const w of s.workers) { const t = thrall(w); if (t) t.xp = (t.xp || 0) + 1; }
+            if (s.overseer !== null && thrall(s.overseer)) thrall(s.overseer).xp = (thrall(s.overseer).xp || 0) + 1;
+          }
+          s.phase = (s.phase + 1) % 3; s.t = 0;
         }
-        continue;
       }
-      let make = stepRate(st.id) * dt;
-      if (st.from) { make = Math.min(make, s.inBuf / st.ratio); s.inBuf -= make * st.ratio; }
-      s.load = Math.min(cap, s.load + make);
-      if (s.load >= cap - 1e-9) { if (!nx && atCap(st.make)) continue; s.trip = stepRoundTrip(st.id); }
     }
   }
 }
@@ -695,7 +710,8 @@ function found(heroPathId, kingdomPathId) {
   leg.heroPath = hp.id; leg.kingdomPath = kp.id;
   // v0.3: the hero, his tech and the quest log carry on. The kingdom (lines, thralls, orders, renown, storehouse) and resources start over.
   const keep = { hero: S.hero, tech: S.tech, quests: S.quests, settings: S.settings, stats: S.stats, lifetime: S.lifetime, log: S.log };
-  const fresh = freshState(); Object.assign(fresh, keep); fresh.legacy = leg;
+  const band = (S.kingdom && S.kingdom.thralls) || [];
+  const fresh = freshState(); Object.assign(fresh, keep); fresh.legacy = leg; fresh.kingdom.thralls = band;
   S = fresh; S.hero.activity = 'fight';
   if (leg.foundings > 1) add('gold', KC().startGold || 50);
   const ca = perkRank('cache'); if (ca) { add('gold', 100 * ca); }
@@ -703,6 +719,7 @@ function found(heroPathId, kingdomPathId) {
   const newStep = allSteps().find(st => st.unlock === leg.foundings);
   log(`Founded Kingdom ${leg.foundings} as ${hp.name} of a ${kp.name}. +${gain} Crystal${gain === 1 ? '' : 's'}`);
   if (newStep) log(`New in this kingdom: ${newStep.name} (${KC().lines[newStep.line].name})`);
+  if (S.kingdom.thralls.length) log(`${S.kingdom.thralls.length} thrall${S.kingdom.thralls.length > 1 ? 's' : ''} followed you to the new lands. Put them to work.`);
   save();
   return gain;
 }
@@ -790,7 +807,7 @@ window.Game = {
   toolTierUnlocked, toolPower, toolCraftCost, toolUpgradeCost, canToolTierUp, craftTool, upgradeTool, activityDef, activityAvailable, setActivity, masteryLevel, harvestTime, harvestYield, harvestRates,
   questCurrent, questProgress, questClaim, suggestGoal, ground, setGround, groundUnlocked, dropToolMult, bestStageAll, groundDrops, toolSlotUnlocked,
   techDef, hasTech, techProgress, canResearch, research, researching, buildingUnlocked, gearTierUnlocked, dropUnlocked, counter,
-  kingdomRates, kingdomNo, allSteps, stepDef, stepUnlocked, lineUnlocked, lineSteps, stepState, nextStep, stepMods, stepRate, stepRoundTrip, stepCart, stepOutput, stepLimit, stepUpCost, stepUpPlan, upgradeStep, stepWorkerSlots,
+  kingdomRates, kingdomNo, allSteps, stepDef, stepUnlocked, lineUnlocked, lineSteps, stepState, nextStep, stepMods, stepRate, stepPhases, stepCycle, stepBatch, stepOutput, thrallLevel, thrallCap, dismiss, stepLimit, stepUpCost, stepUpPlan, upgradeStep, stepWorkerSlots,
   assignWorker, assignOverseer, unassign, thrallPost, useAbility, refreshOffers, hire, maxStars, storeUpCost, upgradeStore, orderGoods, foundRenownNeed, canDeliver, deliver, swapOrder, swapReady, rankIndex, rankInfo, heroFighting, thrallCount, sellPrice, sell, buyPrice, buyRes, buyMax, canBuyRes,
   canAdvance, advance, retreat, canAfford, add, simulate, applyOffline, claimOffline,
   save, load, exportSave, importSave, hardReset,

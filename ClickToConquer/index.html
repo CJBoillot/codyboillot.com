@@ -12,7 +12,7 @@
   <title>Click to Conquer</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=a038">
+  <link rel="stylesheet" href="style.css?v=a040">
 </head>
 <body>
 
@@ -178,6 +178,7 @@
           <div class="card">
             <div class="row-between"><div class="card-title" style="margin:0">Storehouse</div><span class="small dim">Lv <b id="store-lv"></b> · holds <b id="store-cap"></b> of each good</span></div>
             <div id="store-list" class="store-list"></div>
+            <p class="tiny dim" id="store-auto" style="margin:6px 0 0"></p>
             <button id="store-up" class="wide" style="margin-top:6px">Expand the Storehouse (<span id="store-cost"></span>)</button>
           </div>
         </div>
@@ -346,13 +347,13 @@
 
 <div id="found-modal" class="modal hidden">
   <div class="modal-box found-box">
-    <div class="card-title">Found a New Kingdom</div>
-    <p class="dim small">You will gain <b id="fm-gain" class="accent-inline"></b> Crystals and <b id="fm-worker"></b>. Your hero keeps his level, gear and skills; the kingdom and its stores start over.</p>
+    <div class="card-title" id="fm-title">Settle New Lands</div>
+    <p class="dim small" id="fm-text">This land is conquered. You will gain <b id="fm-gain" class="accent-inline"></b> and <b id="fm-worker"></b>. Your hero and your thralls ride with you, keeping their levels; the lands, stores and gold stay behind.</p>
     <div class="card-title small-title">Your hero becomes</div>
     <div id="fm-hero" class="path-list"></div>
     <div class="card-title small-title">Your kingdom becomes</div>
     <div id="fm-kingdom" class="path-list"></div>
-    <div class="btn-row"><button id="fm-cancel">Cancel</button><button id="fm-confirm" class="primary" disabled>Found</button></div>
+    <div class="btn-row"><button id="fm-cancel">Cancel</button><button id="fm-confirm" class="primary" disabled>Ride out</button></div>
   </div>
 </div>
 
@@ -377,9 +378,9 @@
 </div>
 
 
-<script src="config.js?v=a038"></script>
-<script src="game.js?v=a038"></script>
-<script src="ui.js?v=a038"></script>
+<script src="config.js?v=a040"></script>
+<script src="game.js?v=a040"></script>
+<script src="ui.js?v=a040"></script>
 <script>window.addEventListener("error", e => { const d = document.getElementById("err"); if (d) { d.textContent = "Error: " + e.message; d.classList.remove("hidden"); } });</script>
 </body>
 </html>

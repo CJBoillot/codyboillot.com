@@ -7,12 +7,12 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Alpha 0.3.8',
+  version: 'Alpha 0.4.0',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
 
-  caps: { pack: 100, leatherPack: 150, store: 200 },
+  caps: { pack: 100, leatherPack: 150, store: 200, goldMult: 10 },
   offline: {
     capSeconds: 8 * 3600,
     efficiency: 0.10,   // idle runs at 10% of active speed (Long Memory perk adds +10% per rank)
@@ -333,19 +333,22 @@ const CONFIG = {
   kingdom: {
     lines: {
       forest: { name: 'Forest', icon: [4,6], steps: [
-        { id: 'logging',   name: 'Logging',    icon: [17,0],  make: 'wood',   base: 0.5,  unlock: 1, desc: 'Thralls fell trees.' },
-        { id: 'sawmill',   name: 'Sawmill',    icon: [19,11], make: 'planks', from: 'wood',   ratio: 2, base: 0.3,  unlock: 4, desc: '2 logs → 1 plank.' },
-        { id: 'carpenter', name: 'Carpenter',  icon: [10,4],  make: 'lumber', from: 'planks', ratio: 2, base: 0.15, unlock: 7, desc: '2 planks → 1 treated lumber.' } ] },
+        { id: 'logging',   name: 'Logging',    icon: [17,0],  make: 'wood',   base: 0.5, batch: 6,  unlock: 1, desc: 'Thralls fell trees.' },
+        { id: 'sawmill',   name: 'Sawmill',    icon: [19,11], make: 'planks', from: 'wood',   ratio: 2, base: 0.3, batch: 4,  unlock: 4, desc: '2 logs → 1 plank.' },
+        { id: 'carpenter', name: 'Carpenter',  icon: [10,4],  make: 'lumber', from: 'planks', ratio: 2, base: 0.15, batch: 3, unlock: 7, desc: '2 planks → 1 treated lumber.' } ] },
       farm: { name: 'Grain Farm', icon: [12,5], steps: [
-        { id: 'fields', name: 'Fields', icon: [14,13], make: 'grain', base: 0.5,  unlock: 2, desc: 'Thralls sow and reap.' },
-        { id: 'mill',   name: 'Mill',   icon: [15,10], make: 'flour', from: 'grain', ratio: 2, base: 0.3,  unlock: 5, desc: '2 grain → 1 flour.' },
-        { id: 'baker',  name: 'Baker',  icon: [14,14], make: 'bread', from: 'flour', ratio: 2, base: 0.15, unlock: 8, desc: '2 flour → 1 bread.' } ] },
+        { id: 'fields', name: 'Fields', icon: [14,13], make: 'grain', base: 0.5, batch: 6,  unlock: 2, desc: 'Thralls sow and reap.' },
+        { id: 'mill',   name: 'Mill',   icon: [15,10], make: 'flour', from: 'grain', ratio: 2, base: 0.3, batch: 4,  unlock: 5, desc: '2 grain → 1 flour.' },
+        { id: 'baker',  name: 'Baker',  icon: [14,14], make: 'bread', from: 'flour', ratio: 2, base: 0.15, batch: 3, unlock: 8, desc: '2 flour → 1 bread.' } ] },
       mine: { name: 'Iron Mine', icon: [4,5], steps: [
-        { id: 'shaft',   name: 'Mine Shaft', icon: [17,2], make: 'ore',    base: 0.5,  unlock: 3, desc: 'Thralls dig iron ore.' },
-        { id: 'smelter', name: 'Smelter',    icon: [17,3], make: 'ingot',  from: 'ore',   ratio: 2, base: 0.3,  unlock: 6, desc: '2 ore → 1 ingot.' },
-        { id: 'forge',   name: 'Forge',      icon: [5,1],  make: 'swords', from: 'ingot', ratio: 2, base: 0.15, unlock: 9, desc: '2 ingots → 1 iron sword.' } ] },
+        { id: 'shaft',   name: 'Mine Shaft', icon: [17,2], make: 'ore',    base: 0.5, batch: 6,  unlock: 3, desc: 'Thralls dig iron ore.' },
+        { id: 'smelter', name: 'Smelter',    icon: [17,3], make: 'ingot',  from: 'ore',   ratio: 2, base: 0.3, batch: 4,  unlock: 6, desc: '2 ore → 1 ingot.' },
+        { id: 'forge',   name: 'Forge',      icon: [5,1],  make: 'swords', from: 'ingot', ratio: 2, base: 0.15, batch: 3, unlock: 9, desc: '2 ingots → 1 iron sword.' } ] },
     },
-    startGold: 50, foundRenown: 500, swapCooldown: 120, rateGrowth: 0.15, haulBase: 24, haulStep: 1.6, haulMin: 4, cartBase: 4, cartStep: 2,
+    startGold: 50, foundRenown: 500, swapCooldown: 120,
+    // A cycle: Work (batch ÷ rate) → Cart (loadBase) → Haul (haulBase). Every track level shortens its phase by trackGrowth (hyperbolic: never zero, never ends).
+    trackGrowth: 0.12, loadBase: 6, haulBase: 12, autoSell: 0.25,
+    thrallCapBase: 2, thrallXpDiv: 4, thrallLvBonus: 0.1,
     costBase: 40, costExp: 1.6, haulCostMult: 0.8,
     bufferCap: 200,                          // most input a refiner can hold waiting
     workerMilestones: [10, 25, 50],          // +1 worker slot at these step levels (highest track)
@@ -535,18 +538,18 @@ const CONFIG = {
       ], reward: { gold: 100 }, focus: { tab: 'kingdom', ksub: 'legacy', rtab: 'kingdom', el: 'perk:bestiary' } },
     { id: 'k01', chain: 'A Kingdom', name: 'Hands for Hire', text: 'A kingdom needs hands. The Tavern always has three thralls looking for work — each has a role (Foreman, Carter, Packer), stars and stats. Hire one.',
       steps: [ { label: 'Market → Tavern → Hire', check: { hired: 1 } } ], reward: { gold: 40 }, focus: { tab: 'market', msub: 'tavern', rtab: 'market', el: 'id:hire-list' } },
-    { id: 'k02', chain: 'A Kingdom', name: 'Fell the Forest', text: 'A step only runs while a thrall works it. Put your thrall to work at Logging: the logs fill a cart, the cart hauls them to the Storehouse.',
+    { id: 'k02', chain: 'A Kingdom', name: 'Fell the Forest', text: 'A step only runs while a thrall works it. Put your thrall to work at Logging and watch the bar: Work (fell the trees) → Cart (load them) → Haul (take them to the Storehouse), over and over.',
       steps: [ { label: 'Kingdom → Forest → Logging → + Add worker', check: { working: 'logging' } }, { label: 'Haul 40 wood to the Storehouse', check: { made: 'wood', need: 40 } } ], reward: { gold: 60 }, focus: { tab: 'kingdom', ksub: 'forest', rtab: 'kingdom', el: 'step:logging' } },
-    { id: 'k03', chain: 'A Kingdom', name: 'Faster Hands', text: 'Each step has three upgrades: Work rate (how fast it makes), Haul speed (how fast the cart comes back) and Cart size. Output is whichever is slower. Without an overseer, you have to work out which one that is.',
-      steps: [ { label: 'Logging → Work rate to Lv 3', check: { stepLv: 'logging:rate', need: 3 } }, { label: 'Logging → Haul speed to Lv 3', check: { stepLv: 'logging:haul', need: 3 } } ], reward: { gold: 80 }, focus: { tab: 'kingdom', ksub: 'forest', rtab: 'kingdom', el: 'step:logging' } },
+    { id: 'k03', chain: 'A Kingdom', name: 'Faster Hands', text: 'Each step has three upgrades, one for each part of the bar: Work, Cart and Haul. Each upgrade makes its part faster, forever. Upgrade the longest part first.',
+      steps: [ { label: 'Logging → Work to Lv 3', check: { stepLv: 'logging:rate', need: 3 } }, { label: 'Logging → Cart to Lv 3', check: { stepLv: 'logging:cart', need: 3 } }, { label: 'Logging → Haul to Lv 3', check: { stepLv: 'logging:haul', need: 3 } } ], reward: { gold: 80 }, focus: { tab: 'kingdom', ksub: 'forest', rtab: 'kingdom', el: 'step:logging' } },
     { id: 'k04', chain: 'A Kingdom', name: 'Imperial Orders', text: 'The Empire, the Guild and the villages post Orders at your Keep. There is no deadline — but finishing inside the speed window pays 20% more. Orders pay gold and Renown.',
       steps: [ { label: 'Kingdom → Keep → Orders → Deliver one', check: { orders: 1 } } ], reward: { gold: 100 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:order-list' } },
-    { id: 'k05', chain: 'A Kingdom', name: 'An Overseer', text: 'Only an overseer tells you what holds a step back. Put your best thrall in the Overseer slot: their role boosts one upgrade track, and they can call a Double Shift.',
+    { id: 'k05', chain: 'A Kingdom', name: 'An Overseer', text: 'An overseer names the slowest part of a step. Put a thrall in the Overseer slot: their role speeds up one part (Foreman → Work, Packer → Cart, Carter → Haul), and they can call a Double Shift.',
       steps: [ { label: 'Market → Tavern → hire a second thrall', check: { hired: 2 }, focus: { tab: 'market', msub: 'tavern', rtab: 'market', el: 'id:hire-list' } }, { label: 'Kingdom → Forest → Logging → Overseer → Choose', check: { overseer: 1 } } ], reward: { gold: 150 }, focus: { tab: 'kingdom', ksub: 'forest', rtab: 'kingdom', el: 'step:logging' } },
-    { id: 'k06', chain: 'A Kingdom', name: 'Baron', text: 'Renown only comes from Orders. At 500 Renown you become a Baron: more workers, a bigger Storehouse — and you may found a new fief, which brings the next step of a production line.',
+    { id: 'k06', chain: 'A Kingdom', name: 'Baron', text: 'Renown only comes from Orders. At 500 Renown you become a Baron: more workers, a bigger Storehouse — and this land is conquered, and you may settle new lands, which bring the next step of a production line.',
       steps: [ { label: 'Earn 500 Renown from Orders', check: { renown: 500 } } ], reward: { gold: 200 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:order-list' } },
-    { id: 'k07', chain: 'A Kingdom', name: 'A New Fief', text: 'Found a new fief. The kingdom starts over — your hero, his gear and skills, and your Legacy stay — and you gain Crystals and the next step: Fields for grain.',
-      steps: [ { label: 'Kingdom → Keep → Found a new fief', check: { founded: 2 } } ], reward: { gold: 100 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:found-btn' } },
+    { id: 'k07', chain: 'A Kingdom', name: 'New Lands', text: 'Settle new lands. Your hero and your thralls ride with you; the old lands, stores and gold stay behind. You gain Crystals, room for one more thrall and the next step: Fields for grain.',
+      steps: [ { label: 'Kingdom → Keep → Settle New Lands', check: { founded: 2 } } ], reward: { gold: 100 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:found-btn' } },
   ],
 
   // ---------- Tech tree ----------
