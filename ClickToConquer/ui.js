@@ -570,7 +570,7 @@ const UI = (() => {
         const d = el('div', 'node' + (n.capstone ? ' capstone' : '') + (n.tech ? ' tech' : ''));
         d.innerHTML = `${ico(n.icon, 24)}<div class="n-name">${n.name}</div><div class="n-rank" data-f="rank"></div><div class="n-desc">${n.desc}</div><div class="n-bar"><div data-f="bar"></div></div><button class="buy" data-f="btn">+</button>`;
         d.title = n.parent ? `Opens when ${(nodes.find(x => x.id === n.parent) || {}).name} is maxed` : '';
-        d.querySelector('[data-f=btn]').addEventListener('click', () => { if (Game.rankNode(curDisc, n.id)) { flash(d); render(true); } });
+        d.setAttribute('role', 'button'); d.tabIndex = 0; const tap = () => { if (Game.rankNode(curDisc, n.id)) { flash(d); render(true); } }; d.addEventListener('click', tap); d.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); tap(); } });
         rows.node[n.id] = d; row.appendChild(d);
       }
       box.appendChild(row);
