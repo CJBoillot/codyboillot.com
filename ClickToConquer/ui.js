@@ -11,7 +11,11 @@ const UI = (() => {
   const fs = (k, v) => k === 'attack' ? v.toFixed(1) : k === 'speed' ? (1 + v).toFixed(2) + '/s' : k === 'hp' ? Math.round(v) + '' : k === 'armor' ? '−' + v.toFixed(2) + '/hit' : isPct(k) ? Game.pct(v, 0) : Game.fmt(v);
   let welcomeData = null;
   // Sprite icon: [row,col] on the icon sheet. size in px (16/24/32).
-  const ico = (rc, size = 16, cls = '') => { if (!rc) return ''; const sc = size / CONFIG.iconSheet.cell; return `<span class="ico ${cls}" style="width:${size}px;height:${size}px;background-position:-${rc[1] * size}px -${rc[0] * size}px;background-size:${512 * sc}px auto"></span>`; };
+  const ico = (rc, size = 16, cls = '') => { if (!rc) return ''; if (typeof rc === 'string') return `<span class="ico ico-img ${cls}" style="width:${size}px;height:${size}px"><img src="${rc}" alt="" loading="lazy" decoding="async"></span>`; const sc = size / CONFIG.iconSheet.cell; return `<span class="ico ${cls}" style="width:${size}px;height:${size}px;background-position:-${rc[1] * size}px -${rc[0] * size}px;background-size:${512 * sc}px auto"></span>`; };
+  // Painted resource icons: resources, the hand boxes and kingdom buildings use them (drawn a little larger than their box)
+  (() => { const RS = CONFIG.resources, IM = CONFIG.resImages || {}; for (const k in IM) if (RS[k]) RS[k].icon = IM[k];
+    for (const h of CONFIG.hand) if (IM[h.gives]) h.icon = IM[h.gives];
+    for (const lid in CONFIG.kingdom.lines) for (const st of CONFIG.kingdom.lines[lid].steps) if (IM[st.make]) st.icon = IM[st.make]; })();
 
   const costHtml = cost => !cost ? '<span class="dim">max level</span>' : Object.entries(cost).map(([k, v]) => `<span class="costitem ${(Game.S.res[k] || 0) >= v ? '' : 'lack'}" title="${Game.fmt(v)} ${R[k].name} (have ${Game.fmt(Game.S.res[k] || 0)})">${ico(R[k].icon, 16)}${Game.fmt(v)}<span class="cost-name">${R[k].name}</span></span>`).join(' ');
   const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };

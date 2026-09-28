@@ -763,3 +763,7 @@ html, body { max-width: 100%; overflow-x: hidden; }
 .enemy-art img.on { opacity: .42; }
 .mini-hero .ground-art.on { opacity: .18; }
 .mini-hero .enemy-art img.on { opacity: .34; }
+
+/* Painted icons: same box as the sprite icons, image drawn ~20% larger so it reads better without moving the layout */
+.ico.ico-img { background: none; position: relative; overflow: visible; image-rendering: auto; }
+.ico.ico-img img { position: absolute; width: 120%; height: 120%; left: -10%; top: -10%; max-width: none; pointer-events: none; }

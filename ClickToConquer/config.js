@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Alpha 0.6.4',
+  version: 'Alpha 0.6.5',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -283,6 +283,8 @@ const CONFIG = {
   // ---------- Hunting grounds ----------
   // Where the hero fights. Each ground has its own stage, enemies, bosses and loot. Drops need their tech (Skinning, Butchery, Grave Robbing). Beasts carry no gold.
   // Enemy art: image + face position (fraction of the image) so the face sits under the enemy's HP bar. Boss art: '<id>_boss'.
+  // Painted icons for resources (128px webp); anything without one keeps its sprite from icons.png
+  resImages: Object.fromEntries(['fiber','wood','hide','stone','berries','gold','ore','leather','ingot','meat','grain','planks','cloth','wool','flour','bread','swords','bricks'].map(k => [k, `assets/res/${k}.webp`])),
   art: {
     grounds: { wilds: 'assets/enemies/wilds_dusk.webp', roads: 'assets/enemies/roads_a.webp', crypts: 'assets/enemies/crypts_a.webp' },
     enemies: {
@@ -418,6 +420,7 @@ const CONFIG = {
   // jobs (jobs completed by hand or thrall), sold (gold earned at market), stage, boss, founded, thrall (assigned), activity (swings).
   // Shown in Settings → What's new (newest first). Keep each line short.
   changelog: [
+    ['0.6.5', 'New painted icons for every resource.'],
     ['0.6.4', 'The Roads and the Crypts get their art: every bandit, undead and boss, with painted backdrops.'],
     ['0.6.3', 'Art! Every beast in the Wilds and its boss now appears in the fight, over a painted Wilds backdrop.'],
     ['0.6.2', 'Orders now count toward your next settlement. Overseers and thrall stats matter much more. Iron and Steel gear use kingdom goods. Orders sometimes ask for what your hero gathers.'],
