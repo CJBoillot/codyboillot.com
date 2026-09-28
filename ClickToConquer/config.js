@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Alpha 0.6.3',
+  version: 'Alpha 0.6.4',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -284,10 +284,14 @@ const CONFIG = {
   // Where the hero fights. Each ground has its own stage, enemies, bosses and loot. Drops need their tech (Skinning, Butchery, Grave Robbing). Beasts carry no gold.
   // Enemy art: image + face position (fraction of the image) so the face sits under the enemy's HP bar. Boss art: '<id>_boss'.
   art: {
-    grounds: { wilds: 'assets/enemies/wilds_dusk.webp' },
+    grounds: { wilds: 'assets/enemies/wilds_dusk.webp', roads: 'assets/enemies/roads_a.webp', crypts: 'assets/enemies/crypts_a.webp' },
     enemies: {
       rat: [0.87, 0.67], rat_boss: [0.86, 0.25], boar: [0.80, 0.65], boar_boss: [0.84, 0.62], wolf: [0.80, 0.57], wolf_boss: [0.83, 0.47],
       bear: [0.79, 0.42], bear_boss: [0.84, 0.40], saber: [0.88, 0.38], saber_boss: [0.86, 0.33],
+      cutpurse: [0.72, 0.31], cutpurse_boss: [0.18, 0.16], bandit: [0.60, 0.24], bandit_boss: [0.62, 0.13], merc: [0.64, 0.17], merc_boss: [0.49, 0.14],
+      raider: [0.62, 0.28], raider_boss: [0.55, 0.14], assassin: [0.76, 0.25], assassin_boss: [0.44, 0.17],
+      skeleton: [0.72, 0.18], skeleton_boss: [0.51, 0.14], ghoul: [0.80, 0.33], ghoul_boss: [0.56, 0.26], wraith: [0.85, 0.21], wraith_boss: [0.74, 0.14],
+      knight: [0.74, 0.19], knight_boss: [0.51, 0.13], shade: [0.85, 0.21], shade_boss: [0.78, 0.30],
     },
   },
   grounds: {
@@ -414,6 +418,7 @@ const CONFIG = {
   // jobs (jobs completed by hand or thrall), sold (gold earned at market), stage, boss, founded, thrall (assigned), activity (swings).
   // Shown in Settings → What's new (newest first). Keep each line short.
   changelog: [
+    ['0.6.4', 'The Roads and the Crypts get their art: every bandit, undead and boss, with painted backdrops.'],
     ['0.6.3', 'Art! Every beast in the Wilds and its boss now appears in the fight, over a painted Wilds backdrop.'],
     ['0.6.2', 'Orders now count toward your next settlement. Overseers and thrall stats matter much more. Iron and Steel gear use kingdom goods. Orders sometimes ask for what your hero gathers.'],
     ['0.6.1', 'Cloud saves with Google sign-in (or play as a guest). Cheaper buildings, better-paying Orders.'],
