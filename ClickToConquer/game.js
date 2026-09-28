@@ -409,7 +409,7 @@ function thrall(i) { return S.kingdom.thralls[i]; }
 function thrallName(i) { const t = thrall(i); return t ? t.name : 'Thrall'; }
 function thrallLevel(t) { return t ? 1 + Math.floor(Math.sqrt((t.xp || 0) / KC().thrallXpDiv)) : 1; }
 function thrallLvMult(t) { return 1 + KC().thrallLvBonus * (thrallLevel(t) - 1); }
-function thrallCap() { return tierDef().thralls; }
+function thrallCap() { return tierDef().thralls + (phase() === 3 ? KC().war.thrallBonus : 0); } // the Kingdom adds room for the Barracks crew and officers
 function roleMult(t, role) { if (!t || t.role !== role) return 1; return (KC().starMult[t.stars] || 1) * (1 + 0.02 * (thrallLevel(t) - 1)); }
 function stepWorkerSlots(id) { return tierDef().slots; }
 function stepMods(id) {
@@ -682,9 +682,14 @@ function questCheck(c) {
 }
 // Auto-generated goal when the chain is exhausted: the tech you're closest to, with what it still needs.
 function suggestGoal() {
-  if (kingdomNo() > 0) { // the kingdom: the endless loop — Renown toward the next lands
-    const ok = canFound();
-    return { name: ok ? 'Conquer New Lands' : `Grow the ${tierDef().name}`, text: ok ? 'This land is conquered. Conquer new lands when you are ready — or keep upgrading here.' : tierDef().need, hint: 'Kingdom → Keep', parts: [{ done: ok, have: ok ? 1 : 0, need: 1, label: 'Settlement' }], focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:settle-card' } };
+  if (phase() === 3) { // the Kingdom: until the Road opens, the goal is the army
+    const full = (S.res.soldiers || 0) >= resCap('soldiers');
+    return { name: full ? 'The Army Is Ready' : 'Muster the Army', text: full ? 'Your army is at full strength. The Road to new lands opens in the next update — keep upgrading the Capital meanwhile.' : 'The Barracks turns Supplies and gold into soldiers. Upgrade Muster, Drill and March to raise them faster.', hint: 'Kingdom → Barracks',
+      parts: [{ done: full, have: Math.floor(S.res.soldiers || 0), need: resCap('soldiers'), label: 'Soldiers' }], focus: { tab: 'kingdom', ksub: 'war', rtab: 'kingdom', el: 'step:barracks' } };
+  }
+  if (kingdomNo() > 0) { // the kingdom: grow the settlement, then proclaim
+    const ok = canProclaim();
+    return { name: ok ? 'Proclaim the Kingdom' : `Grow the ${tierDef().name}`, text: ok ? 'The City is complete. Proclaim the Kingdom — nothing is lost.' : tierDef().need, hint: 'Kingdom → Keep', parts: [{ done: ok, have: ok ? 1 : 0, need: 1, label: 'Settlement' }], focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:settle-card' } };
   }
   let best = null;
   for (const t of CONFIG.techs) {

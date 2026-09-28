@@ -623,10 +623,10 @@ const UI = (() => {
     $('keep-kingdom').classList.toggle('hidden', !inK); if (!inK) return false;
     { // settlement
       const T = CONFIG.kingdom.tiers, t = Game.kTier(), td = T[t], nx = T[t + 1], need = Game.tierNeed(), paid = Game.tierPaid();
-      setText($('settle-name'), td.name); setText($('settle-tier'), `${t + 1} of ${T.length}${nx ? ' · next: ' + nx.name : ''}`);
+      setText($('settle-name'), Game.phase() === 3 ? 'Capital' : td.name); setText($('settle-tier'), `${t + 1} of ${T.length}${nx ? ' · next: ' + nx.name : ''}`);
       let lh = '';
       if (nx) {
-        setText($('settle-need'), `To become a ${nx.name}: ${td.need} Then pay in ${td.cap} of every good you make — a little at a time, and goods you deliver in Orders count too. Nothing is lost.${t > 0 ? ' Tip: a building uses up what feeds it — take its workers off for a while to stock up.' : ''}`);
+        setText($('settle-need'), `To become a ${nx.name}: ${td.need} Then pay in ${td.cap} of every good you make — a little at a time, and goods you deliver in Orders count too. Nothing is lost.${t > 0 ? ' Tip: set Keep in stock on a building to save its goods for a payment.' : ''}`);
         const cur = CONFIG.kingdom.lines; const stepsHere = Game.allSteps().filter(st => st.tier === t);
         lh += stepsHere.map(st => { const ok = Game.stepBuilt(st.id) && Game.stepState(st.id).workers.length > 0; return `<div class="row-between small"><span>${ok ? '✓' : '○'} ${st.name}</span><span class="${ok ? 'good' : 'dim'}">${Game.stepBuilt(st.id) ? (ok ? 'working' : 'needs a worker') : 'not built'}</span></div>`; }).join('');
         lh += Object.keys(need).map(k => { const g = Math.min(need[k], paid[k] || 0); return `<div class="bar kob"><div style="width:${100 * g / need[k]}%"></div><span>${R[k].name} ${f(g)} / ${f(need[k])}${g < need[k] ? ` · have ${f(Math.floor(S.res[k] || 0))}` : ' ✓'}</span></div>`; }).join('');
@@ -635,7 +635,7 @@ const UI = (() => {
         const cr = Game.canRaise(); $('settle-raise').disabled = !cr; setText($('settle-raise'), `Raise to ${nx.name}`); $('settle-raise').classList.remove('hidden');
         if (cr) keepHint = true;
       } else {
-        setText($('settle-need'), td.need + ' Then proclaim the Kingdom.');
+        setText($('settle-need'), Game.phase() === 3 ? 'Your City is the Capital. This list no longer blocks anything — a full crew and an Overseer still make every building faster.' : td.need + ' Then proclaim the Kingdom.');
         const c = Game.cityChecks(); const row = (lab, a, b) => `<div class="row-between small"><span>${a >= b ? '✓' : '○'} ${lab}</span><span class="${a >= b ? 'good' : 'dim'}">${a} / ${b}</span></div>`;
         lh += row('Buildings with 3 workers', c.crews, c.steps) + row('Buildings with an Overseer', c.overseers, c.steps) + row('Accountants on final goods', c.accountants, c.finals);
         { const miss = []; for (const st of Game.allSteps().filter(x => !x.phase)) { if (!Game.stepBuilt(st.id)) { miss.push(`${st.name}: not built`); continue; } const ss = Game.stepState(st.id), need = [];

@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Alpha 0.8.2',
+  version: 'Alpha 0.8.3',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -368,7 +368,7 @@ const CONFIG = {
           ph: ['Muster', 'Drill', 'March'], build: { lumber: 200, swords: 100, gold: 600 }, desc: '1 Supplies + 2 gold → 1 soldier.' } ] },
     },
     startGold: 50, foundRenown: 500, swapCooldown: 120,
-    war: { supplyCapMult: 2, soldierCapBase: 50, soldierCapPerTier: 25, soldierGold: 2, quartermaster: { bread: 'supplies', swords: 'equipment', lumber: 'equipment' } },
+    war: { thrallBonus: 10, supplyCapMult: 2, soldierCapBase: 50, soldierCapPerTier: 25, soldierGold: 2, quartermaster: { bread: 'supplies', swords: 'equipment', lumber: 'equipment' } },
     // Settlement tiers inside one land. Raising a tier costs `cap` of every good made so far (pay in as you go) and loses nothing.
     tiers: [
       { name: 'Camp',    cap: 200, slots: 1, thralls: 6,  need: 'Build and staff Logging, Fields and the Mine Shaft.' },
@@ -420,6 +420,7 @@ const CONFIG = {
     { id: 'weaver',    cat: 'craft',   name: 'Weaver',      icon: [17,6], buildCost: { gold: 150, wood: 40 },              job: { time: 10, inputs: { wool: 3 },            outputs: { cloth: 1 } } },
     // Artisan
     { id: 'sawmill',   cat: 'artisan', name: 'Sawmill',     icon: [19,11], buildCost: { gold: 400, wood: 100, ingot: 5 },  job: { time: 20, inputs: { wood: 5 },            outputs: { planks: 1 } } },
+    ['0.8.3', 'After proclaiming: +10 thrall room for the Barracks crew, the quest card points at the army instead of the City checklist, and the City card reads Capital.'],
     ['0.8.2', 'Fix: thralls stuck on old or unbuilt buildings (counted as busy, invisible) are freed when the game loads.'],
     ['0.8.1', 'City checklist now names each building that is missing a worker, Overseer or Accountant, and counts idle thralls. The Tavern says when you are at the thrall cap.'],
     ['0.8.0', 'Phase 3 begins: a complete City is now proclaimed as your Capital instead of being reset. The header becomes your war chest (Gold, Supplies, Equipment, Soldiers, Officers), Accountants become Quartermasters, and the Barracks musters soldiers. The Road to new lands comes next.'],
