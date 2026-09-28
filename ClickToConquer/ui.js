@@ -459,6 +459,7 @@ const UI = (() => {
         ${st.from ? `<div class="kin"><span class="small dim">${R[st.from].name} in</span><div class="bar green-bar"><div data-f="inbar"></div><span data-f="inlab"></span></div></div>` : ''}
         <div class="ktracks">${['rate', 'cart', 'haul'].map(t => `<div class="ktrack" data-t="${t}"><div><div class="ktl">${t === 'rate' && st.from ? 'Craft' : TRACK[t]} <span class="dim small">Lv <b data-f="lv"></b></span></div><div class="small dim" data-f="v"></div><div class="kflag hidden">Bottleneck</div></div><button class="buy" data-f="up"><span class="small" data-f="uplab">Upgrade</span><br><span class="cost" data-f="cost"></span></button></div>`).join('')}</div>
         <div class="kcycle">${[0, 1, 2].map(i => `<div class="kseg kseg${i}" data-seg="${i}"><div class="kfill"></div><span>${i === 0 && st.from ? "Craft" : PH[i]}</span></div>`).join("")}</div><div class="tiny dim kcyc-lab" data-f="cartlab"></div>
+        ${L.steps[i + 1] && Game.stepBuilt(L.steps[i + 1].id) ? `<div class="kstock"><div class="kstock-head"><span>Keep ${R[st.make].name.toLowerCase()} in stock</span><span class="kstock-n" data-f="stn"></span></div><div class="seg kstock-seg">${Game.STOCK_MODES.map(m => `<button data-stock="${m}">${m === 'auto' ? 'Auto' : m === 0 ? '0' : m === 1 ? 'Full' : m === 0.5 ? '½' : '¼'}</button>`).join('')}</div><div class="tiny kstock-why" data-f="stwhy"></div></div>` : ''}
         <div class="kcrew">
           <div class="kcrew-head"><span>Workers</span><b data-f="wn"></b></div>
           <div class="kslots" data-f="wslots"></div>
@@ -479,6 +480,7 @@ const UI = (() => {
       card.querySelector('[data-f=ovsel]').addEventListener('click', () => openPicker(id, 'overseer', lid));
       card.querySelector('[data-f=ab]').addEventListener('click', () => { if (Game.useAbility(id)) flash(card); });
       const acb = card.querySelector('[data-f=acsel]'); if (acb) acb.addEventListener('click', () => openPicker(id, 'accountant', lid));
+      card.querySelectorAll('[data-stock]').forEach(b => b.addEventListener('click', () => { const v = b.dataset.stock; if (Game.setStockMode(Game.stepDef(id).make, v === 'auto' ? 'auto' : +v)) { Game.save(); render(true); } }));
     });
     box.closest('.ksub').querySelector('[data-kbar]').innerHTML = kbarHtml();
     box.closest('.ksub').querySelectorAll('[data-kbuy]').forEach(b => b.addEventListener('click', () => { kBuy = b.dataset.kbuy === 'max' ? 'max' : +b.dataset.kbuy; for (const l in lineKey) lineKey[l] = ''; render(true); }));
@@ -511,6 +513,13 @@ const UI = (() => {
       { const PHS = Game.stepPhases(st.id), cyc = PHS[0] + PHS[1] + PHS[2];
         card.querySelectorAll('[data-seg]').forEach(seg => { const i = +seg.dataset.seg; seg.style.flexGrow = (PHS[i] / cyc).toFixed(4); const fill = !m.working ? 0 : i < s.phase ? 100 : i > s.phase ? 0 : 100 * Math.min(1, s.t / PHS[i]); seg.firstChild.style.width = fill + '%'; seg.classList.toggle('on', m.working && i === s.phase); });
         setText(card.querySelector('[data-f=cartlab]'), !m.working ? 'Idle — no workers' : `${Game.stepBatch(st.id)} ${R[st.make].name.toLowerCase()} every ${cyc.toFixed(1)}s · now: ${[st.from ? 'crafting' : 'working', 'loading the cart', 'hauling'][s.phase]}${s.phase === 0 && lim === 'starved' ? ' (waiting for ' + R[st.from].name.toLowerCase() + ')' : ''}`); }
+      if (card.querySelector('[data-f=stn]')) { const k = st.make, T = Game.stockTarget(k), have = Math.floor(S.res[k] || 0), nx = Game.nextStep(st.id), nxn = nx ? nx.name : 'next building';
+        card.querySelectorAll('[data-stock]').forEach(b => b.classList.toggle('active', String(T.mode) === b.dataset.stock));
+        setText(card.querySelector('[data-f=stn]'), `${f(Math.min(have, T.target))} / ${f(T.target)}`);
+        const why = card.querySelector('[data-f=stwhy]');
+        if (T.target <= 0) { setHtml(why, `<span class="dim">Nothing needed — every ${R[k].name.toLowerCase()} feeds the ${nxn}.</span>`); }
+        else if (have < T.target) setHtml(why, `<span class="kstock-fill">${T.share < 1 ? 'Half to the Storehouse' : 'Storehouse first'}${T.why.length ? ' for the ' + T.why.join(', the ').replace(/the orders$/, 'Keep orders') : ''}${T.share < 1 ? ', half to the ' + nxn : ', then the ' + nxn}.</span>`);
+        else setHtml(why, `<span class="dim">Stock is full${T.why.length ? ' (' + T.why.join(', ') + ')' : ''} — the rest feeds the ${nxn}.</span>`); }
       if (st.from) { card.querySelector('[data-f=inbar]').style.width = Math.min(100, 100 * s.inBuf / (st.ratio * st.batch * 2)) + '%'; setText(card.querySelector('[data-f=inlab]'), `${Math.floor(s.inBuf)} waiting`); }
       { const cap = Game.stepWorkerSlots(st.id), open = cap - s.workers.length, T = CONFIG.kingdom.tiers;
         setText(card.querySelector('[data-f=wn]'), `${s.workers.length} / ${cap}`);

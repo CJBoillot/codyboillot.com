@@ -415,6 +415,20 @@ function stepMods(id) {
 }
 // One production cycle = Work (make a batch) → Cart (load it) → Haul (deliver it). Each track shortens its own phase, forever.
 const trackGrow = lv => 1 + KC().trackGrowth * (lv - 1);
+// Stock targets: an intermediate good (planks, flour, ingots) fills the Storehouse up to its target before it feeds the next building.
+// Auto = what the kingdom currently needs: unbuilt buildings, the settlement payment, open orders.
+const STOCK_MODES = ['auto', 0, 0.25, 0.5, 1];
+function stockMode(k) { const m = (S.kingdom.stock || {})[k]; return m === undefined ? 'auto' : m; }
+function setStockMode(k, m) { if (!STOCK_MODES.includes(m)) return false; (S.kingdom.stock = S.kingdom.stock || {})[k] = m; return true; }
+function stockDemand(k) {
+  const why = []; let n = 0;
+  for (const lid in KC().lines) for (const d of KC().lines[lid].steps) { if (!d.build || !d.build[k] || !stepAvailable(d.id) || stepBuilt(d.id)) continue; n += d.build[k]; why.push(d.name); }
+  let allBuilt = true; for (const lid in KC().lines) for (const d of KC().lines[lid].steps) if (stepAvailable(d.id) && !stepBuilt(d.id)) allBuilt = false;
+  const need = allBuilt ? tierNeed() : null; if (need && need[k]) { const left = Math.max(0, need[k] - (tierPaid()[k] || 0)); if (left > 0) { n += left; why.push(tierDef(kTier() + 1).name); } }
+  let o = 0; for (const ord of (S.kingdom.orders || [])) o += (ord.wants || {})[k] || 0; if (o) { n += o; why.push('orders'); }
+  return { n, why };
+}
+function stockTarget(k) { const m = stockMode(k), cap = resCap(k); if (m === 'auto') { const d = stockDemand(k); return { target: Math.min(cap, d.n), why: d.why, mode: m, share: 0.5 }; } return { target: Math.floor(cap * m), why: [], mode: m, share: 1 }; }
 function nextBufCap(nx) { return nx.ratio * nx.batch * 2; }
 function stepBatch(id) { return stepDef(id).batch; }
 function stepRate(id) { const d = stepDef(id), s = stepState(id); return d.base * trackGrow(s.rate) * stepMods(id).rate; }
@@ -485,7 +499,8 @@ function tickKingdom(dt) {
         } else { const adv = Math.min(left, dur - s.t); s.t += adv; left -= adv; }
         if (s.t >= dur - 1e-9) {
           if (s.phase === 2) { // delivered
-            let rest = batch; if (nx && stepMods(nx.id).working) { const b = stepState(nx.id), room = Math.max(0, nextBufCap(nx) - b.inBuf), take = Math.min(room, rest); b.inBuf += take; rest -= take; } // the next building takes what it can use
+            let rest = batch; if (nx && stepMods(nx.id).working) { const T = stockTarget(st.make), short = Math.max(0, T.target - (S.res[st.make] || 0)), keep = Math.min(rest * T.share, short); if (keep > 0) { storeDeliver(st.make, keep); rest -= keep; } }
+            if (rest > 0 && nx && stepMods(nx.id).working) { const b = stepState(nx.id), room = Math.max(0, nextBufCap(nx) - b.inBuf), take = Math.min(room, rest); b.inBuf += take; rest -= take; } // the next building takes what it can use
             if (rest > 0) storeDeliver(st.make, rest);
             for (const w of s.workers) { const t = thrall(w); if (t) t.xp = (t.xp || 0) + 1; }
             if (s.overseer !== null && thrall(s.overseer)) thrall(s.overseer).xp = (thrall(s.overseer).xp || 0) + 1;
@@ -756,6 +771,12 @@ function applyOffline(awaySeconds) {
   if (researching() && awaySeconds >= (researching().total - researching().t)) finishResearch();
   const counted = Math.min(awaySeconds, afkCap()), eff = afkEff(), gains = {};
   const kr = kingdomRates(); for (const k in kr) gains[k] = (gains[k] || 0) + kr[k] * counted * eff;
+  // stock targets while away: an intermediate good tops up the Storehouse first, taken from what the next building would have made
+  for (const lid in KC().lines) { const steps = lineSteps(lid); for (let i = 0; i < steps.length - 1; i++) { const st = steps[i], nx = steps[i + 1];
+    if (!stepMods(st.id).working || !stepMods(nx.id).working) continue;
+    const T = stockTarget(st.make), short = Math.max(0, T.target - (S.res[st.make] || 0) - (gains[st.make] || 0)); if (short <= 0) continue;
+    const top = Math.min(short, stepOutput(st.id) * counted * eff * T.share); gains[st.make] = (gains[st.make] || 0) + top;
+    const fin = steps[steps.length - 1].make; let lost = top; for (let j = i + 1; j < steps.length; j++) lost /= steps[j].ratio; if (gains[fin]) gains[fin] = Math.max(0, gains[fin] - lost); } }
   let kills = 0;
   if (heroFighting()) { const hr = heroRates(); for (const k in hr) gains[k] = (gains[k] || 0) + hr[k] * counted * eff; kills = farmRate() * counted * eff; }
   else { const hr = harvestRates(); for (const k in hr) gains[k] = (gains[k] || 0) + hr[k] * counted * eff; }
@@ -883,6 +904,7 @@ function boot() {
 }
 
 window.Game = {
+  stockMode, setStockMode, stockTarget, stockDemand, STOCK_MODES,
   get S() { return S; }, saveString, saveMeta, restoreString, setSaveHook: f => { saveHook = f; }, SAVE_KEY, fmt, pct, fmtTime, drainEvents: () => EVENTS.splice(0), afkEfficiency: () => afkEff(),
   discXp, discLevel, discProgress, treeNode, nodeRank, nodeMax, nodeOpen, treePointsTotal, treePointsSpent, treePointsFree, canRankNode, rankNode, nodeQuestLocked, treeMods,
   fistLevel, slotValue, enemyHit, crafting, maxUpgradePlan, upgradeMax, stats, gearStats, itemStatPreview, gearCraftCost, gearUpgradeCost, canTierUp, craftGear, upgradeGear,
