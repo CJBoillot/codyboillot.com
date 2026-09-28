@@ -695,3 +695,17 @@ html, body { max-width: 100%; overflow-x: hidden; }
 .kswap { min-width: 40px; padding: 6px 8px; font-size: 16px; }
 #market-mode { display: flex; margin-top: 8px; }
 #market-mode button { flex: 1; padding: 8px; font-size: 14px; }
+.subtabs2 { flex-direction: column; }
+.subtabs2 .subrow { display: flex; gap: 4px; }
+.subtabs2 .subrow.hidden { display: none; }
+.pick-box { max-width: 400px; text-align: left; }
+.pick-box .card-title { text-align: center; }
+.pick-row { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; padding: 10px 12px; border-radius: 8px; margin: 0; }
+.pick-row .row-main { flex: 1; min-width: 0; }
+.pick-row .tag { font-size: 11px; padding: 2px 6px; border-radius: 4px; border: 1px solid var(--line2); white-space: nowrap; }
+.pick-row .tag.idle { color: #8fd18f; border-color: #3d6b3d; }
+.kslot .kpick { padding: 6px 10px; font-size: 13px; }
+.pt-box { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+.pt-row { display: flex; gap: 10px; align-items: flex-start; }
+.pt-num { min-width: 34px; text-align: center; font-size: 20px; color: var(--bronze2); border: 1px solid var(--line2); border-radius: 6px; padding: 2px 4px; }
+.pt-num.gold { color: #f3c64d; }

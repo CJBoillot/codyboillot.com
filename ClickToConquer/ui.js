@@ -83,6 +83,12 @@ const UI = (() => {
       document.querySelectorAll('[data-ksub]').forEach(x => x.classList.toggle('active', x === b));
       document.querySelectorAll('.ksub').forEach(t => t.classList.toggle('hidden', t.id !== 'ksub-' + b.dataset.ksub));
     }));
+    document.querySelectorAll('[data-msub]').forEach(b => b.addEventListener('click', () => {
+      document.querySelectorAll('[data-msub]').forEach(x => x.classList.toggle('active', x === b));
+      document.querySelectorAll('.msub').forEach(t => t.classList.toggle('hidden', t.id !== 'msub-' + b.dataset.msub));
+    }));
+    $('pick-cancel').addEventListener('click', () => $('pick-modal').classList.add('hidden'));
+    $('pick-modal').addEventListener('click', e => { if (e.target.id === 'pick-modal') $('pick-modal').classList.add('hidden'); });
     document.querySelectorAll('[data-csub]').forEach(b => b.addEventListener('click', () => {
       if (b.dataset.csub === 'best' && !Game.perkRank('bestiary')) { /* still show the locked card */ }
       document.querySelectorAll('[data-csub]').forEach(x => x.classList.toggle('active', x === b));
@@ -255,16 +261,20 @@ const UI = (() => {
       case 'gear': return reached('f03');
       case 'skills': return S.hero.level >= 2 || reached('q02b') || Object.values(S.hero.dxp || {}).some(x => x > 0);
       case 'market': return reached('q14') || S.legacy.foundings > 0;
+      case 'trade': return true;
+      case 'tavern': return Game.kingdomNo() > 0;
       case 'inventory': return reached('q05') || Object.keys(R).some(k => R[k].kind === 'loot' && S.lifetime[k] > 0);
       default: return true;
     }
   }
-  const TABKEY = b => b.dataset.tab || b.dataset.sub || b.dataset.ksub || b.dataset.rtab;
+  const TABKEY = b => b.dataset.tab || b.dataset.sub || b.dataset.ksub || b.dataset.msub || b.dataset.rtab;
   function applyTabLocks() {
-    document.querySelectorAll('[data-tab],[data-sub],[data-ksub],[data-rtab]').forEach(b => {
+    document.querySelectorAll('[data-tab],[data-sub],[data-ksub],[data-msub],[data-rtab]').forEach(b => {
       const key = TABKEY(b), ok = tabUnlocked(key);
-      b.disabled = !ok; b.classList.toggle('locked-tab', !ok); if (b.classList.contains('kline')) b.classList.toggle('hidden', !ok);
+      b.disabled = !ok; b.classList.toggle('locked-tab', !ok);
     });
+    $('kline-row').classList.toggle('hidden', Game.kingdomNo() < 1);
+    { const ma = document.querySelector('[data-msub].active'); if (ma && !tabUnlocked(ma.dataset.msub)) document.querySelector('[data-msub=trade]').click(); }
     // hide content behind a locked active tab
     const ra = document.querySelector('[data-rtab].active'), rlocked = desktop && ra && !tabUnlocked(ra.dataset.rtab);
     $('right-locked').classList.toggle('hidden', !rlocked);
@@ -290,6 +300,7 @@ const UI = (() => {
     if (F.tab && !desktop) add(document.querySelector(`[data-tab=${F.tab}]`));
     if (F.sub) add(document.querySelector(`[data-sub=${F.sub}]`));
     if (F.ksub) add(document.querySelector(`[data-ksub=${F.ksub}]`));
+    if (F.msub) add(document.querySelector(`[data-msub=${F.msub}]`));
     if (F.rtab && desktop) add(document.querySelector(`[data-rtab=${F.rtab}]`));
     for (const sel of [F.el, F.el2]) {
       if (!sel) continue; const ci = sel.indexOf(':'), kind = sel.slice(0, ci), id = sel.slice(ci + 1);
@@ -313,7 +324,7 @@ const UI = (() => {
   const RIGHT = { kingdom: 'tab-kingdom', skills: 'sub-skills', inventory: 'tab-inventory', market: 'tab-market' };
   let desktop = false;
   // Mobile: the active tab's sub-tab strip sits directly under the main tabs (in the sticky header)
-  const SUBNAV = { hero: 'hero-subtabs', kingdom: 'kingdom-subtabs', inventory: 'csub-tabs' };
+  const SUBNAV = { hero: 'hero-subtabs', kingdom: 'kingdom-subtabs', inventory: 'csub-tabs', market: 'market-subtabs' };
   function placeSubtabs() {
     for (const k in SUBNAV) undock(SUBNAV[k]);
     if (desktop) return;
@@ -399,8 +410,8 @@ const UI = (() => {
         <div class="ktracks">${['rate', 'haul', 'cart'].map(t => `<div class="ktrack" data-t="${t}"><div><div class="ktl">${t === 'rate' && st.from ? 'Craft rate' : TRACK[t]} <span class="dim small">Lv <b data-f="lv"></b></span></div><div class="small dim" data-f="v"></div><div class="kflag hidden">Bottleneck</div></div><button class="buy" data-f="up"><span class="small" data-f="uplab">Upgrade</span><br><span class="cost" data-f="cost"></span></button></div>`).join('')}</div>
         <div class="bar kcart"><div data-f="cartbar"></div><span data-f="cartlab"></span></div>
         <div class="kstaff">
-          <div class="kslot"><span class="small dim">Workers <b data-f="wn"></b></span><span data-f="wlist" class="small"></span><select data-f="wadd" aria-label="Add a worker"></select></div>
-          <div class="kslot"><span class="small dim">Overseer</span><span data-f="ov" class="small"></span><select data-f="ovsel" aria-label="Choose an overseer"></select><button data-f="ab" class="buy small-btn">Double shift</button></div>
+          <div class="kslot"><span class="small dim">Workers <b data-f="wn"></b></span><span data-f="wlist" class="small"></span><button data-f="wadd" class="buy kpick">+ Add worker</button></div>
+          <div class="kslot"><span class="small dim">Overseer</span><span data-f="ov" class="small"></span><button data-f="ovsel" class="buy kpick">Choose</button><button data-f="ab" class="buy small-btn">Double shift</button></div>
         </div>
       </div>`;
     });
@@ -410,8 +421,8 @@ const UI = (() => {
     box.querySelectorAll('[data-step]').forEach(card => {
       const id = card.dataset.step; rows.step[lid][id] = card;
       card.querySelectorAll('[data-t]').forEach(tr => tr.querySelector('[data-f=up]').addEventListener('click', () => { if (Game.upgradeStep(id, tr.dataset.t, kBuy)) { flash(tr); render(true); } }));
-      card.querySelector('[data-f=wadd]').addEventListener('change', e => { const v = e.target.value; if (v !== '') Game.assignWorker(id, +v); e.target.value = ''; lineKey[lid] = ''; render(true); });
-      card.querySelector('[data-f=ovsel]').addEventListener('change', e => { const v = e.target.value; if (v === '') { const s = Game.stepState(id); s.overseer = null; } else Game.assignOverseer(id, +v); lineKey[lid] = ''; render(true); });
+      card.querySelector('[data-f=wadd]').addEventListener('click', () => openPicker(id, 'worker', lid));
+      card.querySelector('[data-f=ovsel]').addEventListener('click', () => openPicker(id, 'overseer', lid));
       card.querySelector('[data-f=ab]').addEventListener('click', () => { if (Game.useAbility(id)) flash(card); });
     });
     box.closest('.ksub').querySelector('[data-kbar]').innerHTML = kbarHtml();
@@ -447,18 +458,46 @@ const UI = (() => {
       setText(card.querySelector('[data-f=wn]'), `${s.workers.length}/${Game.stepWorkerSlots(st.id)}`);
       setHtml(card.querySelector('[data-f=wlist]'), s.workers.map(i => `<span class="kchip">${S.kingdom.thralls[i].name} <button class="kx" data-rm="${i}" aria-label="Remove">×</button></span>`).join(' ') || '<span class="warn">none</span>');
       card.querySelectorAll('[data-rm]').forEach(b => b.onclick = () => { Game.unassign(+b.dataset.rm); lineKey[lid] = ''; render(true); });
-      const wsel = card.querySelector('[data-f=wadd]'); const wo = `<option value="">+ Add worker</option>` + S.kingdom.thralls.map((t, i) => s.workers.includes(i) ? '' : `<option value="${i}">${t.name} ${stars(t.stars)}${Game.thrallPost(i) ? ' (busy)' : ''}</option>`).join('');
-      if (wsel.__o !== wo) { wsel.innerHTML = wo; wsel.__o = wo; } wsel.disabled = s.workers.length >= Game.stepWorkerSlots(st.id) || !S.kingdom.thralls.length;
+      const wsel = card.querySelector('[data-f=wadd]'); wsel.classList.toggle('hidden', s.workers.length >= Game.stepWorkerSlots(st.id));
       const ov = s.overseer !== null ? S.kingdom.thralls[s.overseer] : null;
       setHtml(card.querySelector('[data-f=ov]'), ov ? `<b>${ov.name}</b> <span class="stars">${stars(ov.stars)}</span> <span class="dim">${roleShort(ov.role)} ×${CONFIG.kingdom.starMult[ov.stars]}</span>` : '<span class="dim">empty</span>');
-      const osel = card.querySelector('[data-f=ovsel]'); const oo = `<option value="">${ov ? 'Remove overseer' : 'Choose…'}</option>` + S.kingdom.thralls.map((t, i) => i === s.overseer ? '' : `<option value="${i}">${t.name} ${stars(t.stars)} ${roleShort(t.role)}${Game.thrallPost(i) ? ' (busy)' : ''}</option>`).join('');
-      if (osel.__o !== oo) { osel.innerHTML = oo; osel.__o = oo; }
+      setText(card.querySelector('[data-f=ovsel]'), ov ? 'Change' : 'Choose');
       const ab = card.querySelector('[data-f=ab]'), now = S.hero.time; ab.classList.toggle('hidden', !ov);
       if (ov) { ab.disabled = s.abilityReady > now; setText(ab, s.abilityUntil > now ? `Active ${Math.ceil(s.abilityUntil - now)}s` : s.abilityReady > now ? `Ready in ${Game.fmtTime(s.abilityReady - now)}` : 'Double shift'); }
     }
     return anyUp;
   }
   function buildKeepLists() {}
+  // In-game picker for staffing a step (replaces native dropdowns)
+  function openPicker(stepId, as, lid) {
+    const S = Game.S, K = S.kingdom, st = Game.stepDef(stepId), ss = Game.stepState(stepId), list = $('pick-list');
+    setText($('pick-title'), as === 'worker' ? `Worker for the ${st.name}` : `Overseer for the ${st.name}`);
+    setText($('pick-sub'), as === 'worker' ? 'Workers run the step. Strength adds to cart size, Speed to work rate.' : 'An Overseer reports the bottleneck and boosts one track by role: Foreman → work rate, Carter → haul speed, Packer → cart size.');
+    const close = () => { $('pick-modal').classList.add('hidden'); lineKey[lid] = ''; render(true); };
+    let h = '';
+    if (as === 'overseer' && ss.overseer !== null) h += `<button class="pick-row danger-btn" data-pick="remove"><div class="row-main"><b>Remove ${K.thralls[ss.overseer].name}</b><div class="small dim">Leave the Overseer slot empty</div></div></button>`;
+    const cand = K.thralls.map((t, i) => ({ t, i, p: Game.thrallPost(i) })).filter(c => as === 'worker' ? !ss.workers.includes(c.i) : c.i !== ss.overseer)
+      .sort((a, b) => (!!a.p - !!b.p) || (b.t.stars - a.t.stars));
+    for (const c of cand) {
+      const where = c.p ? `${c.p.as === 'overseer' ? 'Overseer' : 'Worker'} at the ${Game.stepDef(c.p.id).name}` : 'Idle';
+      const perk = as === 'worker' ? `Str ${c.t.str} · Spd ${c.t.spd}` : `${ROLE[c.t.role]} ×${CONFIG.kingdom.starMult[c.t.stars]}`;
+      h += `<button class="pick-row" data-pick="${c.i}"><div class="row-main"><b>${c.t.name}</b> <span class="stars">${stars(c.t.stars)}</span> <span class="owned">${roleShort(c.t.role)}</span><div class="small dim">${perk}</div></div><span class="tag ${c.p ? '' : 'idle'}">${c.p ? 'Move from ' + Game.stepDef(c.p.id).name : 'Idle'}</span></button>`;
+    }
+    if (!cand.length) h += `<div class="dim small center" style="padding:8px 0">${K.thralls.length ? 'Every thrall is already here.' : 'You have no thralls yet.'}</div><button class="pick-row" data-pick="tavern"><div class="row-main"><b>Go to the Tavern</b><div class="small dim">Market → Tavern: hire a thrall</div></div><span class="tag">▶</span></button>`;
+    list.innerHTML = h;
+    list.querySelectorAll('[data-pick]').forEach(b => b.onclick = () => {
+      const v = b.dataset.pick;
+      if (v === 'tavern') { $('pick-modal').classList.add('hidden'); goTavern(); return; }
+      if (v === 'remove') { ss.overseer = null; }
+      else if (as === 'worker') Game.assignWorker(stepId, +v); else Game.assignOverseer(stepId, +v);
+      close();
+    });
+    $('pick-modal').classList.remove('hidden');
+  }
+  function goTavern() {
+    if (desktop) { const r = document.querySelector('[data-rtab=market]'); if (r) r.click(); } else document.querySelector('[data-tab=market]').click();
+    document.querySelector('[data-msub=tavern]').click();
+  }
   function renderKeep() {
     const S = Game.S, f = Game.fmt, K = S.kingdom, inK = Game.kingdomNo() > 0;
     $('keep-kingdom').classList.toggle('hidden', !inK); if (!inK) return false;
@@ -480,14 +519,16 @@ const UI = (() => {
     const hl = $('hire-list'); if (hl.__h !== hh) { hl.innerHTML = hh; hl.__h = hh; hl.querySelectorAll('[data-hire]').forEach(b => b.onclick = () => { if (Game.hire(+b.dataset.hire)) { hl.__h = ''; for (const l in lineKey) lineKey[l] = ''; render(true); } }); }
     // roster
     setText($('roster-count'), `${K.thralls.length} hired`);
-    const rh = K.thralls.map((t, i) => { const p = Game.thrallPost(i); return `<div class="row"><div class="row-main"><div class="row-title">${t.name} <span class="stars">${stars(t.stars)}</span> <span class="owned">${roleShort(t.role)}</span></div><div class="row-sub">${p ? (p.as === 'overseer' ? 'Overseer' : 'Worker') + ' at the ' + Game.stepDef(p.id).name : '<span class="warn">Idle — assign on a production line</span>'} · Str ${t.str} · Spd ${t.spd} · ${f(t.xp || 0)} jobs</div></div></div>`; }).join('');
-    const rl = $('roster'); if (rl.__h !== rh) { rl.innerHTML = rh || '<div class="dim small">Nobody yet. Hire from the Hiring Hall.</div>'; rl.__h = rh; }
+    const rh = K.thralls.map((t, i) => { const p = Game.thrallPost(i); return `<div class="row"><div class="row-main"><div class="row-title">${t.name} <span class="stars">${stars(t.stars)}</span> <span class="owned">${roleShort(t.role)}</span></div><div class="row-sub">${p ? (p.as === 'overseer' ? 'Overseer' : 'Worker') + ' at the ' + Game.stepDef(p.id).name : '<span class="warn">Idle — Kingdom → a line → + Add worker</span>'} · Str ${t.str} · Spd ${t.spd} · ${f(t.xp || 0)} jobs</div></div></div>`; }).join('');
+    const rl = $('roster'); if (rl.__h !== rh) { rl.innerHTML = rh || '<div class="dim small">Nobody yet. Hire someone above.</div>'; rl.__h = rh; }
     // storehouse
     setText($('store-lv'), K.storeLv || 0); setText($('store-cap'), f(Game.storeCap('wood')));
     const goods = Game.allSteps().filter(st => Game.stepUnlocked(st.id)).map(st => st.make);
     setHtml($('store-list'), goods.map(k => `<div class="row-between small"><span>${ico(R[k].icon, 14)} ${R[k].name}</span><span class="${Game.atCap(k) ? 'warn' : ''}">${f(S.res[k] || 0)} / ${f(Game.resCap(k))}</span></div>`).join(''));
     const sc = Game.storeUpCost(); setHtml($('store-cost'), costHtml(sc)); $('store-up').disabled = !Game.canAfford(sc);
-    return anyOrder || (K.offers || []).some(o => (S.res.gold || 0) >= o.price) && K.thralls.length < 2;
+    const canHire = (K.offers || []).some(o => (S.res.gold || 0) >= o.price) && K.thralls.length < 2;
+    $('badge-tavern').classList.toggle('hidden', !canHire);
+    return anyOrder;
   }
 
 
@@ -541,7 +582,7 @@ const UI = (() => {
     for (const d in CONFIG.disciplines) { const b = rows.disc[d]; if (!b) continue; const pr = Game.discProgress(d), fr = Game.treePointsFree(d); setText(b.querySelector('[data-f=lvl]'), `Lv${pr.level}`); b.querySelector('[data-f=dot]').classList.toggle('hidden', fr <= 0); if (fr > 0) any = true; }
     const tfree = Game.talentPointsFree(); if (tfree > 0) any = true;
     const D = CONFIG.disciplines[curDisc], pr = Game.discProgress(curDisc);
-    setText($('disc-name'), `${D.name} Lv${pr.level}`); setText($('disc-desc'), D.desc);
+    setText($('disc-name'), `${D.name} Lv${pr.level}`); setText($('disc-desc'), D.desc); setText($('disc-how'), curDisc === 'combat' ? 'You get 1 every time Combat levels up. Combat XP comes from kills.' : `You get 1 every time ${D.name} levels up. XP comes from every swing of the tool.`);
     setText($('disc-pts'), Game.treePointsFree(curDisc)); setText($('talent-free'), tfree);
     $('disc-xpbar').style.width = (100 * pr.have / pr.need) + '%'; setText($('disc-xptext'), `${f(pr.have)} / ${f(pr.need)} XP`);
     for (const n of CONFIG.trees[curDisc] || []) {
@@ -792,7 +833,7 @@ const UI = (() => {
       if (have >= 1 && R[k].tier >= 2 && k !== 'gold') anySell = true;
     }
     orderRows($('market-list'), Object.keys(rows.market).map(k => ({ el: rows.market[k], rank: (S.res[k] || 0) >= 1 ? (R[k].tier >= 2 ? 0 : 1) : 2 })));
-    $('badge-market').classList.toggle('hidden', !anySell);
+    $('badge-market').classList.toggle('hidden', !anySell && $('badge-tavern').classList.contains('hidden'));
 
     applyTabLocks();
     // Quest

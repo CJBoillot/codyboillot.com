@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Alpha 0.3.5',
+  version: 'Alpha 0.3.6',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -353,7 +353,7 @@ const CONFIG = {
     starMult: [1, 1.2, 1.5, 1.8, 2.0, 2.5],  // Overseer multiplier by stars (index = stars)
     abilitySeconds: 30, abilityCooldown: 600,
     hirePrice: [0, 40, 120, 350, 900, 2200], offerRefresh: 300, refreshCost: 25,
-    ranks: [ { name: 'Reeve', renown: 0, perk: 'Start' }, { name: 'Baron', renown: 500, perk: '+1 worker slot everywhere · Storehouse ×2 · can found a new fief' }, { name: 'Count', renown: 2000, perk: '4★ thralls in the Hiring Hall · bigger Orders' }, { name: 'Duke', renown: 6000, perk: '5★ thralls · the biggest Orders' } ],
+    ranks: [ { name: 'Reeve', renown: 0, perk: 'Start' }, { name: 'Baron', renown: 500, perk: '+1 worker slot everywhere · Storehouse ×2 · can found a new fief' }, { name: 'Count', renown: 2000, perk: '4★ thralls in the Tavern · bigger Orders' }, { name: 'Duke', renown: 6000, perk: '5★ thralls · the biggest Orders' } ],
     orderFrom: ['The Northern Legion', 'The Merchant Guild', 'The Village of Ashford', 'The Imperial Court', 'The Border Garrison'],
     orderBase: { wood: 40, grain: 40, ore: 30, planks: 20, flour: 20, ingot: 15, lumber: 10, bread: 10, swords: 6 },
     renownPer: { wood: 0.5, grain: 0.5, ore: 0.7, planks: 1.5, flour: 1.5, ingot: 2, lumber: 4, bread: 4, swords: 6 },
@@ -533,16 +533,16 @@ const CONFIG = {
       steps: [
         { label: 'Kingdom → Legacy → unlock Bestiary (1 Crystal)', check: { perk: 'bestiary' } },
       ], reward: { gold: 100 }, focus: { tab: 'kingdom', ksub: 'legacy', rtab: 'kingdom', el: 'perk:bestiary' } },
-    { id: 'k01', chain: 'A Kingdom', name: 'Hands for Hire', text: 'A kingdom needs hands. The Hiring Hall always has three thralls on offer — each has a role (Foreman, Carter, Packer), stars and stats. Hire one.',
-      steps: [ { label: 'Kingdom → Keep → Hiring Hall → Hire', check: { hired: 1 } } ], reward: { gold: 40 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:hire-list' } },
+    { id: 'k01', chain: 'A Kingdom', name: 'Hands for Hire', text: 'A kingdom needs hands. The Tavern always has three thralls looking for work — each has a role (Foreman, Carter, Packer), stars and stats. Hire one.',
+      steps: [ { label: 'Market → Tavern → Hire', check: { hired: 1 } } ], reward: { gold: 40 }, focus: { tab: 'market', msub: 'tavern', rtab: 'market', el: 'id:hire-list' } },
     { id: 'k02', chain: 'A Kingdom', name: 'Fell the Forest', text: 'A step only runs while a thrall works it. Put your thrall to work at Logging: the logs fill a cart, the cart hauls them to the Storehouse.',
-      steps: [ { label: 'Kingdom → Forest → Logging → Assign a worker', check: { working: 'logging' } }, { label: 'Haul 40 wood to the Storehouse', check: { made: 'wood', need: 40 } } ], reward: { gold: 60 }, focus: { tab: 'kingdom', ksub: 'forest', rtab: 'kingdom', el: 'step:logging' } },
+      steps: [ { label: 'Kingdom → Forest → Logging → + Add worker', check: { working: 'logging' } }, { label: 'Haul 40 wood to the Storehouse', check: { made: 'wood', need: 40 } } ], reward: { gold: 60 }, focus: { tab: 'kingdom', ksub: 'forest', rtab: 'kingdom', el: 'step:logging' } },
     { id: 'k03', chain: 'A Kingdom', name: 'Faster Hands', text: 'Each step has three upgrades: Work rate (how fast it makes), Haul speed (how fast the cart comes back) and Cart size. Output is whichever is slower. Without an overseer, you have to work out which one that is.',
       steps: [ { label: 'Logging → Work rate to Lv 3', check: { stepLv: 'logging:rate', need: 3 } }, { label: 'Logging → Haul speed to Lv 3', check: { stepLv: 'logging:haul', need: 3 } } ], reward: { gold: 80 }, focus: { tab: 'kingdom', ksub: 'forest', rtab: 'kingdom', el: 'step:logging' } },
     { id: 'k04', chain: 'A Kingdom', name: 'Imperial Orders', text: 'The Empire, the Guild and the villages post Orders at your Keep. There is no deadline — but finishing inside the speed window pays 20% more. Orders pay gold and Renown.',
       steps: [ { label: 'Kingdom → Keep → Orders → Deliver one', check: { orders: 1 } } ], reward: { gold: 100 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:order-list' } },
     { id: 'k05', chain: 'A Kingdom', name: 'An Overseer', text: 'Only an overseer tells you what holds a step back. Put your best thrall in the Overseer slot: their role boosts one upgrade track, and they can call a Double Shift.',
-      steps: [ { label: 'Hire a second thrall', check: { hired: 2 } }, { label: 'Logging → Overseer → assign a thrall', check: { overseer: 1 } } ], reward: { gold: 150 }, focus: { tab: 'kingdom', ksub: 'forest', rtab: 'kingdom', el: 'step:logging' } },
+      steps: [ { label: 'Market → Tavern → hire a second thrall', check: { hired: 2 }, focus: { tab: 'market', msub: 'tavern', rtab: 'market', el: 'id:hire-list' } }, { label: 'Kingdom → Forest → Logging → Overseer → Choose', check: { overseer: 1 } } ], reward: { gold: 150 }, focus: { tab: 'kingdom', ksub: 'forest', rtab: 'kingdom', el: 'step:logging' } },
     { id: 'k06', chain: 'A Kingdom', name: 'Baron', text: 'Renown only comes from Orders. At 500 Renown you become a Baron: more workers, a bigger Storehouse — and you may found a new fief, which brings the next step of a production line.',
       steps: [ { label: 'Earn 500 Renown from Orders', check: { renown: 500 } } ], reward: { gold: 200 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:order-list' } },
     { id: 'k07', chain: 'A Kingdom', name: 'A New Fief', text: 'Found a new fief. The kingdom starts over — your hero, his gear and skills, and your Legacy stay — and you gain Crystals and the next step: Fields for grain.',

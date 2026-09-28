@@ -163,7 +163,7 @@ function treeNode(d, id) { return (CONFIG.trees[d] || []).find(n => n.id === id)
 function nodeRank(d, id) { return (S.hero.tree && S.hero.tree[d] && S.hero.tree[d][id]) || 0; }
 function nodeMax(n) { return n.capstone ? 1 : CONFIG.treeRanks; }
 function nodeQuestLocked(d, id) { const n = treeNode(d, id); if (!n || !n.quest || S.legacy.foundings > 0 || nodeRank(d, id) > 0) return false; const qi = CONFIG.quests.findIndex(q => q.id === n.quest); return qi >= 0 && S.quests.index < qi; }
-function nodeOpen(d, id) { const n = treeNode(d, id); if (!n) return false; if (nodeQuestLocked(d, id)) return false; if (!n.parent) return true; const p = treeNode(d, n.parent); return nodeRank(d, n.parent) >= nodeMax(p); }
+function nodeOpen(d, id) { const n = treeNode(d, id); if (!n) return false; if (nodeQuestLocked(d, id)) return false; if (!n.parent || n.capstone) return true; const p = treeNode(d, n.parent); return nodeRank(d, n.parent) >= nodeMax(p); }
 function treePointsTotal(d) { return discLevel(d) - 1 + (d === 'combat' ? perkRank('veteran') * 3 : 0); }
 function treePointsSpent(d) { let n = 0; for (const node of CONFIG.trees[d] || []) if (!node.capstone) n += nodeRank(d, node.id); return n; }
 function treePointsFree(d) { return treePointsTotal(d) - treePointsSpent(d); }
@@ -403,7 +403,7 @@ function assignOverseer(id, i) { if (!stepUnlocked(id) || !thrall(i)) return fal
 function unassign(i) { for (const id in (S.kingdom.steps || {})) { const s = S.kingdom.steps[id]; s.workers = s.workers.filter(x => x !== i); if (s.overseer === i) s.overseer = null; } }
 function thrallPost(i) { for (const id in (S.kingdom.steps || {})) { const s = S.kingdom.steps[id]; if (s.overseer === i) return { id, as: 'overseer' }; if (s.workers.includes(i)) return { id, as: 'worker' }; } return null; }
 function useAbility(id) { const s = stepState(id), now = S.hero.time; if (s.overseer === null || s.abilityReady > now) return false; s.abilityUntil = now + KC().abilitySeconds; s.abilityReady = now + KC().abilityCooldown; log(`${thrallName(s.overseer)}: Double shift at the ${stepDef(id).name}!`); return true; }
-// Hiring Hall: 3 offers, refresh on a timer or for gold
+// Tavern: 3 offers, refresh on a timer or for gold
 function maxStars() { return 3 + (rankIndex() >= 2 ? 1 : 0) + (rankIndex() >= 3 ? 1 : 0); }
 function rollThrall() {
   const roles = ['foreman', 'carter', 'packer'], r = Math.random(), top = maxStars();
