@@ -12,7 +12,7 @@
   <title>Click to Conquer</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=a0101">
+  <link rel="stylesheet" href="style.css?v=a0102">
 </head>
 <body>
 
@@ -87,6 +87,8 @@
           <div class="progress-row auto-row"><div class="bar autoadv" id="auto-barbox"><div id="auto-bar"></div><span id="auto-text"></span></div></div>
           <div id="auto-why" class="auto-why small hidden"></div>
           <div id="army-line" class="army-line hidden"></div>
+          <div id="army-flow" class="flowline hidden"></div>
+          <div id="strain-card" class="strain hidden"></div>
           <div id="conquest-box" class="conquest hidden"><div class="row-between small"><b id="cq-name"></b><span id="cq-pct" class="dim"></span></div><div class="bar cq-bar"><div id="cq-bar"></div><span id="cq-text"></span></div><div id="cq-ticks" class="cq-ticks"></div></div>
           <div class="btn-row">
             <button id="retreat-btn">◀ Retreat</button>
@@ -226,6 +228,10 @@
           <p class="small dim" id="barracks-desc" style="margin:4px 0 8px"></p>
           <div class="bar"><div id="train-bar"></div><span id="train-txt"></span></div>
           <button id="barracks-up" class="buy wide" style="margin-top:8px"><span class="small" id="barracks-uplab">Build the Barracks</span><br><span class="cost" id="barracks-cost"></span></button>
+        </div>
+        <div class="card" id="loss-card">
+          <div class="row-between"><div class="card-title" style="margin:0">Losses &amp; replacements</div><span class="small dim">per minute</span></div>
+          <div id="loss-rows"></div>
         </div>
         <div class="card" id="demand-card">
           <div class="card-title">Demand grows with your realm</div>
@@ -493,11 +499,11 @@
 </div>
 
 
-<script src="config.js?v=a0101"></script>
-<script src="cloud-config.js?v=a0101"></script>
-<script src="game.js?v=a0101"></script>
-<script src="ui.js?v=a0101"></script>
-<script src="cloud.js?v=a0101"></script>
+<script src="config.js?v=a0102"></script>
+<script src="cloud-config.js?v=a0102"></script>
+<script src="game.js?v=a0102"></script>
+<script src="ui.js?v=a0102"></script>
+<script src="cloud.js?v=a0102"></script>
 <script>window.addEventListener("error", e => { const d = document.getElementById("err"); if (d) { d.textContent = "Error: " + e.message; d.classList.remove("hidden"); } });</script>
 </body>
 </html>

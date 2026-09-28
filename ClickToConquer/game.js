@@ -965,8 +965,9 @@ function applyOffline(awaySeconds) {
   if (phase() === 3) { // 0.9 while away: final goods reach the army, soldiers eat and train, lands fill their coffers
     const mins = counted / 60, hrs = counted / 3600;
     for (const k of WAR_KEYS) { const gd = AC().lines[k].good; gains[gd] = (gains[gd] || 0) - warDemand(k) * mins; }
-    const n = Math.floor(Math.max(0, Math.min(trainPerMin() * mins, armyLimit() - soldiers())));
-    if (n > 0) gains.soldiers = (gains.soldiers || 0) + n;
+    { const target = heroFighting() ? armyHold() : armyLimit(), now = soldiers(), cap = Math.min(target, now + trainPerMin() * mins);
+      const end = target >= now ? cap : target + (now - target) * Math.exp(-mins / 60); // rebuild up to the hold, or bleed toward it
+      const d = Math.round(end - now); if (d) gains.soldiers = (gains.soldiers || 0) + d; if (d > 0) gains.swords = (gains.swords || 0) - d * recruitCost(); }
     for (const ln of landsTouched()) { const t = taxPerHour(ln) * hrs; if (t > 0) tax[ln] = t; const sp = spoilPerHour(ln) * hrs * eff; if (sp > 0) gains[landDef(ln).spoil] = (gains[landDef(ln).spoil] || 0) + sp; }
   }
   let kills = 0;
@@ -1062,17 +1063,41 @@ function garrisoned() { let n = 0; for (const k in (S.kingdom.lands || {})) n +=
 function marching() { return Math.max(0, soldiers() - garrisoned()); }
 function armyMult() { return phase() === 3 ? 1 + Math.sqrt(marching()) / AC().bonusDiv * armyEff() : 1; }
 function armyHpMult() { return phase() === 3 ? 1 + marching() / AC().hpDiv * armyEff() : 1; }
+let _press = null, _pressAt = -1;
+function battlePressure() { // share of the hero's HP one fight takes before healing, 0..1 — how hard the army is fighting
+  if (phase() < 3 || !heroFighting() || S.hero.resting || marching() <= 0) return 0;
+  const t = S.hero.time; if (_pressAt === t && _press !== null) return _press; _pressAt = t;
+  const f = fightNet(); return (_press = Math.max(0, Math.min(1, f.taken / Math.max(1, f.maxHp))));
+}
+function recruitCost() { return AC().recruitArms * demandMult(); } // swords to arm one recruit
+function armyFloor() { return Math.floor(armyLimit() * AC().lossFloor); }
+function lossPerMin() { const p = battlePressure(); return p > 0 && soldiers() > armyFloor() ? marching() * AC().lossRate * p : 0; }
+function spareArms() { return Math.max(0, warIncome('arms') - warDemand('arms')); }
+function recruitPerMin() { // how fast soldiers can actually join right now
+  if (!barracksBuilt()) return 0;
+  const c = recruitCost(), cap = Math.min(trainPerMin(), (S.res.swords || 0) >= c * 5 ? Infinity : spareArms() / c);
+  return soldiers() >= armyLimit() ? Math.min(cap, lossPerMin()) : cap; // at full strength: replacing the fallen
+}
+function armyHold() { // where the army settles at the current pressure (losses = replacements)
+  const lim = armyLimit(), p = battlePressure(); if (!p) return lim;
+  const ps = perSoldier('arms'), eq = lim * ps / (ps + AC().lossRate * p * recruitCost());
+  return Math.max(armyFloor(), Math.min(lim, Math.floor(eq)));
+}
+function swordsLeftMin() { const def = lossPerMin() * recruitCost() - spareArms(); return def > 0 ? (S.res.swords || 0) / def : Infinity; }
 function tickArmy(dt) {
   if (phase() < 3) return;
   // the army draws its upkeep from each line's final good as it is made; whatever is left over stays in the Storehouse
   for (const k of WAR_KEYS) { const g = AC().lines[k].good, need = warDemand(k) / 60 * dt; if (need > 0) S.res[g] = Math.max(0, (S.res[g] || 0) - need); }
-  const B = S.kingdom.barracks, lim = armyLimit();
+  // casualties: hard fighting costs soldiers (never below the floor)
+  const K = S.kingdom, loss = lossPerMin() / 60 * dt;
+  if (loss > 0) { K.lossAcc = (K.lossAcc || 0) + loss; while (K.lossAcc >= 1 && marching() > 0 && soldiers() > armyFloor()) { K.lossAcc -= 1; S.res.soldiers -= 1; S.stats.fallen = (S.stats.fallen || 0) + 1; } }
+  const B = K.barracks, lim = armyLimit(), cost = recruitCost();
   if (B && B.lv > 0 && soldiers() < lim) {
     B.train = Math.min(3, (B.train || 0) + trainPerMin() / 60 * dt);
-    while (B.train >= 1 && soldiers() + 1 <= lim) { B.train -= 1; S.res.soldiers = (S.res.soldiers || 0) + 1; S.stats.trained = (S.stats.trained || 0) + 1; S.lifetime.soldiers = (S.lifetime.soldiers || 0) + 1; }
+    while (B.train >= 1 && soldiers() + 1 <= lim && (S.res.swords || 0) >= cost) { B.train -= 1; S.res.swords -= cost; S.res.soldiers = (S.res.soldiers || 0) + 1; S.stats.trained = (S.stats.trained || 0) + 1; S.lifetime.soldiers = (S.lifetime.soldiers || 0) + 1; }
   }
-  S.kingdom.deserting = false;
-  let over = garrisoned() - soldiers(); if (over > 0) for (const k of Object.keys(S.kingdom.lands || {}).sort((a, b) => b - a)) { const L = S.kingdom.lands[k], t = Math.min(over, L.garrison || 0); L.garrison -= t; over -= t; if (over <= 0) break; }
+  K.deserting = false;
+  let over = garrisoned() - soldiers(); if (over > 0) for (const k of Object.keys(K.lands || {}).sort((a, b) => b - a)) { const L = K.lands[k], t = Math.min(over, L.garrison || 0); L.garrison -= t; over -= t; if (over <= 0) break; }
 }
 
 // ---- Lands, garrisons, taxes ----
@@ -1253,7 +1278,7 @@ window.Game = {
   phase, canProclaim, proclaim,
   stockMode, setStockMode, stockTarget, stockDemand, STOCK_MODES,
   get S() { return S; }, saveString, saveMeta, restoreString, setSaveHook: f => { saveHook = f; }, SAVE_KEY, fmt, pct, fmtTime, drainEvents: () => EVENTS.splice(0), afkEfficiency: () => afkEff(),
-  markViewed, questReached, tierDefAt, landCurve, isEndless, landShare, heroInLand, warIncome, warDemand, warCover, perSoldier, lineSupports, armyEff, demandMult, WAR_KEYS, discXp, discLevel, discProgress, pathNodes, pathNode, pathRank, pathOpen, pathNeedsStar, pathPointsTotal, pathPointsSpent, pathPointsFree, pathPointsMax, starsTotal, starsSpent, starsFree, canRankPath, rankPath, pathMods, resetPaths, techUnlocked, techUnlockMet, techUnlockLabel, techMastery, techLevelOf, techMod, techMods, chooseMod, modPending, techSlots, equipTech, unequipTech, skillDur, skillCdBase, checkTechUnlocks, treeNode, nodeRank, nodeMax, nodeOpen, treePointsTotal, treePointsSpent, treePointsFree, canRankNode, rankNode, nodeQuestLocked, treeMods,
+  markViewed, questReached, battlePressure, recruitCost, armyFloor, lossPerMin, spareArms, recruitPerMin, armyHold, swordsLeftMin, tierDefAt, landCurve, fightNet, isEndless, landShare, heroInLand, warIncome, warDemand, warCover, perSoldier, lineSupports, armyEff, demandMult, WAR_KEYS, discXp, discLevel, discProgress, pathNodes, pathNode, pathRank, pathOpen, pathNeedsStar, pathPointsTotal, pathPointsSpent, pathPointsFree, pathPointsMax, starsTotal, starsSpent, starsFree, canRankPath, rankPath, pathMods, resetPaths, techUnlocked, techUnlockMet, techUnlockLabel, techMastery, techLevelOf, techMod, techMods, chooseMod, modPending, techSlots, equipTech, unequipTech, skillDur, skillCdBase, checkTechUnlocks, treeNode, nodeRank, nodeMax, nodeOpen, treePointsTotal, treePointsSpent, treePointsFree, canRankNode, rankNode, nodeQuestLocked, treeMods,
   fistLevel, slotValue, enemyHit, crafting, maxUpgradePlan, upgradeMax, stats, gearStats, itemStatPreview, gearCraftCost, gearUpgradeCost, canTierUp, craftGear, upgradeGear,
   talentPointsFree, talentPointsTotal, talentPointsSpent, respec, respecCost,
   skillDef, skillUnlocked, skillPower, skillCd, skillReady, castSkill, activeBuffs,

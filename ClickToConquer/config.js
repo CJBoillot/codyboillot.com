@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Alpha 0.10.1',
+  version: 'Alpha 0.10.2',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -397,6 +397,9 @@ const CONFIG = {
     // Each soldier draws `upkeep` of each per minute (× (1 + demandPerLand × lands held)). The army fights at the strength of its weakest line.
     army: { build: { lumber: 150, swords: 60, gold: 600 }, trainPerMin: 2, upkeep: { housing: 0.04, arms: 0.04, food: 0.04 }, demandPerLand: 0.15,
       lines: { housing: { good: 'lumber', line: 'forest', name: 'Housing', verb: 'Houses the army' }, arms: { good: 'swords', line: 'mine', name: 'Arms', verb: 'Arms the army' }, food: { good: 'bread', line: 'farm', name: 'Food', verb: 'Feeds the army' } },
+      // 0.10.2 casualties: marching soldiers fall at lossRate × pressure per minute (pressure = share of the hero's HP one fight takes, 0..1),
+      // never below lossFloor of the army limit. Each recruit needs recruitArms × demand swords from the Storehouse.
+      lossRate: 0.035, lossFloor: 0.5, recruitArms: 1,
       bonusDiv: 5, hpDiv: 400, costBase: 60, costExp: 1.6 },
     // Hero buildings in the city (0.9)
     halls: [
@@ -470,6 +473,7 @@ const CONFIG = {
   // jobs (jobs completed by hand or thrall), sold (gold earned at market), stage, boss, founded, thrall (assigned), activity (swings).
   // Shown in Settings → What's new (newest first). Keep each line short.
   changelog: [
+    ['0.10.2', 'Battles cost soldiers. The harder the fight, the more fall — easy fights cost nothing, new lands and captains the most. The Barracks replaces them, but every recruit needs swords, so a strong Mine decides how hard you can push. The army settles where replacements keep up and never falls below half. Push to conquer, fall back to rebuild: the hero screen shows losses, recruits and where your army will hold.'],
     ['0.10.1', 'Every new land is a real step up. Enemies grow steadily through a land, and the next land starts well above where the last one ended — from the Iron Hills on, expect to need better gear and a bigger army. Hardened gear now goes on forever: Hardened I, II, III… each tier makes your weapon, chest and helm about 60% stronger (Mythril is folded into Hardened). Hardened I costs about what Steel did, and conquered lands send 5× more silver and heartwood.'],
     ['0.10.0', 'The war economy. Your army now runs on income, not stockpiles: the Forest houses it (treated lumber), the Mine arms it (swords) and the Farm feeds it (bread). Soldiers join free while all three lines have income to spare, and the army fights at the strength of its weakest line. Every land you conquer makes each soldier need 15% more — rebalance your lines to keep up. In a land the hero now auto-advances through captains and the Ruler; after the Ruler comes the Endless Battle, the richest fighting in that land, where he rests instead of retreating. Only you choose the next land — and a land pays at most 50% taxes while your hero is still in it. Old Food and Supplies go back to the Storehouse as bread, swords and lumber.'],
     ['0.9.12', 'Rally is gone — the army already fights at the hero\'s side on its own. If you bought the War Cry perk, its Crowns are back.'],
