@@ -974,8 +974,8 @@ const UI = (() => {
         setText(row.querySelector('[data-f=stats]'), Object.entries(cur).map(([k, v]) => `${STAT_LABEL[k]} ${fs(k, v)}`).join(' · '));
         setText(row.querySelector('[data-f=next]'), it.level < CONFIG.tierUpAt - 1 ? 'Next: ' + Object.entries(nxt).map(([k, v]) => fs(k, v)).join(' · ') : `Lv${it.level} — forge the next tier to go higher`);
         up.classList.remove('hidden');
-        if (!forgeState(up, 'gearUp', slot, 'Upgrade')) { const uc = Game.gearUpgradeCost(slot); setHtml(up.querySelector('[data-f=upcost]'), costHtml(uc)); up.disabled = !uc || !Game.canAfford(uc) || !!Game.crafting(); if (!up.disabled) anyGear = true; }
-        { const mx = row.querySelector('[data-f=max]'), plan = Game.maxUpgradePlan('gear', slot); mx.classList.toggle('hidden', !it); setText(mx.querySelector('[data-f=maxn]'), plan ? `+${plan.levels} → Lv${it.level + plan.levels}` : '—'); mx.disabled = !plan || plan.levels < 2 || !!Game.crafting(); }
+        if (!forgeState(up, 'gearUp', slot, 'Upgrade')) { const uc = Game.gearUpgradeCost(slot); up.classList.toggle('hidden', !uc); setHtml(up.querySelector('[data-f=upcost]'), costHtml(uc)); up.disabled = !uc || !Game.canAfford(uc) || !!Game.crafting(); if (!up.disabled) anyGear = true; }
+        { const mx = row.querySelector('[data-f=max]'), plan = Game.maxUpgradePlan('gear', slot); mx.classList.toggle('hidden', !it || !plan || plan.levels < 2); setText(mx.querySelector('[data-f=maxn]'), plan ? `+${plan.levels} → Lv${it.level + plan.levels}` : '—'); mx.disabled = !plan || plan.levels < 2 || !!Game.crafting(); }
       }
       const fc = Game.gearCraftCost(slot), can = Game.canTierUp(slot);
       if (!fc) forge.classList.add('hidden');
@@ -1101,8 +1101,8 @@ const UI = (() => {
       else {
         setHtml(row.querySelector('[data-f=title]'), `${CONFIG.toolTiers[it.tier].name} ${def.name} <span class="owned">Lv${it.level}</span>`);
         setText(row.querySelector('[data-f=stats]'), def.activity ? `Power ×${Game.toolPower(slot).toFixed(2)} → ${CONFIG.activities[def.activity].name}: ${Object.entries(Game.harvestRates(def.activity)).map(([k, v]) => `${f(v)} ${R[k].name}/s`).join(', ')}` : `Power ×${Game.toolPower(slot).toFixed(2)} → ${R[def.boosts].name} chance ×${Game.dropToolMult(slot).toFixed(2)}`);
-        up.classList.remove('hidden'); if (!forgeState(up, 'toolUp', slot, 'Upgrade')) { const uc = Game.toolUpgradeCost(slot); setHtml(up.querySelector('[data-f=upcost]'), costHtml(uc)); up.disabled = !uc || !Game.canAfford(uc) || !!Game.crafting(); }
-        { const mx = row.querySelector('[data-f=max]'), plan = Game.maxUpgradePlan('tool', slot); mx.classList.remove('hidden'); setText(mx.querySelector('[data-f=maxn]'), plan ? `+${plan.levels} → Lv${it.level + plan.levels}` : '—'); mx.disabled = !plan || plan.levels < 2 || !!Game.crafting(); }
+        up.classList.remove('hidden'); if (!forgeState(up, 'toolUp', slot, 'Upgrade')) { const uc = Game.toolUpgradeCost(slot); up.classList.toggle('hidden', !uc); setHtml(up.querySelector('[data-f=upcost]'), costHtml(uc)); up.disabled = !uc || !Game.canAfford(uc) || !!Game.crafting(); }
+        { const mx = row.querySelector('[data-f=max]'), plan = Game.maxUpgradePlan('tool', slot); mx.classList.toggle('hidden', !plan || plan.levels < 2); setText(mx.querySelector('[data-f=maxn]'), plan ? `+${plan.levels} → Lv${it.level + plan.levels}` : '—'); mx.disabled = !plan || plan.levels < 2 || !!Game.crafting(); }
       }
       const fc = Game.toolCraftCost(slot), can = Game.canToolTierUp(slot), nt = it ? it.tier + 1 : 0;
       if (!fc) forge.classList.add('hidden');

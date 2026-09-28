@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Alpha 0.9.3',
+  version: 'Alpha 0.9.4',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -450,6 +450,7 @@ const CONFIG = {
   // jobs (jobs completed by hand or thrall), sold (gold earned at market), stage, boss, founded, thrall (assigned), activity (swings).
   // Shown in Settings → What's new (newest first). Keep each line short.
   changelog: [
+    ['0.9.4', 'Gear and tool pop-ups are tidy: item info on top, Upgrade and Max side by side, Forge underneath, and buttons that can\'t do anything are hidden.'],
     ['0.9.3', 'The skill XP bar is taller so you can read the numbers.'],
     ['0.9.2', 'The ! on the top tabs is a clean round badge again.'],
     ['0.9.1', 'New quests take the hero\'s gear to Iron: research Iron Gear and forge an Iron blade in the Hamlet, then Iron armor in the Village before the Cult Priest.'],
