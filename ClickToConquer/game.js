@@ -234,6 +234,7 @@ function modPending(id) { if (!techUnlocked(id)) return false; const st = techSt
 function techSlots() { const c = discLevel('combat'); let n = 0; for (const s of CONFIG.techSlots) if ((s.combat && c >= s.combat) || (s.land && S.hero.landSlot)) n++; return n; }
 function equipTech(id) { if (!techUnlocked(id) || S.hero.loadout.includes(id) || S.hero.loadout.length >= techSlots()) return false; S.hero.loadout.push(id); return true; }
 function unequipTech(id) { if (!S.hero.loadout.includes(id)) return false; S.hero.loadout = S.hero.loadout.filter(x => x !== id); delete S.hero.cds[id]; return true; }
+function markViewed(k) { S.stats.viewed = S.stats.viewed || {}; if (!S.stats.viewed[k]) { S.stats.viewed[k] = true; return true; } return false; }
 function migrateSkills() { // 0.9.5: the old Combat tree → Paths (points refunded) + Techniques (tree rank → mastery level)
   const h = S.hero; h.paths = h.paths || {}; h.techs = h.techs || {}; h.stars = h.stars || {};
   for (const k in (h.bossesKilled || {})) h.stars[k] = true;
@@ -726,6 +727,7 @@ function questCheck(c) {
   if (c.harvested) { const n = sinceVal('h:' + c.harvested, (S.stats.harvested && S.stats.harvested[c.harvested]) || 0, c); return { done: n >= c.need, have: n, need: c.need }; }
   if (c.perk) return { done: perkRank(c.perk) >= (c.need || 1), have: perkRank(c.perk), need: c.need || 1 };
   if (c.disc) return { done: discLevel(c.disc) >= c.need, have: discLevel(c.disc), need: c.need };
+  if (c.viewed) { const v = !!(S.stats.viewed && S.stats.viewed[c.viewed]); return { done: v, have: v ? 1 : 0, need: 1, simple: true }; }
   if (c.path) { const r = pathRank(c.path); return { done: r >= c.need, have: r, need: c.need }; }
   if (c.node) { const [d, id] = c.node.split(':'), r = nodeRank(d, id); return { done: r >= c.need, have: r, need: c.need }; }
   if (c.casts) { const n = (S.stats.casts && S.stats.casts[c.casts]) || 0; return { done: n >= c.need, have: n, need: c.need }; }
@@ -1142,6 +1144,7 @@ function load() {
     S.hero.tree = S.hero.tree || {}; S.hero.dxp = S.hero.dxp || {};
     if (!S.hero.dxp.combat && S.hero.level > 1) { let x = 0; for (let l = 1; l < S.hero.level; l++) x += CONFIG.discXpToLevel(l); S.hero.dxp.combat = x; } // old save: seed Combat from hero level
     migrateSkills();
+    if (S.legacy.perks && S.legacy.perks.bestiary) { delete S.legacy.perks.bestiary; S.legacy.knowledge = (S.legacy.knowledge || 0) + 1; } // 0.9.8: the Bestiary unlocks by playing — its Crown comes back
     return S;
   } catch (e) { return null; }
 }
@@ -1198,7 +1201,7 @@ window.Game = {
   phase, canProclaim, proclaim,
   stockMode, setStockMode, stockTarget, stockDemand, STOCK_MODES,
   get S() { return S; }, saveString, saveMeta, restoreString, setSaveHook: f => { saveHook = f; }, SAVE_KEY, fmt, pct, fmtTime, drainEvents: () => EVENTS.splice(0), afkEfficiency: () => afkEff(),
-  discXp, discLevel, discProgress, pathNodes, pathNode, pathRank, pathOpen, pathNeedsStar, pathPointsTotal, pathPointsSpent, pathPointsFree, pathPointsMax, starsTotal, starsSpent, starsFree, canRankPath, rankPath, pathMods, resetPaths, techUnlocked, techUnlockMet, techUnlockLabel, techMastery, techLevelOf, techMod, techMods, chooseMod, modPending, techSlots, equipTech, unequipTech, skillDur, skillCdBase, checkTechUnlocks, treeNode, nodeRank, nodeMax, nodeOpen, treePointsTotal, treePointsSpent, treePointsFree, canRankNode, rankNode, nodeQuestLocked, treeMods,
+  markViewed, discXp, discLevel, discProgress, pathNodes, pathNode, pathRank, pathOpen, pathNeedsStar, pathPointsTotal, pathPointsSpent, pathPointsFree, pathPointsMax, starsTotal, starsSpent, starsFree, canRankPath, rankPath, pathMods, resetPaths, techUnlocked, techUnlockMet, techUnlockLabel, techMastery, techLevelOf, techMod, techMods, chooseMod, modPending, techSlots, equipTech, unequipTech, skillDur, skillCdBase, checkTechUnlocks, treeNode, nodeRank, nodeMax, nodeOpen, treePointsTotal, treePointsSpent, treePointsFree, canRankNode, rankNode, nodeQuestLocked, treeMods,
   fistLevel, slotValue, enemyHit, crafting, maxUpgradePlan, upgradeMax, stats, gearStats, itemStatPreview, gearCraftCost, gearUpgradeCost, canTierUp, craftGear, upgradeGear,
   talentPointsFree, talentPointsTotal, talentPointsSpent, respec, respecCost,
   skillDef, skillUnlocked, skillPower, skillCd, skillReady, castSkill, activeBuffs,

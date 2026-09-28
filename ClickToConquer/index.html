@@ -12,7 +12,7 @@
   <title>Click to Conquer</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=a097">
+  <link rel="stylesheet" href="style.css?v=a098">
 </head>
 <body>
 
@@ -197,11 +197,11 @@
         <button data-ksub="mine" class="kline">Mine <span id="badge-mine" class="dot hidden"></span></button>
         <button data-ksub="war" class="kline">Barracks <span id="badge-war" class="dot hidden"></span></button>
         </div><div class="subrow">
-        <button data-ksub="keep">Keep <span id="badge-throne" class="dot hidden"></span></button>
-        <button data-ksub="lands">Lands <span id="badge-lands" class="dot hidden"></span></button>
-        <button data-ksub="halls">Halls <span id="badge-halls" class="dot hidden"></span></button>
         <button data-ksub="tech" class="active">Tech <span id="badge-tech" class="dot hidden"></span></button>
+        <button data-ksub="keep">Keep <span id="badge-throne" class="dot hidden"></span></button>
         <button data-ksub="legacy">Legacy <span id="badge-legacy" class="dot hidden"></span></button>
+        <button data-ksub="halls">Halls <span id="badge-halls" class="dot hidden"></span></button>
+        <button data-ksub="lands">Lands <span id="badge-lands" class="dot hidden"></span></button>
         </div>
       </nav>
       <div id="ksub-forest" class="ksub hidden"><div class="kbar" data-kbar></div><div id="line-forest" class="kline-body"></div></div>
@@ -299,8 +299,8 @@
     <div id="tab-inventory" class="tab hidden">
       <nav class="subtabs" id="csub-tabs">
         <button data-csub="inv" class="active">Inventory</button>
-        <button data-csub="best">Bestiary <span class="lock-ico"></span></button>
-        <button data-csub="troph">Trophies</button>
+        <button data-csub="best" id="csub-best-btn">Bestiary</button>
+        <button data-csub="troph" id="csub-troph-btn">Trophies</button>
       </nav>
       <div id="csub-inv" class="csub">
         <div class="card"><div class="card-title">Inventory</div><p class="dim small">Everything you own. Tap an item to see where it comes from, what it is for, sell it — or pin it to the top bar.</p>
@@ -312,7 +312,6 @@
         <div class="card"><div class="card-title">Bestiary</div><p class="dim small">The more of a creature you kill, the better you fight it: <b>Familiar</b> 10 kills (+2%), <b>Studied</b> 50 (+5%), <b>Known</b> 200 (+10%), <b>Mastered</b> 1,000 (+15%) damage dealt and less taken against that kind. Kill counts survive founding.</p>
           <div id="bestiary" class="list"></div>
         </div>
-        <div class="card" id="bestiary-locked"><div class="card-title">🔒 Bestiary</div><p class="dim small">Costs <b>1 Crown</b> in Kingdom → Legacy. Your kills are counted either way.</p></div>
       </div>
       <div id="csub-troph" class="csub hidden">
         <div class="card"><div class="card-title">Trophies</div><p class="dim small">Mounted heads for kill milestones: Wood 1,000 · Stone 2,000 · Bronze 5,000 · Silver 10,000 · Gold 25,000. Every trophy you own gives <b>+1% loot and XP</b>, forever. Trophies survive founding.</p>
@@ -486,11 +485,11 @@
 </div>
 
 
-<script src="config.js?v=a097"></script>
-<script src="cloud-config.js?v=a097"></script>
-<script src="game.js?v=a097"></script>
-<script src="ui.js?v=a097"></script>
-<script src="cloud.js?v=a097"></script>
+<script src="config.js?v=a098"></script>
+<script src="cloud-config.js?v=a098"></script>
+<script src="game.js?v=a098"></script>
+<script src="ui.js?v=a098"></script>
+<script src="cloud.js?v=a098"></script>
 <script>window.addEventListener("error", e => { const d = document.getElementById("err"); if (d) { d.textContent = "Error: " + e.message; d.classList.remove("hidden"); } });</script>
 </body>
 </html>

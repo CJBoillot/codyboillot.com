@@ -99,7 +99,6 @@ const UI = (() => {
     $('pick-cancel').addEventListener('click', () => $('pick-modal').classList.add('hidden'));
     $('pick-modal').addEventListener('click', e => { if (e.target.id === 'pick-modal') $('pick-modal').classList.add('hidden'); });
     document.querySelectorAll('[data-csub]').forEach(b => b.addEventListener('click', () => {
-      if (b.dataset.csub === 'best' && !Game.perkRank('bestiary')) { /* still show the locked card */ }
       document.querySelectorAll('[data-csub]').forEach(x => x.classList.toggle('active', x === b));
       document.querySelectorAll('.csub').forEach(t => t.classList.toggle('hidden', t.id !== 'csub-' + b.dataset.csub));
     }));
@@ -280,27 +279,32 @@ const UI = (() => {
       case 'tech': return reached('f02');
       case 'forest': case 'farm': case 'mine': return Game.lineUnlocked(key);
       case 'war': case 'lands': return Game.phase() === 3;
-      case 'halls': return Game.kingdomNo() > 0 && Game.kTier() >= 1;
+      case 'halls': return reached('h04') || (Game.kingdomNo() > 0 && Game.kTier() >= 2);
       case 'tavern': return false;
-      case 'keep': return reached('q17') || Game.bestStageAll() >= 20 || S.legacy.foundings > 0;
-      case 'legacy': return S.legacy.foundings > 0 || S.legacy.knowledge > 0;
+      case 'keep': return reached('q17') || S.legacy.foundings > 0;
+      case 'legacy': return reached('p01') || S.legacy.foundings > 1;
       case 'gear': return reached('f03');
-      case 'skills': return S.hero.level >= 2 || reached('q02b') || Object.values(S.hero.dxp || {}).some(x => x > 0);
+      case 'skills': return reached('q02b');
       case 'market': return reached('q14') || S.legacy.foundings > 0;
       case 'trade': return true;
       case 'tavern': return Game.kingdomNo() > 0;
-      case 'inventory': return reached('q05') || Object.keys(R).some(k => R[k].kind === 'loot' && S.lifetime[k] > 0);
+      case 'inventory': case 'inv': return reached('q05b');
+      case 'best': return reached('q13x');
+      case 'troph': return reached('q16b');
       default: return true;
     }
   }
-  const TABKEY = b => b.dataset.tab || b.dataset.sub || b.dataset.ksub || b.dataset.msub || b.dataset.rtab;
+  const TABKEY = b => b.dataset.tab || b.dataset.sub || b.dataset.ksub || b.dataset.msub || b.dataset.rtab || b.dataset.csub;
   function applyTabLocks() {
-    document.querySelectorAll('[data-tab],[data-sub],[data-ksub],[data-msub],[data-rtab]').forEach(b => {
+    document.querySelectorAll('[data-tab],[data-sub],[data-ksub],[data-msub],[data-rtab],[data-csub]').forEach(b => {
       const key = TABKEY(b), ok = tabUnlocked(key);
       b.disabled = !ok; b.classList.toggle('locked-tab', !ok);
     });
     $('kline-row').classList.toggle('hidden', Game.kingdomNo() < 1);
     { const ma = document.querySelector('[data-msub].active'); if (ma && !tabUnlocked(ma.dataset.msub)) document.querySelector('[data-msub=trade]').click(); }
+    { const ca = document.querySelector('[data-csub].active'); if (ca && !tabUnlocked(ca.dataset.csub)) document.querySelector('[data-csub=inv]').click(); }
+    { // screens a quest asks you to look at: count them as seen once they are on screen
+      const inv = $('tab-inventory'); if (inv && inv.offsetParent) { const ca = document.querySelector('[data-csub].active'), k = ca ? { inv: 'inventory', best: 'bestiary', troph: 'trophies' }[ca.dataset.csub] : null; if (k) Game.markViewed(k); if (k !== 'inventory') Game.markViewed('inventory'); } }
     // hide content behind a locked active tab
     const ra = document.querySelector('[data-rtab].active'), rlocked = desktop && ra && !tabUnlocked(ra.dataset.rtab);
     $('right-locked').classList.toggle('hidden', !rlocked);
@@ -923,7 +927,7 @@ const UI = (() => {
       $('inv-empty').classList.toggle('hidden', keys.length > 0);
       renderBestiary();
     }
-    const bKey = S.hero.ground + ':' + S.hero.bestStage + ':' + Object.keys(S.hero.bossesKilled).length + ':' + Object.values(S.hero.grounds).map(g => g.bestStage).join('/') + ':' + Game.perkRank('bestiary') + ':' + Math.floor(S.hero.totalKills / 10);
+    const bKey = S.hero.ground + ':' + S.hero.bestStage + ':' + Object.keys(S.hero.bossesKilled).length + ':' + Object.values(S.hero.grounds).map(g => g.bestStage).join('/') + ':' + Math.floor(S.hero.totalKills / 10);
     if (bKey !== renderBestiary.key) { renderBestiary.key = bKey; renderBestiary(); }
     for (const k of keys) setText(rows.inv[k].querySelector('[data-f=n]'), f(Math.floor(S.res[k] || 0)));
     if (invItem) { setText($('item-have'), f(Math.floor(S.res[invItem] || 0))); const have = Math.floor(S.res[invItem] || 0); $('item-s1').disabled = have < 1; $('item-s10').disabled = have < 10; $('item-sall').disabled = have < 1; }
@@ -971,9 +975,7 @@ const UI = (() => {
   }
   function closeItem() { invItem = null; $('item-modal').classList.add('hidden'); }
   function renderBestiary() {
-    const S = Game.S, box = $('bestiary'), has = !!Game.perkRank('bestiary'); let html = '';
-    $('bestiary-locked').classList.toggle('hidden', has); box.classList.toggle('hidden', !has);
-    document.querySelector('[data-csub=best] .lock-ico').textContent = has ? '' : '🔒';
+    const S = Game.S, box = $('bestiary'), has = true; let html = '';
     if (has) for (const gid in CONFIG.grounds) {
       const G = CONFIG.grounds[gid], gs = gid === S.hero.ground ? { bestStage: S.hero.bestStage } : (S.hero.grounds[gid] || { bestStage: 0 });
       const best = gs.bestStage || 0; const seen = G.line.filter((T, i) => best >= i * CONFIG.stages.perType + 1 || Game.typeKills(gid + ':' + T.id) > 0);

@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Alpha 0.9.7',
+  version: 'Alpha 0.9.8',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -450,6 +450,7 @@ const CONFIG = {
     { id: 'smith',     cat: 'craft',   name: 'Blacksmith',  icon: [4,4],  buildCost: { gold: 200, stone: 40, wood: 40 },   job: { time: 10, inputs: { ore: 5 },             outputs: { ingot: 1 } } },
     { id: 'tannery',   cat: 'craft',   name: 'Tannery',     icon: [8,2],  buildCost: { wood: 40, stone: 20, hide: 10 },              job: { time: 10, inputs: { hide: 3 },            outputs: { leather: 1 } } },
     { id: 'weaver',    cat: 'craft',   name: 'Weaver',      icon: [17,6], buildCost: { gold: 150, wood: 40 },              job: { time: 10, inputs: { wool: 3 },            outputs: { cloth: 1 } } },
+    ['0.9.8', 'Screens open as the story reaches them, left to right. Loot, the Bestiary and Trophies each unlock with a short quest — no Crown needed (if you bought the Bestiary, your Crown is back). Kingdom tabs are now in unlock order: Tech, Keep, Legacy, Halls, Lands. Your first Crown goes on The Ledger.'],
     ['0.9.7', 'The first quests ask a little more, and kill goals now count from when the quest starts — so a quest is never already finished when you reach it.'],
     ['0.9.6', 'Fixed: tapping an item in the Inventory crashed (thanks Monica!). Item details now list the city buildings, Quartermaster and Barracks correctly. Gathering shows when an item is full and stops popping +1 for things that can\'t be stored. Fixed gathering mastery speed.'],
     ['0.9.5', 'New skills. Paths: a passive web of 39 nodes in three branches (Might, Guard, Command) — every node has 10 ranks, points come from Combat levels and ★ from bosses, and nothing ever resets. Techniques: ten active moves unlocked by milestones, levelled by using them, with a mod to choose at Lv 5 and Lv 10. Your old Combat tree points are refunded — spend them in Paths!'],
@@ -548,6 +549,8 @@ const CONFIG = {
         { label: 'Slay 100 enemies', check: { counter: 'kills', need: 100, since: true } },
         { label: 'Kingdom → Tech → Research Skinning', check: { tech: 'skinning' } },
       ], reward: { hide: 5 }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:skinning', el2: 'act:fight' } },
+    { id: 'q05b', name: 'Spoils', text: 'Everything you kill leaves something behind — tails, tusks, pelts. The Loot tab keeps it all. Tap an item there to see where it comes from and what it is for.',
+      steps: [ { label: 'Open the Loot tab', check: { viewed: 'inventory' } } ], reward: { gold: 20 }, focus: { tab: 'inventory', rtab: 'inventory' } },
     { id: 'q06', name: 'Hunter', text: 'Only beasts have hides, and beasts live in the Wilds. A better knife takes more hide per kill.',
       steps: [
         { label: 'Click the Skinning Knife slot → Make (10 wood)', check: { tool: 'knife' } },
@@ -575,6 +578,8 @@ const CONFIG = {
         { label: 'Advance to stage 10', check: { stage: 10 } },
         { label: 'Slay the boss', check: { boss: 1 } },
       ], reward: { gold: 60 }, focus: { tab: 'hero', sub: 'fight', el: 'act:fight', el2: 'id:advance-btn' } },
+    { id: 'q13x', name: 'Know Your Enemy', text: 'Every kill teaches your hero something. The Bestiary counts them: 10 of a kind makes it Familiar, 50 Studied, 200 Known, 1,000 Mastered — and each step means you hit it harder and it hits you softer.',
+      steps: [ { label: 'Loot → open the Bestiary', check: { viewed: 'bestiary' } } ], reward: { gold: 40 }, focus: { tab: 'inventory', rtab: 'inventory', el: 'id:csub-best-btn' } },
     { id: 'q13a', name: 'Highwayman', text: 'Bandits carry the gold they stole. The Roads pay better the deeper you go.',
       steps: [
         { label: 'Fight on The Roads', check: { activity: 'fight', ground: 'roads' } },
@@ -625,13 +630,15 @@ const CONFIG = {
       steps: [
         { label: 'Reach stage 20 in any ground', check: { stage: 20 } },
       ], reward: { gold: 200 }, focus: { tab: 'hero', sub: 'fight', el: 'act:fight', el2: 'id:advance-btn' } },
+    { id: 'q16b', name: 'The Trophy Wall', text: 'Kill 1,000 of one kind and its head goes on your wall — Wood, then Stone, Bronze, Silver and Gold. Every head is +1% loot and XP, for good.',
+      steps: [ { label: 'Loot → open Trophies', check: { viewed: 'trophies' } } ], reward: { gold: 100 }, focus: { tab: 'inventory', rtab: 'inventory', el: 'id:csub-troph-btn' } },
     { id: 'q17', name: 'A New Kingdom', text: 'You have survived the wild alone. Pay tribute to the Empire — 100 gold and the Rat King\'s Tooth — and it grants you land. Your hero keeps everything he has earned — levels, skills and gear — but the goods in your pack stay behind. This is where the kingdom begins.',
       steps: [
         { label: 'Kingdom → Throne → Pay tribute (100 gold + Rat King\'s Tooth)', check: { founded: 1 } },
       ], reward: { gold: 100 }, focus: { tab: 'kingdom', ksub: 'throne', rtab: 'kingdom', el: 'id:found-btn' } },
     // ===== A Kingdom: after the first founding =====
-    { id: 'p01', chain: 'A Kingdom', name: 'What Survives', text: 'Crowns are forever: Legacy perks survive every new dynasty. Spend your first Crown on the Bestiary, so every creature you have ever killed keeps teaching you how to fight it.',
-      steps: [ { label: 'Kingdom → Legacy → unlock Bestiary (1 Crown)', check: { perk: 'bestiary' } } ], reward: { gold: 50 }, focus: { tab: 'kingdom', ksub: 'legacy', rtab: 'kingdom', el: 'perk:bestiary' } },
+    { id: 'p01', chain: 'A Kingdom', name: 'What Survives', text: 'Crowns are forever: Legacy perks survive every new dynasty. Spend your first Crown on The Ledger, so you always know what your hero and your city earn while you are away.',
+      steps: [ { label: 'Kingdom → Legacy → buy The Ledger (1 Crown)', check: { perk: 'ledger' } } ], reward: { gold: 50 }, focus: { tab: 'kingdom', ksub: 'legacy', rtab: 'kingdom', el: 'perk:ledger' } },
     { id: 'k01', chain: 'A Kingdom', name: 'The First Camp', text: 'Buildings work on their own. Each level makes one faster — and every 10 levels it doubles and gets a new name.',
       steps: [ { label: 'Kingdom → Forest → Logging → Upgrade to Lv 3', check: { bLv: 'logging', need: 3 } }, { label: 'Haul 60 wood to the Storehouse', check: { made: 'wood', need: 60 } } ], reward: { gold: 60 }, focus: { tab: 'kingdom', ksub: 'forest', rtab: 'kingdom', el: 'step:logging' } },
     { id: 'k02', chain: 'A Kingdom', name: 'Imperial Orders', text: 'The Empire, the Guild and the villages post Orders at your Keep. They pay gold and Renown — no deadline, but a speed bonus.',
@@ -774,8 +781,7 @@ const CONFIG = {
       { id: 'autocollect', tree: 'realm',   name: 'Stewards',        icon: [13,11], max: 1, cost: 15, costMult: 1,   desc: 'Taxes flow in by themselves — no need to Collect' },
       { id: 'spoils',    tree: 'realm',     name: 'Plunder',         icon: [12,15], max: 5, cost: 5,  costMult: 1.8, desc: '+25% spoils per rank' },
       { id: 'lap',       tree: 'realm',     name: 'Victory Lap',     icon: [5,7],  max: 3,  cost: 6,  costMult: 2,   desc: 'Lands you have conquered before: hero damage ×3 there, +×1 per rank' },
-      { id: 'ledger',    tree: 'realm',     name: 'The Ledger',      icon: [13,11], max: 1, cost: 2,  costMult: 1,   desc: 'See your AFK forecast (gold and goods per hour while away)' },
-      { id: 'bestiary',  tree: 'realm',     name: 'Bestiary',        icon: [13,6],  max: 1, cost: 1,  costMult: 1,   desc: 'Unlock the Bestiary: kill counts, what each enemy drops and your bonus against it' },
+      { id: 'ledger',    tree: 'realm',     name: 'The Ledger',      icon: [13,11], max: 1, cost: 1,  costMult: 1,   desc: 'See your AFK forecast (gold and goods per hour while away)' },
       { id: 'danger',    tree: 'realm',     name: 'Danger Sense',    icon: [0,9],   max: 1, cost: 2,  costMult: 1,   desc: 'See how much HP each fight costs and whether the next stage is safe' },
       { id: 'chronicler',tree: 'realm',     name: 'Chronicler',      icon: [13,8],  max: 1, cost: 2,  costMult: 1,   desc: 'Unlock the Stats card: DPS, crit, kills per second, loot' },
       { id: 'surveyor',  tree: 'crown',     name: 'Surveyor',        icon: [10,7],  max: 1, cost: 2,  costMult: 1,   desc: 'See swing times and yield per swing on the harvest screen' },
