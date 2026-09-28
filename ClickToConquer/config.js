@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Alpha 0.3.1',
+  version: 'Alpha 0.3.2',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -166,7 +166,7 @@ const CONFIG = {
 
   tiers: [
     { name: 'Crude', mult: 0.5, perSlot: { weapon: { name: 'Wooden', craftCost: { wood: 10 }, upgradeCost: { wood: 2 } }, chest: { name: 'Fiber', craftCost: { fiber: 10 }, upgradeCost: { fiber: 2 } }, gloves: { name: 'Fiber', craftCost: { fiber: 6 }, upgradeCost: { fiber: 2 } }, helm: { name: 'Fiber', craftCost: { fiber: 6 }, upgradeCost: { fiber: 2 } }, boots: { name: 'Fiber', craftCost: { fiber: 6 }, upgradeCost: { fiber: 2 } }, trinket: { name: 'Fiber', craftCost: { fiber: 4 }, upgradeCost: { fiber: 1 } } }, craftCost: { fiber: 10 }, upgradeCost: { fiber: 2 }, upgradeMult: 1.18 },
-    { name: 'Leather',     mult: 1,   perSlot: { weapon: { name: 'Stone', craftCost: { stone: 12, wood: 6 }, upgradeCost: { stone: 4, wood: 2 } } }, craftCost: { leather: 3, hide: 5 }, upgradeCost: { leather: 1, hide: 2 }, upgradeMult: 1.25 },
+    { name: 'Leather',     mult: 1,   perSlot: { weapon: { name: 'Stone', craftCost: { stone: 12, wood: 6 }, upgradeCost: { stone: 4, wood: 2 } } }, craftCost: { hide: 8, fiber: 4 }, upgradeCost: { hide: 2, fiber: 1 }, upgradeMult: 1.25 },
     { name: 'Iron',        mult: 3,   craftCost: { ingot: 5, leather: 3, gold: 300 },            upgradeCost: { ingot: 2, leather: 1 },           upgradeMult: 1.25 },
     { name: 'Steel',       mult: 9,   craftCost: { ingot: 10, planks: 3, leather: 3, gold: 2000 },   upgradeCost: { ingot: 5, planks: 1 },              upgradeMult: 1.25 },
     { name: 'Hardened',    mult: 27,  craftCost: { ingot: 20, bricks: 10, cloth: 6, gold: 5000 },    upgradeCost: { ingot: 8, bricks: 2, cloth: 1 },   upgradeMult: 1.25 },
@@ -317,7 +317,7 @@ const CONFIG = {
     refP: [1.00, 1.15, 1.30, 1.50, 1.75, 2.00, 2.30, 2.60, 3.00, 3.40],
     refHit: t => (t + 2) * (CONFIG.stages.refP[Math.min(t, CONFIG.stages.refP.length - 1)] * Math.pow(1.15, Math.max(0, t - CONFIG.stages.refP.length + 1))),
     refHeroHp: t => 10 * (t + 1.5),
-    groundOffset: { wilds: 0, roads: 1, crypts: 2 },
+    groundOffset: { wilds: 0, roads: 1, crypts: 3 },
     goldPerKill: s => 1 * Math.pow(1.14, s - 1),
     xpPerKill:  s => { const t = Math.floor((s - 1) / 10), k = (s - 1) % 10 + 1; return (k + 10 * t) * Math.pow(1.3, t); }, // Rat 1 → 1 XP, Rat 10 → 10, Boar 1 → 14
     dropCap: 0.95,
@@ -499,6 +499,13 @@ const CONFIG = {
         { label: 'Combat tree → Power Strike rank 1', check: { node: 'combat:strike', need: 1 } },
         { label: 'Use Power Strike 5 times', check: { casts: 'strike', need: 5 } },
       ], reward: { gold: 80 }, focus: { tab: 'hero', sub: 'skills', rtab: 'skills', el: 'node:combat:strike' } },
+    { id: 'q13d', name: 'Armor Up', text: 'The dead hit harder than rats. Nobody walks into the Crypts in rags: take every piece of armor to Leather. Max a Fiber piece to Lv 9 and the Forge button turns it into Leather.',
+      steps: [
+        { label: 'Gear → Helm → make it, max Fiber to Lv 9, forge Leather', check: { gearTier: 'helm', need: 1 }, focus: { tab: 'hero', sub: 'gear', el: 'gear:helm' } },
+        { label: 'Gear → Chest → make it, max Fiber to Lv 9, forge Leather', check: { gearTier: 'chest', need: 1 }, focus: { tab: 'hero', sub: 'gear', el: 'gear:chest' } },
+        { label: 'Gear → Gloves → make it, max Fiber to Lv 9, forge Leather', check: { gearTier: 'gloves', need: 1 }, focus: { tab: 'hero', sub: 'gear', el: 'gear:gloves' } },
+        { label: 'Gear → Boots → make it, max Fiber to Lv 9, forge Leather', check: { gearTier: 'boots', need: 1 }, focus: { tab: 'hero', sub: 'gear', el: 'gear:boots' } },
+      ], reward: { hide: 20 }, focus: { tab: 'hero', sub: 'gear', el: 'gear:helm' } },
     { id: 'q13b', name: 'Grave Robber', text: 'The dead were buried with their coin — and their armor. Rusted iron can be melted down.',
       steps: [
         { label: 'Kingdom → Tech → Research Grave Robbing', check: { tech: 'graverobbing' } },
