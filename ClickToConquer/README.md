@@ -1,4 +1,4 @@
-# Click to Conquer — Alpha 0.6.1
+# Click to Conquer — Alpha 0.6.2
 
 Mobile-first AFK / incremental game. Vanilla HTML + JS, no build: open `index.html`. Full design in the project doc `design/v0.3-design.md`.
 

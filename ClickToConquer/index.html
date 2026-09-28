@@ -12,7 +12,7 @@
   <title>Click to Conquer</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=a063">
+  <link rel="stylesheet" href="style.css?v=a064">
 </head>
 <body>
 
@@ -391,6 +391,10 @@
   <div class="set-row"><span>Update</span><button id="set-reload" title="Save and reload the game, fetching the newest version">↻ Reload game</button></div>
   <div class="set-row"><span>Start over</span><button id="set-reset" class="danger-btn">Reset all progress</button></div>
   <details class="devtools">
+    <summary>What's new</summary>
+    <div id="whatsnew" class="whatsnew"></div>
+  </details>
+  <details class="devtools">
     <summary>Developer tools</summary>
     <div class="dev-row"><button id="dev-offline">AFK test 4h</button><button id="dev-tech">All tech</button><button id="dev-qskip">Skip quest</button></div>
     <div class="dev-row"><input id="dev-n" type="number" value="1000" class="dev-input"> <button id="dev-give-all">Give all</button><select id="dev-res" class="dev-input"></select><button id="dev-give-one">Give</button></div>
@@ -401,11 +405,11 @@
 </div>
 
 
-<script src="config.js?v=a063"></script>
-<script src="cloud-config.js?v=a063"></script>
-<script src="game.js?v=a063"></script>
-<script src="ui.js?v=a063"></script>
-<script src="cloud.js?v=a063"></script>
+<script src="config.js?v=a064"></script>
+<script src="cloud-config.js?v=a064"></script>
+<script src="game.js?v=a064"></script>
+<script src="ui.js?v=a064"></script>
+<script src="cloud.js?v=a064"></script>
 <script>window.addEventListener("error", e => { const d = document.getElementById("err"); if (d) { d.textContent = "Error: " + e.message; d.classList.remove("hidden"); } });</script>
 </body>
 </html>

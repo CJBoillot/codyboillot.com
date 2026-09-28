@@ -54,7 +54,7 @@ const UI = (() => {
     $('retreat-btn').addEventListener('click', () => Game.retreat());
     $('respec-btn').addEventListener('click', () => ask('Respec', 'Reset all tree points across every discipline? Capstones are kept. Costs ' + Game.fmt(Game.respecCost()) + ' gold.', 'Respec', () => Game.respec()));
     $('wb-claim').addEventListener('click', () => claimWelcome(1));
-    $('wb-ad').addEventListener('click', () => claimWelcome(CONFIG.offline.adDoubleMultiplier));
+    $('wb-ad').disabled = true; $('wb-ad').innerHTML = '▶ Watch ad ×2 <span class="small dim">· coming soon</span>';
     $('dev-toggle').addEventListener('click', () => $('dev-panel').classList.toggle('hidden'));
     $('dev-close').addEventListener('click', () => $('dev-panel').classList.add('hidden'));
     $('item-close').addEventListener('click', closeItem); $('item-modal').addEventListener('click', e => { if (e.target === $('item-modal')) closeItem(); });
@@ -148,7 +148,7 @@ const UI = (() => {
       if (gain === false) return;
       $('found-modal').classList.add('hidden'); buildLists(); for (const l in lineKey) lineKey[l] = '';
       document.querySelector('[data-tab=hero]').click();
-      if (Game.S.legacy.foundings === 1 && !Game.S.settings.demoSeen) showInfo('Camp', 'You founded a kingdom.', '<p class="small">The wild is behind you. From here on your land works while you are away.</p><p class="small"><b>Market → Tavern</b> — hire thralls. <b>Kingdom → Forest</b> — put them to work at Logging, and upgrade Work, Cart and Haul with gold.</p><p class="small"><b>Keep</b> — fill Imperial Orders for gold and Renown, and grow your settlement: <b>Camp → Hamlet → Village → City</b>. Each step up costs goods, never your progress.</p><p class="small dim">Alpha — numbers are rough and will change.</p>', 'demoSeen');
+      if (Game.S.legacy.foundings === 1 && !Game.S.settings.demoSeen) showInfo('Camp', 'You founded a kingdom.', '<p class="small">The wild is behind you. From here on your land works while you are away.</p><p class="small"><b>Market → Tavern</b> — hire thralls. <b>Kingdom → Forest</b> — put them to work at Logging, and upgrade Work, Cart and Haul with gold.</p><p class="small"><b>Keep</b> — fill Imperial Orders for gold and Renown, and grow your settlement: <b>Camp → Hamlet → Village → City</b>. Each step up costs goods, never your progress.</p>' + (Game.S.settings.guest && window.Cloud && Cloud.available && !Cloud.user ? '<p class="small"><b>Your kingdom lives on this device.</b> Settings (⚙) → Sign in with Google to back it up and play anywhere.</p>' : '') + '<p class="small dim">Alpha — numbers are rough and will change.</p>', 'demoSeen');
     });
     $('demo-continue').addEventListener('click', () => { if (infoFlag) Game.S.settings[infoFlag] = true; Game.save(); $('demo-modal').classList.add('hidden'); });
     if (Game.S.migrated03 && !Game.S.settings.migSeen) showInfo('Alpha 0.3', 'The kingdom has been rebuilt.', '<p class="small">Combat, gear and the whole kingdom were redesigned for 0.3, so your old run could not carry over. Your <b>Crystals, Legacy perks and Bestiary kills</b> are kept.</p><p class="small">The wild now starts with bare fists, a 100-item pack and a tribute to the Empire. Past it lies a new idle kingdom of production lines, thralls and Imperial Orders.</p>', 'migSeen');
@@ -492,7 +492,7 @@ const UI = (() => {
   function openPicker(stepId, as, lid) {
     const S = Game.S, K = S.kingdom, st = Game.stepDef(stepId), ss = Game.stepState(stepId), list = $('pick-list');
     setText($('pick-title'), as === 'worker' ? `Worker for the ${st.name}` : as === 'accountant' ? `Accountant for the ${st.name}` : `Overseer for the ${st.name}`);
-    setText($('pick-sub'), as === 'accountant' ? `An Accountant sells ${R[st.make].name.toLowerCase()} the Storehouse does not need (above a quarter of its cap), at half the Market price.` : as === 'worker' ? 'Workers run the step. Speed shortens Work, Strength shortens Cart. Thralls level up as they work.' : 'An Overseer reports the bottleneck and boosts one track by role: Foreman → work rate, Carter → haul speed, Packer → cart size.');
+    setText($('pick-sub'), as === 'accountant' ? `An Accountant sells ${R[st.make].name.toLowerCase()} the Storehouse does not need (above a quarter of its cap), at half the Market price.` : as === 'worker' ? 'Workers run the step. Each worker speeds up Work and Cart by their stats. Thralls level up as they work.' : 'An Overseer reports the bottleneck and boosts one track by role: Foreman → work rate, Carter → haul speed, Packer → cart size.');
     const close = () => { $('pick-modal').classList.add('hidden'); lineKey[lid] = ''; render(true); };
     let h = '';
     if (as === 'accountant' && ss.accountant != null) h += `<button class="pick-row danger-btn" data-pick="remove"><div class="row-main"><b>Remove ${K.thralls[ss.accountant].name}</b></div></button>`;
@@ -501,7 +501,8 @@ const UI = (() => {
       .sort((a, b) => (!!a.p - !!b.p) || (b.t.stars - a.t.stars));
     for (const c of cand) {
       const where = c.p ? `${c.p.as === 'overseer' ? 'Overseer' : c.p.as === 'accountant' ? 'Accountant' : 'Worker'} at the ${Game.stepDef(c.p.id).name}` : 'Idle';
-      const perk = `Lv ${Game.thrallLevel(c.t)} · ` + (as === 'worker' ? `Str ${c.t.str} · Spd ${c.t.spd}` : `${ROLE[c.t.role]} ×${CONFIG.kingdom.starMult[c.t.stars]}`);
+      const lm = 1 + CONFIG.kingdom.thrallLvBonus * (Game.thrallLevel(c.t) - 1), sp = CONFIG.kingdom.statPct;
+      const perk = `Lv ${Game.thrallLevel(c.t)} · ` + (as === 'worker' ? `Work +${Math.round(100 * sp * c.t.spd * lm)}% · Cart +${Math.round(100 * sp * c.t.str * lm)}%` : as === 'accountant' ? `sells at ${Math.round(100 * CONFIG.kingdom.accountantShare * (1 + 0.02 * (Game.thrallLevel(c.t) - 1)))}% of Market price` : `${ROLE[c.t.role]} ×${CONFIG.kingdom.starMult[c.t.stars]}`);
       h += `<button class="pick-row" data-pick="${c.i}"><div class="row-main"><b>${c.t.name}</b> <span class="stars">${stars(c.t.stars)}</span> <span class="owned">${roleShort(c.t.role)}</span><div class="small dim">${perk}</div></div><span class="tag ${c.p ? '' : 'idle'}">${c.p ? 'Move from ' + Game.stepDef(c.p.id).name : 'Idle'}</span></button>`;
     }
     if (!cand.length) h += `<div class="dim small center" style="padding:8px 0">${K.thralls.length ? 'Every thrall is already here.' : 'You have no thralls yet.'}</div><button class="pick-row" data-pick="tavern"><div class="row-main"><b>Go to the Tavern</b><div class="small dim">Market → Tavern: hire a thrall</div></div><span class="tag">▶</span></button>`;
@@ -529,7 +530,7 @@ const UI = (() => {
       setText($('settle-name'), td.name); setText($('settle-tier'), `${t + 1} of ${T.length}${nx ? ' · next: ' + nx.name : ''}`);
       let lh = '';
       if (nx) {
-        setText($('settle-need'), `To become a ${nx.name}: ${td.need} Then pay in ${td.cap} of every good you make — a little at a time is fine. Nothing is lost.${t > 0 ? ' Tip: a building uses up what feeds it — take its workers off for a while to stock up.' : ''}`);
+        setText($('settle-need'), `To become a ${nx.name}: ${td.need} Then pay in ${td.cap} of every good you make — a little at a time, and goods you deliver in Orders count too. Nothing is lost.${t > 0 ? ' Tip: a building uses up what feeds it — take its workers off for a while to stock up.' : ''}`);
         const cur = CONFIG.kingdom.lines; const stepsHere = Game.allSteps().filter(st => st.tier === t);
         lh += stepsHere.map(st => { const ok = Game.stepBuilt(st.id) && Game.stepState(st.id).workers.length > 0; return `<div class="row-between small"><span>${ok ? '✓' : '○'} ${st.name}</span><span class="${ok ? 'good' : 'dim'}">${Game.stepBuilt(st.id) ? (ok ? 'working' : 'needs a worker') : 'not built'}</span></div>`; }).join('');
         lh += Object.keys(need).map(k => { const g = Math.min(need[k], paid[k] || 0); return `<div class="bar kob"><div style="width:${100 * g / need[k]}%"></div><span>${R[k].name} ${f(g)} / ${f(need[k])}${g < need[k] ? ` · have ${f(Math.floor(S.res[k] || 0))}` : ' ✓'}</span></div>`; }).join('');
@@ -559,7 +560,7 @@ const UI = (() => {
     const ol = $('order-list'); if (ol.__h !== oh) { ol.innerHTML = oh || '<div class="dim small">No orders yet — produce something first.</div>'; ol.__h = oh; ol.querySelectorAll('[data-deliver]').forEach(b => b.onclick = () => { if (Game.deliver(+b.dataset.deliver)) { ol.__h = ''; render(true); } }); ol.querySelectorAll('[data-swap]').forEach(b => b.onclick = () => { if (Game.swapOrder(+b.dataset.swap)) { ol.__h = ''; render(true); } }); }
     // hiring
     setText($('offer-timer'), Game.fmtTime(Math.max(0, K.offerTimer || 0))); setText($('refresh-cost'), CONFIG.kingdom.refreshCost); $('offer-refresh').disabled = (S.res.gold || 0) < CONFIG.kingdom.refreshCost;
-    const hh = (K.offers || []).map((o, i) => `<div class="row koffer"><div class="row-main"><div class="row-title">${o.name} <span class="stars">${stars(o.stars)}</span></div><div class="row-sub">${ROLE[o.role]} ×${CONFIG.kingdom.starMult[o.stars]}</div><div class="row-sub dim">Strength ${o.str} (Cart) · Speed ${o.spd} (Work)</div></div><button class="buy" data-hire="${i}" ${(S.res.gold || 0) >= o.price && K.thralls.length < Game.thrallCap() ? '' : 'disabled'}><span class="small">Hire</span><br><span class="cost">${costHtml({ gold: o.price })}</span></button></div>`).join('');
+    const hh = (K.offers || []).map((o, i) => `<div class="row koffer"><div class="row-main"><div class="row-title">${o.name} <span class="stars">${stars(o.stars)}</span></div><div class="row-sub">${ROLE[o.role]} ×${CONFIG.kingdom.starMult[o.stars]}</div><div class="row-sub dim">Work +${Math.round(100 * CONFIG.kingdom.statPct * o.spd)}% · Cart +${Math.round(100 * CONFIG.kingdom.statPct * o.str)}%</div></div><button class="buy" data-hire="${i}" ${(S.res.gold || 0) >= o.price && K.thralls.length < Game.thrallCap() ? '' : 'disabled'}><span class="small">Hire</span><br><span class="cost">${costHtml({ gold: o.price })}</span></button></div>`).join('');
     const hl = $('hire-list'); if (hl.__h !== hh) { hl.innerHTML = hh; hl.__h = hh; hl.querySelectorAll('[data-hire]').forEach(b => b.onclick = () => { if (Game.hire(+b.dataset.hire)) { hl.__h = ''; for (const l in lineKey) lineKey[l] = ''; render(true); } }); }
     // roster
     setText($('roster-count'), `${K.thralls.length} / ${Game.thrallCap()} · room for one more each new land`);
@@ -734,7 +735,7 @@ const UI = (() => {
       const e = $('res-' + k), open = R[k].kind !== 'loot' && S.lifetime[k] > 0 && Game.pinned(k);
       e.classList.toggle('hidden', !open); if (!open) continue;
       e.querySelector('.rrate').classList.toggle('hidden', !Game.perkRank('almanac'));
-      { const cap = Game.resCap(k), full = (S.res[k] || 0) >= cap - 1e-9; setHtml(e.querySelector('[data-f=amt]'), `${f(S.res[k])}<span class="capn">/${f(cap)}</span>`); e.classList.toggle('full', full); }
+      { const cap = Game.resCap(k), full = (S.res[k] || 0) >= cap - 1e-9; setHtml(e.querySelector('[data-f=amt]'), `${f(Math.floor((S.res[k] || 0) + 1e-6))}<span class="capn">/${f(cap)}</span>`); e.classList.toggle('full', full); }
       const rate = (kr[k] || 0) + (hr[k] || 0) + (hrv[k] || 0);
       const re = e.querySelector('[data-f=rate]'); setText(re, (rate > 0 ? '+' + f(rate) : '0') + '/s'); re.classList.toggle('zero', !(rate > 0));
     }
@@ -1087,13 +1088,15 @@ const UI = (() => {
     const dot = $('avatar-dot'); dot.classList.toggle('hidden', !u); dot.className = 'avatar-dot ' + (u ? ({ ok: 'ok', syncing: 'busy', error: 'bad', offline: 'off', idle: 'off' }[C.status] || 'off') : 'hidden');
     $('cloud-out').classList.toggle('hidden', !!u); $('cloud-in').classList.toggle('hidden', !u);
     $('cloud-guest').classList.toggle('hidden', !!Game.S.settings.guest || !C.available);
-    const sb = $('cloud-signin'); sb.disabled = !C.ready; sb.querySelector('span').textContent = !C.available ? 'Cloud saves — coming soon' : C.ready ? 'Sign in with Google' : 'Connecting…';
+    const sb = $('cloud-signin'); sb.disabled = !C.ready; sb.querySelector('span').textContent = !C.available ? 'Cloud saves — coming soon' : C.ready ? 'Sign in with Google' : C.status === 'error' ? 'Cloud unavailable right now' : 'Connecting…';
     if (u) { $('cloud-pic').innerHTML = pic || sil; setHtml($('cloud-name'), `<b>${(u.displayName || 'Signed in').replace(/</g, '&lt;')}</b>`);
       setText($('cloud-sync'), C.status === 'syncing' ? 'Syncing…' : C.status === 'offline' ? 'Offline — saved on this device' : C.lastSync ? `Synced ${C.ago(C.lastSync)}` : 'Signed in'); }
     const e = $('cloud-err'); e.classList.toggle('hidden', !C.error); setText(e, C.error || '');
     const b = C.backupInfo && C.backupInfo(), rb = $('cloud-restore'); rb.classList.toggle('hidden', !b);
     if (b && b.meta) setText(rb, `Restore previous save (${b.meta.place}, Hero Lv ${b.meta.heroLv}, set aside ${C.ago(b.at)})`);
   }
+  function renderChangelog() { const el = $('whatsnew'); if (!el || el.__done) return; el.innerHTML = CONFIG.changelog.map(([v, t]) => `<div class="small"><b>${v}</b> <span class="dim">${t}</span></div>`).join(''); el.__done = true; }
+  setTimeout(renderChangelog, 0);
   function rebuild() { buildLists(); for (const l in lineKey) lineKey[l] = ''; glowKey = ''; render(true); }
   setInterval(renderCloud, 15000);
   return { init, render, showWelcomeBack, renderCloud, rebuild };

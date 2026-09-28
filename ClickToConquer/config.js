@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Alpha 0.6.1',
+  version: 'Alpha 0.6.2',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -168,8 +168,8 @@ const CONFIG = {
   tiers: [
     { name: 'Crude', mult: 0.5, perSlot: { weapon: { name: 'Wooden', craftCost: { wood: 10 }, upgradeCost: { wood: 2 } }, chest: { name: 'Fiber', craftCost: { fiber: 10 }, upgradeCost: { fiber: 2 } }, gloves: { name: 'Fiber', craftCost: { fiber: 6 }, upgradeCost: { fiber: 2 } }, helm: { name: 'Fiber', craftCost: { fiber: 6 }, upgradeCost: { fiber: 2 } }, boots: { name: 'Fiber', craftCost: { fiber: 6 }, upgradeCost: { fiber: 2 } }, trinket: { name: 'Fiber', craftCost: { fiber: 4 }, upgradeCost: { fiber: 1 } } }, craftCost: { fiber: 10 }, upgradeCost: { fiber: 2 }, upgradeMult: 1.18 },
     { name: 'Leather',     mult: 1,   perSlot: { weapon: { name: 'Stone', craftCost: { stone: 12, wood: 6 }, upgradeCost: { stone: 4, wood: 2 } } }, craftCost: { hide: 8, fiber: 4 }, upgradeCost: { hide: 2, fiber: 1 }, upgradeMult: 1.25 },
-    { name: 'Iron',        mult: 3,   craftCost: { ingot: 5, leather: 3, gold: 300 },            upgradeCost: { ingot: 2, leather: 1 },           upgradeMult: 1.25 },
-    { name: 'Steel',       mult: 9,   craftCost: { ingot: 10, planks: 3, leather: 3, gold: 2000 },   upgradeCost: { ingot: 5, planks: 1 },              upgradeMult: 1.25 },
+    { name: 'Iron',        mult: 3,   craftCost: { ingot: 5, hide: 6, gold: 300 },            upgradeCost: { ingot: 2, hide: 1 },           upgradeMult: 1.25 },
+    { name: 'Steel',       mult: 9,   craftCost: { ingot: 10, lumber: 3, gold: 1500 },   upgradeCost: { ingot: 4, lumber: 1 },              upgradeMult: 1.25 },
     { name: 'Hardened',    mult: 27,  craftCost: { ingot: 20, bricks: 10, cloth: 6, gold: 5000 },    upgradeCost: { ingot: 8, bricks: 2, cloth: 1 },   upgradeMult: 1.25 },
     { name: 'Mythril',     mult: 81,  craftCost: { ingot: 40, planks: 10, bricks: 10, cloth: 10, gold: 20000 }, upgradeCost: { ingot: 15, bricks: 4, gold: 500 }, upgradeMult: 1.25 },
   ],
@@ -353,6 +353,9 @@ const CONFIG = {
       { name: 'Village', cap: 500, slots: 3, thralls: 30, need: 'Build and staff the Carpenter, Baker and Forge.' },
       { name: 'City',    cap: 800, slots: 3, thralls: 42, need: 'Every building: 3 workers and an Overseer. An Accountant on each final good.' },
     ],
+    statPct: 0.05,                  // each point of a worker's Speed / Strength: 5% faster Work / Cart
+    tierOrders: true,               // goods delivered in Orders also count toward the next settlement
+    heroOrderChance: 0.3,           // once the kingdom makes 3+ goods, one Order at a time may still ask for the hero's goods
     accountantShare: 0.5, accountantReserve: 0.25,   // accountants sell a line's final good above 25% of cap, at half the Market price
     // A cycle: Work (batch ÷ rate) → Cart (loadBase) → Haul (haulBase). Every track level shortens its phase by trackGrowth (hyperbolic: never zero, never ends).
     trackGrowth: 0.12, loadBase: 6, haulBase: 12, autoSell: 0.25,
@@ -361,7 +364,7 @@ const CONFIG = {
     bufferCap: 200,                          // most input a refiner can hold waiting
     workerMilestones: [10, 25, 50],          // +1 worker slot at these step levels (highest track)
     extraWorker: 0.25,                       // each worker after the first: +25% rate
-    starMult: [1, 1.2, 1.5, 1.8, 2.0, 2.5],  // Overseer multiplier by stars (index = stars)
+    starMult: [1, 1.5, 2.0, 2.5, 3.0, 3.5],  // Overseer multiplier by stars (index = stars)
     abilitySeconds: 30, abilityCooldown: 600,
     hirePrice: [0, 40, 120, 350, 900, 2200], offerRefresh: 300, refreshCost: 25,
     ranks: [ { name: 'Reeve', renown: 0, perk: 'Start' }, { name: 'Baron', renown: 500, perk: 'Storehouse ×2' }, { name: 'Count', renown: 2000, perk: '4★ thralls in the Tavern · bigger Orders' }, { name: 'Duke', renown: 6000, perk: '5★ thralls · the biggest Orders' } ],
@@ -401,6 +404,13 @@ const CONFIG = {
   // ---------- Quests ----------
   // A linear chain that doubles as the tutorial. `check` types: counter (lifetime goods/kills/etc), tech, tool, gear, plots, building,
   // jobs (jobs completed by hand or thrall), sold (gold earned at market), stage, boss, founded, thrall (assigned), activity (swings).
+  // Shown in Settings → What's new (newest first). Keep each line short.
+  changelog: [
+    ['0.6.2', 'Orders now count toward your next settlement. Overseers and thrall stats matter much more. Iron and Steel gear use kingdom goods. Orders sometimes ask for what your hero gathers.'],
+    ['0.6.1', 'Cloud saves with Google sign-in (or play as a guest). Cheaper buildings, better-paying Orders.'],
+    ['0.6.0', 'Camp → Hamlet → Village → City. Buildings are built with goods; raising the settlement costs goods, never progress.'],
+    ['0.5.x', 'Work → Cart → Haul cycle bar. The Tavern. Thralls level up and ride with you to new lands.'],
+  ],
   quests: [
     // ===== First Steps: everything by hand =====
     { id: 'f01', chain: 'First Steps', name: 'Naked in the Wild', text: 'You have nothing. Plants have fiber, and fiber can be twisted into cloth. Pull some by hand — one handful per click.',

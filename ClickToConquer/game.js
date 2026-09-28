@@ -407,9 +407,9 @@ function stepMods(id) {
   const boost = s.abilityUntil > now ? 2 : 1;
   const spd = ws.reduce((a, t) => a + t.spd * thrallLvMult(t), 0), str = ws.reduce((a, t) => a + t.str * thrallLvMult(t), 0);
   return {
-    rate: (1 + KC().extraWorker * Math.max(0, ws.length - 1) + 0.02 * spd) * roleMult(ov, 'foreman') * boost,
+    rate: (1 + KC().extraWorker * Math.max(0, ws.length - 1) + KC().statPct * spd) * roleMult(ov, 'foreman') * boost,
     haul: roleMult(ov, 'carter') * boost,
-    cart: (1 + 0.02 * str) * roleMult(ov, 'packer') * boost,
+    cart: (1 + KC().statPct * str) * roleMult(ov, 'packer') * boost,
     working: ws.length > 0,
   };
 }
@@ -469,7 +469,7 @@ function tickKingdom(dt) {
   if (kingdomNo() < 1) return;
   const K = S.kingdom;
   K.offerTimer = (K.offerTimer || KC().offerRefresh) - dt; if (K.offerTimer <= 0) refreshOffers();
-  { const g = orderGoods(); (K.orders || []).forEach((o, i) => { if (Object.keys(o.wants).some(k => !g.includes(k) && (S.res[k] || 0) < o.wants[k])) K.orders.splice(i, 1, makeOrder(i)); });
+  { const g = orderGoods(); (K.orders || []).forEach((o, i) => { if (Object.keys(o.wants).some(k => !g.includes(k) && !((S.lifetime[k] || 0) > 0 && KC().heroOrderGoods.includes(k)) && (S.res[k] || 0) < o.wants[k])) K.orders.splice(i, 1, makeOrder(i)); });
     const seen = []; K.orders.forEach((o, i) => { const k = Object.keys(o.wants)[0]; if (seen.includes(k) && orderGoods().filter(g => !K.orders.some(x => Object.keys(x.wants)[0] === g)).length) K.orders.splice(i, 1, makeOrder(i)); else seen.push(k); }); }
   for (const lid in KC().lines) {
     for (const st of lineSteps(lid)) {
@@ -533,7 +533,9 @@ function makeOrder(slot = -1) {
   const pool = orderGoods(), taken = (S.kingdom.orders || []).filter((o, i) => o && i !== slot).map(o => Object.keys(o.wants)[0]);
   const fresh = pool.filter(k => !taken.includes(k)), pickFrom = fresh.length ? fresh : pool;
   const from = KC().orderFrom[Math.floor(Math.random() * KC().orderFrom.length)], mult = 1 + 0.5 * rankIndex();
-  const kFirst = pickFrom.filter(k => !KC().heroOrderGoods.includes(k)), src = kFirst.length ? kFirst : pickFrom;
+  const heroAvail = KC().heroOrderGoods.filter(k => (S.lifetime[k] || 0) > 0 && !taken.includes(k)), heroOpen = !(S.kingdom.orders || []).some((o, i) => i !== slot && o && KC().heroOrderGoods.includes(Object.keys(o.wants)[0]));
+  const kFirst = pickFrom.filter(k => !KC().heroOrderGoods.includes(k));
+  const src = heroAvail.length && heroOpen && kFirst.length && Math.random() < KC().heroOrderChance ? heroAvail : kFirst.length ? kFirst : pickFrom;
   const main = src[Math.floor(Math.random() * Math.min(src.length, 4))];
   const pick = [main]; const others = pool.filter(k => k !== main && !taken.includes(k)); if (pool.length >= 5 && others.length && Math.random() < 0.3) pick.push(others[Math.floor(Math.random() * others.length)]);
   const wants = {}; for (const k of pick) wants[k] = Math.max(5, Math.round((KC().orderBase[k] || 20) * mult));
@@ -544,7 +546,9 @@ function makeOrder(slot = -1) {
 function canDeliver(i) { const o = (S.kingdom.orders || [])[i]; return !!o && canAfford(o.wants); }
 function deliver(i) {
   const o = S.kingdom.orders[i]; if (!o || !canAfford(o.wants)) return false;
-  pay(o.wants); const fast = S.hero.time <= o.bonusBy, m = fast ? 1 + KC().speedBonus : 1;
+  pay(o.wants);
+  if (KC().tierOrders) { const need = tierNeed(); if (need) { S.kingdom.tierPaid = S.kingdom.tierPaid || {}; for (const k in o.wants) if (need[k]) S.kingdom.tierPaid[k] = Math.min(need[k], (S.kingdom.tierPaid[k] || 0) + o.wants[k]); } }
+  const fast = S.hero.time <= o.bonusBy, m = fast ? 1 + KC().speedBonus : 1;
   S.res.gold = (S.res.gold || 0) + Math.round(o.gold * m); S.lifetime.gold = (S.lifetime.gold || 0) + Math.round(o.gold * m);
   const rb = rankIndex(); S.kingdom.renown = (S.kingdom.renown || 0) + Math.round(o.renown * m); S.stats.orders = (S.stats.orders || 0) + 1;
   log(`Order delivered to ${o.from}: +${Math.round(o.gold * m)} gold, +${Math.round(o.renown * m)} Renown${fast ? ' (speed bonus)' : ''}`);
