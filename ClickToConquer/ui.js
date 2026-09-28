@@ -126,7 +126,6 @@ const UI = (() => {
     // Founding
     $('found-btn').addEventListener('click', openFound);
     $('barracks-up').addEventListener('click', () => { if (Game.upgradeBarracks()) { flash($('barracks-card')); render(true); } });
-    $('tax-collect').addEventListener('click', () => { if (Game.collectTaxes()) { flash($('lands-card')); render(true); } });
     $('build-cancel').addEventListener('click', () => $('build-modal').classList.add('hidden'));
     $('slot-close').addEventListener('click', closeSlot);
     $('doll').addEventListener('click', e => { const s = e.target.closest('.doll-slot'); if (s && s.dataset.slot) openSlot(s.dataset.kind, s.dataset.slot); });
@@ -309,6 +308,8 @@ const UI = (() => {
       b.disabled = !ok; b.classList.toggle('locked-tab', !ok);
     });
     $('kline-row').classList.toggle('hidden', Game.kingdomNo() < 1);
+    { const war = Game.phase() === 3, NAMES = { forest: ['Housing', 0], mine: ['Arms', 1], farm: ['Food', 2], war: ['Soldiers', 3] };
+      for (const k in NAMES) { const b = document.querySelector(`[data-ksub=${k}]`); if (!b) continue; const nm = b.querySelector('.kl-name'); setText(nm, war ? NAMES[k][0] : nm.dataset.base); b.style.order = war ? String(NAMES[k][1]) : ''; } }
     { const ma = document.querySelector('[data-msub].active'); if (ma && !tabUnlocked(ma.dataset.msub)) document.querySelector('[data-msub=trade]').click(); }
     document.querySelectorAll('#skill-seg [data-sk]').forEach(b => { const ok = tabUnlocked('sk-' + b.dataset.sk); b.disabled = !ok; b.classList.toggle('locked-tab', !ok); });
     if (!tabUnlocked('sk-' + skView)) { const first = ['paths', 'gather', 'tech'].find(k => tabUnlocked('sk-' + k)); if (first && first !== skView) setSkillView(first); }
@@ -624,22 +625,22 @@ const UI = (() => {
   }
   function renderFeeds() { // line tabs: what each line feeds, and whether it holds the army back
     const p3 = Game.phase() === 3 && Game.barracksBuilt(), A = CONFIG.kingdom.army, by = Game.armyLimitBy(), sol = Game.soldiers(), f = Game.fmt;
+    { const ws = $('klsub-war'); if (ws) { ws.classList.toggle('hidden', !p3); if (p3) { setText(ws, `${f(sol)} / ${f(Game.armyLimit())}`); ws.className = 'kl-sub' + (Game.armyEff() < 1 ? ' bad' : ''); } } }
     for (const k of Game.WAR_KEYS) { const W = A.lines[k], ban = $('feed-' + W.line), sub = $('klsub-' + W.line); if (!ban) continue;
       ban.classList.toggle('hidden', !p3); if (sub) sub.classList.toggle('hidden', !p3); if (!p3) continue;
       const cov = Game.warCover(k), stall = sol > 0 && cov < 1, lim = k === by, sup = Game.lineSupports(k);
       ban.className = 'feed-banner' + (stall ? ' stall' : lim ? ' lim' : '');
       const key = [k, stall, lim, sup, Math.round(cov * 100)].join(); if (ban.__k !== key) { ban.__k = key;
         setHtml(ban, `${ico(R[W.good].icon, 28)}<div><b class="fh">${W.verb}</b><div class="small">${R[W.good].name} becomes <b>${W.name}</b> · ${f(Game.warIncome(k))} / min — ${stall ? `<b class="bad">short: the army fights at ${Math.round(cov * 100)}%</b>` : lim ? `<b class="bad">this sets your army size (${f(sup)})</b>` : `enough for ${f(sup)} soldiers`}</div></div>`); }
-      if (sub) { setText(sub, sol > 0 ? `${W.name} ${Math.round(Math.min(cov, 9.99) * 100)}%` : `${W.name} ${f(sup)}`); sub.className = 'kl-sub' + (stall || lim ? ' bad' : ''); } }
+      if (sub) { const src = CONFIG.kingdom.lines[W.line].name.replace('Grain ', '').replace('Iron ', ''); setText(sub, sol > 0 ? `${src} ${Math.round(Math.min(cov, 9.99) * 100)}%` : `${src} · ${f(sup)}`); sub.className = 'kl-sub' + (stall || lim ? ' bad' : ''); } }
   }
   // ---- 0.9: lands, garrisons, taxes ----
   let landKey = '';
   function renderLands() {
     const S = Game.S, f = Game.fmt; if (Game.phase() !== 3) return false;
-    const tot = Game.cofferTotal(), auto = Game.perkRank('autocollect') > 0;
-    setText($('tax-rate'), `All lands · +${f(Game.taxTotalPerHour())} gold / hour${auto ? ' · Stewards collect for you' : ''}`);
-    const cb = $('tax-collect'); setHtml(cb, auto ? 'Auto' : `Collect ${ico(R.gold.icon, 16)} ${f(Math.floor(tot))}`); cb.disabled = auto || tot < 1;
-    const ns = Game.landsTouched(); const k = ns.join(',') + '|' + Game.soldiers();
+    const auto = true;
+    setText($('tax-rate'), 'All lands · paid straight into your gold'); setHtml($('tax-total'), `${ico(R.gold.icon, 16)} +${f(Game.taxTotalPerHour())} / h`);
+    const ns = Game.landsTouched().slice().reverse(); const k = ns.join(',') + '|' + Game.soldiers(); // newest land first
     if (landKey !== k) { landKey = k;
       $('land-list').innerHTML = ns.map(n => `<div class="land-row" data-land="${n}"><div class="lr-main"><div class="lr-name" data-f="nm"></div><div class="small dim" data-f="meta"></div></div><div class="lr-coffer"><b data-f="cof"></b><span class="small dim" data-f="rate"></span></div>
         <div class="lr-gar"><span data-f="gar"></span><span class="lr-btns"><button class="buy" data-g="-10">−10</button><button class="buy" data-g="10">+10</button><button class="buy" data-g="fill">Fill</button></span></div></div>`).join('') || '<div class="dim small">Conquer your first land from the hero screen.</div>';
@@ -651,12 +652,12 @@ const UI = (() => {
       setHtml(row.querySelector('[data-f=nm]'), `${n} · ${G.name}`);
       const here = Game.heroInLand(n);
       setHtml(row.querySelector('[data-f=meta]'), (done ? `100% conquered · 👑 ${G.ruler}` : pct > 0 ? `${pct}% conquered · ${G.ruler} waits at stage ${G.stages}` : `Not yet attacked · ${G.terrain}`) + (here && pct > 50 ? ` <span class="warn">· pays 50% while your hero is here — move on to collect it all</span>` : ''));
-      setHtml(row.querySelector('[data-f=cof]'), `${ico(R.gold.icon, 14)} ${f(Math.floor(L.coffer || 0))}`);
-      setText(row.querySelector('[data-f=rate]'), pct > 0 ? `+${f(Game.taxPerHour(n))} / h${Game.garrisonFill(n) < 1 ? ` (full garrison: ${f(Game.taxFull(n) * Game.landShare(n))})` : ''}` : `~${f(Game.taxFull(n))} / h when conquered`);
+      setHtml(row.querySelector('[data-f=cof]'), pct > 0 ? `${ico(R.gold.icon, 14)} ${f(Game.taxPerHour(n))}` : '');
+      setText(row.querySelector('[data-f=rate]'), pct > 0 ? `/ hour${Game.garrisonFill(n) < 1 ? ` (full garrison: ${f(Game.taxFull(n) * Game.landShare(n))})` : ''}` : `~${f(Game.taxFull(n))} / h when conquered`);
       setHtml(row.querySelector('[data-f=gar]'), pct > 0 ? `🛡 Garrison <b class="${g >= need ? 'good' : 'warn'}">${g} / ${need}</b> <span class="${g >= need ? 'good' : 'warn'}">· ${Math.round(100 * Math.min(1, g / need))}% taxes</span>` : '<span class="dim">Garrison once you hold part of it</span>');
       row.querySelectorAll('[data-g]').forEach(b => b.disabled = pct <= 0);
       if (pct > 0 && g < need && Game.marching() > 0) any = true; }
-    return !auto && tot >= 1 || any;
+    return any;
   }
   // ---- 0.9: the hero's halls ----
   let hallKey = '';

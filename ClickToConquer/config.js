@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Alpha 0.10.2',
+  version: 'Alpha 0.10.3',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -473,6 +473,7 @@ const CONFIG = {
   // jobs (jobs completed by hand or thrall), sold (gold earned at market), stage, boss, founded, thrall (assigned), activity (swings).
   // Shown in Settings → What's new (newest first). Keep each line short.
   changelog: [
+    ['0.10.3', 'In the Kingdom phase the building tabs are named for what they supply — Housing, Arms, Food, Soldiers — in the same order as the header. Taxes now flow straight into your gold (no more Collect button; if you bought Stewards, its 15 Crowns are back). Lands are listed newest first.'],
     ['0.10.2', 'Battles cost soldiers. The harder the fight, the more fall — easy fights cost nothing, new lands and captains the most. The Barracks replaces them, but every recruit needs swords, so a strong Mine decides how hard you can push. The army settles where replacements keep up and never falls below half. Push to conquer, fall back to rebuild: the hero screen shows losses, recruits and where your army will hold.'],
     ['0.10.1', 'Every new land is a real step up. Enemies grow steadily through a land, and the next land starts well above where the last one ended — from the Iron Hills on, expect to need better gear and a bigger army. Hardened gear now goes on forever: Hardened I, II, III… each tier makes your weapon, chest and helm about 60% stronger (Mythril is folded into Hardened). Hardened I costs about what Steel did, and conquered lands send 5× more silver and heartwood.'],
     ['0.10.0', 'The war economy. Your army now runs on income, not stockpiles: the Forest houses it (treated lumber), the Mine arms it (swords) and the Farm feeds it (bread). Soldiers join free while all three lines have income to spare, and the army fights at the strength of its weakest line. Every land you conquer makes each soldier need 15% more — rebalance your lines to keep up. In a land the hero now auto-advances through captains and the Ruler; after the Ruler comes the Endless Battle, the richest fighting in that land, where he rests instead of retreating. Only you choose the next land — and a land pays at most 50% taxes while your hero is still in it. Old Food and Supplies go back to the Storehouse as bread, swords and lumber.'],
@@ -707,9 +708,9 @@ const CONFIG = {
     { id: 'w02', chain: 'The Kingdom', name: 'March on Ashford', text: 'The hero leads the conquest. The army marches with him and multiplies every blow. Choose Ashford Vale on the hero screen.',
       steps: [ { label: 'Hero → Where to fight → Ashford Vale', check: { landPct: 1, need: 1 } }, { label: 'Conquer 10% more of Ashford Vale', check: { landPct: 1, need: 10, since: true } } ], reward: { gold: 1000 }, focus: { tab: 'hero', sub: 'fight', el: 'ground:land1' } },
     { id: 'w03', chain: 'The Kingdom', name: 'A Garrison', text: 'A conquered land pays taxes — but only as much as its garrison can hold. Soldiers in a garrison do not march with the hero.',
-      steps: [ { label: 'Kingdom → Lands → Ashford Vale → station 10 soldiers', check: { garrison: 1, need: 10 } }, { label: 'Collect 100 gold of taxes', check: { taxed: 100 } } ], reward: { gold: 1000 }, focus: { tab: 'kingdom', ksub: 'lands', rtab: 'kingdom', el: 'id:lands-card' } },
+      steps: [ { label: 'Kingdom → Lands → Ashford Vale → station 10 soldiers', check: { garrison: 1, need: 10 } }, { label: 'Earn 100 gold in taxes', check: { taxed: 100 } } ], reward: { gold: 1000 }, focus: { tab: 'kingdom', ksub: 'lands', rtab: 'kingdom', el: 'id:lands-card' } },
     { id: 'w04', chain: 'The Kingdom', name: 'Baron Hollin', text: 'At the end of every land waits its Ruler. Beat him and take his crown — Crowns are the power of your dynasty.',
-      steps: [ { label: 'Conquer Ashford Vale (defeat Baron Hollin, stage 50)', check: { landDone: 1 } }, { label: 'Collect 100 more gold in taxes', check: { taxed: 1, need: 100, since: true } } ], reward: { gold: 2000 }, focus: { tab: 'hero', sub: 'fight', el: 'ground:land1' } },
+      steps: [ { label: 'Conquer Ashford Vale (defeat Baron Hollin, stage 50)', check: { landDone: 1 } }, { label: 'Earn 100 more gold in taxes', check: { taxed: 1, need: 100, since: true } } ], reward: { gold: 2000 }, focus: { tab: 'hero', sub: 'fight', el: 'ground:land1' } },
     { id: 'w05', chain: 'The Kingdom', name: 'Blackwood March', text: 'Every land is harder than the last — and pays about four times more.',
       steps: [ { label: 'Conquer Blackwood March', check: { landDone: 2 } } ], reward: { gold: 5000 }, focus: { tab: 'hero', sub: 'fight', el: 'ground:land2' } },
     { id: 'w06', chain: 'The Kingdom', name: 'The Iron Hills', text: 'The hills hold silver — the metal of Hardened gear.',
@@ -788,7 +789,6 @@ const CONFIG = {
       { id: 'rations',   tree: 'war',       name: 'Rations',         icon: [14,14], max: 5, cost: 5,  costMult: 1.7, desc: 'Soldiers need 10% less Housing, Arms and Food per rank' },
       { id: 'standing',  tree: 'war',       name: 'Standing Army',   icon: [7,1],  max: 3,  cost: 8,  costMult: 2,   desc: 'Begin each dynasty with 25 soldiers per rank' },
       { id: 'tax',       tree: 'realm',     name: 'Tax Collectors',  icon: [12,7], max: 10, cost: 3,  costMult: 1.5, desc: '+25% taxes per rank' },
-      { id: 'autocollect', tree: 'realm',   name: 'Stewards',        icon: [13,11], max: 1, cost: 15, costMult: 1,   desc: 'Taxes flow in by themselves — no need to Collect' },
       { id: 'spoils',    tree: 'realm',     name: 'Plunder',         icon: [12,15], max: 5, cost: 5,  costMult: 1.8, desc: '+25% spoils per rank' },
       { id: 'lap',       tree: 'realm',     name: 'Victory Lap',     icon: [5,7],  max: 3,  cost: 6,  costMult: 2,   desc: 'Lands you have conquered before: hero damage ×3 there, +×1 per rank' },
       { id: 'ledger',    tree: 'realm',     name: 'The Ledger',      icon: [13,11], max: 1, cost: 1,  costMult: 1,   desc: 'See your AFK forecast (gold and goods per hour while away)' },

@@ -978,7 +978,7 @@ function applyOffline(awaySeconds) {
 function claimOffline(data, mult = 1) {
   for (const k in data.gains) add(k, data.gains[k] > 0 ? data.gains[k] * mult : data.gains[k]); // inputs consumed aren't doubled
   for (const k of ['food', 'supplies', 'soldiers', 'bread', 'swords', 'lumber']) if ((S.res[k] || 0) < 0) S.res[k] = 0;
-  for (const n in (data.tax || {})) { const t = data.tax[n] * mult; if (perkRank('autocollect')) add('gold', t); else { const L = landState(+n); L.coffer = Math.min(cofferCap(+n), (L.coffer || 0) + t); } }
+  for (const n in (data.tax || {})) { const t = data.tax[n] * mult; add('gold', t); S.stats.taxed = (S.stats.taxed || 0) + t; if (false) { const L = landState(+n); L.coffer = Math.min(cofferCap(+n), (L.coffer || 0) + t); } }
   if (heroFighting() && data.kills > 0) offlineStages(data.kills * mult);
   gainXp(data.kills * H.xpPerKill * CONFIG.stages.xpPerKill(S.hero.stage) * stats('sustained').xp * mult);
   S.hero.totalKills += data.kills * mult;
@@ -1127,7 +1127,7 @@ function tickTaxes(dt) {
   if (phase() < 3) return;
   for (const n of landsTouched()) {
     const G = landDef(n), L = landState(n), t = taxPerHour(n) / 3600 * dt;
-    if (t > 0) { if (perkRank('autocollect')) { add('gold', t); S.stats.taxed = (S.stats.taxed || 0) + t; } else L.coffer = Math.min(cofferCap(n), (L.coffer || 0) + t); }
+    if (t > 0) { add('gold', t); S.stats.taxed = (S.stats.taxed || 0) + t; } // 0.10.3: taxes go straight into your gold
     const sp = spoilPerHour(n) / 3600 * dt; if (sp > 0) add(G.spoil, sp);
   }
 }
@@ -1219,6 +1219,8 @@ function load() {
     S.hero.tree = S.hero.tree || {}; S.hero.dxp = S.hero.dxp || {};
     if (!S.hero.dxp.combat && S.hero.level > 1) { let x = 0; for (let l = 1; l < S.hero.level; l++) x += CONFIG.discXpToLevel(l); S.hero.dxp.combat = x; } // old save: seed Combat from hero level
     migrateSkills();
+    if (S.kingdom && S.kingdom.lands) { const g0 = cofferTotal(); if (g0 > 0) { add('gold', g0); S.stats.taxed = (S.stats.taxed || 0) + g0; } for (const k in S.kingdom.lands) S.kingdom.lands[k].coffer = 0; } // 0.10.3: coffers emptied into gold
+    if (S.legacy.perks && S.legacy.perks.autocollect) { delete S.legacy.perks.autocollect; S.legacy.knowledge = (S.legacy.knowledge || 0) + 15; } // Stewards refunded: taxes flow in for everyone now
     if ((S.res.food || 0) > 0 || (S.res.supplies || 0) > 0) { S.res.bread = (S.res.bread || 0) + (S.res.food || 0); S.res.swords = (S.res.swords || 0) + (S.res.supplies || 0) / 2; S.res.lumber = (S.res.lumber || 0) + (S.res.supplies || 0) / 2; S.res.food = 0; S.res.supplies = 0; } // 0.10: stockpiles go back to the Storehouse
     if (S.legacy.perks && S.legacy.perks.warcry) { const r = S.legacy.perks.warcry; let back = 0; for (let i = 0; i < r; i++) back += Math.ceil(5 * Math.pow(1.8, i)); S.legacy.knowledge = (S.legacy.knowledge || 0) + back; delete S.legacy.perks.warcry; } // 0.9.12: Rally removed — its War Cry perk is refunded
     if (S.legacy.perks && S.legacy.perks.bestiary) { delete S.legacy.perks.bestiary; S.legacy.knowledge = (S.legacy.knowledge || 0) + 1; } // 0.9.8: the Bestiary unlocks by playing — its Crown comes back

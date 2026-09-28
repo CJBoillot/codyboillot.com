@@ -12,7 +12,7 @@
   <title>Click to Conquer</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=a0102">
+  <link rel="stylesheet" href="style.css?v=a0103">
 </head>
 <body>
 
@@ -197,10 +197,10 @@
     <div id="tab-kingdom" class="tab hidden">
       <nav class="subtabs subtabs2" id="kingdom-subtabs">
         <div class="subrow" id="kline-row">
-        <button data-ksub="forest" class="kline">Forest<small class="kl-sub" id="klsub-forest"></small> <span id="badge-forest" class="dot hidden"></span></button>
-        <button data-ksub="farm" class="kline">Farm<small class="kl-sub" id="klsub-farm"></small> <span id="badge-farm" class="dot hidden"></span></button>
-        <button data-ksub="mine" class="kline">Mine<small class="kl-sub" id="klsub-mine"></small> <span id="badge-mine" class="dot hidden"></span></button>
-        <button data-ksub="war" class="kline">Barracks <span id="badge-war" class="dot hidden"></span></button>
+        <button data-ksub="forest" class="kline"><span class="kl-name" data-base="Forest">Forest</span><small class="kl-sub" id="klsub-forest"></small> <span id="badge-forest" class="dot hidden"></span></button>
+        <button data-ksub="farm" class="kline"><span class="kl-name" data-base="Farm">Farm</span><small class="kl-sub" id="klsub-farm"></small> <span id="badge-farm" class="dot hidden"></span></button>
+        <button data-ksub="mine" class="kline"><span class="kl-name" data-base="Mine">Mine</span><small class="kl-sub" id="klsub-mine"></small> <span id="badge-mine" class="dot hidden"></span></button>
+        <button data-ksub="war" class="kline"><span class="kl-name" data-base="Barracks">Barracks</span><small class="kl-sub" id="klsub-war"></small> <span id="badge-war" class="dot hidden"></span></button>
         </div><div class="subrow">
         <button data-ksub="tech" class="active">Tech <span id="badge-tech" class="dot hidden"></span></button>
         <button data-ksub="keep">Keep <span id="badge-throne" class="dot hidden"></span></button>
@@ -242,7 +242,7 @@
       </div>
       <div id="ksub-lands" class="ksub hidden">
         <div class="card" id="lands-card">
-          <div class="row-between"><div><div class="card-title" style="margin:0">Tax coffers</div><div class="small dim" id="tax-rate"></div></div><button id="tax-collect" class="primary">Collect</button></div>
+          <div class="row-between"><div><div class="card-title" style="margin:0">Taxes</div><div class="small dim" id="tax-rate"></div></div><b class="tax-total" id="tax-total"></b></div>
         </div>
         <div id="land-list" class="list"></div>
         <p class="small dim center" style="margin-top:6px">Soldiers in a garrison don't march with the hero — every soldier is a choice: <b>power now</b> or <b>gold every hour</b>.</p>
@@ -499,11 +499,11 @@
 </div>
 
 
-<script src="config.js?v=a0102"></script>
-<script src="cloud-config.js?v=a0102"></script>
-<script src="game.js?v=a0102"></script>
-<script src="ui.js?v=a0102"></script>
-<script src="cloud.js?v=a0102"></script>
+<script src="config.js?v=a0103"></script>
+<script src="cloud-config.js?v=a0103"></script>
+<script src="game.js?v=a0103"></script>
+<script src="ui.js?v=a0103"></script>
+<script src="cloud.js?v=a0103"></script>
 <script>window.addEventListener("error", e => { const d = document.getElementById("err"); if (d) { d.textContent = "Error: " + e.message; d.classList.remove("hidden"); } });</script>
 </body>
 </html>
