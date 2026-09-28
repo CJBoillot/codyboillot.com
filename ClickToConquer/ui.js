@@ -148,6 +148,7 @@ const UI = (() => {
       rightShow(b.dataset.rtab);
     }));
     const mq = window.matchMedia('(min-width: 1024px)'); mq.addEventListener('change', applyLayout); applyLayout();
+    initBackButton();
     $('fm-cancel').addEventListener('click', () => $('found-modal').classList.add('hidden'));
     $('fm-confirm').addEventListener('click', () => {
       const gain = Game.found(fmPick.hero, fmPick.kingdom);
@@ -370,6 +371,35 @@ const UI = (() => {
       document.querySelectorAll('.sub').forEach(x => x.classList.toggle('hidden', x.id !== 'sub-' + s.dataset.sub));
     }
     placeSubtabs();
+  }
+  // ---------- Back button: returns to the previous in-game tab; closes an open popup first ----------
+  const NAV_KEYS = ['tab', 'sub', 'rtab', 'ksub', 'msub', 'csub'];
+  function navSnap() { const s = {}; for (const k of NAV_KEYS) { const b = document.querySelector(`[data-${k}].active`); if (b) s[k] = b.dataset[k]; } return s; }
+  const navSame = (a, b) => NAV_KEYS.every(k => (a || {})[k] === (b || {})[k]);
+  // popups the Back button may close (Welcome Back and cloud choice must be answered, so they stay)
+  const BACK_CLOSE = [
+    ['confirm-modal', () => closeAsk()], ['item-modal', () => closeItem()], ['slot-modal', () => closeSlot()],
+    ['pick-modal', () => $('pick-cancel').click()], ['build-modal', () => $('build-cancel').click()],
+    ['found-modal', () => $('fm-cancel').click()], ['demo-modal', () => $('demo-continue').click()],
+    ['dev-panel', () => $('dev-panel').classList.add('hidden')],
+  ];
+  function initBackButton() {
+    if (!window.history || !history.pushState) return;
+    try { history.replaceState({ ctcNav: navSnap() }, ''); } catch (e) { return; }
+    // after any real tap on a tab button, record the new place
+    document.addEventListener('click', e => {
+      if (!e.isTrusted || !e.target.closest(NAV_KEYS.map(k => `[data-${k}]`).join(','))) return;
+      setTimeout(() => { const s = navSnap(), cur = (history.state || {}).ctcNav; if (!navSame(s, cur)) try { history.pushState({ ctcNav: s }, ''); } catch (x) {} }, 0);
+    });
+    window.addEventListener('popstate', e => {
+      const open = BACK_CLOSE.find(([id]) => $(id) && !$(id).classList.contains('hidden'));
+      const blocking = ['welcome', 'cloud-modal'].some(id => $(id) && !$(id).classList.contains('hidden'));
+      const here = navSnap();
+      if (open || blocking) { if (open) open[1](); try { history.pushState({ ctcNav: here }, ''); } catch (x) {} return; }
+      const st = e.state && e.state.ctcNav;
+      if (!st) return;
+      for (const k of NAV_KEYS) { if (!st[k] || st[k] === here[k]) continue; const b = document.querySelector(`[data-${k}="${st[k]}"]`); if (b && !b.disabled && !b.classList.contains('locked')) b.click(); }
+    });
   }
   function rightShow(key) { for (const k in RIGHT) $(RIGHT[k]).classList.toggle('hidden', k !== key); }
 

@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Alpha 0.6.7',
+  version: 'Alpha 0.6.8',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -420,6 +420,7 @@ const CONFIG = {
   // jobs (jobs completed by hand or thrall), sold (gold earned at market), stage, boss, founded, thrall (assigned), activity (swings).
   // Shown in Settings → What's new (newest first). Keep each line short.
   changelog: [
+    ['0.6.8', 'The Back button now returns to the tab you were on (and closes an open popup first) instead of leaving the game.'],
     ['0.6.7', 'Fix: on desktop the first quest could be pushed off the bottom of the screen and hidden.'],
     ['0.6.6', 'Painted icons for every gear piece and tool, changing with each tier.'],
     ['0.6.5', 'New painted icons for every resource.'],
