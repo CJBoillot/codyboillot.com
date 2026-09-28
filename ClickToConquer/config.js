@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Alpha 0.10.0',
+  version: 'Alpha 0.10.1',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -53,8 +53,8 @@ const CONFIG = {
     bread:   { name: 'Bread',    icon: [14,14], tier: 3, sell: 12, buy: 40, desc: 'Baker: 2 flour into 1 loaf. Armies march on it.' },
     swords:  { name: 'Iron Swords', icon: [5,1], tier: 3, sell: 45, buy: 150, desc: 'Forge: 2 ingots into 1 sword. The Legion always needs more.' },
     // ---- Spoils of conquest (0.9): from the taxes of conquered lands ----
-    heartwood: { name: 'Heartwood', icon: 'assets/res/wood.webp',  tier: 4, sell: 40, desc: 'Ancient timber from conquered forests. Hardened and Mythril gear.' },
-    silver:    { name: 'Silver',    icon: 'assets/res/ingot.webp', tier: 4, sell: 60, desc: 'From conquered hills. Hardened and Mythril gear.' },
+    heartwood: { name: 'Heartwood', icon: 'assets/res/wood.webp',  tier: 4, sell: 40, desc: 'Ancient timber from conquered forests. Hardened gear.' },
+    silver:    { name: 'Silver',    icon: 'assets/res/ingot.webp', tier: 4, sell: 60, desc: 'From conquered hills. Hardened gear.' },
     relic:     { name: 'Relic',     icon: 'assets/res/gold.webp',  tier: 4, sell: 200, desc: 'Holy relics from conquered shrines. Wonders, later.' },
     // ---- The war chest (Phase 3): shown in the header after the Kingdom is proclaimed ----
     food:      { name: 'Food',      icon: 'assets/res/bread.webp',      kind: 'war', tier: 4, sell: 0, desc: 'Bread sent to the army. Soldiers are trained on it and eat it every minute.' },
@@ -138,6 +138,8 @@ const CONFIG = {
   // stat = base × tierMult × gearGrowth^level. Secondary stat opens at tier ≥ 2.
   // Craft next tier: previous tier level ≥ tierUpAt, pay tier's craftCost. Upgrade: upgradeCost × upgradeMult^level.
   gearGrowth: 1.15,
+  // Hardened tiers go on forever. Weapon, chest and helm grow ×tierGrowth per tier (levels add +levelStep each); gloves, boots and trinket keep the gentle +1 per tier.
+  hardened: { base: 6.5, tierGrowth: 1.6, levelStep: 0.05, costGrowth: 1.7, goldGrowth: 2.2, fastSlots: ['weapon', 'chest', 'helm'] },
   tierUpAt: 9,   // levels 0..9 (value x.0 → x.9); at Lv9 forge the next tier. Levels cap at 9.
   researchSeconds: 5, // researching a tech takes this long (one at a time)
   upgradeSeconds: 2, // each gear/tool upgrade level takes this long (shares the one-at-a-time forge)
@@ -180,8 +182,7 @@ const CONFIG = {
     { name: 'Leather',     mult: 1,   perSlot: { weapon: { name: 'Stone', craftCost: { stone: 12, wood: 6 }, upgradeCost: { stone: 4, wood: 2 } } }, craftCost: { hide: 8, fiber: 4 }, upgradeCost: { hide: 2, fiber: 1 }, upgradeMult: 1.25 },
     { name: 'Iron',        mult: 3,   craftCost: { ingot: 5, hide: 6, gold: 300 },            upgradeCost: { ingot: 2, hide: 1 },           upgradeMult: 1.25 },
     { name: 'Steel',       mult: 9,   craftCost: { ingot: 10, lumber: 3, gold: 1500 },   upgradeCost: { ingot: 4, lumber: 1 },              upgradeMult: 1.25 },
-    { name: 'Hardened',    mult: 27,  craftCost: { ingot: 20, silver: 8, heartwood: 4, gold: 5000 },    upgradeCost: { ingot: 8, silver: 2 },   upgradeMult: 1.25 },
-    { name: 'Mythril',     mult: 81,  craftCost: { ingot: 40, silver: 20, heartwood: 10, gold: 20000 }, upgradeCost: { ingot: 15, silver: 4, gold: 500 }, upgradeMult: 1.25 },
+    { name: 'Hardened',    mult: 27,  craftCost: { ingot: 16, silver: 5, heartwood: 3, gold: 1500 },    upgradeCost: { ingot: 5, silver: 1 },   upgradeMult: 1.25 }, // endless: Hardened I, II, III… (see hardened below)
   ],
   // Per-slot cost scaling so armor pieces cost a bit different amounts
   slotCostMult: { weapon: 1, helm: 0.8, chest: 1.1, gloves: 0.8, boots: 0.7, trinket: 0.9 },
@@ -406,7 +407,9 @@ const CONFIG = {
     ],
     hallCost: { base: 100, exp: 1.7 },
     // Lands (0.9): conquered from the hero screen; taxes grow ×4 per land
-    lands: { taxBase: 1000, taxGrowth: 4, garrisonPer: 10, cofferHours: 8, shortStages: 50, longStages: 100, shortLands: 3, offsetStart: 6, offsetStep: 3, spoilPerHour: 6, victoryLap: 3, heroHereCap: 0.5 },
+    lands: { taxBase: 1000, taxGrowth: 4, garrisonPer: 10, cofferHours: 8, shortStages: 50, longStages: 100, shortLands: 3, offsetStart: 6, offsetStep: 3, spoilPerHour: 30, victoryLap: 3, heroHereCap: 0.5,
+      // 0.10.1 land difficulty: smooth inside a land (×span from first stage to the Ruler's), a wall between lands (next land starts ×(land/span) above the last one's end)
+      curve: { hp: 105, hit: 11.5, landHp: 2.4, landHit: 1.75, spanHp: 1.6, spanHit: 1.35, captainHp: 3, captainHit: 1.4, rulerHp: 4, rulerHit: 1.4, endless: 1.15 } },
     // Settlement tiers inside one land. Raising a tier costs `cap` of every good made so far (pay in as you go) and loses nothing.
     tiers: [
       { name: 'Camp',    cap: 300, slots: 1, thralls: 6,  lvCap: 25,  threat: 'roads:20',  need: 'Build Logging, the Fields and the Mine Shaft.' },
@@ -450,27 +453,14 @@ const CONFIG = {
   buildingTypes: [
     // Gathering
     { id: 'forest',    cat: 'gather',  name: 'Forest',      icon: [4,6],  buildCost: { wood: 40, stone: 10 },                         job: { time: 10, inputs: {},                     outputs: { wood: 1 } } },
-    ['0.10.0', 'The war economy. Your army now runs on income, not stockpiles: the Forest houses it (treated lumber), the Mine arms it (swords) and the Farm feeds it (bread). Soldiers join free while all three lines have income to spare, and the army fights at the strength of its weakest line. Every land you conquer makes each soldier need 15% more — rebalance your lines to keep up. In a land the hero now auto-advances through captains and the Ruler; after the Ruler comes the Endless Battle, the richest fighting in that land, where he rests instead of retreating. Only you choose the next land — and a land pays at most 50% taxes while your hero is still in it. Old Food and Supplies go back to the Storehouse as bread, swords and lumber.'],
     { id: 'mine',      cat: 'gather',  name: 'Mine',        icon: [4,5],  buildCost: { wood: 40, stone: 30 },               job: { time: 10, inputs: {},                     outputs: { stone: 1, ore: 1 } } },
     { id: 'farm',      cat: 'gather',  name: 'Farm',        icon: [12,5], buildCost: { wood: 30, stone: 10, fiber: 10 },               job: { time: 10, inputs: {},                     outputs: { grain: 1 } } },
     // Crafting (refining)
-    ['0.9.12', 'Rally is gone — the army already fights at the hero\'s side on its own. If you bought the War Cry perk, its Crowns are back.'],
-    ['0.9.11', 'A second bar under the kills bar shows the countdown to auto-advance — and when it is paused, it says why (boss next, or the next stage is too tough and what to upgrade). The Rally button now shows what it does: your army strikes for the damage shown, 1 Supply per tap.'],
-    ['0.9.10', 'The hero pushes on by himself: after 50 kills on a stage he advances — but only into a stage he can hold, and never into a boss (you choose those fights). No more resting mid-fight: he catches his breath after every kill instead. If a fight goes badly he retreats a stage and tells you what to upgrade. You can turn auto-advance off under the kills bar.'],
     { id: 'smith',     cat: 'craft',   name: 'Blacksmith',  icon: [4,4],  buildCost: { gold: 200, stone: 40, wood: 40 },   job: { time: 10, inputs: { ore: 5 },             outputs: { ingot: 1 } } },
     { id: 'tannery',   cat: 'craft',   name: 'Tannery',     icon: [8,2],  buildCost: { wood: 40, stone: 20, hide: 10 },              job: { time: 10, inputs: { hide: 3 },            outputs: { leather: 1 } } },
-    ['0.9.9', 'Every quest now has something new to do when you reach it — no more instant claims. Screens and Skills views (Paths, Gathering, Techniques) unlock when a quest sends you there. Combat levels come much slower, but each Path point is worth 50% more (if you had spent more points than you now have, your Paths were reset to re-spend). Boss threats are part of the Raise quests, and raising the settlement or proclaiming waits for its quest.'],
     { id: 'weaver',    cat: 'craft',   name: 'Weaver',      icon: [17,6], buildCost: { gold: 150, wood: 40 },              job: { time: 10, inputs: { wool: 3 },            outputs: { cloth: 1 } } },
-    ['0.9.8', 'Screens open as the story reaches them, left to right. Loot, the Bestiary and Trophies each unlock with a short quest — no Crown needed (if you bought the Bestiary, your Crown is back). Kingdom tabs are now in unlock order: Tech, Keep, Legacy, Halls, Lands. Your first Crown goes on The Ledger.'],
-    ['0.9.7', 'The first quests ask a little more, and kill goals now count from when the quest starts — so a quest is never already finished when you reach it.'],
-    ['0.9.6', 'Fixed: tapping an item in the Inventory crashed (thanks Monica!). Item details now list the city buildings, Quartermaster and Barracks correctly. Gathering shows when an item is full and stops popping +1 for things that can\'t be stored. Fixed gathering mastery speed.'],
-    ['0.9.5', 'New skills. Paths: a passive web of 39 nodes in three branches (Might, Guard, Command) — every node has 10 ranks, points come from Combat levels and ★ from bosses, and nothing ever resets. Techniques: ten active moves unlocked by milestones, levelled by using them, with a mod to choose at Lv 5 and Lv 10. Your old Combat tree points are refunded — spend them in Paths!'],
     // Artisan
     { id: 'sawmill',   cat: 'artisan', name: 'Sawmill',     icon: [19,11], buildCost: { gold: 400, wood: 100, ingot: 5 },  job: { time: 20, inputs: { wood: 5 },            outputs: { planks: 1 } } },
-    ['0.8.3', 'After proclaiming: +10 thrall room for the Barracks crew, the quest card points at the army instead of the City checklist, and the City card reads Capital.'],
-    ['0.8.2', 'Fix: thralls stuck on old or unbuilt buildings (counted as busy, invisible) are freed when the game loads.'],
-    ['0.8.1', 'City checklist now names each building that is missing a worker, Overseer or Accountant, and counts idle thralls. The Tavern says when you are at the thrall cap.'],
-    ['0.8.0', 'Phase 3 begins: a complete City is now proclaimed as your Capital instead of being reset. The header becomes your war chest (Gold, Supplies, Equipment, Soldiers, Officers), Accountants become Quartermasters, and the Barracks musters soldiers. The Road to new lands comes next.'],
     { id: 'kiln',      cat: 'artisan', name: 'Kiln',        icon: [13,4],  buildCost: { gold: 400, stone: 100, ingot: 5 }, job: { time: 20, inputs: { stone: 5 },           outputs: { bricks: 1 } } },
   ],
   buildingCats: { gather: 'Gathering', craft: 'Crafting', artisan: 'Artisan' },
@@ -480,11 +470,25 @@ const CONFIG = {
   // jobs (jobs completed by hand or thrall), sold (gold earned at market), stage, boss, founded, thrall (assigned), activity (swings).
   // Shown in Settings → What's new (newest first). Keep each line short.
   changelog: [
+    ['0.10.1', 'Every new land is a real step up. Enemies grow steadily through a land, and the next land starts well above where the last one ended — from the Iron Hills on, expect to need better gear and a bigger army. Hardened gear now goes on forever: Hardened I, II, III… each tier makes your weapon, chest and helm about 60% stronger (Mythril is folded into Hardened). Hardened I costs about what Steel did, and conquered lands send 5× more silver and heartwood.'],
+    ['0.10.0', 'The war economy. Your army now runs on income, not stockpiles: the Forest houses it (treated lumber), the Mine arms it (swords) and the Farm feeds it (bread). Soldiers join free while all three lines have income to spare, and the army fights at the strength of its weakest line. Every land you conquer makes each soldier need 15% more — rebalance your lines to keep up. In a land the hero now auto-advances through captains and the Ruler; after the Ruler comes the Endless Battle, the richest fighting in that land, where he rests instead of retreating. Only you choose the next land — and a land pays at most 50% taxes while your hero is still in it. Old Food and Supplies go back to the Storehouse as bread, swords and lumber.'],
+    ['0.9.12', 'Rally is gone — the army already fights at the hero\'s side on its own. If you bought the War Cry perk, its Crowns are back.'],
+    ['0.9.11', 'A second bar under the kills bar shows the countdown to auto-advance — and when it is paused, it says why (boss next, or the next stage is too tough and what to upgrade). The Rally button now shows what it does: your army strikes for the damage shown, 1 Supply per tap.'],
+    ['0.9.10', 'The hero pushes on by himself: after 50 kills on a stage he advances — but only into a stage he can hold, and never into a boss (you choose those fights). No more resting mid-fight: he catches his breath after every kill instead. If a fight goes badly he retreats a stage and tells you what to upgrade. You can turn auto-advance off under the kills bar.'],
+    ['0.9.9', 'Every quest now has something new to do when you reach it — no more instant claims. Screens and Skills views (Paths, Gathering, Techniques) unlock when a quest sends you there. Combat levels come much slower, but each Path point is worth 50% more (if you had spent more points than you now have, your Paths were reset to re-spend). Boss threats are part of the Raise quests, and raising the settlement or proclaiming waits for its quest.'],
+    ['0.9.8', 'Screens open as the story reaches them, left to right. Loot, the Bestiary and Trophies each unlock with a short quest — no Crown needed (if you bought the Bestiary, your Crown is back). Kingdom tabs are now in unlock order: Tech, Keep, Legacy, Halls, Lands. Your first Crown goes on The Ledger.'],
+    ['0.9.7', 'The first quests ask a little more, and kill goals now count from when the quest starts — so a quest is never already finished when you reach it.'],
+    ['0.9.6', 'Fixed: tapping an item in the Inventory crashed (thanks Monica!). Item details now list the city buildings, Quartermaster and Barracks correctly. Gathering shows when an item is full and stops popping +1 for things that can\'t be stored. Fixed gathering mastery speed.'],
+    ['0.9.5', 'New skills. Paths: a passive web of 39 nodes in three branches (Might, Guard, Command) — every node has 10 ranks, points come from Combat levels and ★ from bosses, and nothing ever resets. Techniques: ten active moves unlocked by milestones, levelled by using them, with a mod to choose at Lv 5 and Lv 10. Your old Combat tree points are refunded — spend them in Paths!'],
     ['0.9.4', 'Gear and tool pop-ups are tidy: item info on top, Upgrade and Max side by side, Forge underneath, and buttons that can\'t do anything are hidden.'],
     ['0.9.3', 'The skill XP bar is taller so you can read the numbers.'],
     ['0.9.2', 'The ! on the top tabs is a clean round badge again.'],
     ['0.9.1', 'New quests take the hero\'s gear to Iron: research Iron Gear and forge an Iron blade in the Hamlet, then Iron armor in the Village before the Cult Priest.'],
     ['0.9.0', 'The big one. Buildings run on one level each — no more thralls, workers or Overseers — and double their output at Lv 10, 25, 50, 100. The hero clears a threat before each settlement can grow, and the city builds him Halls (Training Yard, Smithy, Apothecary, Stables). After you proclaim, the Barracks trains an army that eats Food and Supplies and multiplies the hero\'s power, and the hero leads the conquest from his own screen: lands of 50–100 stages, a Ruler with a crown at the end, garrisons and taxes. Crystals are now Crowns: take them from rulers, spend them in four trees, and Pass the Crown to start a stronger dynasty.'],
+    ['0.8.3', 'After proclaiming: +10 thrall room for the Barracks crew, the quest card points at the army instead of the City checklist, and the City card reads Capital.'],
+    ['0.8.2', 'Fix: thralls stuck on old or unbuilt buildings (counted as busy, invisible) are freed when the game loads.'],
+    ['0.8.1', 'City checklist now names each building that is missing a worker, Overseer or Accountant, and counts idle thralls. The Tavern says when you are at the thrall cap.'],
+    ['0.8.0', 'Phase 3 begins: a complete City is now proclaimed as your Capital instead of being reset. The header becomes your war chest (Gold, Supplies, Equipment, Soldiers, Officers), Accountants become Quartermasters, and the Barracks musters soldiers. The Road to new lands comes next.'],
     ['0.7.2', 'Settle New Lands is now Conquer New Lands.'],
     ['0.7.1', 'New Your Stats card on the Gear screen: every combat stat, which piece drives it, and what to do next — the weakest piece is marked Best next. Tap a row to open that piece.'],
     ['0.7.0', 'Stock settings: buildings that feed another building now keep goods in the Storehouse for what you need (new buildings, the next settlement, orders). Auto splits half and half; or pick 0, ¼, ½ or Full.'],
@@ -731,8 +735,7 @@ const CONFIG = {
     { id: 'steelgear',  tier: 3, name: 'Steel Gear',       icon: [7,7],   req: { planks: 20 },           cost: { gold: 2000, planks: 5 },       unlocks: { gearTier: 3 },           desc: 'Forge Steel gear.' },
     { id: 'steeltools', tier: 3, name: 'Steel Tools',      icon: [10,1],  req: { planks: 10 },           cost: { gold: 1500, planks: 2 },       unlocks: { toolTier: 2 },           desc: 'Forge Steel tools.' },
     // Tier 4 — Advanced
-    { id: 'hardening',  tier: 4, name: 'Hardening',        icon: [13,4],  req: { silver: 20 }, cost: { gold: 5000, silver: 10 },  unlocks: { gearTier: 4 },           desc: 'Forge Hardened gear from the silver of conquered hills.' },
-    { id: 'mythril',    tier: 4, name: 'Mythril Secrets',  icon: [12,15], req: { silver: 100, heartwood: 50 }, cost: { gold: 20000, silver: 40 },     unlocks: { gearTier: 5 },           desc: 'Forge Mythril gear.' },
+    { id: 'hardening',  tier: 4, name: 'Hardening',        icon: [13,4],  req: { silver: 10 }, cost: { gold: 3000, silver: 5 },  unlocks: { gearTier: 4 },           desc: 'Forge Hardened gear from the silver of conquered hills — Hardened I, II, III… each tier far stronger than the last.' },
   ],
 
   buildingUpgrade: { base: { gold: 100 }, mult: 1.5, speedPerLevel: 0.08, batchEvery: 5 },

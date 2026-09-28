@@ -54,12 +54,17 @@ function kingdomPath() { return CONFIG.legacy.kingdomPaths.find(p => p.id === S.
 let S = freshState();
 
 // ---------- Gear ----------
-function tierName(slot, tier) { const t = CONFIG.tiers[tier]; return t.perSlot && t.perSlot[slot] ? t.perSlot[slot].name : t.name; }
+const HARD_T = 4; // first Hardened tier index
+function roman(n) { const m = [[1000,'M'],[900,'CM'],[500,'D'],[400,'CD'],[100,'C'],[90,'XC'],[50,'L'],[40,'XL'],[10,'X'],[9,'IX'],[5,'V'],[4,'IV'],[1,'I']]; let s = ''; for (const [v, r] of m) while (n >= v) { s += r; n -= v; } return s; }
+function tierDefAt(tier) { const T = CONFIG.tiers[Math.min(tier, HARD_T)]; if (tier <= HARD_T) return T; const H = CONFIG.hardened, k = tier - HARD_T, sc = (o, g2) => { const r = {}; for (const x in o) r[x] = Math.round(o[x] * Math.pow(x === 'gold' ? H.goldGrowth : H.costGrowth, k)); return r; }; return { ...T, craftCost: sc(T.craftCost), upgradeCost: sc(T.upgradeCost) }; }
+function tierName(slot, tier) { if (tier >= HARD_T) return 'Hardened ' + roman(tier - HARD_T + 1); const t = CONFIG.tiers[tier]; return t.perSlot && t.perSlot[slot] ? t.perSlot[slot].name : t.name; }
 // v0.3: slot value = tier + 0.1 × level; bare slot = 1 (+ fists levels for the weapon). Tier index 0 (Crude) = value 2.
 function fistLevel() { return Math.min(9, Math.floor((S.hero.fistKills || 0) / CONFIG.fistKillsPerLevel)); }
 function slotValue(slot, tier, level) {
   if (tier === -1) return 1 + (slot === 'weapon' ? 0.1 * fistLevel() : 0);
   if (tier === undefined) { const it = S.hero.gear[slot]; if (!it) return 1 + (slot === 'weapon' ? 0.1 * fistLevel() : 0); tier = it.tier; level = it.level; }
+  const H = CONFIG.hardened;
+  if (tier >= HARD_T && H.fastSlots.includes(slot)) return H.base * Math.pow(H.tierGrowth, tier - HARD_T) * (1 + H.levelStep * (level || 0));
   return tier + 2 + 0.1 * (level || 0);
 }
 function slotStat(slot, v) { const d = CONFIG.slots[slot]; return d.primary === 'speed' ? d.per * v : d.per * v; }
@@ -69,18 +74,17 @@ function scaleCost(base, mult, level, extra = 1) { const c = {}; for (const k in
 function gearCraftCost(slot) { return smithyCost(gearCraftCost0(slot)); }
 function gearCraftCost0(slot) { // cost to craft next tier (or first)
   const it = S.hero.gear[slot], next = it ? it.tier + 1 : 0;
-  if (next >= CONFIG.tiers.length) return null;
-  const t = CONFIG.tiers[next], ps = t.perSlot && t.perSlot[slot];
+  const t = tierDefAt(next), ps = t.perSlot && t.perSlot[slot];
   return ps ? { ...ps.craftCost } : scaleCost(t.craftCost, 1, 0, CONFIG.slotCostMult[slot]);
 }
 function gearUpgradeCost(slot) { return smithyCost(gearUpgradeCost0(slot)); }
 function gearUpgradeCost0(slot) {
   if (S.hero.gear[slot] && S.hero.gear[slot].level >= CONFIG.tierUpAt) return null;
   const it = S.hero.gear[slot]; if (!it) return null;
-  const t = CONFIG.tiers[it.tier], ps = t.perSlot && t.perSlot[slot];
+  const t = tierDefAt(it.tier), ps = t.perSlot && t.perSlot[slot];
   return ps ? scaleCost(ps.upgradeCost, t.upgradeMult, it.level) : scaleCost(t.upgradeCost, t.upgradeMult, it.level, CONFIG.slotCostMult[slot]);
 }
-function canTierUp(slot) { const it = S.hero.gear[slot], next = it ? it.tier + 1 : 0; return next < CONFIG.tiers.length && gearTierUnlocked(next, slot) && (!it || it.level >= CONFIG.tierUpAt); }
+function canTierUp(slot) { const it = S.hero.gear[slot], next = it ? it.tier + 1 : 0; return gearTierUnlocked(next, slot) && (!it || it.level >= CONFIG.tierUpAt); }
 // Forging takes CONFIG.craftSeconds; cost is paid up front, the item lands when the bar fills. One forge at a time.
 function crafting() { return S.hero.crafting || null; }
 function craftGear(slot) {
@@ -356,8 +360,15 @@ function enemyType(stage = S.hero.stage, gid = S.hero.ground) { const L = CONFIG
 function enemyTypeLoops(stage = S.hero.stage, gid = S.hero.ground) { const L = CONFIG.grounds[gid].line, { t } = stageType(stage); return Math.max(0, t - (L.length - 1)); }
 function isBoss(stage = S.hero.stage) { return stageType(stage).k === CONFIG.stages.perType; }
 function effType(stage = S.hero.stage, gid = S.hero.ground) { return stageType(stage).t + (CONFIG.stages.groundOffset[gid] || 0); }
-function enemyMaxHp(stage = S.hero.stage, gid = S.hero.ground) { const t = effType(stage, gid), { k } = stageType(stage), R = CONFIG.stages.refHit(t); return Math.max(1, Math.round(isBoss(stage) ? R * 8 : R * (2 + (k - 1) / 8))); }
-function enemyHit(stage = S.hero.stage, gid = S.hero.ground) { const t = effType(stage, gid), { k } = stageType(stage), hp = CONFIG.stages.refHeroHp(t); return Math.round((isBoss(stage) ? hp * 0.15 : hp * (0.05 + 0.10 * (k - 1) / 8)) * 10) / 10; }
+function landCurve(stage, gid) { // 0.10.1: {hp, hit} for a land stage, or null outside lands
+  const G = CONFIG.grounds[gid]; if (!G || !G.land) return null; const C = LC().curve, n = G.land, S_ = G.stages, end = stage > S_;
+  const f = Math.min(1, Math.max(0, (stage - 1) / Math.max(1, S_ - 1))), boss = !end && isBoss(stage), ruler = stage === S_;
+  let hp = C.hp * Math.pow(C.landHp, n - 1) * Math.pow(C.spanHp, f), hit = C.hit * Math.pow(C.landHit, n - 1) * Math.pow(C.spanHit, f);
+  if (ruler) { hp *= C.rulerHp; hit *= C.rulerHit; } else if (boss) { hp *= C.captainHp; hit *= C.captainHit; } else if (end) { hp *= C.endless; hit *= C.endless; }
+  return { hp: Math.max(1, Math.round(hp)), hit: Math.round(hit * 10) / 10 };
+}
+function enemyMaxHp(stage = S.hero.stage, gid = S.hero.ground) { const lc = landCurve(stage, gid); if (lc) return lc.hp; const t = effType(stage, gid), { k } = stageType(stage), R = CONFIG.stages.refHit(t); return Math.max(1, Math.round(isBoss(stage) ? R * 8 : R * (2 + (k - 1) / 8))); }
+function enemyHit(stage = S.hero.stage, gid = S.hero.ground) { const lc = landCurve(stage, gid); if (lc) return lc.hit; const t = effType(stage, gid), { k } = stageType(stage), hp = CONFIG.stages.refHeroHp(t); return Math.round((isBoss(stage) ? hp * 0.15 : hp * (0.05 + 0.10 * (k - 1) / 8)) * 10) / 10; }
 function enemyDps(stage = S.hero.stage) { return enemyHit(stage) / H.enemyAttackInterval; }
 function ground() { return CONFIG.grounds[S.hero.ground] || CONFIG.grounds.wilds; }
 function groundUnlocked(id) { const G = CONFIG.grounds[id]; if (!G || !G.req) return true; if (G.req.land) return landOpen(G.req.land) || landPct(G.req.land) > 0; if (G.req.tech) return hasTech(G.req.tech); if (G.req.stage) return (S.hero.ground === 'wilds' ? S.hero.bestStage : (S.hero.grounds.wilds || {}).bestStage || 1) >= G.req.stage; return true; }
@@ -731,7 +742,7 @@ function research(id) { if (researching() || !canResearch(id)) return false; pay
 function finishResearch() { const r = researching(); if (!r) return; S.researching = null; S.tech[r.id] = true; log(`Researched ${techDef(r.id).name}`); pushEvent({ who: 'research', name: techDef(r.id).name }); }
 function tickResearch(dt) { const r = researching(); if (!r) return; r.t += dt; if (r.t >= r.total) finishResearch(); }
 function buildingUnlocked(typeId) { return CONFIG.techs.some(t => t.unlocks.building === typeId && hasTech(t.id)); }
-function gearTierUnlocked(tier, slot) { return CONFIG.techs.some(t => t.unlocks.gearTier === tier && hasTech(t.id) && (!t.unlocks.slots || !slot || t.unlocks.slots.includes(slot))); }
+function gearTierUnlocked(tier, slot) { if (tier > HARD_T) tier = HARD_T; return CONFIG.techs.some(t => t.unlocks.gearTier === tier && hasTech(t.id) && (!t.unlocks.slots || !slot || t.unlocks.slots.includes(slot))); }
 function dropGated(res) { return CONFIG.techs.some(t => t.unlocks.drop === res); }
 function dropUnlocked(res) { return !dropGated(res) || CONFIG.techs.some(t => t.unlocks.drop === res && hasTech(t.id)); }
 function techJobSpeed() { let s = 1; for (const t of CONFIG.techs) if (hasTech(t.id) && t.unlocks.jobSpeed) s *= 1 + t.unlocks.jobSpeed; return s; }
@@ -1242,7 +1253,7 @@ window.Game = {
   phase, canProclaim, proclaim,
   stockMode, setStockMode, stockTarget, stockDemand, STOCK_MODES,
   get S() { return S; }, saveString, saveMeta, restoreString, setSaveHook: f => { saveHook = f; }, SAVE_KEY, fmt, pct, fmtTime, drainEvents: () => EVENTS.splice(0), afkEfficiency: () => afkEff(),
-  markViewed, questReached, isEndless, landShare, heroInLand, warIncome, warDemand, warCover, perSoldier, lineSupports, armyEff, demandMult, WAR_KEYS, discXp, discLevel, discProgress, pathNodes, pathNode, pathRank, pathOpen, pathNeedsStar, pathPointsTotal, pathPointsSpent, pathPointsFree, pathPointsMax, starsTotal, starsSpent, starsFree, canRankPath, rankPath, pathMods, resetPaths, techUnlocked, techUnlockMet, techUnlockLabel, techMastery, techLevelOf, techMod, techMods, chooseMod, modPending, techSlots, equipTech, unequipTech, skillDur, skillCdBase, checkTechUnlocks, treeNode, nodeRank, nodeMax, nodeOpen, treePointsTotal, treePointsSpent, treePointsFree, canRankNode, rankNode, nodeQuestLocked, treeMods,
+  markViewed, questReached, tierDefAt, landCurve, isEndless, landShare, heroInLand, warIncome, warDemand, warCover, perSoldier, lineSupports, armyEff, demandMult, WAR_KEYS, discXp, discLevel, discProgress, pathNodes, pathNode, pathRank, pathOpen, pathNeedsStar, pathPointsTotal, pathPointsSpent, pathPointsFree, pathPointsMax, starsTotal, starsSpent, starsFree, canRankPath, rankPath, pathMods, resetPaths, techUnlocked, techUnlockMet, techUnlockLabel, techMastery, techLevelOf, techMod, techMods, chooseMod, modPending, techSlots, equipTech, unequipTech, skillDur, skillCdBase, checkTechUnlocks, treeNode, nodeRank, nodeMax, nodeOpen, treePointsTotal, treePointsSpent, treePointsFree, canRankNode, rankNode, nodeQuestLocked, treeMods,
   fistLevel, slotValue, enemyHit, crafting, maxUpgradePlan, upgradeMax, stats, gearStats, itemStatPreview, gearCraftCost, gearUpgradeCost, canTierUp, craftGear, upgradeGear,
   talentPointsFree, talentPointsTotal, talentPointsSpent, respec, respecCost,
   skillDef, skillUnlocked, skillPower, skillCd, skillReady, castSkill, activeBuffs,
