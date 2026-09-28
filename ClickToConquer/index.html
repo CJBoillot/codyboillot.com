@@ -12,7 +12,7 @@
   <title>Click to Conquer</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=a074">
+  <link rel="stylesheet" href="style.css?v=a075">
 </head>
 <body>
 
@@ -154,6 +154,7 @@
         <button data-ksub="forest" class="kline">Forest <span id="badge-forest" class="dot hidden"></span></button>
         <button data-ksub="farm" class="kline">Farm <span id="badge-farm" class="dot hidden"></span></button>
         <button data-ksub="mine" class="kline">Mine <span id="badge-mine" class="dot hidden"></span></button>
+        <button data-ksub="war" class="kline">Barracks <span id="badge-war" class="dot hidden"></span></button>
         </div><div class="subrow">
         <button data-ksub="keep">Keep <span id="badge-throne" class="dot hidden"></span></button>
         <button data-ksub="tech" class="active">Tech <span id="badge-tech" class="dot hidden"></span></button>
@@ -163,6 +164,7 @@
       <div id="ksub-forest" class="ksub hidden"><div class="kbar" data-kbar></div><div id="line-forest" class="kline-body"></div></div>
       <div id="ksub-farm" class="ksub hidden"><div class="kbar" data-kbar></div><div id="line-farm" class="kline-body"></div></div>
       <div id="ksub-mine" class="ksub hidden"><div class="kbar" data-kbar></div><div id="line-mine" class="kline-body"></div></div>
+      <div id="ksub-war" class="ksub hidden"><div class="kbar" data-kbar></div><div id="line-war" class="kline-body"></div></div>
       <div id="ksub-locked" class="card dim small center hidden">Locked. Your quests will open this when you need it.</div>
       <div id="ksub-tech" class="ksub">
         <div class="card"><div class="card-title">Tech</div><p class="dim small">No research points. Each tech unlocks once you've <b>done</b> the thing it needs and paid its cost. Resets when you found a new kingdom; the Blueprints perk keeps tiers.</p>
@@ -205,8 +207,8 @@
         <div class="card">
           <div class="card-title" id="found-title">Found a New Kingdom</div>
           <p class="dim small" id="found-text">Start over with everything you learned.</p>
-          <div class="row-sub">Crystals on founding: <b id="found-gain" class="accent-inline"></b></div>
-          <div class="row-sub">Cost: <span id="found-cost"></span></div>
+          <div class="row-sub" id="found-gain-row"><span id="found-gain-lab">Crystals on founding:</span> <b id="found-gain" class="accent-inline"></b></div>
+          <div class="row-sub" id="found-cost-row">Cost: <span id="found-cost"></span></div>
           <div id="found-req" class="dim small"></div>
           <button id="found-btn" class="big" disabled>Found a New Kingdom</button>
         </div>
@@ -410,11 +412,11 @@
 </div>
 
 
-<script src="config.js?v=a074"></script>
-<script src="cloud-config.js?v=a074"></script>
-<script src="game.js?v=a074"></script>
-<script src="ui.js?v=a074"></script>
-<script src="cloud.js?v=a074"></script>
+<script src="config.js?v=a075"></script>
+<script src="cloud-config.js?v=a075"></script>
+<script src="game.js?v=a075"></script>
+<script src="ui.js?v=a075"></script>
+<script src="cloud.js?v=a075"></script>
 <script>window.addEventListener("error", e => { const d = document.getElementById("err"); if (d) { d.textContent = "Error: " + e.message; d.classList.remove("hidden"); } });</script>
 </body>
 </html>

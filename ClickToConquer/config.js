@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Alpha 0.7.2',
+  version: 'Alpha 0.8.0',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -52,6 +52,11 @@ const CONFIG = {
     flour:   { name: 'Flour',    icon: [15,10], tier: 3, sell: 4, buy: 12,  desc: 'Mill: 2 grain into 1 flour.' },
     bread:   { name: 'Bread',    icon: [14,14], tier: 3, sell: 12, buy: 40, desc: 'Baker: 2 flour into 1 loaf. Armies march on it.' },
     swords:  { name: 'Iron Swords', icon: [5,1], tier: 3, sell: 45, buy: 150, desc: 'Forge: 2 ingots into 1 sword. The Legion always needs more.' },
+    // ---- The war chest (Phase 3): shown in the header after the Kingdom is proclaimed ----
+    supplies:  { name: 'Supplies',  icon: 'assets/res/bread.webp',     kind: 'war', tier: 4, sell: 0, desc: 'Bread sent to the army by the Quartermaster. Every soldier is mustered on Supplies, and every march eats them.' },
+    equipment: { name: 'Equipment', icon: 'assets/gear/weapon_t2.webp', kind: 'war', tier: 4, sell: 0, desc: 'Iron swords and treated lumber sent to the army by the Quartermaster. One per soldier for full strength.' },
+    soldiers:  { name: 'Soldiers',  icon: 'assets/gear/helm_t2.webp',   kind: 'war', tier: 4, sell: 0, desc: 'Mustered at the Barracks from Supplies and gold.' },
+    officers:  { name: 'Officers',  icon: 'assets/gear/helm_t4.webp',   kind: 'war', tier: 4, sell: 0, desc: 'Your best thralls, promoted to lead the army. Promotion arrives with the Road.' },
     bricks:  { name: 'Bricks',   icon: [13,4],  tier: 3, sell: 12, buy: 40, desc: 'Kiln turns 5 stone into a brick. Hardened gear, grand buildings.' },
     // ---- Loot (kind: 'loot'): dropped by enemies, shown in the Inventory, not in the header bar ----
     rattail:   { name: 'Rat Tail',        icon: [16,2],  kind: 'loot', rarity: 'common',   sell: 3,   desc: 'Proof of a rat well killed. Sells for a little.' },
@@ -358,8 +363,12 @@ const CONFIG = {
         { id: 'shaft',   name: 'Mine Shaft', icon: [17,2], make: 'ore',    base: 0.5, batch: 6,  tier: 0, build: { wood: 60, grain: 30, gold: 80 }, desc: 'Thralls dig iron ore.' },
         { id: 'smelter', name: 'Smelter',    icon: [17,3], make: 'ingot',  from: 'ore',   ratio: 2, base: 0.3, batch: 4,  tier: 1, build: { ore: 100, wood: 80, gold: 200 }, desc: '2 ore → 1 ingot.' },
         { id: 'forge',   name: 'Forge',      icon: [5,1],  make: 'swords', from: 'ingot', ratio: 2, base: 0.15, batch: 3, tier: 2, build: { ingot: 120, planks: 60, gold: 500 }, desc: '2 ingots → 1 iron sword.' } ] },
+      war: { name: 'Barracks', icon: [8,1], steps: [
+        { id: 'barracks', name: 'Barracks', icon: 'assets/gear/helm_t2.webp', make: 'soldiers', from: 'supplies', pull: true, ratio: 1, base: 0.15, batch: 5, tier: 3, phase: 3,
+          ph: ['Muster', 'Drill', 'March'], build: { lumber: 200, swords: 100, gold: 600 }, desc: '1 Supplies + 2 gold → 1 soldier.' } ] },
     },
     startGold: 50, foundRenown: 500, swapCooldown: 120,
+    war: { supplyCapMult: 2, soldierCapBase: 50, soldierCapPerTier: 25, soldierGold: 2, quartermaster: { bread: 'supplies', swords: 'equipment', lumber: 'equipment' } },
     // Settlement tiers inside one land. Raising a tier costs `cap` of every good made so far (pay in as you go) and loses nothing.
     tiers: [
       { name: 'Camp',    cap: 200, slots: 1, thralls: 6,  need: 'Build and staff Logging, Fields and the Mine Shaft.' },
@@ -411,6 +420,7 @@ const CONFIG = {
     { id: 'weaver',    cat: 'craft',   name: 'Weaver',      icon: [17,6], buildCost: { gold: 150, wood: 40 },              job: { time: 10, inputs: { wool: 3 },            outputs: { cloth: 1 } } },
     // Artisan
     { id: 'sawmill',   cat: 'artisan', name: 'Sawmill',     icon: [19,11], buildCost: { gold: 400, wood: 100, ingot: 5 },  job: { time: 20, inputs: { wood: 5 },            outputs: { planks: 1 } } },
+    ['0.8.0', 'Phase 3 begins: a complete City is now proclaimed as your Capital instead of being reset. The header becomes your war chest (Gold, Supplies, Equipment, Soldiers, Officers), Accountants become Quartermasters, and the Barracks musters soldiers. The Road to new lands comes next.'],
     { id: 'kiln',      cat: 'artisan', name: 'Kiln',        icon: [13,4],  buildCost: { gold: 400, stone: 100, ingot: 5 }, job: { time: 20, inputs: { stone: 5 },           outputs: { bricks: 1 } } },
   ],
   buildingCats: { gather: 'Gathering', craft: 'Crafting', artisan: 'Artisan' },
@@ -627,8 +637,14 @@ const CONFIG = {
       steps: [ { label: 'All 9 buildings: an Overseer each', check: { overseer: 9 } } ], reward: { gold: 500 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:settle-card' } },
     { id: 'y03', chain: 'City', name: 'Accountants', text: 'An Accountant sits on each final good — treated lumber, bread and iron swords — and sells what the Storehouse does not need, at half the Market price.',
       steps: [ { label: 'Carpenter, Baker and Forge → Accountant', check: { accountants: 3 } } ], reward: { gold: 500 }, focus: { tab: 'kingdom', ksub: 'forest', rtab: 'kingdom', el: 'step:carpenter' } },
-    { id: 'y04', chain: 'City', name: 'New Lands', text: 'This land is conquered. Conquer new lands: your hero and your thralls ride with you, you earn Crystals, and a new Camp begins.',
-      steps: [ { label: 'Kingdom → Keep → Conquer New Lands', check: { founded: 2 } } ], reward: { gold: 100 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:found-btn' } },
+    { id: 'y04', chain: 'City', name: 'Proclaim the Kingdom', text: 'The City is complete. Proclaim the Kingdom: your City becomes the Capital — nothing is lost — and the war for new lands begins.',
+      steps: [ { label: 'Kingdom → Keep → Proclaim the Kingdom', check: { proclaimed: 1 } } ], reward: { gold: 500 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:found-btn' } },
+    { id: 'w01', chain: 'The Kingdom', name: 'The Barracks', text: 'An army is mustered, not bought. Build the Barracks and put a thrall to work: 1 Supplies and 2 gold become 1 soldier.',
+      steps: [ { label: 'Kingdom → Barracks → Build', check: { built: 'barracks' } }, { label: 'Barracks → + Add worker', check: { staffed: 'barracks' } } ], reward: { gold: 500 }, focus: { tab: 'kingdom', ksub: 'war', rtab: 'kingdom', el: 'step:barracks' } },
+    { id: 'w02', chain: 'The Kingdom', name: 'Quartermaster', text: 'In the Kingdom your Accountants become Quartermasters: instead of selling, they send spare bread to the army as Supplies, and swords and treated lumber as Equipment.',
+      steps: [ { label: 'Gather 50 Supplies (Baker → Accountant)', check: { have: 'supplies', need: 50 } }, { label: 'Gather 30 Equipment (Forge, Carpenter → Accountant)', check: { have: 'equipment', need: 30 } } ], reward: { gold: 500 }, focus: { tab: 'kingdom', ksub: 'farm', rtab: 'kingdom', el: 'step:baker' } },
+    { id: 'w03', chain: 'The Kingdom', name: 'Muster', text: 'Soldiers wait in the war chest for the road ahead. Muster a company.',
+      steps: [ { label: 'Muster 25 soldiers', check: { have: 'soldiers', need: 25 } } ], reward: { gold: 1000 }, focus: { tab: 'kingdom', ksub: 'war', rtab: 'kingdom', el: 'step:barracks' } },
   ],
 
   // ---------- Tech tree ----------

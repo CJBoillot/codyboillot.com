@@ -831,3 +831,5 @@ html, body { max-width: 100%; overflow-x: hidden; }
 .stat-best { color: #1a1208; background: var(--bronze2); border-radius: 8px; padding: 0 6px; font-size: 10.5px; letter-spacing: .5px; text-transform: uppercase; margin-right: 4px; }
 .stat-ready { color: var(--bronze2); font-size: 11px; border: 1px solid var(--bronze-dim); border-radius: 8px; padding: 0 6px; margin-left: 4px; }
 @media (min-width: 1024px) { .panel-left .stat-card { padding: 10px; margin: 0; flex: 0 0 auto; } .panel-left .stat-row { padding: 6px 8px; } }
+/* Phase 3 war chest chips (0.8.0) */
+.res.war-chip { border-color: var(--bronze-dim); cursor: pointer; }

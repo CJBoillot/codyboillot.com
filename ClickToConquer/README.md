@@ -1,4 +1,4 @@
-# Click to Conquer — Alpha 0.6.2
+# Click to Conquer — Alpha 0.8.0
 
 Mobile-first AFK / incremental game. Vanilla HTML + JS, no build: open `index.html`. Full design in the project doc `design/v0.3-design.md`.
 
@@ -35,3 +35,7 @@ Damage starts at 1. Gear stat = tier value + 0.1 × level (levels 0–9); fists 
 | `index.html`, `style.css` | Layout (≥1024px three columns, otherwise mobile tabs). |
 
 Offline: 8h cap at 10% efficiency (+Long Memory), closed-form rates for the hero and kingdom lines.
+
+## Phase 3 — the Kingdom (0.8.0, milestone 1 of `design/phase3-march-v2.md`)
+
+A complete City is **proclaimed** (Keep → Proclaim the Kingdom) instead of reset: +√(Renown/40) Crystals once, nothing lost. The header switches to the war chest: Gold · Supplies · Equipment · Soldiers · Officers. Accountants on the Baker / Forge / Carpenter become **Quartermasters** and send bread → Supplies, swords and treated lumber → Equipment (above the stock target). The **Barracks** (4th line, 200 lumber + 100 swords + 600 gold) musters soldiers: 1 Supplies + 2 gold each, Muster → Drill → March. Soldier cap 50 + 25 × settlement tier. Saves that used the old reset keep their land and wait at the Proclaim quest. Bot: Barracks ~10 min after proclaiming, soldier cap (125) in ~1 h.
