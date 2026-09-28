@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Alpha 0.5.0',
+  version: 'Alpha 0.5.1',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -366,8 +366,9 @@ const CONFIG = {
     hirePrice: [0, 40, 120, 350, 900, 2200], offerRefresh: 300, refreshCost: 25,
     ranks: [ { name: 'Reeve', renown: 0, perk: 'Start' }, { name: 'Baron', renown: 500, perk: 'Storehouse ×2' }, { name: 'Count', renown: 2000, perk: '4★ thralls in the Tavern · bigger Orders' }, { name: 'Duke', renown: 6000, perk: '5★ thralls · the biggest Orders' } ],
     orderFrom: ['The Northern Legion', 'The Merchant Guild', 'The Village of Ashford', 'The Imperial Court', 'The Border Garrison'],
-    orderBase: { wood: 40, grain: 40, ore: 30, planks: 20, flour: 20, ingot: 15, lumber: 10, bread: 10, swords: 6 },
-    renownPer: { wood: 0.5, grain: 0.5, ore: 0.7, planks: 1.5, flour: 1.5, ingot: 2, lumber: 4, bread: 4, swords: 6 },
+    orderBase: { wood: 40, grain: 40, ore: 30, planks: 20, flour: 20, ingot: 15, lumber: 10, bread: 10, swords: 6, hide: 25, meat: 15, stone: 40, fiber: 40, berries: 30 },
+    heroOrderGoods: ['hide', 'meat', 'stone', 'fiber', 'berries'],   // when the kingdom makes fewer than 3 goods, Orders ask for what the hero gathers
+    renownPer: { wood: 0.5, grain: 0.5, ore: 0.7, planks: 1.5, flour: 1.5, ingot: 2, lumber: 4, bread: 4, swords: 6, hide: 0.8, meat: 1, stone: 0.4, fiber: 0.4, berries: 0.4 },
     orderGoldMult: 1.5, orderBonusSeconds: 600, speedBonus: 0.2,
   },
 

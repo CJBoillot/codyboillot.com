@@ -469,7 +469,8 @@ function tickKingdom(dt) {
   if (kingdomNo() < 1) return;
   const K = S.kingdom;
   K.offerTimer = (K.offerTimer || KC().offerRefresh) - dt; if (K.offerTimer <= 0) refreshOffers();
-  { const g = orderGoods(); (K.orders || []).forEach((o, i) => { if (Object.keys(o.wants).some(k => !g.includes(k) && (S.res[k] || 0) < o.wants[k])) K.orders.splice(i, 1, makeOrder()); }); }
+  { const g = orderGoods(); (K.orders || []).forEach((o, i) => { if (Object.keys(o.wants).some(k => !g.includes(k) && (S.res[k] || 0) < o.wants[k])) K.orders.splice(i, 1, makeOrder(i)); });
+    const seen = []; K.orders.forEach((o, i) => { const k = Object.keys(o.wants)[0]; if (seen.includes(k) && orderGoods().filter(g => !K.orders.some(x => Object.keys(x.wants)[0] === g)).length) K.orders.splice(i, 1, makeOrder(i)); else seen.push(k); }); }
   for (const lid in KC().lines) {
     for (const st of lineSteps(lid)) {
       const s = stepState(st.id), m = stepMods(st.id); if (!m.working) continue;
@@ -517,13 +518,25 @@ function kingdomRates() {
   return r;
 }
 // Orders
-function orderGoods(all = false) { const o = [], staffed = []; for (const lid in KC().lines) { const steps = lineSteps(lid); if (!steps.length) continue; o.push(steps[steps.length - 1].make); let top = null; for (const st of steps) { if (stepMods(st.id).working) top = st; else break; } if (top) staffed.push(top.make); } if (staffed.length) return staffed; const first = lineSteps(Object.keys(KC().lines)[0]); return all ? o : (first.length ? [first[0].make] : o.slice(0, 1)); }
+// Goods an Order may ask for: what the kingdom delivers to the Storehouse, best goods first; then goods the hero gathers.
+function orderGoods(all = false) {
+  const kg = [];
+  for (const lid in KC().lines) { const steps = lineSteps(lid); for (let k = steps.length - 1; k >= 0; k--) { const st = steps[k]; if (stepMods(st.id).working && !kg.includes(st.make)) kg.push(st.make); } }
+  for (const k in kingdomRates()) if (!kg.includes(k)) kg.push(k);
+  if (!kg.length) { const f = lineSteps(Object.keys(KC().lines)[0]); if (f.length) kg.push(f[0].make); }
+  const hero = KC().heroOrderGoods.filter(k => (S.lifetime[k] || 0) > 0 && !kg.includes(k));
+  return kg.length >= 3 ? kg : kg.concat(hero.slice(0, 3 - kg.length));
+}
 function swapReady() { return S.hero.time >= (S.kingdom.swapAt || 0); }
-function swapOrder(i) { if (!S.kingdom.orders[i] || !swapReady()) return false; S.kingdom.orders.splice(i, 1, makeOrder()); S.kingdom.swapAt = S.hero.time + KC().swapCooldown; return true; }
-function makeOrder() {
-  const goods = orderGoods(), from = KC().orderFrom[Math.floor(Math.random() * KC().orderFrom.length)], mult = 1 + 0.5 * rankIndex();
-  const pick = goods.length > 1 && Math.random() < 0.4 ? [goods[Math.floor(Math.random() * goods.length)], goods[Math.floor(Math.random() * goods.length)]] : [goods[Math.floor(Math.random() * goods.length)]];
-  const wants = {}; for (const k of pick) wants[k] = (wants[k] || 0) + Math.max(5, Math.round((KC().orderBase[k] || 20) * mult));
+function swapOrder(i) { if (!S.kingdom.orders[i] || !swapReady()) return false; S.kingdom.orders.splice(i, 1, makeOrder(i)); S.kingdom.swapAt = S.hero.time + KC().swapCooldown; return true; }
+function makeOrder(slot = -1) {
+  const pool = orderGoods(), taken = (S.kingdom.orders || []).filter((o, i) => o && i !== slot).map(o => Object.keys(o.wants)[0]);
+  const fresh = pool.filter(k => !taken.includes(k)), pickFrom = fresh.length ? fresh : pool;
+  const from = KC().orderFrom[Math.floor(Math.random() * KC().orderFrom.length)], mult = 1 + 0.5 * rankIndex();
+  const kFirst = pickFrom.filter(k => !KC().heroOrderGoods.includes(k)), src = kFirst.length ? kFirst : pickFrom;
+  const main = src[Math.floor(Math.random() * Math.min(src.length, 4))];
+  const pick = [main]; const others = pool.filter(k => k !== main && !taken.includes(k)); if (pool.length >= 5 && others.length && Math.random() < 0.3) pick.push(others[Math.floor(Math.random() * others.length)]);
+  const wants = {}; for (const k of pick) wants[k] = Math.max(5, Math.round((KC().orderBase[k] || 20) * mult));
   let gold = 0, renown = 0; for (const k in wants) { gold += wants[k] * CONFIG.resources[k].sell * KC().orderGoldMult; renown += wants[k] * (KC().renownPer[k] || 1); }
   S.kingdom.orderSeq = (S.kingdom.orderSeq || 0) + 1;
   return { id: S.kingdom.orderSeq, from, wants, gold: Math.round(gold), renown: Math.round(renown), bonusBy: S.hero.time + KC().orderBonusSeconds };
@@ -536,7 +549,7 @@ function deliver(i) {
   const rb = rankIndex(); S.kingdom.renown = (S.kingdom.renown || 0) + Math.round(o.renown * m); S.stats.orders = (S.stats.orders || 0) + 1;
   log(`Order delivered to ${o.from}: +${Math.round(o.gold * m)} gold, +${Math.round(o.renown * m)} Renown${fast ? ' (speed bonus)' : ''}`);
   if (rankIndex() > rb) log(`You are now a ${KC().ranks[rankIndex()].name}!`);
-  S.kingdom.orders.splice(i, 1, makeOrder()); return true;
+  S.kingdom.orders.splice(i, 1, makeOrder(i)); return true;
 }
 function rankIndex() { const r = S.kingdom.renown || 0; let i = 0; KC().ranks.forEach((x, j) => { if (r >= x.renown) i = j; }); return i; }
 function rankInfo() { const i = rankIndex(), R = KC().ranks; return { i, cur: R[i], next: R[i + 1] || null, renown: S.kingdom.renown || 0 }; }
