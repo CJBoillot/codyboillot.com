@@ -633,7 +633,7 @@ const UI = (() => {
         const cr = Game.canRaise(); $('settle-raise').disabled = !cr; setText($('settle-raise'), `Raise to ${nx.name}`); $('settle-raise').classList.remove('hidden');
         if (cr) keepHint = true;
       } else {
-        setText($('settle-need'), td.need + ' Then this land is conquered, and you can settle new lands.');
+        setText($('settle-need'), td.need + ' Then this land is conquered, and you can conquer new lands.');
         const c = Game.cityChecks(); const row = (lab, a, b) => `<div class="row-between small"><span>${a >= b ? '✓' : '○'} ${lab}</span><span class="${a >= b ? 'good' : 'dim'}">${a} / ${b}</span></div>`;
         lh += row('Buildings with 3 workers', c.crews, c.steps) + row('Buildings with an Overseer', c.overseers, c.steps) + row('Accountants on final goods', c.accountants, c.finals);
         $('settle-pay').classList.add('hidden'); $('settle-raise').classList.add('hidden');
@@ -1053,7 +1053,7 @@ const UI = (() => {
     const L = Game.S.legacy;
     fmPick.hero = L.heroPath || 'warrior'; fmPick.kingdom = L.kingdomPath || 'benevolent';
     { const g = Game.knowledgeGain(); setText($('fm-gain'), `${g} Crystal${g === 1 ? '' : 's'}`); }
-    { const first = Game.S.legacy.foundings === 0; setText($('fm-title'), first ? 'Found Your Kingdom' : 'Settle New Lands'); setText($('fm-confirm'), first ? 'Found' : 'Ride out'); }
+    { const first = Game.S.legacy.foundings === 0; setText($('fm-title'), first ? 'Found Your Kingdom' : 'Conquer New Lands'); setText($('fm-confirm'), first ? 'Found' : 'Ride out'); }
     setText($('fm-worker'), Game.S.legacy.foundings === 0 ? 'your first Camp' : 'a new Camp in new lands');
     const build = (holder, list, key) => {
       holder.innerHTML = '';
@@ -1080,9 +1080,9 @@ const UI = (() => {
     setText($('found-gain'), '+' + Game.knowledgeGain());
     const cost = Game.foundCost(); setHtml($('found-cost'), Object.keys(cost).length ? costHtml(cost) : '<span class="dim">free — Renown is the price</span>');
     const first = S.legacy.foundings === 0;
-    setText($('found-title'), first ? 'Pay Tribute to the Empire' : 'Settle New Lands');
-    setText($('found-text'), first ? 'Pay tribute and the Empire grants you land: your first kingdom, with a Forest to work. Your hero keeps everything.' : 'Once your City is complete, this land is conquered. Settle new lands: your hero, your thralls, Legacy and trophies go with you; the lands, buildings, stores and gold stay behind, and a new Camp begins.');
-    $('found-btn').textContent = first ? 'Pay Tribute' : 'Settle New Lands';
+    setText($('found-title'), first ? 'Pay Tribute to the Empire' : 'Conquer New Lands');
+    setText($('found-text'), first ? 'Pay tribute and the Empire grants you land: your first kingdom, with a Forest to work. Your hero keeps everything.' : 'Once your City is complete, this land is conquered. Conquer new lands: your hero, your thralls, Legacy and trophies go with you; the lands, buildings, stores and gold stay behind, and a new Camp begins.');
+    $('found-btn').textContent = first ? 'Pay Tribute' : 'Conquer New Lands';
     if (first) { const reqStage = CONFIG.legacy.foundRequiresStage, okStage = Game.bestStageAll() >= reqStage; setText($('found-req'), okStage ? (Game.canAfford(cost) ? 'Ready.' : 'Gather the tribute: 100 gold and the Rat King\'s Tooth.') : `Reach stage ${reqStage} to pay tribute (best: ${Game.bestStageAll()}).`); }
     else { setText($('found-req'), Game.canFound() ? 'Ready. This land is conquered.' : `Grow your settlement into a complete City first (now: ${Game.tierDef().name}).`); }
     $('found-btn').disabled = !Game.canFound();

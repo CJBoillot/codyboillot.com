@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Alpha 0.7.1',
+  version: 'Alpha 0.7.2',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -420,6 +420,7 @@ const CONFIG = {
   // jobs (jobs completed by hand or thrall), sold (gold earned at market), stage, boss, founded, thrall (assigned), activity (swings).
   // Shown in Settings → What's new (newest first). Keep each line short.
   changelog: [
+    ['0.7.2', 'Settle New Lands is now Conquer New Lands.'],
     ['0.7.1', 'New Your Stats card on the Gear screen: every combat stat, which piece drives it, and what to do next — the weakest piece is marked Best next. Tap a row to open that piece.'],
     ['0.7.0', 'Stock settings: buildings that feed another building now keep goods in the Storehouse for what you need (new buildings, the next settlement, orders). Auto splits half and half; or pick 0, ¼, ½ or Full.'],
     ['0.6.9', 'Building crews redesigned: a tile for each worker slot (empty slots show + Add worker), with Overseer and Accountant rows that say what they do. Clearer sword and quest wording.'],
@@ -626,8 +627,8 @@ const CONFIG = {
       steps: [ { label: 'All 9 buildings: an Overseer each', check: { overseer: 9 } } ], reward: { gold: 500 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:settle-card' } },
     { id: 'y03', chain: 'City', name: 'Accountants', text: 'An Accountant sits on each final good — treated lumber, bread and iron swords — and sells what the Storehouse does not need, at half the Market price.',
       steps: [ { label: 'Carpenter, Baker and Forge → Accountant', check: { accountants: 3 } } ], reward: { gold: 500 }, focus: { tab: 'kingdom', ksub: 'forest', rtab: 'kingdom', el: 'step:carpenter' } },
-    { id: 'y04', chain: 'City', name: 'New Lands', text: 'This land is conquered. Settle new lands: your hero and your thralls ride with you, you earn Crystals, and a new Camp begins.',
-      steps: [ { label: 'Kingdom → Keep → Settle New Lands', check: { founded: 2 } } ], reward: { gold: 100 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:found-btn' } },
+    { id: 'y04', chain: 'City', name: 'New Lands', text: 'This land is conquered. Conquer new lands: your hero and your thralls ride with you, you earn Crystals, and a new Camp begins.',
+      steps: [ { label: 'Kingdom → Keep → Conquer New Lands', check: { founded: 2 } } ], reward: { gold: 100 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:found-btn' } },
   ],
 
   // ---------- Tech tree ----------

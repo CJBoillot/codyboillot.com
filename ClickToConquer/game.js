@@ -652,7 +652,7 @@ function questCheck(c) {
 function suggestGoal() {
   if (kingdomNo() > 0) { // the kingdom: the endless loop — Renown toward the next lands
     const ok = canFound();
-    return { name: ok ? 'Settle New Lands' : `Grow the ${tierDef().name}`, text: ok ? 'This land is conquered. Settle new lands when you are ready — or keep upgrading here.' : tierDef().need, hint: 'Kingdom → Keep', parts: [{ done: ok, have: ok ? 1 : 0, need: 1, label: 'Settlement' }], focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:settle-card' } };
+    return { name: ok ? 'Conquer New Lands' : `Grow the ${tierDef().name}`, text: ok ? 'This land is conquered. Conquer new lands when you are ready — or keep upgrading here.' : tierDef().need, hint: 'Kingdom → Keep', parts: [{ done: ok, have: ok ? 1 : 0, need: 1, label: 'Settlement' }], focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:settle-card' } };
   }
   let best = null;
   for (const t of CONFIG.techs) {
@@ -812,7 +812,7 @@ function found(heroPathId, kingdomPathId) {
   if (leg.foundings > 1) add('gold', KC().startGold || 50);
   const ca = perkRank('cache'); if (ca) { add('gold', 100 * ca); }
   ensureThralls();
-  log(`${leg.foundings === 1 ? 'Founded your kingdom' : 'Settled new lands'} as ${hp.name} of a ${kp.name}. A Camp is pitched. +${gain} Crystal${gain === 1 ? '' : 's'}`);
+  log(`${leg.foundings === 1 ? 'Founded your kingdom' : 'Conquered new lands'} as ${hp.name} of a ${kp.name}. A Camp is pitched. +${gain} Crystal${gain === 1 ? '' : 's'}`);
   if (S.kingdom.thralls.length) log(`${S.kingdom.thralls.length} thrall${S.kingdom.thralls.length > 1 ? 's' : ''} followed you to the new lands. Put them to work.`);
   save();
   return gain;
