@@ -12,7 +12,7 @@
   <title>Click to Conquer</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=a094">
+  <link rel="stylesheet" href="style.css?v=a095">
 </head>
 <body>
 
@@ -135,18 +135,55 @@
       </div>
 
       <div id="sub-skills" class="sub hidden">
-        <div class="card">
-          <div class="disc-bar" id="disc-bar"></div>
-          <div class="row-between" style="margin-top:8px"><div><b id="disc-name">Combat</b> <span class="dim small" id="disc-desc"></span></div></div>
-          <div class="bar xp disc-xp"><div id="disc-xpbar"></div><span id="disc-xptext"></span></div>
-          <div class="pt-box">
-            <div class="pt-row"><b id="disc-pts" class="pt-num">0</b><div><b>Skill points</b> <span class="dim small">for this tree</span><div class="small dim" id="disc-how">You get 1 every time this skill levels up.</div></div></div>
-            <div class="pt-row"><b id="talent-free" class="pt-num gold">0</b><div><b>Talent points</b> <span class="dim small">any tree</span><div class="small dim">You get 1 for the first kill of each boss (and from some quests). Spend them on the gold ★ talents at the bottom of a tree.</div></div></div>
-          </div>
-          <p class="dim small" style="margin:6px 0 0">Tap a node to spend a skill point on it. A node has 10 ranks; the node below it opens when it is maxed.</p>
+        <div class="skill-seg" id="skill-seg">
+          <button data-sk="tech">Techniques<span class="dot hidden" id="dot-sk-tech"></span></button>
+          <button data-sk="paths">Paths<span class="dot hidden" id="dot-sk-paths"></span></button>
+          <button data-sk="gather">Gathering<span class="dot hidden" id="dot-sk-gather"></span></button>
         </div>
-        <div id="tree" class="tree"></div>
-        <button id="respec-btn" class="wide" style="margin-top:12px">Respec all trees (<span id="respec-cost"></span> 🪙)</button>
+
+        <div id="sk-tech">
+          <div class="card">
+            <div class="row-between"><span class="card-title" style="margin:0">Loadout</span><span class="small dim">auto-cast · tap in a fight for ×1.5</span></div>
+            <div id="loadout" class="loadout"></div>
+            <p class="small dim" id="slot-note" style="margin:6px 0 0"></p>
+          </div>
+          <div id="tech-cards"></div>
+          <p class="dim small center">Techniques level up every time they fire. Mastery is never lost — not even when you pass the crown.</p>
+        </div>
+
+        <div id="sk-paths" class="hidden">
+          <div class="card">
+            <div class="row-between"><span class="card-title" style="margin:0">The Paths of War</span><span class="small dim" id="path-lv">Combat Lv 1</span></div>
+            <div class="path-pts">
+              <div><b id="path-free">0</b><span>points to spend</span></div>
+              <div><b id="path-spent">0</b><span id="path-spent-of">spent of 390</span></div>
+              <div><b id="path-stars">0 ★</b><span>boss tokens</span></div>
+            </div>
+            <div class="bar xp disc-xp"><div id="path-xpbar"></div><span id="path-xptext"></span></div>
+            <p class="small dim" style="margin:4px 0 0">+1 point every Combat level · +1 ★ the first time you beat each boss. Paths are never reset.</p>
+          </div>
+          <div class="path-heads" id="path-heads"></div>
+          <div class="path-web-wrap"><svg id="path-web" viewBox="0 0 368 548" preserveAspectRatio="xMidYMid meet"></svg></div>
+          <div class="path-legend"><span><i class="lg taken"></i>taken</span><span><i class="lg can"></i>can take</span><span><i class="lg lock"></i>locked</span><span><i class="lg notable"></i>notable ★</span><span><i class="lg key"></i>keystone ★</span></div>
+          <div class="card path-pop" id="path-pop"></div>
+          <div class="card" id="path-sum-card"><div class="card-title" style="margin:0 0 4px">Your Paths give</div><div id="path-sum" class="small"></div></div>
+          <button id="path-reset" class="wide" style="margin-top:4px">Reset Paths (<span id="path-reset-cost"></span> 🪙)</button>
+        </div>
+
+        <div id="sk-gather" class="hidden">
+          <div class="card">
+            <div class="disc-bar" id="disc-bar"></div>
+            <div class="row-between" style="margin-top:8px"><div><b id="disc-name">Logging</b> <span class="dim small" id="disc-desc"></span></div></div>
+            <div class="bar xp disc-xp"><div id="disc-xpbar"></div><span id="disc-xptext"></span></div>
+            <div class="pt-box">
+              <div class="pt-row"><b id="disc-pts" class="pt-num">0</b><div><b>Skill points</b> <span class="dim small">for this tree</span><div class="small dim" id="disc-how">You get 1 every time this skill levels up.</div></div></div>
+              <div class="pt-row"><b id="talent-free" class="pt-num gold">0</b><div><b>★ Boss tokens</b> <span class="dim small">shared with Paths</span><div class="small dim">You get 1 the first time you beat each boss. The gold ★ capstone at the bottom of a tree costs one.</div></div></div>
+            </div>
+            <p class="dim small" style="margin:6px 0 0">Tap a node to spend a skill point on it. A node has 10 ranks; the node below it opens when it is maxed.</p>
+          </div>
+          <div id="tree" class="tree"></div>
+          <button id="respec-btn" class="wide" style="margin-top:12px">Respec gathering trees (<span id="respec-cost"></span> 🪙)</button>
+        </div>
       </div>
     </div>
 
@@ -448,11 +485,11 @@
 </div>
 
 
-<script src="config.js?v=a094"></script>
-<script src="cloud-config.js?v=a094"></script>
-<script src="game.js?v=a094"></script>
-<script src="ui.js?v=a094"></script>
-<script src="cloud.js?v=a094"></script>
+<script src="config.js?v=a095"></script>
+<script src="cloud-config.js?v=a095"></script>
+<script src="game.js?v=a095"></script>
+<script src="ui.js?v=a095"></script>
+<script src="cloud.js?v=a095"></script>
 <script>window.addEventListener("error", e => { const d = document.getElementById("err"); if (d) { d.textContent = "Error: " + e.message; d.classList.remove("hidden"); } });</script>
 </body>
 </html>

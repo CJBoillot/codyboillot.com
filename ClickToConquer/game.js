@@ -37,7 +37,7 @@ function freshState() {
     quests: { index: 0, done: {} }, stats: { jobs: 0, sold: 0, focused: 0 }, // plots: {type, level, progress, running, worker: null|'hero'|thrallIndex}; thralls: [{name}]
     hero: {
       level: 1, xp: 0, stage: 1, bestStage: 1, kills: 0, hp: 10, enemyHp: 0, fistKills: 0, resting: false, totalKills: 0, time: 0, carry: 0,
-      attr, gear, tools, skillLv, loadout: [], cds: {}, buffs: {}, talents: {}, tree: {}, dxp: {}, bossesKilled: {}, activity: 'idle', harvestTimer: 0, mastery: {}, ground: 'wilds', grounds: {}, hand: {},
+      attr, gear, tools, skillLv, loadout: [], cds: {}, buffs: {}, talents: {}, tree: {}, dxp: {}, bossesKilled: {}, paths: {}, techs: {}, stars: {}, activity: 'idle', harvestTimer: 0, mastery: {}, ground: 'wilds', grounds: {}, hand: {},
     },
     lifetime: {}, lastTick: Date.now(), createdAt: Date.now(), settings: { devSpeed: 1, showLog: false }, revealed: {}, log: [],
     legacy: freshLegacy(),
@@ -160,8 +160,8 @@ function tickHarvest(dt) {
 
 // ---------- Disciplines & skill trees ----------
 function discXp(d) { return (S.hero.dxp && S.hero.dxp[d]) || 0; }
-function discLevel(d) { let lvl = 1, x = discXp(d); while (x >= CONFIG.discXpToLevel(lvl) && lvl < 200) { x -= CONFIG.discXpToLevel(lvl); lvl++; } return lvl; }
-function discProgress(d) { let lvl = 1, x = discXp(d); while (x >= CONFIG.discXpToLevel(lvl) && lvl < 200) { x -= CONFIG.discXpToLevel(lvl); lvl++; } return { level: lvl, have: x, need: CONFIG.discXpToLevel(lvl) }; }
+function discLevel(d) { let lvl = 1, x = discXp(d); while (x >= CONFIG.discXpToLevel(lvl) && lvl < 5000) { x -= CONFIG.discXpToLevel(lvl); lvl++; } return lvl; }
+function discProgress(d) { let lvl = 1, x = discXp(d); while (x >= CONFIG.discXpToLevel(lvl) && lvl < 5000) { x -= CONFIG.discXpToLevel(lvl); lvl++; } return { level: lvl, have: x, need: CONFIG.discXpToLevel(lvl) }; }
 function gainDiscXp(d, n) { if (!CONFIG.disciplines[d]) return; S.hero.dxp = S.hero.dxp || {}; const before = discLevel(d); S.hero.dxp[d] = (S.hero.dxp[d] || 0) + n; const after = discLevel(d); if (after > before) log(`${CONFIG.disciplines[d].name} level ${after}!`); }
 function treeNode(d, id) { return (CONFIG.trees[d] || []).find(n => n.id === id); }
 function nodeRank(d, id) { return (S.hero.tree && S.hero.tree[d] && S.hero.tree[d][id]) || 0; }
@@ -171,14 +171,13 @@ function nodeOpen(d, id) { const n = treeNode(d, id); if (!n) return false; if (
 function treePointsTotal(d) { return discLevel(d) - 1 + (d === 'combat' ? perkRank('veteran') * 3 : 0); }
 function treePointsSpent(d) { let n = 0; for (const node of CONFIG.trees[d] || []) if (!node.capstone) n += nodeRank(d, node.id); return n; }
 function treePointsFree(d) { return treePointsTotal(d) - treePointsSpent(d); }
-function talentPointsTotal() { return Object.keys(S.hero.bossesKilled).length * H.talentPointsPerBoss + (S.hero.bonusTalent || 0); }
-function talentPointsSpent() { let n = 0; for (const d in CONFIG.trees) for (const node of CONFIG.trees[d]) if (node.capstone) n += nodeRank(d, node.id); return n; }
+function talentPointsTotal() { return starsTotal(); }
+function talentPointsSpent() { return starsSpent(); }
 function talentPointsFree() { return talentPointsTotal() - talentPointsSpent(); }
 function canRankNode(d, id) { const n = treeNode(d, id); if (!n || !nodeOpen(d, id) || nodeRank(d, id) >= nodeMax(n)) return false; return n.capstone ? talentPointsFree() > 0 : treePointsFree(d) > 0; }
 function rankNode(d, id) {
   if (!canRankNode(d, id)) return false;
   S.hero.tree = S.hero.tree || {}; S.hero.tree[d] = S.hero.tree[d] || {}; S.hero.tree[d][id] = nodeRank(d, id) + 1;
-  const n = treeNode(d, id); if (n.tech) { S.hero.skillLv[n.tech] = S.hero.tree[d][id] - 1; if (!S.hero.loadout.includes(n.tech)) S.hero.loadout.push(n.tech); if (S.hero.tree[d][id] === 1) log(`Technique learned: ${n.name}`); }
   return true;
 }
 function treeMods(d) { const m = {}; for (const n of CONFIG.trees[d] || []) { const r = nodeRank(d, n.id); if (!r || !n.per) continue; for (const k in n.per) m[k] = (m[k] || 0) + n.per[k] * r; } return m; }
@@ -186,31 +185,94 @@ function treeSide(d) { const o = {}; for (const n of CONFIG.trees[d] || []) { if
 function respecCost() { const kp = kingdomPath(); return kp && kp.freeRespec ? 0 : H.respecCost(S.hero.level); }
 function respec() {
   const c = respecCost(); if (S.res.gold < c) return false;
-  S.res.gold -= c; for (const d in CONFIG.trees) for (const n of CONFIG.trees[d]) if (!n.capstone && S.hero.tree && S.hero.tree[d]) { delete S.hero.tree[d][n.id]; if (n.tech) { S.hero.skillLv[n.tech] = 0; S.hero.loadout = S.hero.loadout.filter(x => x !== n.tech); } }
-  log('Respecced all tree points (capstones kept).'); return true;
+  S.res.gold -= c; for (const d in CONFIG.trees) for (const n of CONFIG.trees[d]) if (!n.capstone && S.hero.tree && S.hero.tree[d]) delete S.hero.tree[d][n.id];
+  log('Respecced the gathering trees (capstones kept).'); return true;
+}
+// ---------- Paths of War (passive, permanent) ----------
+let _pathNodes = null;
+function pathNodes() {
+  if (_pathNodes) return _pathNodes; const P = CONFIG.paths, out = [];
+  for (const b of P.branches) { let k = 0; P.plan.forEach((cols, t) => cols.forEach(c => { const d = P.nodes[b.id][k]; out.push({ id: b.id + k, b: b.id, t, c, name: d[0], per: d[1], kind: d[2] || 'small' }); k++; })); }
+  for (const n of out) n.parents = n.t === 0 ? [] : out.filter(p => p.b === n.b && p.t === n.t - 1 && Math.abs(p.c - n.c) <= 1).map(p => p.id);
+  return (_pathNodes = out);
+}
+function pathNode(id) { return pathNodes().find(n => n.id === id) || null; }
+function pathRank(id) { return (S.hero.paths && S.hero.paths[id]) || 0; }
+function pathOpen(id) { const n = pathNode(id); if (!n) return false; return !n.parents.length || n.parents.some(p => pathRank(p) >= CONFIG.paths.ranks); }
+function pathNeedsStar(id) { const n = pathNode(id); return !!n && n.kind !== 'small'; }
+function pathPointsTotal() { return discLevel('combat') - 1 + perkRank('veteran') * 3; }
+function pathPointsSpent() { let s = 0; for (const k in (S.hero.paths || {})) s += S.hero.paths[k]; return s; }
+function pathPointsFree() { return pathPointsTotal() - pathPointsSpent(); }
+function pathPointsMax() { return pathNodes().length * CONFIG.paths.ranks; }
+function starsTotal() { return Object.keys(S.hero.stars || {}).length * H.talentPointsPerBoss + (S.hero.bonusTalent || 0); }
+function starsSpent() { let n = 0; for (const p of pathNodes()) if (p.kind !== 'small') n += pathRank(p.id); for (const d in CONFIG.trees) for (const node of CONFIG.trees[d]) if (node.capstone) n += nodeRank(d, node.id); return n; }
+function starsFree() { return starsTotal() - starsSpent(); }
+function canRankPath(id) { const n = pathNode(id); if (!n || !pathOpen(id) || pathRank(id) >= CONFIG.paths.ranks || pathPointsFree() < 1) return false; return n.kind === 'small' || starsFree() >= 1; }
+function rankPath(id, times = 1) { let k = 0; S.hero.paths = S.hero.paths || {}; while (k < times && canRankPath(id)) { S.hero.paths[id] = pathRank(id) + 1; k++; } if (k && pathRank(id) >= CONFIG.paths.ranks) log(`${pathNode(id).name} mastered!`); return k; }
+function pathMods() { const m = {}; for (const n of pathNodes()) { const r = pathRank(n.id); if (!r) continue; for (const k in n.per) m[k] = (m[k] || 0) + n.per[k] * r; } return m; }
+function resetPaths() { const c = respecCost(); if (S.res.gold < c || !pathPointsSpent()) return false; S.res.gold -= c; S.hero.paths = {}; log('Your Paths are cleared — every point is back to spend.'); return true; }
+
+// ---------- Techniques (active, permanent: unlocked by milestones, levelled by use) ----------
+function techState(id) { S.hero.techs = S.hero.techs || {}; return S.hero.techs[id] || (S.hero.techs[id] = { xp: 0, mods: [] }); }
+function techUnlocked(id) { return !!(S.hero.techs && S.hero.techs[id] && S.hero.techs[id].open); }
+function techUnlockMet(d, cl = discLevel('combat')) { const u = d.unlock || {}; if (u.combat) return cl >= u.combat; if (u.boss) return !!(S.hero.stars || {})[u.boss] || !!S.hero.bossesKilled[u.boss]; if (u.proclaim) return phase() === 3 || (S.legacy.dynasty || 1) > 1; return true; }
+function techUnlockLabel(d) { const u = d.unlock || {}; return u.label || (u.combat ? `Reach Combat Lv ${u.combat}` : ''); }
+function checkTechUnlocks() {
+  const cl = discLevel('combat');
+  for (const d of CONFIG.skills) if (!techUnlocked(d.id) && techUnlockMet(d, cl)) { techState(d.id).open = true; log(`New technique: ${d.name}!`); pushEvent({ who: 'technique', name: d.name }); if (S.hero.loadout.length < techSlots()) S.hero.loadout.push(d.id); }
+  if (!S.hero.landSlot && S.kingdom && landsHeld() >= 1) S.hero.landSlot = true;
+}
+function masteryNeed(lv) { return CONFIG.masteryBase * Math.pow(CONFIG.masteryGrowth, lv - 1); }
+function masteryProgress(id) { let lv = 1, x = (S.hero.techs && S.hero.techs[id] && S.hero.techs[id].xp) || 0; while (x >= masteryNeed(lv) && lv < 5000) { x -= masteryNeed(lv); lv++; } return { level: lv, have: x, need: masteryNeed(lv) }; }
+function masteryLevel(id) { return masteryProgress(id).level; }
+function gainMastery(id, x, quiet = false) { const st = techState(id), before = masteryLevel(id); st.xp += x; const after = masteryLevel(id); if (after > before && !quiet) { log(`${skillDef(id).name} mastery Lv ${after}!`); if (after === 5 || after === 10) pushEvent({ who: 'technique', name: skillDef(id).name + ' — choose a mod' }); } }
+const MOD_LV = [5, 10];
+function techMod(id, tier) { const d = skillDef(id), st = S.hero.techs && S.hero.techs[id]; if (!st || !d.mods || masteryLevel(id) < MOD_LV[tier]) return null; return d.mods[tier].find(m => m.id === (st.mods || [])[tier]) || null; }
+function techMods(id) { const o = { power: 0, cd: 0, dur: 0, boss: 0, leech: 0, twin: 0 }; for (const t of [0, 1]) { const m = techMod(id, t); if (m) for (const k in o) if (m[k]) o[k] += m[k]; } return o; }
+function chooseMod(id, tier, modId) { const d = skillDef(id); if (!techUnlocked(id) || !d.mods || masteryLevel(id) < MOD_LV[tier] || !d.mods[tier].some(m => m.id === modId)) return false; const st = techState(id); st.mods = st.mods || []; st.mods[tier] = modId; return true; }
+function modPending(id) { if (!techUnlocked(id)) return false; const st = techState(id), lv = masteryLevel(id); return [0, 1].some(t => lv >= MOD_LV[t] && !(st.mods || [])[t]); }
+function techSlots() { const c = discLevel('combat'); let n = 0; for (const s of CONFIG.techSlots) if ((s.combat && c >= s.combat) || (s.land && S.hero.landSlot)) n++; return n; }
+function equipTech(id) { if (!techUnlocked(id) || S.hero.loadout.includes(id) || S.hero.loadout.length >= techSlots()) return false; S.hero.loadout.push(id); return true; }
+function unequipTech(id) { if (!S.hero.loadout.includes(id)) return false; S.hero.loadout = S.hero.loadout.filter(x => x !== id); delete S.hero.cds[id]; return true; }
+function migrateSkills() { // 0.9.5: the old Combat tree → Paths (points refunded) + Techniques (tree rank → mastery level)
+  const h = S.hero; h.paths = h.paths || {}; h.techs = h.techs || {}; h.stars = h.stars || {};
+  for (const k in (h.bossesKilled || {})) h.stars[k] = true;
+  const old = h.tree && h.tree.combat;
+  if (old) {
+    const map = { strike: 'strike', cleave: 'cleave', warcry: 'warcry', execute: 'execute', focus: 'focus', wind: 'wind' };
+    for (const nid in map) { const r = old[nid] || 0; if (r >= 1) { const st = techState(map[nid]); st.open = true; let x = 0; for (let l = 1; l < r; l++) x += masteryNeed(l); st.xp = Math.max(st.xp || 0, x); } }
+    delete h.tree.combat;
+  }
+  const slots = techSlots(); h.loadout = (h.loadout || []).filter((id, i, a) => skillDef(id) && techUnlocked(id) && a.indexOf(id) === i).slice(0, slots);
+  checkTechUnlocks();
 }
 // Legacy shims so old code paths keep working
 function attrPointsFree() { return 0; } function spendAttr() { return false; } function spendTalent() { return false; } function talentAvailable() { return false; }
 
 // ---------- Skills ----------
 function skillDef(id) { return CONFIG.skills.find(s => s.id === id); }
-function skillUnlocked(id) { return CONFIG.trees.combat.some(n => n.tech === id && nodeRank('combat', n.id) >= 1); }
-function skillPower(id) { const d = skillDef(id); return d.power + d.powerPerLevel * (S.hero.skillLv[id] || 0); }
-function skillCd(id) { return skillDef(id).cd * (1 - stats().cdr); }
+function skillUnlocked(id) { return techUnlocked(id); }
+function skillPower(id) { const d = skillDef(id); return (d.power + d.powerPerLevel * (masteryLevel(id) - 1)) * (1 + techMods(id).power); }
+function skillCdBase(id) { return skillDef(id).cd * (1 + techMods(id).cd); }
+function skillCd(id) { return skillCdBase(id) * (1 - stats().cdr); }
+function skillDur(id) { const d = skillDef(id); return (d.dur || 0) * (1 + techMods(id).dur); }
 function skillReady(id) { return (S.hero.cds[id] || 0) <= 0; }
 function castSkill(id, manual = false) {
   if (!S.hero.loadout.includes(id) || !skillReady(id) || S.hero.resting) return false;
-  const d = skillDef(id), st = stats(), h = S.hero;
+  const d = skillDef(id), st = stats(), h = S.hero, md = techMods(id);
   const bonus = manual ? H.manualCastBonus : 1, p = skillPower(id) * st.skillPower * bonus;
-  const bossMult = isBoss() ? st.bossDmg : 1;
+  const bossMult = isBoss() ? st.bossDmg * (1 + md.boss) : 1;
+  const strike = dm => { hitEnemy(dm); pushEvent({ who: 'hero', dmg: dm, skill: d.name }); if (md.leech) h.hp = Math.min(st.maxHp, h.hp + dm * md.leech); if (md.twin) { const d2 = dm * md.twin; hitEnemy(d2); pushEvent({ who: 'hero', dmg: d2, skill: d.name }); } };
   switch (d.type) {
-    case 'damage': hitEnemy(st.attack * p * bossMult); pushEvent({ who: 'hero', dmg: st.attack * p * bossMult, skill: d.name }); break;
-    case 'execute': { const dm = st.attack * p * bossMult * (isBoss() ? 3 : 1); hitEnemy(dm); pushEvent({ who: 'hero', dmg: dm, skill: d.name }); break; }
-    case 'cleave': hitEnemy(st.attack * p * bossMult); h.carry += st.attack * p; pushEvent({ who: 'hero', dmg: st.attack * p * bossMult, skill: d.name }); break;
+    case 'damage': strike(st.attack * p * bossMult); break;
+    case 'execute': strike(st.attack * p * bossMult * (isBoss() ? 3 : 1)); break;
+    case 'cleave': strike(st.attack * p * bossMult); h.carry += st.attack * p; break;
+    case 'charge': strike(st.attack * p * bossMult * (1 + (S.kingdom ? marching() : 0) / 100)); break;
     case 'heal': h.hp = Math.min(st.maxHp, h.hp + st.maxHp * p); pushEvent({ who: 'heal', dmg: st.maxHp * p, skill: d.name }); break;
-    case 'buff': h.buffs[d.stat] = { value: p, until: h.time + d.dur }; break;
+    case 'buff': h.buffs[d.stat] = { value: p, until: h.time + skillDur(id) }; break;
   }
   h.cds[id] = skillCd(id);
+  gainMastery(id, d.cd);
   S.stats.casts = S.stats.casts || {}; S.stats.casts[id] = (S.stats.casts[id] || 0) + 1;
   if (manual) { S.stats.focused = (S.stats.focused || 0) + 1; log(`Focused ${d.name}!`); }
   return true;
@@ -221,16 +283,17 @@ function sustainedSkillMods() {
   const o = {}, w = CONFIG.offlineSkillWeight, sp = 1; // skillPower applied later in stats; keep simple
   for (const id of S.hero.loadout) {
     const d = skillDef(id); if (d.type !== 'buff') continue;
-    const cd = d.cd * (1 - Math.min(CONFIG.cdrCap, rawMods().cdr || 0));
-    o[d.stat] = (o[d.stat] || 0) + skillPower(id) * Math.min(1, d.dur / cd) * w;
+    const cd = skillCdBase(id) * (1 - Math.min(CONFIG.cdrCap, rawMods().cdr || 0));
+    o[d.stat] = (o[d.stat] || 0) + skillPower(id) * Math.min(1, skillDur(id) / cd) * w;
   }
   return o;
 }
 function sustainedSkillDps(st) { // extra dps from damage skills + heal as regen
   let dps = 0, heal = 0; const w = CONFIG.offlineSkillWeight;
   for (const id of S.hero.loadout) {
-    const d = skillDef(id), cd = d.cd * (1 - st.cdr), p = skillPower(id) * st.skillPower;
+    const d = skillDef(id), cd = skillCdBase(id) * (1 - st.cdr), md = techMods(id), p = skillPower(id) * st.skillPower * (1 + md.twin);
     if (d.type === 'damage' || d.type === 'execute') dps += st.attack * p / cd * w;
+    if (d.type === 'charge') dps += st.attack * p * (1 + (S.kingdom ? marching() : 0) / 100) / cd * w;
     if (d.type === 'cleave') dps += st.attack * p * 2 / cd * w;
     if (d.type === 'heal') heal += st.maxHp * p / cd * w;
   }
@@ -241,7 +304,7 @@ function sustainedSkillDps(st) { // extra dps from damage skills + heal as regen
 function rawMods() { // attributes + talents only
   const m = {}; const add = (k, v) => m[k] = (m[k] || 0) + v;
   const hp = heroPath(), kp = kingdomPath();
-  const tm = treeMods('combat'); for (const e in tm) add(e, tm[e]);
+  const tm = pathMods(); for (const e in tm) add(e, tm[e]);
   if (hp) for (const e in hp.mods) add(e, hp.mods[e]);
   if (kp && kp.mods) for (const e in kp.mods) add(e, kp.mods[e]);
   const bl = perkRank('bloodline') * 0.05; if (bl) { add('attackPct', bl); add('hpPct', bl); add('regenPct', bl); }
@@ -274,7 +337,7 @@ function stats(mode = 'live') {
   st.bossDmg = 1 + (m.bossDmg || 0);
   st.restSpeed = H.restMult * (1 + (m.restSpeed || 0));
   if (mode === 'sustained') { const s = sustainedSkillDps(st); st.dps += s.dps; st.regen += s.heal; }
-  { const am = S.kingdom ? armyMult() : 1, lap = S.kingdom && lapActive() ? LC().victoryLap + perkRank('lap') : 1, hm = S.kingdom ? armyHpMult() : 1; st.army = am; st.lap = lap; st.gearAttack = st.attack; st.attack *= am * lap; st.dps *= am * lap; st.maxHp *= hm; st.regen *= hm; }
+  { const am = S.kingdom ? 1 + (armyMult() - 1) * (1 + (m.armyPct || 0)) : 1, lap = S.kingdom && lapActive() ? LC().victoryLap + perkRank('lap') : 1, hm = S.kingdom ? armyHpMult() : 1; st.army = am; st.lap = lap; st.gearAttack = st.attack; st.attack *= am * lap; st.dps *= am * lap; st.maxHp *= hm; st.regen *= hm; }
   return st;
 }
 function effectiveEnemyDps(st, stage = S.hero.stage) {
@@ -660,6 +723,7 @@ function questCheck(c) {
   if (c.harvested) { const n = (S.stats.harvested && S.stats.harvested[c.harvested]) || 0; return { done: n >= c.need, have: n, need: c.need }; }
   if (c.perk) return { done: perkRank(c.perk) >= (c.need || 1), have: perkRank(c.perk), need: c.need || 1 };
   if (c.disc) return { done: discLevel(c.disc) >= c.need, have: discLevel(c.disc), need: c.need };
+  if (c.path) { const r = pathRank(c.path); return { done: r >= c.need, have: r, need: c.need }; }
   if (c.node) { const [d, id] = c.node.split(':'), r = nodeRank(d, id); return { done: r >= c.need, have: r, need: c.need }; }
   if (c.casts) { const n = (S.stats.casts && S.stats.casts[c.casts]) || 0; return { done: n >= c.need, have: n, need: c.need }; }
   if (c.focused) return { done: (S.stats.focused || 0) >= c.focused, have: S.stats.focused || 0, need: c.focused };
@@ -776,7 +840,7 @@ function onKill(st) {
   S.hero.kills++; S.hero.totalKills++;
   if (!S.hero.gear.weapon) { const b = fistLevel(); S.hero.fistKills = (S.hero.fistKills || 0) + 1; if (fistLevel() > b) { log(`Your fists harden: ${slotValue('weapon').toFixed(1)} damage`); pushEvent({ who: 'craft', name: 'Fists ' + slotValue('weapon').toFixed(1) }); } }
   { const key = typeKey(s); S.legacy.kills = S.legacy.kills || {}; const before = trophyTier(key), bt = bestiaryTier(key); S.legacy.kills[key] = (S.legacy.kills[key] || 0) + 1; const after = trophyTier(key); if (after > before) { log(`Trophy earned: ${CONFIG.trophies.tiers[after].name} ${enemyType(s).name} head!`); pushEvent({ who: 'trophy', key, tier: after }); } if (bestiaryTier(key) > bt) log(`Bestiary: ${enemyType(s).plural} — ${CONFIG.bestiary.tiers[bestiaryTier(key)].name}`); }
-  if (isBoss(s)) { const bk = S.hero.ground + ':' + s; if (!S.hero.bossesKilled[bk]) { S.hero.bossesKilled[bk] = true; if (LN && s === ground().stages) onRulerSlain(LN); const u = enemyType(s).unique; if (u && CONFIG.resources[u]) { add(u, 1); pushEvent({ who: 'loot', loot: { [u]: 1 }, unique: true }); } log(`Defeated ${enemyName(s)}! +1 talent point${u ? ', ' + CONFIG.resources[u].name : ''}`); } else { const u = enemyType(s).unique; if (u && S.legacy.foundings === 0 && CONFIG.legacy.tribute[u] && !(S.res[u] >= 1)) { add(u, 1); pushEvent({ who: 'loot', loot: { [u]: 1 }, unique: true }); } log(`Defeated ${enemyName(s)}!`); } }
+  if (isBoss(s)) { const bk = S.hero.ground + ':' + s; if (!S.hero.bossesKilled[bk]) { S.hero.bossesKilled[bk] = true; S.hero.stars = S.hero.stars || {}; const newStar = !S.hero.stars[bk]; S.hero.stars[bk] = true; if (LN && s === ground().stages) onRulerSlain(LN); const u = enemyType(s).unique; if (u && CONFIG.resources[u]) { add(u, 1); pushEvent({ who: 'loot', loot: { [u]: 1 }, unique: true }); } log(`Defeated ${enemyName(s)}!${newStar ? ' +1 ★' : ''}${u ? ' +' + CONFIG.resources[u].name : ''}`); } else { const u = enemyType(s).unique; if (u && S.legacy.foundings === 0 && CONFIG.legacy.tribute[u] && !(S.res[u] >= 1)) { add(u, 1); pushEvent({ who: 'loot', loot: { [u]: 1 }, unique: true }); } log(`Defeated ${enemyName(s)}!`); } }
   if (CONFIG.automation.autoAdvance && canAdvance()) advance();
 }
 function gainXp(x) {
@@ -803,6 +867,7 @@ function heroStrike(st) {
 function simulate(dt) {
   tickKingdom(dt); tickArmy(dt); tickTaxes(dt); tickCraft(dt); tickResearch(dt);
   const h = S.hero; h.time += dt;
+  if ((h._tu = (h._tu || 0) + dt) >= 1) { h._tu = 0; checkTechUnlocks(); }
   if (!heroFighting()) { const st0 = stats(); h.hp = Math.min(st0.maxHp, h.hp + st0.regen * dt); tickHarvest(dt); return; }
   for (const id in h.cds) if (h.cds[id] > 0) h.cds[id] -= dt;
   const st = stats();
@@ -861,6 +926,7 @@ function claimOffline(data, mult = 1) {
   for (const n in (data.tax || {})) { const t = data.tax[n] * mult; if (perkRank('autocollect')) add('gold', t); else { const L = landState(+n); L.coffer = Math.min(cofferCap(+n), (L.coffer || 0) + t); } }
   gainXp(data.kills * H.xpPerKill * CONFIG.stages.xpPerKill(S.hero.stage) * stats('sustained').xp * mult);
   S.hero.totalKills += data.kills * mult;
+  if (data.kills > 0) for (const id of S.hero.loadout) gainMastery(id, data.counted * CONFIG.offlineSkillWeight * mult, true);
 }
 
 // ---------- Founding (prestige) ----------
@@ -1070,9 +1136,9 @@ function load() {
     // Migration: saves that reached the kingdom quests before the kingdom moved behind the first founding get that founding for free
     ensureThralls();
     // Techniques come from the Combat tree now: rebuild loadout / levels from ranks (migrates old Skills-tab saves)
-    S.hero.tree = S.hero.tree || {}; S.hero.dxp = S.hero.dxp || {}; S.hero.loadout = []; for (const s of CONFIG.skills) S.hero.skillLv[s.id] = 0;
-    for (const n of CONFIG.trees.combat) if (n.tech && nodeRank('combat', n.id) >= 1) { S.hero.skillLv[n.tech] = nodeRank('combat', n.id) - 1; S.hero.loadout.push(n.tech); }
+    S.hero.tree = S.hero.tree || {}; S.hero.dxp = S.hero.dxp || {};
     if (!S.hero.dxp.combat && S.hero.level > 1) { let x = 0; for (let l = 1; l < S.hero.level; l++) x += CONFIG.discXpToLevel(l); S.hero.dxp.combat = x; } // old save: seed Combat from hero level
+    migrateSkills();
     return S;
   } catch (e) { return null; }
 }
@@ -1129,7 +1195,7 @@ window.Game = {
   phase, canProclaim, proclaim,
   stockMode, setStockMode, stockTarget, stockDemand, STOCK_MODES,
   get S() { return S; }, saveString, saveMeta, restoreString, setSaveHook: f => { saveHook = f; }, SAVE_KEY, fmt, pct, fmtTime, drainEvents: () => EVENTS.splice(0), afkEfficiency: () => afkEff(),
-  discXp, discLevel, discProgress, treeNode, nodeRank, nodeMax, nodeOpen, treePointsTotal, treePointsSpent, treePointsFree, canRankNode, rankNode, nodeQuestLocked, treeMods,
+  discXp, discLevel, discProgress, pathNodes, pathNode, pathRank, pathOpen, pathNeedsStar, pathPointsTotal, pathPointsSpent, pathPointsFree, pathPointsMax, starsTotal, starsSpent, starsFree, canRankPath, rankPath, pathMods, resetPaths, techUnlocked, techUnlockMet, techUnlockLabel, masteryProgress, masteryLevel, techMod, techMods, chooseMod, modPending, techSlots, equipTech, unequipTech, skillDur, skillCdBase, checkTechUnlocks, treeNode, nodeRank, nodeMax, nodeOpen, treePointsTotal, treePointsSpent, treePointsFree, canRankNode, rankNode, nodeQuestLocked, treeMods,
   fistLevel, slotValue, enemyHit, crafting, maxUpgradePlan, upgradeMax, stats, gearStats, itemStatPreview, gearCraftCost, gearUpgradeCost, canTierUp, craftGear, upgradeGear,
   talentPointsFree, talentPointsTotal, talentPointsSpent, respec, respecCost,
   skillDef, skillUnlocked, skillPower, skillCd, skillReady, castSkill, activeBuffs,

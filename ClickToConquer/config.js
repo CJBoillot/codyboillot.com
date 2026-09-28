@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Alpha 0.9.4',
+  version: 'Alpha 0.9.5',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -198,24 +198,6 @@ const CONFIG = {
   discXpPerSwing: 1,
   treeRanks: 10,
   trees: {
-    combat: [
-      { id: 'power',     name: 'Power',       icon: [1,4],  row: 0, per: { attackPct: 0.05 },  desc: '+5% attack per rank' },
-      { id: 'haste',     name: 'Haste',       icon: [2,6],  row: 0, per: { speedPct: 0.03 },   desc: '+3% attack speed per rank' },
-      { id: 'precision', name: 'Precision',   icon: [0,8],  row: 0, per: { crit: 0.01 },       desc: '+1% crit chance per rank' },
-      { id: 'toughness', name: 'Toughness',   icon: [1,0],  row: 0, per: { hpPct: 0.05 },      desc: '+5% max HP per rank' },
-      { id: 'strike',    name: 'Power Strike',icon: [3,0],  row: 1, parent: 'power',     tech: 'strike', quest: 'q13c',  desc: 'Technique. Rank 1 unlocks it; each rank hits harder' },
-      { id: 'cleave',    name: 'Cleave',      icon: [3,2],  row: 1, parent: 'haste',     tech: 'cleave',  desc: 'Technique. Damage carries to the next enemy' },
-      { id: 'plunderer', name: 'Plunderer',   icon: [11,11],row: 1, parent: 'precision', per: { dropPct: 0.03 }, desc: '+3% loot per rank' },
-      { id: 'vigor',     name: 'Vigor',       icon: [1,1],  row: 1, parent: 'toughness', per: { regenPct: 0.08 }, desc: '+8% HP regen per rank' },
-      { id: 'warcry',    name: 'War Cry',     icon: [3,6],  row: 2, parent: 'strike',    tech: 'warcry',  desc: 'Technique. Burst of attack' },
-      { id: 'execute',   name: 'Execute',     icon: [0,0],  row: 2, parent: 'cleave',    tech: 'execute', desc: 'Technique. Huge hit, ×3 vs bosses' },
-      { id: 'focus',     name: 'Focus',       icon: [3,10], row: 2, parent: 'plunderer', tech: 'focus',   desc: 'Technique. Burst of crit' },
-      { id: 'wind',      name: 'Second Wind', icon: [3,5],  row: 2, parent: 'vigor',     tech: 'wind',    desc: 'Technique. Heals in a fight' },
-      { id: 'berserker', name: 'Berserker',   icon: [3,12], row: 3, parent: 'warcry',    capstone: true, per: { attackPct: 0.30, speedPct: 0.15 }, desc: 'Capstone: +30% attack, +15% attack speed' },
-      { id: 'slayer',    name: 'Slayer',      icon: [5,9],  row: 3, parent: 'execute',   capstone: true, per: { bossDmg: 0.50 }, desc: 'Capstone: +50% damage to bosses' },
-      { id: 'hunter',    name: 'Hunter',      icon: [6,3],  row: 3, parent: 'focus',     capstone: true, per: { dropPct: 0.30, xpPct: 0.20 }, desc: 'Capstone: +30% loot, +20% XP' },
-      { id: 'juggernaut',name: 'Juggernaut',  icon: [6,1],  row: 3, parent: 'wind',      capstone: true, per: { dr: 0.15, hpPct: 0.25 }, desc: 'Capstone: −15% damage taken, +25% HP' },
-    ],
     wood: [
       { id: 'swing',   name: 'Swift Axe',   icon: [10,1], row: 0, per: { harvestSpeed: 0.05 },  desc: '+5% chop speed per rank' },
       { id: 'yield',   name: 'Heavy Hand',  icon: [17,0], row: 0, per: { harvestYield: 0.05 },  desc: '+5% wood per swing per rank' },
@@ -239,26 +221,59 @@ const CONFIG = {
     ],
   },
 
+  // ---------- Paths of War (passive). 3 branches × 13 nodes, every node has 10 ranks. Never reset (kept through Pass the Crown). ----------
+  // Points: 1 per Combat level. ★ tokens: 1 per boss ever slain (first kill of each boss stage) + quest rewards.
+  // A node opens when a connected node one tier closer to the centre is maxed (10/10). Notables and keystones cost 1 point + 1 ★ per rank.
+  paths: {
+    ranks: 10,
+    branches: [ { id: 'M', name: 'Might', desc: 'attack · crit · bosses', color: '#d9604c' }, { id: 'G', name: 'Guard', desc: 'HP · armor · healing', color: '#6fa3d9' }, { id: 'C', name: 'Command', desc: 'army · gold · loot', color: '#7fd28f' } ],
+    plan: [[1],[0,2],[0,1,2],[1],[0,2],[0,1,2],[1]], // tier → column positions (0..2) in each branch
+    nodes: {
+      M: [ ['Sharpened Edge', { attackPct: 0.04 }], ['Quick Hands', { speedPct: 0.015 }], ['Keen Eye', { crit: 0.004 }], ['Heavy Blows', { attackPct: 0.04 }], ['Brutality', { critDmg: 0.04 }], ['Giant Slayer', { bossDmg: 0.04 }],
+           ['Headhunter', { bossDmg: 0.05, attackPct: 0.01 }, 'notable'], ['Fury', { speedPct: 0.015 }], ['Deadly Aim', { crit: 0.004 }], ['Weapon Master', { attackPct: 0.04 }], ['Savagery', { critDmg: 0.04 }], ["Tyrant's Bane", { bossDmg: 0.04 }],
+           ['Berserker', { attackPct: 0.05, hpPct: -0.02 }, 'key'] ],
+      G: [ ['Thick Skin', { hpPct: 0.05 }], ['Second Breath', { regenPct: 0.05 }], ['Iron Hide', { dr: 0.005 }], ['Stout Heart', { hpPct: 0.04 }], ['Field Rations', { restSpeed: 0.05 }], ['Hardened', { dr: 0.005 }],
+           ['Bulwark', { hpPct: 0.05, dr: 0.005 }, 'notable'], ['Vigor', { regenPct: 0.05 }], ['Endurance', { hpPct: 0.04 }], ['Stone Skin', { dr: 0.005 }], ['Troll Blood', { regenPct: 0.05 }], ['Colossus', { hpPct: 0.04 }],
+           ['Unbreakable', { hpPct: 0.06, dr: 0.01, speedPct: -0.01 }, 'key'] ],
+      C: [ ['Plunderer', { goldPct: 0.03 }], ['Scavenger', { dropPct: 0.03 }], ['Tactics', { skillPct: 0.03 }], ['Drillmaster', { armyPct: 0.03 }], ["Veteran's Lessons", { xpPct: 0.02 }], ['Quick Study', { cdr: 0.004 }],
+           ['Warlord', { armyPct: 0.05 }, 'notable'], ['Tax Man', { goldPct: 0.03 }], ['Battle Rhythm', { skillPct: 0.03 }], ['Banners', { armyPct: 0.03 }], ['Treasure Hunter', { dropPct: 0.03 }], ['Tactician', { cdr: 0.004 }],
+           ['Conqueror', { armyPct: 0.08, attackPct: -0.01 }, 'key'] ],
+    },
+  },
+
   // ---------- Bestiary & trophies (kill counts per enemy type; persist through founding) ----------
   // Bestiary: the more you kill a type, the better you fight it — bonus = ×damage dealt and −damage taken vs that type.
   bestiary: { tiers: [ { kills: 10, name: 'Familiar', bonus: 0.02 }, { kills: 50, name: 'Studied', bonus: 0.05 }, { kills: 200, name: 'Known', bonus: 0.10 }, { kills: 1000, name: 'Mastered', bonus: 0.15 } ] },
   // Trophies: mounted heads for kill milestones. Each trophy owned = +lootPerTrophy loot and XP, permanently.
   trophies: { lootPerTrophy: 0.01, tiers: [ { kills: 1000, name: 'Wood', color: '#8a6a3a' }, { kills: 2000, name: 'Stone', color: '#9a9a9a' }, { kills: 5000, name: 'Bronze', color: '#c08040' }, { kills: 10000, name: 'Silver', color: '#d8dce0' }, { kills: 25000, name: 'Gold', color: '#e8c06a' } ] },
 
-  // ---------- Techniques (auto-cast on cooldown). Unlocked and ranked through the Combat tree; rank r → level r−1 ----------
-  // Levels cost gold + meat: cost × levelMult^level. power grows +powerPerLevel per level.
+  // ---------- Techniques (active). Unlocked by milestones, levelled by use (mastery), never reset. ----------
+  // Mastery XP per cast = the technique's base cooldown (so every technique levels at about the same pace per minute of fighting).
+  // Lv N → N+1 costs masteryBase × masteryGrowth^(N−1). Lv 5 and Lv 10 each offer a choice of two mods (switch any time).
   skillSlots: 6,
-  skillLevelCost: { gold: 200, meat: 5 },
-  skillLevelMult: 1.4,
+  masteryBase: 120, masteryGrowth: 1.45,
+  techSlots: [ { combat: 1 }, { combat: 1 }, { combat: 20 }, { combat: 45 }, { land: 1 } ], // 2 to start, 3 at Combat 20, 4 at Combat 45, 5 once a land has been conquered
   skills: [
-    { id: 'strike', unlock: 12, icon: [3,0],  name: 'Power Strike', cd: 6,  type: 'damage', power: 3,    powerPerLevel: 0.3,  desc: 'Hit for {p}× attack' },
-    { id: 'cleave', unlock: 15, icon: [3,2],  name: 'Cleave',       cd: 12, type: 'cleave', power: 1.5,  powerPerLevel: 0.15, desc: 'Damage {p}× attack to this and next enemy' },
-    { id: 'warcry', unlock: 18, icon: [3,6],  name: 'War Cry',      cd: 20, type: 'buff', stat: 'attackPct', power: 0.3, powerPerLevel: 0.03, dur: 8, desc: '+{p%} attack for {d}s' },
-    { id: 'wind', unlock: 20, icon: [3,5],    name: 'Second Wind',  cd: 25, type: 'heal', power: 0.3,  powerPerLevel: 0.03, desc: 'Heal {p%} max HP' },
-    { id: 'focus', unlock: 24, icon: [3,10],   name: 'Focus',        cd: 20, type: 'buff', stat: 'crit', power: 0.25, powerPerLevel: 0.02, dur: 8, desc: '+{p%} crit for {d}s' },
-    { id: 'execute', unlock: 28, icon: [0,0], name: 'Execute',      cd: 15, type: 'execute', power: 5, powerPerLevel: 0.5, desc: 'Hit {p}× attack; ×3 vs bosses' },
-    { id: 'plunder', unlock: 32, icon: [11,11], name: 'Plunder',      cd: 30, type: 'buff', stat: 'dropPct', power: 0.5, powerPerLevel: 0.05, dur: 10, desc: '+{p%} drops for {d}s' },
-    { id: 'ironskin', unlock: 36, icon: [3,7],name: 'Iron Skin',    cd: 25, type: 'buff', stat: 'dr', power: 0.3, powerPerLevel: 0.02, dur: 8, desc: '−{p%} damage taken for {d}s' },
+    { id: 'strike',  icon: [3,0],  emoji: '🗡', name: 'Power Strike', cd: 6,  type: 'damage',  power: 3,   powerPerLevel: 0.3,  desc: 'Hit for {p}× attack', unlock: { combat: 5 },
+      mods: [ [ { id: 'rend', name: 'Rend', desc: '+30% power', power: 0.3 }, { id: 'stagger', name: 'Quick Hands', desc: '−20% cooldown', cd: -0.2 } ], [ { id: 'twin', name: 'Twin Strike', desc: 'hits twice (2nd at 50%)', twin: 0.5 }, { id: 'armorbreak', name: 'Armor Break', desc: '+60% vs bosses', boss: 0.6 } ] ] },
+    { id: 'cleave',  icon: [3,2],  emoji: '🌪', name: 'Cleave',       cd: 12, type: 'cleave',  power: 1.5, powerPerLevel: 0.15, desc: '{p}× attack to this and the next enemy', unlock: { combat: 15 },
+      mods: [ [ { id: 'wide', name: 'Wide Arc', desc: '+30% power', power: 0.3 }, { id: 'swift', name: 'Swift Arc', desc: '−20% cooldown', cd: -0.2 } ], [ { id: 'reap', name: 'Reaper', desc: 'heals 10% of damage dealt', leech: 0.1 }, { id: 'whirl', name: 'Whirlwind', desc: 'hits twice (2nd at 50%)', twin: 0.5 } ] ] },
+    { id: 'warcry',  icon: [3,6],  emoji: '📣', name: 'War Cry',      cd: 20, type: 'buff', stat: 'attackPct', power: 0.3, powerPerLevel: 0.03, dur: 8, desc: '+{p%} attack for {d}s', unlock: { combat: 22 },
+      mods: [ [ { id: 'hymn', name: 'Battle Hymn', desc: '+50% duration', dur: 0.5 }, { id: 'oath', name: 'Blood Oath', desc: '+40% power', power: 0.4 } ], [ { id: 'drums', name: 'War Drums', desc: '−25% cooldown', cd: -0.25 }, { id: 'rage', name: 'Rage', desc: '+50% power', power: 0.5 } ] ] },
+    { id: 'wind',    icon: [3,5],  emoji: '💚', name: 'Second Wind',  cd: 25, type: 'heal', power: 0.3, powerPerLevel: 0.03, desc: 'Heal {p%} max HP', unlock: { combat: 30 },
+      mods: [ [ { id: 'deep', name: 'Deep Breath', desc: '+30% healing', power: 0.3 }, { id: 'quick', name: 'Quick Recovery', desc: '−20% cooldown', cd: -0.2 } ], [ { id: 'renew', name: 'Renewal', desc: '−30% cooldown', cd: -0.3 }, { id: 'fortify', name: 'Fortify', desc: '+60% healing', power: 0.6 } ] ] },
+    { id: 'focus',   icon: [3,10], emoji: '🎯', name: 'Focus',        cd: 20, type: 'buff', stat: 'crit', power: 0.25, powerPerLevel: 0.02, dur: 8, desc: '+{p%} crit for {d}s', unlock: { combat: 38 },
+      mods: [ [ { id: 'steady', name: 'Steady Hand', desc: '+50% duration', dur: 0.5 }, { id: 'sharp', name: 'Sharp Eye', desc: '+30% power', power: 0.3 } ], [ { id: 'trance', name: 'Trance', desc: '−25% cooldown', cd: -0.25 }, { id: 'lethal', name: 'Lethal', desc: '+50% power', power: 0.5 } ] ] },
+    { id: 'shieldwall', icon: [3,7], emoji: '🛡', name: 'Shield Wall', cd: 30, type: 'buff', stat: 'dr', power: 0.35, powerPerLevel: 0.01, dur: 6, desc: '−{p%} damage taken for {d}s', unlock: { boss: 'crypts:10', label: 'Defeat the Bone Lord (Crypts 10)' },
+      mods: [ [ { id: 'hold', name: 'Hold the Line', desc: '+50% duration', dur: 0.5 }, { id: 'brace', name: 'Brace', desc: '−20% cooldown', cd: -0.2 } ], [ { id: 'phalanx', name: 'Phalanx', desc: '+100% duration', dur: 1 }, { id: 'tortoise', name: 'Tortoise', desc: '−30% cooldown', cd: -0.3 } ] ] },
+    { id: 'execute', icon: [0,0],  emoji: '💀', name: 'Execute',      cd: 15, type: 'execute', power: 5, powerPerLevel: 0.5, desc: 'Hit {p}× attack; ×3 vs bosses', unlock: { boss: 'crypts:20', label: 'Defeat the Crypts 20 boss' },
+      mods: [ [ { id: 'mercy', name: 'No Mercy', desc: '+30% power', power: 0.3 }, { id: 'swiftend', name: 'Swift End', desc: '−20% cooldown', cd: -0.2 } ], [ { id: 'kingslayer', name: 'Kingslayer', desc: '+100% vs bosses', boss: 1 }, { id: 'drain', name: 'Soul Drain', desc: 'heals 15% of damage dealt', leech: 0.15 } ] ] },
+    { id: 'ironskin', icon: [3,7], emoji: '🪨', name: 'Iron Skin',    cd: 25, type: 'buff', stat: 'dr', power: 0.3, powerPerLevel: 0.02, dur: 8, desc: '−{p%} damage taken for {d}s', unlock: { combat: 45 },
+      mods: [ [ { id: 'thick', name: 'Thick Hide', desc: '+50% duration', dur: 0.5 }, { id: 'hard', name: 'Hardened', desc: '+30% power', power: 0.3 } ], [ { id: 'stone', name: 'Living Stone', desc: '−25% cooldown', cd: -0.25 }, { id: 'granite', name: 'Granite', desc: '+100% duration', dur: 1 } ] ] },
+    { id: 'plunder', icon: [11,11], emoji: '💰', name: 'Plunder',     cd: 30, type: 'buff', stat: 'dropPct', power: 0.5, powerPerLevel: 0.05, dur: 10, desc: '+{p%} loot and gold for {d}s', unlock: { combat: 55 },
+      mods: [ [ { id: 'greed', name: 'Greed', desc: '+40% power', power: 0.4 }, { id: 'long', name: 'Long Haul', desc: '+50% duration', dur: 0.5 } ], [ { id: 'hoard', name: 'Hoarder', desc: '+60% power', power: 0.6 }, { id: 'raid', name: 'Raider', desc: '−30% cooldown', cd: -0.3 } ] ] },
+    { id: 'charge',  icon: [7,1],  emoji: '⚡', name: 'Charge',       cd: 18, type: 'charge', power: 2, powerPerLevel: 0.2, desc: '{p}× attack, +1× for every 100 soldiers marching', unlock: { proclaim: true, label: 'Proclaim the Kingdom' },
+      mods: [ [ { id: 'lances', name: 'Lances', desc: '+30% power', power: 0.3 }, { id: 'horns', name: 'Horns', desc: '−20% cooldown', cd: -0.2 } ], [ { id: 'trample', name: 'Trample', desc: 'hits twice (2nd at 50%)', twin: 0.5 }, { id: 'standard', name: 'Royal Standard', desc: '+60% vs bosses', boss: 0.6 } ] ] },
   ],
   // Offline: loadout modeled as flat multipliers (no cooldown sim). Fraction of uptime × average effect.
   offlineSkillWeight: 0.6,
@@ -306,7 +321,7 @@ const CONFIG = {
   },
   grounds: {
     // Each ground is a LINE of enemy types. A type has 10 stages; stage 10 is its boss. Pool: per-kill drop chance = base + growth × (stage−1), capped.
-    // Loot from earlier types carries over at its stage-10 chance. `unique` drops once, on the first boss kill (+1 talent point).
+    // Loot from earlier types carries over at its stage-10 chance. `unique` drops once, on the first boss kill (+1 ★).
     // dropTool: the drop needs that tool and scales with it. Tech gating (Skinning → hide, Butchery → meat, Grave Robbing → ingot) applies by resource.
     wilds:  { name: 'The Wilds',  icon: [17,8],  desc: 'Beasts. Hide and meat — no gold.',              goldMult: 0, dropTool: { hide: 'knife', meat: 'cleaver' }, line: [
       { id: 'rat',   name: 'Rat',      plural: 'Rats',      boss: 'Rat King',    unique: 'ratkingtooth', pool: [{ k: 'hide', base: 0.10, growth: 0.05 }, { k: 'rattail', base: 0.00, growth: 0.03 }] },
@@ -435,6 +450,7 @@ const CONFIG = {
     { id: 'smith',     cat: 'craft',   name: 'Blacksmith',  icon: [4,4],  buildCost: { gold: 200, stone: 40, wood: 40 },   job: { time: 10, inputs: { ore: 5 },             outputs: { ingot: 1 } } },
     { id: 'tannery',   cat: 'craft',   name: 'Tannery',     icon: [8,2],  buildCost: { wood: 40, stone: 20, hide: 10 },              job: { time: 10, inputs: { hide: 3 },            outputs: { leather: 1 } } },
     { id: 'weaver',    cat: 'craft',   name: 'Weaver',      icon: [17,6], buildCost: { gold: 150, wood: 40 },              job: { time: 10, inputs: { wool: 3 },            outputs: { cloth: 1 } } },
+    ['0.9.5', 'New skills. Paths: a passive web of 39 nodes in three branches (Might, Guard, Command) — every node has 10 ranks, points come from Combat levels and ★ from bosses, and nothing ever resets. Techniques: ten active moves unlocked by milestones, levelled by using them, with a mod to choose at Lv 5 and Lv 10. Your old Combat tree points are refunded — spend them in Paths!'],
     // Artisan
     { id: 'sawmill',   cat: 'artisan', name: 'Sawmill',     icon: [19,11], buildCost: { gold: 400, wood: 100, ingot: 5 },  job: { time: 20, inputs: { wood: 5 },            outputs: { planks: 1 } } },
     ['0.8.3', 'After proclaiming: +10 thrall room for the Barracks crew, the quest card points at the army instead of the City checklist, and the City card reads Capital.'],
@@ -509,11 +525,11 @@ const CONFIG = {
         { label: 'Have 25 wood (Trees box)', check: { have: 'wood', need: 25 } },
         { label: 'Kingdom → Tech → Research Woodcraft', check: { tech: 'stonetools' } },
       ], reward: { wood: 40 }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:stonetools' } },
-    { id: 'q02b', name: 'Growing Stronger', text: 'Kills give Combat XP. Every Combat level grants a point for the Combat tree — the top row is open now; deeper nodes open when the one above is maxed. Unspent points show as a dot on the Skills tab.',
+    { id: 'q02b', name: 'Growing Stronger', text: 'Kills give Combat XP. Every Combat level grants a point for your Paths — the passive web on the Skills tab. Start at the centre; a node opens when the one before it is maxed. Paths are never reset, so every point is forever.',
       steps: [
         { label: 'Reach Combat level 2', check: { disc: 'combat', need: 2 } },
-        { label: 'Skills → Combat → put a point in Power', check: { node: 'combat:power', need: 1 } },
-      ], reward: { fiber: 15 }, focus: { tab: 'hero', sub: 'skills', rtab: 'skills', el: 'node:combat:power' } },
+        { label: 'Skills → Paths → put a point in Sharpened Edge', check: { path: 'M0', need: 1 } },
+      ], reward: { fiber: 15 }, focus: { tab: 'hero', sub: 'skills', rtab: 'skills', el: 'path:M0' } },
     { id: 'q03', name: 'An Axe of Your Own', text: 'You have wood enough for an axe, and the axe will cut the rest. Tools are the row under your armor on the Equipment panel — click a slot to make or upgrade it.',
       steps: [
         { label: 'Click the Axe slot on your Equipment → Make (Wooden)', check: { tool: 'axe' } },
@@ -551,7 +567,7 @@ const CONFIG = {
         { label: 'Kingdom → Tech → Research Stone Weapons', check: { tech: 'stoneweapons' }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:stoneweapons' } },
         { label: 'Click the Weapon slot → Forge Stone', check: { gearTier: 'weapon', need: 1 }, focus: { tab: 'hero', sub: 'gear', el: 'gear:weapon' } },
       ], reward: { stone: 30 }, focus: { tab: 'hero', sub: 'gear', el: 'gear:weapon' } },
-    { id: 'q13', name: 'The First Boss', text: 'The tenth stage of every enemy is its boss. The first kill gives a talent point — spent on the gold capstone at the bottom of a tree — plus a trophy, and beating the Rat King opens the Roads, where bandits carry gold.',
+    { id: 'q13', name: 'The First Boss', text: 'The tenth stage of every enemy is its boss. The first kill gives a ★ boss token — spent on the big notables and keystones in your Paths — plus a trophy, and beating the Rat King opens the Roads, where bandits carry gold.',
       steps: [
         { label: 'Activity → Fight', check: { activity: 'fight' } },
         { label: 'Advance to stage 10', check: { stage: 10 } },
@@ -577,12 +593,12 @@ const CONFIG = {
         { label: 'Kingdom → Tech → Research Prospecting', check: { tech: 'prospecting' }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:prospecting' } },
         { label: 'Activity → Mine: dig 30 iron ore', check: { harvested: 'ore', need: 30 }, focus: { tab: 'hero', sub: 'fight', el: 'act:mine' } },
       ], reward: { ore: 20 } },
-    { id: 'q13c', name: 'A Second Blow', text: 'Max a top-row node and the one below it opens. Power Strike is a technique: rank 1 unlocks it and it fires on its own whenever it is off cooldown.',
+    { id: 'q13c', name: 'A Second Blow', text: 'Paths are slow and permanent: max a node and the ones past it open. Techniques are your active moves — Power Strike is unlocked. Equip it and it fires by itself; tap it in a fight for a harder hit.',
       steps: [
-        { label: 'Combat tree → Power 10/10', check: { node: 'combat:power', need: 10 } },
-        { label: 'Combat tree → Power Strike rank 1', check: { node: 'combat:strike', need: 1 } },
+        { label: 'Paths → Sharpened Edge 10/10', check: { path: 'M0', need: 10 }, focus: { tab: 'hero', sub: 'skills', rtab: 'skills', el: 'path:M0' } },
+        { label: 'Techniques → equip Power Strike', check: { skillEquipped: 'strike' }, focus: { tab: 'hero', sub: 'skills', rtab: 'skills', el: 'technique:strike' } },
         { label: 'Use Power Strike 5 times', check: { casts: 'strike', need: 5 } },
-      ], reward: { gold: 80 }, focus: { tab: 'hero', sub: 'skills', rtab: 'skills', el: 'node:combat:strike' } },
+      ], reward: { gold: 80 }, focus: { tab: 'hero', sub: 'skills', rtab: 'skills', el: 'technique:strike' } },
     { id: 'q13d', name: 'Armor Up', text: 'The dead hit harder than rats. Nobody walks into the Crypts in rags: take every piece of armor to Leather. Max a Fiber piece to Lv 9 and the Forge button turns it into Leather.',
       steps: [
         { label: 'Gear → Helm → make it, max Fiber to Lv 9, forge Leather', check: { gearTier: 'helm', need: 1 }, focus: { tab: 'hero', sub: 'gear', el: 'gear:helm' } },
@@ -739,7 +755,7 @@ const CONFIG = {
     trees: [ { id: 'bloodline', name: 'Bloodline', desc: 'The hero' }, { id: 'crown', name: 'Crown', desc: 'The city' }, { id: 'war', name: 'War', desc: 'The army' }, { id: 'realm', name: 'Realm', desc: 'The conquest' } ],
     perks: [
       { id: 'bloodline', tree: 'bloodline', name: 'Bloodline',       icon: [1,0],  max: 10, cost: 3,  costMult: 1.5, desc: '+5% attack, HP and healing per rank' },
-      { id: 'veteran',   tree: 'bloodline', name: 'Veteran',         icon: [1,4],  max: 3,  cost: 8,  costMult: 2,   desc: '+3 Combat tree points per rank' },
+      { id: 'veteran',   tree: 'bloodline', name: 'Veteran',         icon: [1,4],  max: 3,  cost: 8,  costMult: 2,   desc: '+3 Path points per rank' },
       { id: 'heirloom',  tree: 'bloodline', name: 'Heirloom Arms',   icon: [5,1],  max: 3,  cost: 10, costMult: 2.2, desc: 'A new dynasty starts with gear one tier better per rank (Wooden → Stone → Iron)' },
       { id: 'oldblade',  tree: 'bloodline', name: 'Old Blade',       icon: [5,1],  max: 1,  cost: 20, costMult: 1,   desc: 'Keep your weapon when you pass the crown' },
       { id: 'cache',     tree: 'crown',     name: "Founder's Cache", icon: [11,11], max: 5, cost: 4,  costMult: 1.6, desc: 'Begin each dynasty with 1,000 gold per rank' },

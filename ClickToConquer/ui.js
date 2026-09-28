@@ -59,7 +59,9 @@ const UI = (() => {
     $('advance-btn').addEventListener('click', () => Game.advance());
     $('mini-advance').addEventListener('click', () => Game.advance());
     $('retreat-btn').addEventListener('click', () => Game.retreat());
-    $('respec-btn').addEventListener('click', () => ask('Respec', 'Reset all tree points across every discipline? Capstones are kept. Costs ' + Game.fmt(Game.respecCost()) + ' gold.', 'Respec', () => Game.respec()));
+    $('respec-btn').addEventListener('click', () => ask('Respec', 'Reset the points in Logging, Mining and Foraging? Capstones are kept. Costs ' + Game.fmt(Game.respecCost()) + ' gold.', 'Respec', () => Game.respec()));
+    $('path-reset').addEventListener('click', () => ask('Reset Paths', 'Take every point back out of your Paths so you can spend them again? Costs ' + Game.fmt(Game.respecCost()) + ' gold.', 'Reset', () => Game.resetPaths()));
+    document.querySelectorAll('#skill-seg [data-sk]').forEach(b => b.addEventListener('click', () => setSkillView(b.dataset.sk)));
     $('wb-claim').addEventListener('click', () => claimWelcome(1));
     $('wb-ad').disabled = true; $('wb-ad').innerHTML = '▶ Watch ad ×2 <span class="small dim">· coming soon</span>';
     $('dev-toggle').addEventListener('click', () => $('dev-panel').classList.toggle('hidden'));
@@ -207,7 +209,7 @@ const UI = (() => {
       row.querySelector('[data-f=forge]').addEventListener('click', () => { if (Game.craftTool(slot)) flash(row); });
       rows.tool[slot] = row; tl.appendChild(row);
     }
-    buildDiscBar();
+    buildDiscBar(); buildPaths(); buildTechs(); setSkillView(skView);
     const pl = $('perk-list'); pl.innerHTML = ''; rows.perk = {};
     const treeBox = {}; for (const t of CONFIG.legacy.trees) { const hd = el('div', 'perk-tree-head', `<b>${t.name}</b> <span class="dim small">· ${t.desc}</span>`); pl.appendChild(hd); treeBox[t.id] = el('div', 'list perk-tree'); pl.appendChild(treeBox[t.id]); }
     for (const p of CONFIG.legacy.perks) {
@@ -334,7 +336,9 @@ const UI = (() => {
       else if (kind === 'market') add($('market-list'));
       else if (kind === 'ground') { add(rows.ground[id]); add(rows.act.fight); }
       else if (kind === 'perk') add(rows.perk[id]);
-      else if (kind === 'node') { const [d, nid] = id.split(':'); if (curDisc !== d) { curDisc = d; buildTree(); } add(rows.node[nid]); add(rows.disc[d]); }
+      else if (kind === 'path') { if (skView !== 'paths') setSkillView('paths'); add(pathEls[id] && pathEls[id].g); add(document.querySelector('#skill-seg [data-sk=paths]')); }
+      else if (kind === 'technique') { if (skView !== 'tech') setSkillView('tech'); add(techEls[id] && techEls[id].card); add(document.querySelector('#skill-seg [data-sk=tech]')); }
+      else if (kind === 'node') { if (skView !== 'gather') setSkillView('gather'); const [d, nid] = id.split(':'); if (curDisc !== d) { curDisc = d; buildTree(); } add(rows.node[nid]); add(rows.disc[d]); }
       else if (kind === 'hand') add(rows.hand[id]);
     }
   }
@@ -737,11 +741,124 @@ const UI = (() => {
     forge.style.removeProperty('--p'); return false;
   }
 
-  // ---- Skill trees ----
-  let curDisc = 'combat'; rows.disc = {}; rows.node = {}; let treeKey = '';
+
+  // ---- Skills: Techniques (active) · Paths (passive) · Gathering ----
+  let skView = 'tech', pathSel = null; const pathEls = {}, techEls = {};
+  function setSkillView(v) { skView = v; document.querySelectorAll('#skill-seg [data-sk]').forEach(b => b.classList.toggle('active', b.dataset.sk === v)); for (const k of ['tech', 'paths', 'gather']) $('sk-' + k).classList.toggle('hidden', k !== v); try { glowKey = ''; } catch (e) {} if (typeof render === 'function') try { render(true); } catch (e) {} }
+  const MOD_LABEL = { attackPct: 'attack', speedPct: 'attack speed', crit: 'crit chance', critDmg: 'crit damage', bossDmg: 'damage to bosses', hpPct: 'max HP', regenPct: 'HP regen', dr: 'damage taken', restSpeed: 'resting speed', goldPct: 'gold', dropPct: 'loot', skillPct: 'technique power', armyPct: 'army bonus', xpPct: 'XP', cdr: 'cooldowns' };
+  const LESS_IS_GOOD = { dr: 1, cdr: 1 };
+  function fmtMod(k, v) { const n = Math.round(Math.abs(v) * 1000) / 10, good = v >= 0; const sign = LESS_IS_GOOD[k] ? (good ? '−' : '+') : (good ? '+' : '−'); return `${sign}${n}% ${MOD_LABEL[k] || k}`; }
+  function fmtMods(m) { return Object.entries(m).filter(([, v]) => v).map(([k, v]) => fmtMod(k, v)).join(' · '); }
+  const PCOL = { M: [20, 61, 102], G: [143, 184, 225], C: [266, 307, 348] }, PY = t => 486 - t * 72, ROOT = { x: 184, y: 530 }, NS = 'http://www.w3.org/2000/svg';
+  const svgEl = (tag, attrs, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
+  function buildPaths() {
+    const svg = $('path-web'); svg.innerHTML = ''; const nodes = Game.pathNodes(), col = {}; for (const b of CONFIG.paths.branches) col[b.id] = b.color;
+    setHtml($('path-heads'), CONFIG.paths.branches.map(b => `<div><b style="color:${b.color}">${b.name}</b><span>${b.desc}</span></div>`).join(''));
+    const defs = svgEl('defs', {}, svg); const rg = svgEl('radialGradient', { id: 'pglow' }, defs); svgEl('stop', { offset: '0', 'stop-color': '#e8c06a', 'stop-opacity': '.55' }, rg); svgEl('stop', { offset: '1', 'stop-color': '#e8c06a', 'stop-opacity': '0' }, rg);
+    const edgeG = svgEl('g', {}, svg), nodeG = svgEl('g', {}, svg);
+    const pos = n => ({ x: PCOL[n.b][n.c], y: PY(n.t) });
+    for (const n of nodes) { pathEls[n.id] = { n, edges: [] }; const p = pos(n);
+      const froms = n.parents.length ? n.parents.map(id => ({ id, ...pos(Game.pathNode(id)) })) : [{ id: null, ...ROOT }];
+      for (const f of froms) pathEls[n.id].edges.push({ from: f.id, line: svgEl('line', { x1: f.x, y1: f.y, x2: p.x, y2: p.y, 'stroke-width': 2 }, edgeG) }); }
+    svgEl('circle', { cx: ROOT.x, cy: ROOT.y, r: 12, fill: '#1f1810', stroke: '#e8c06a', 'stroke-width': 2 }, nodeG); const rt = svgEl('text', { x: ROOT.x, y: ROOT.y + 4, 'text-anchor': 'middle', 'font-size': 11, fill: '#e8c06a' }, nodeG); rt.textContent = '⚔';
+    for (const n of nodes) {
+      const p = pos(n), R = n.kind === 'small' ? 11 : 14, g = svgEl('g', { class: 'pnode', tabindex: 0, role: 'button' }, nodeG), E = pathEls[n.id];
+      E.glow = svgEl('circle', { cx: p.x, cy: p.y, r: R + 9, fill: 'url(#pglow)' }, g);
+      E.arc = svgEl('circle', { cx: p.x, cy: p.y, r: R + 3.5, fill: 'none', stroke: col[n.b], 'stroke-width': 2.5, transform: `rotate(-90 ${p.x} ${p.y})` }, g); E.circ = 2 * Math.PI * (R + 3.5);
+      E.shape = n.kind === 'key' ? svgEl('rect', { x: p.x - R + 1, y: p.y - R + 1, width: 2 * R - 2, height: 2 * R - 2, rx: 3, transform: `rotate(45 ${p.x} ${p.y})` }, g) : svgEl('circle', { cx: p.x, cy: p.y, r: R }, g);
+      E.txt = svgEl('text', { x: p.x, y: p.y + 3.5, 'text-anchor': 'middle', 'font-size': n.kind === 'small' ? 10 : 11, 'font-weight': 700 }, g);
+      E.sel = svgEl('circle', { cx: p.x, cy: p.y, r: R + 7, fill: 'none', stroke: '#e8c06a', 'stroke-width': 1.5, 'stroke-dasharray': '3 3' }, g);
+      if (n.kind !== 'small') { const lb = svgEl('text', { x: p.x, y: p.y + R + (n.kind === 'key' ? 16 : 14), 'text-anchor': 'middle', 'font-size': 10, 'font-weight': 600, fill: '#ede4d3', stroke: '#120e0b', 'stroke-width': 3, 'paint-order': 'stroke' }, g); lb.textContent = n.name; }
+      svgEl('circle', { cx: p.x, cy: p.y, r: 20, fill: 'transparent' }, g);
+      const pick = () => { pathSel = n.id; render(true); }; g.addEventListener('click', pick); g.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } });
+      E.g = g;
+    }
+    const pop = $('path-pop'); pop.innerHTML = `<div class="row-between"><b class="pp-name" data-f="name"></b><span class="pp-tag" data-f="tag"></span></div>
+      <div class="small" data-f="now"></div><div class="small dim" data-f="each"></div>
+      <div class="bar pp-bar"><div data-f="bar"></div><span data-f="rank"></span></div>
+      <div class="small dim" data-f="cost"></div>
+      <div class="pp-btns"><button class="buy" data-f="one">+1 rank</button><button class="buy maxbtn" data-f="max">+Max</button></div>`;
+    pop.querySelector('[data-f=one]').addEventListener('click', () => { if (pathSel && Game.rankPath(pathSel, 1)) { flash(pop); render(true); } });
+    pop.querySelector('[data-f=max]').addEventListener('click', () => { if (pathSel && Game.rankPath(pathSel, CONFIG.paths.ranks)) { flash(pop); render(true); } });
+  }
+  function renderPaths() {
+    const S = Game.S, f = Game.fmt, nodes = Game.pathNodes(), RK = CONFIG.paths.ranks, col = {}; for (const b of CONFIG.paths.branches) col[b.id] = b.color;
+    const pr = Game.discProgress('combat'), free = Game.pathPointsFree(), sf = Game.starsFree();
+    setText($('path-lv'), `Combat Lv ${pr.level}`); setText($('path-free'), f(free)); setText($('path-spent'), f(Game.pathPointsSpent())); setText($('path-spent-of'), `spent of ${Game.pathPointsMax()}`);
+    setText($('path-stars'), `${sf} ★`); $('path-xpbar').style.width = (100 * pr.have / pr.need) + '%'; setText($('path-xptext'), `${f(pr.have)} / ${f(pr.need)} XP to next point`);
+    let anyCan = false; if (!pathSel || !Game.pathNode(pathSel)) pathSel = (nodes.find(n => Game.canRankPath(n.id)) || nodes[0]).id;
+    for (const n of nodes) {
+      const E = pathEls[n.id]; if (!E) continue; const r = Game.pathRank(n.id), open = Game.pathOpen(n.id), can = Game.canRankPath(n.id); if (can) anyCan = true;
+      E.shape.setAttribute('fill', r >= RK ? col[n.b] : r > 0 ? '#2a1f16' : '#15110e');
+      E.shape.setAttribute('stroke', r >= RK ? '#e8c06a' : can ? '#e8c06a' : open ? '#8a6a33' : '#4a3a2a'); E.shape.setAttribute('stroke-width', n.kind === 'small' ? 2 : 3);
+      E.arc.setAttribute('stroke-dasharray', `${E.circ * Math.min(1, r / RK)} ${E.circ}`); E.arc.style.display = r > 0 && r < RK ? '' : 'none';
+      E.txt.textContent = r > 0 ? (r >= RK ? '✓' : r) : n.kind === 'small' ? '' : '★'; E.txt.setAttribute('fill', r >= RK ? '#120e0b' : r > 0 ? col[n.b] : open ? '#e8c06a' : '#5d5245');
+      E.glow.style.display = can ? '' : 'none'; E.sel.style.display = pathSel === n.id ? '' : 'none'; E.g.classList.toggle('locked', !open);
+      for (const ed of E.edges) { const on = r > 0 && (!ed.from || Game.pathRank(ed.from) >= RK); ed.line.setAttribute('stroke', on ? '#c9973f' : '#3a2e24'); ed.line.setAttribute('stroke-width', on ? 3 : 2); }
+    }
+    const n = Game.pathNode(pathSel), pop = $('path-pop'), r = Game.pathRank(n.id), open = Game.pathOpen(n.id), br = CONFIG.paths.branches.find(b => b.id === n.b);
+    setText(pop.querySelector('[data-f=name]'), n.name); pop.querySelector('[data-f=name]').style.color = br.color;
+    setText(pop.querySelector('[data-f=tag]'), `${n.kind === 'key' ? 'Keystone' : n.kind === 'notable' ? 'Notable' : 'Path'} · ${br.name}`);
+    const now = {}; for (const k in n.per) now[k] = n.per[k] * r;
+    setText(pop.querySelector('[data-f=now]'), r ? 'Now: ' + fmtMods(now) : 'Not taken yet'); setText(pop.querySelector('[data-f=each]'), 'Each rank: ' + fmtMods(n.per));
+    pop.querySelector('[data-f=bar]').style.width = (100 * r / RK) + '%'; setText(pop.querySelector('[data-f=rank]'), `Rank ${r} / ${RK}`);
+    const par = n.parents.map(id => Game.pathNode(id).name);
+    setText(pop.querySelector('[data-f=cost]'), r >= RK ? 'Mastered.' : !open ? `Opens when ${par.join(' or ')} is ${RK}/${RK}.` : `Costs 1 point${n.kind !== 'small' ? ' + 1 ★' : ''} per rank · you have ${free} point${free === 1 ? '' : 's'}${n.kind !== 'small' ? ` and ${sf} ★` : ''}.`);
+    const can = Game.canRankPath(n.id); pop.querySelector('[data-f=one]').disabled = !can; pop.querySelector('[data-f=max]').disabled = !can; pop.querySelector('[data-f=one]').classList.toggle('hidden', r >= RK); pop.querySelector('[data-f=max]').classList.toggle('hidden', r >= RK);
+    { const m = Game.pathMods(), t = fmtMods(m); setText($('path-sum'), t || 'Nothing yet — spend a point on Sharpened Edge to start.'); }
+    setText($('path-reset-cost'), f(Game.respecCost())); $('path-reset').disabled = S.res.gold < Game.respecCost() || !Game.pathPointsSpent();
+    $('dot-sk-paths').classList.toggle('hidden', !anyCan); return anyCan;
+  }
+  function techDesc(id) { const d = Game.skillDef(id), p = Game.skillPower(id), dur = Game.skillDur(id); return d.desc.replace('{p%}', Math.round(p * 100) + '%').replace('{p}', p.toFixed(1)).replace('{d}', dur.toFixed(dur % 1 ? 1 : 0)) + ` · every ${Game.skillCdBase(id).toFixed(1)}s`; }
+  function buildTechs() {
+    const box = $('tech-cards'); box.innerHTML = '';
+    for (const d of CONFIG.skills) {
+      const c = el('div', 'tcard'); c.innerHTML = `<div class="tc-top"><span class="tc-ic">${ico(d.icon, 26)}</span><div class="tc-main"><div class="tc-row"><b>${d.name}</b><span class="tc-tag" data-f="tag"></span></div><div class="small dim" data-f="desc"></div></div><b class="tc-lv" data-f="lv"></b></div>
+        <div data-f="unl" class="small tc-unl"></div>
+        <div data-f="body"><div class="row-between small dim tc-mrow"><span>Mastery — levels by using it</span><span data-f="mx"></span></div><div class="bar tc-bar"><div data-f="mbar"></div></div>
+        <div class="tc-mods" data-f="mods"></div>
+        <div class="tc-act"><button class="buy" data-f="eq">Equip</button></div></div>`;
+      c.querySelector('[data-f=eq]').addEventListener('click', () => { const on = Game.S.hero.loadout.includes(d.id); if (on ? Game.unequipTech(d.id) : Game.equipTech(d.id)) { flash(c); render(true); } });
+      const mods = c.querySelector('[data-f=mods]'), chips = [];
+      d.mods.forEach((tier, t) => { const row = el('div', 'tc-tier'); row.appendChild(el('span', 'tc-tlv', `Lv ${[5, 10][t]}`)); tier.forEach(m => { const b = el('button', 'mod', `<b>${m.name}</b> <span>${m.desc}</span>`); b.addEventListener('click', () => { if (Game.chooseMod(d.id, t, m.id)) { flash(b); render(true); } }); row.appendChild(b); chips.push({ b, t, m }); }); mods.appendChild(row); });
+      techEls[d.id] = { card: c, chips }; box.appendChild(c);
+    }
+    const lo = $('loadout'); lo.innerHTML = ''; techEls._slots = [];
+    for (let i = 0; i < CONFIG.techSlots.length; i++) { const s = el('div', 'lslot', `<span class="ls-ic"></span><span class="ls-n"></span><span class="ls-l small dim"></span><i class="ls-cd"></i>`); lo.appendChild(s); techEls._slots.push(s); }
+  }
+  function renderTechs() {
+    const S = Game.S, h = S.hero, f = Game.fmt, slots = Game.techSlots(); let any = false;
+    const stored = CONFIG.skills.some(d => Game.techUnlocked(d.id) && !h.loadout.includes(d.id));
+    for (const d of CONFIG.skills) {
+      const E = techEls[d.id], c = E.card, un = Game.techUnlocked(d.id), eq = h.loadout.includes(d.id), mp = Game.masteryProgress(d.id), pend = Game.modPending(d.id);
+      c.classList.toggle('locked', !un); c.classList.toggle('eq', eq); if (pend) any = true;
+      setText(c.querySelector('[data-f=tag]'), !un ? 'locked' : eq ? 'equipped' : 'stored'); c.querySelector('[data-f=tag]').className = 'tc-tag' + (eq ? ' on' : '');
+      setText(c.querySelector('[data-f=desc]'), techDesc(d.id)); setText(c.querySelector('[data-f=lv]'), un ? `Lv ${mp.level}` : '—');
+      setText(c.querySelector('[data-f=unl]'), un ? '' : 'Unlock: ' + Game.techUnlockLabel(d)); c.querySelector('[data-f=body]').classList.toggle('hidden', !un);
+      if (!un) continue;
+      c.querySelector('[data-f=mbar]').style.width = (100 * mp.have / mp.need) + '%'; setText(c.querySelector('[data-f=mx]'), `${f(mp.have)} / ${f(mp.need)}`);
+      const st = (h.techs || {})[d.id] || {};
+      for (const ch of E.chips) { const reached = mp.level >= [5, 10][ch.t], picked = (st.mods || [])[ch.t] === ch.m.id, none = !(st.mods || [])[ch.t]; ch.b.disabled = !reached; ch.b.classList.toggle('pick', reached && picked); ch.b.classList.toggle('choose', reached && none); }
+      const b = c.querySelector('[data-f=eq]'); setText(b, eq ? 'Unequip' : h.loadout.length >= slots ? 'Slots full' : 'Equip'); b.disabled = !eq && h.loadout.length >= slots;
+    }
+    let nextShown = false;
+    techEls._slots.forEach((s, i) => {
+      const id = h.loadout[i], cdE = s.querySelector('.ls-cd');
+      if (i < slots && id) { const d = Game.skillDef(id), cd = Math.max(0, (h.cds || {})[id] || 0); s.className = 'lslot on'; if (s.dataset.id !== id) { setHtml(s.querySelector('.ls-ic'), ico(d.icon, 24)); s.dataset.id = id; } setText(s.querySelector('.ls-n'), d.name); setText(s.querySelector('.ls-l'), `Lv ${Game.masteryLevel(id)}`); cdE.style.setProperty('--p', (cd > 0 ? 100 * cd / Game.skillCd(id) : 0) + '%'); }
+      else if (i < slots) { s.className = 'lslot empty'; s.dataset.id = ''; setHtml(s.querySelector('.ls-ic'), ''); setText(s.querySelector('.ls-n'), 'empty'); setText(s.querySelector('.ls-l'), ''); cdE.style.setProperty('--p', '0%'); if (stored) any = true; }
+      else if (!nextShown) { nextShown = true; const req = CONFIG.techSlots[i]; s.className = 'lslot lock'; s.dataset.id = ''; setHtml(s.querySelector('.ls-ic'), '🔒'); setText(s.querySelector('.ls-n'), `Slot ${i + 1}`); setText(s.querySelector('.ls-l'), req.combat ? `Combat Lv ${req.combat}` : 'Conquer a land'); cdE.style.setProperty('--p', '0%'); }
+      else s.className = 'lslot hidden';
+    });
+    setText($('slot-note'), `${h.loadout.length} of ${slots} slots used. Swap any time — mastery is kept.`);
+    $('dot-sk-tech').classList.toggle('hidden', !any); return any;
+  }
+
+  // ---- Skill trees (gathering) ----
+  let curDisc = 'wood'; rows.disc = {}; rows.node = {}; let treeKey = '';
   function buildDiscBar() {
     const bar = $('disc-bar'); bar.innerHTML = ''; rows.disc = {};
     for (const d in CONFIG.disciplines) {
+      if (d === 'combat') continue;
       const D = CONFIG.disciplines[d], b = el('button', 'disc-btn' + (d === curDisc ? ' active' : ''));
       b.innerHTML = `${ico(D.icon, 22)}<span>${D.name}<span class="dot hidden" data-f="dot"></span></span><span class="d-lvl" data-f="lvl">Lv1</span>`;
       b.addEventListener('click', () => { curDisc = d; buildDiscBar(); buildTree(); render(true); });
@@ -771,19 +888,21 @@ const UI = (() => {
   function renderTrees() {
     const S = Game.S, f = Game.fmt; let any = false;
     for (const d in CONFIG.disciplines) { const b = rows.disc[d]; if (!b) continue; const pr = Game.discProgress(d), fr = Game.treePointsFree(d); setText(b.querySelector('[data-f=lvl]'), `Lv${pr.level}`); b.querySelector('[data-f=dot]').classList.toggle('hidden', fr <= 0); if (fr > 0) any = true; }
-    const tfree = Game.talentPointsFree(); if (tfree > 0) any = true;
+    const tfree = Game.talentPointsFree(); let capOpen = false; for (const d in CONFIG.trees) for (const n of CONFIG.trees[d]) if (n.capstone && Game.canRankNode(d, n.id)) capOpen = true; if (capOpen) any = true;
     const D = CONFIG.disciplines[curDisc], pr = Game.discProgress(curDisc);
-    setText($('disc-name'), `${D.name} Lv${pr.level}`); setText($('disc-desc'), D.desc); setText($('disc-how'), curDisc === 'combat' ? 'You get 1 every time Combat levels up. Combat XP comes from kills.' : `You get 1 every time ${D.name} levels up. XP comes from every swing of the tool.`);
+    setText($('disc-name'), `${D.name} Lv${pr.level}`); setText($('disc-desc'), D.desc); setText($('disc-how'), `You get 1 every time ${D.name} levels up. XP comes from every swing of the tool.`);
     setText($('disc-pts'), Game.treePointsFree(curDisc)); setText($('talent-free'), tfree);
     $('disc-xpbar').style.width = (100 * pr.have / pr.need) + '%'; setText($('disc-xptext'), `${f(pr.have)} / ${f(pr.need)} XP`);
     for (const n of CONFIG.trees[curDisc] || []) {
       const d = rows.node[n.id]; if (!d) continue; const r = Game.nodeRank(curDisc, n.id), max = Game.nodeMax(n), open = Game.nodeOpen(curDisc, n.id), can = Game.canRankNode(curDisc, n.id);
       d.classList.toggle('locked', !open); d.classList.toggle('maxed', r >= max); d.classList.toggle('can', can);
-      setText(d.querySelector('[data-f=rank]'), Game.nodeQuestLocked(curDisc, n.id) ? '🔒 Quest' : n.capstone ? (r ? 'Learned' : '1 talent') : `${r} / ${max}`);
+      setText(d.querySelector('[data-f=rank]'), Game.nodeQuestLocked(curDisc, n.id) ? '🔒 Quest' : n.capstone ? (r ? 'Learned' : '1 ★') : `${r} / ${max}`);
       d.querySelector('[data-f=bar]').style.width = (100 * r / max) + '%';
-      const b = d.querySelector('[data-f=btn]'); setText(b, r >= max ? '✓ Maxed' : !open ? '' : n.capstone ? (can ? '★ Learn' : 'needs a talent point') : (can ? '+1' : 'no points'));
+      const b = d.querySelector('[data-f=btn]'); setText(b, r >= max ? '✓ Maxed' : !open ? '' : n.capstone ? (can ? '★ Learn' : 'needs a ★') : (can ? '+1' : 'no points'));
       const link = $('tree').querySelector(`[data-link="${n.id}"]`); if (link) link.classList.toggle('on', open);
     }
+    $('dot-sk-gather').classList.toggle('hidden', !any);
+    const pa = renderPaths(), te = renderTechs(); any = any || pa || te;
     $('badge-skills').classList.toggle('hidden', !any);
     return any;
   }
@@ -1056,7 +1175,7 @@ const UI = (() => {
       { const chain = q.chain || (CONFIG.quests.slice(0, S.quests.index).reverse().find(x => x.chain) || {}).chain || ''; const inChain = CONFIG.quests.filter((x, i) => (x.chain || (CONFIG.quests.slice(0, i).reverse().find(y => y.chain) || {}).chain) === chain); setText($('quest-n'), `${chain} · ${inChain.indexOf(q) + 1} / ${inChain.length}`); }
       setText($('quest-name'), q.name); setText($('quest-text'), q.text); setText($('quest-hint'), q.hint || ''); $('quest-hint').classList.toggle('hidden', !q.hint);
       setHtml($('quest-obj'), pr.parts.map(partHtml).join(''));
-      setHtml($('quest-reward'), 'Reward: ' + Object.entries(q.reward).map(([k, v]) => k === 'crystal' ? `<span class="costitem">👑 ${v} Crown</span>` : k === 'talent' ? `<span class="costitem">★ ${v} talent point</span>` : `<span class="costitem">${ico(R[k].icon, 14)}${f(v)}</span>`).join(' '));
+      setHtml($('quest-reward'), 'Reward: ' + Object.entries(q.reward).map(([k, v]) => k === 'crystal' ? `<span class="costitem">👑 ${v} Crown</span>` : k === 'talent' ? `<span class="costitem">★ ${v} boss token</span>` : `<span class="costitem">${ico(R[k].icon, 14)}${f(v)}</span>`).join(' '));
       $('quest-claim').classList.remove('hidden'); $('quest-claim').disabled = !pr.done; $('quest-card').classList.toggle('ready', pr.done);
     } else if (goal) {
       setText($('quest-n'), ''); setText($('quest-name'), goal.name); setText($('quest-text'), goal.text); setText($('quest-hint'), goal.hint); $('quest-hint').classList.remove('hidden');
@@ -1204,6 +1323,7 @@ const UI = (() => {
   }
   function tallyLoot(obj) { for (const k in obj) if (obj[k] > 0) { lootTally[k] = (lootTally[k] || 0) + obj[k]; lootFresh[k] = true; } }
   function hitPop(ev) {
+    if (ev.who === 'technique') { const a = document.querySelector('.top') || document.body; const r = a.getBoundingClientRect(); const p = el('div', 'pop craft', `⚔ ${ev.name}`); p.style.left = (r.left + r.width * 0.5) + 'px'; p.style.top = (Math.max(r.top, 80) + 20) + 'px'; document.body.appendChild(p); setTimeout(() => p.remove(), 1800); return; }
     if (ev.who === 'research') { const a = $('tech-tree').offsetParent ? $('tech-tree') : document.querySelector('.top'); const r = a.getBoundingClientRect(); const p = el('div', 'pop craft', `✦ ${ev.name} researched!`); p.style.left = (r.left + r.width * 0.5) + 'px'; p.style.top = (Math.max(r.top, 80) + 20) + 'px'; document.body.appendChild(p); setTimeout(() => p.remove(), 1400); return; }
     if (ev.who === 'craft') { const a = $('doll').offsetParent ? $('doll') : $('mini-hero').offsetParent ? $('mini-hero') : document.querySelector('.top'); const r = a.getBoundingClientRect(); const p = el('div', 'pop craft', `⚒ ${ev.name} forged!`); p.style.left = (r.left + r.width * 0.5) + 'px'; p.style.top = (r.top + Math.min(40, r.height * 0.3)) + 'px'; document.body.appendChild(p); setTimeout(() => p.remove(), 1400); return; }
     if (ev.who === 'loot') { tallyLoot(ev.loot); for (const b of [$('enemy-hpbar').parentElement, $('mini-target')]) { b.classList.remove('killed'); void b.offsetWidth; b.classList.add('killed'); setTimeout(() => b.classList.remove('killed'), 450); } }
