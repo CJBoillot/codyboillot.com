@@ -557,7 +557,7 @@ body.desktop.has-dock .panel-center { padding-bottom: 160px; }
 .disc-btn .d-lvl { font-size: 10px; color: var(--dim); font-family: var(--font-body); }
 .disc-btn.active { border-color: var(--bronze); background: #1f1812; }
 .disc-btn .dot { position: static; margin-left: 3px; }
-.disc-xp { height: 8px; margin-top: 6px; } .disc-xp > span { font-size: 9px; line-height: 7px; }
+.bar.xp.disc-xp { height: 18px; margin-top: 6px; } .bar.xp.disc-xp > span { font-size: 11px; line-height: 16px; }
 .tree { display: flex; flex-direction: column; align-items: stretch; gap: 0; margin-top: 8px; }
 .tree-row { display: grid; gap: 6px; position: relative; }
 .tree-link { height: 14px; display: grid; }
