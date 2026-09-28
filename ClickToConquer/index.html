@@ -12,7 +12,7 @@
   <title>Click to Conquer</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=a075">
+  <link rel="stylesheet" href="style.css?v=a076">
 </head>
 <body>
 
@@ -261,6 +261,7 @@
           <div class="card"><div class="card-title">Tavern</div><p class="dim small">Thralls looking for work. Hire one, then put them to work on a production line: Kingdom → Forest (or Farm, Mine) → <b>+ Add worker</b>. Each offer's role only matters as an Overseer.</p></div>
           <div class="card">
             <div class="row-between"><div class="card-title" style="margin:0">For hire</div><span class="small dim">New faces in <b id="offer-timer"></b></span></div>
+            <div id="hire-full" class="small warn hidden" style="margin-bottom:6px"></div>
             <div id="hire-list" class="list"></div>
             <button id="offer-refresh" class="wide" style="margin-top:6px">Buy a round — new faces now (<span id="refresh-cost"></span> gold)</button>
           </div>
@@ -412,11 +413,11 @@
 </div>
 
 
-<script src="config.js?v=a075"></script>
-<script src="cloud-config.js?v=a075"></script>
-<script src="game.js?v=a075"></script>
-<script src="ui.js?v=a075"></script>
-<script src="cloud.js?v=a075"></script>
+<script src="config.js?v=a076"></script>
+<script src="cloud-config.js?v=a076"></script>
+<script src="game.js?v=a076"></script>
+<script src="ui.js?v=a076"></script>
+<script src="cloud.js?v=a076"></script>
 <script>window.addEventListener("error", e => { const d = document.getElementById("err"); if (d) { d.textContent = "Error: " + e.message; d.classList.remove("hidden"); } });</script>
 </body>
 </html>

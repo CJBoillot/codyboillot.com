@@ -635,9 +635,15 @@ const UI = (() => {
         const cr = Game.canRaise(); $('settle-raise').disabled = !cr; setText($('settle-raise'), `Raise to ${nx.name}`); $('settle-raise').classList.remove('hidden');
         if (cr) keepHint = true;
       } else {
-        setText($('settle-need'), td.need + ' Then this land is conquered, and you can conquer new lands.');
+        setText($('settle-need'), td.need + ' Then proclaim the Kingdom.');
         const c = Game.cityChecks(); const row = (lab, a, b) => `<div class="row-between small"><span>${a >= b ? '✓' : '○'} ${lab}</span><span class="${a >= b ? 'good' : 'dim'}">${a} / ${b}</span></div>`;
         lh += row('Buildings with 3 workers', c.crews, c.steps) + row('Buildings with an Overseer', c.overseers, c.steps) + row('Accountants on final goods', c.accountants, c.finals);
+        { const miss = []; for (const st of Game.allSteps().filter(x => !x.phase)) { if (!Game.stepBuilt(st.id)) { miss.push(`${st.name}: not built`); continue; } const ss = Game.stepState(st.id), need = [];
+            if (ss.workers.length < 3) need.push(`${3 - ss.workers.length} worker${3 - ss.workers.length > 1 ? 's' : ''}`); if (ss.overseer === null) need.push('an Overseer'); if (st.tier === 2 && ss.accountant == null) need.push('an Accountant');
+            if (need.length) miss.push(`<b>${st.name}</b> needs ${need.join(', ')}`); }
+          const idle = S.kingdom.thralls.filter((t, i) => !Game.thrallPost(i)).length;
+          if (miss.length) lh += `<div class="city-miss small">${miss.map(m => `<div>○ ${m}</div>`).join('')}</div>`;
+          if (idle) lh += `<div class="small good" style="margin-top:4px">${idle} idle thrall${idle > 1 ? 's' : ''} ready — open a building above and tap + Add worker.</div>`; }
         $('settle-pay').classList.add('hidden'); $('settle-raise').classList.add('hidden');
       }
       setHtml($('settle-list'), lh);
@@ -656,10 +662,13 @@ const UI = (() => {
     const ol = $('order-list'); if (ol.__h !== oh) { ol.innerHTML = oh || '<div class="dim small">No orders yet — produce something first.</div>'; ol.__h = oh; ol.querySelectorAll('[data-deliver]').forEach(b => b.onclick = () => { if (Game.deliver(+b.dataset.deliver)) { ol.__h = ''; render(true); } }); ol.querySelectorAll('[data-swap]').forEach(b => b.onclick = () => { if (Game.swapOrder(+b.dataset.swap)) { ol.__h = ''; render(true); } }); }
     // hiring
     setText($('offer-timer'), Game.fmtTime(Math.max(0, K.offerTimer || 0))); setText($('refresh-cost'), CONFIG.kingdom.refreshCost); $('offer-refresh').disabled = (S.res.gold || 0) < CONFIG.kingdom.refreshCost;
-    const hh = (K.offers || []).map((o, i) => `<div class="row koffer"><div class="row-main"><div class="row-title">${o.name} <span class="stars">${stars(o.stars)}</span></div><div class="row-sub">${ROLE[o.role]} ×${CONFIG.kingdom.starMult[o.stars]}</div><div class="row-sub dim">Work +${Math.round(100 * CONFIG.kingdom.statPct * o.spd)}% · Cart +${Math.round(100 * CONFIG.kingdom.statPct * o.str)}%</div></div><button class="buy" data-hire="${i}" ${(S.res.gold || 0) >= o.price && K.thralls.length < Game.thrallCap() ? '' : 'disabled'}><span class="small">Hire</span><br><span class="cost">${costHtml({ gold: o.price })}</span></button></div>`).join('');
+    const hh = (K.offers || []).map((o, i) => `<div class="row koffer"><div class="row-main"><div class="row-title">${o.name} <span class="stars">${stars(o.stars)}</span></div><div class="row-sub">${ROLE[o.role]} ×${CONFIG.kingdom.starMult[o.stars]}</div><div class="row-sub dim">Work +${Math.round(100 * CONFIG.kingdom.statPct * o.spd)}% · Cart +${Math.round(100 * CONFIG.kingdom.statPct * o.str)}%</div></div><button class="buy" data-hire="${i}" ${(S.res.gold || 0) >= o.price && K.thralls.length < Game.thrallCap() ? '' : 'disabled'}><span class="small">${K.thralls.length >= Game.thrallCap() ? 'Full' : 'Hire'}</span><br><span class="cost">${costHtml({ gold: o.price })}</span></button></div>`).join('');
     const hl = $('hire-list'); if (hl.__h !== hh) { hl.innerHTML = hh; hl.__h = hh; hl.querySelectorAll('[data-hire]').forEach(b => b.onclick = () => { if (Game.hire(+b.dataset.hire)) { hl.__h = ''; for (const l in lineKey) lineKey[l] = ''; render(true); } }); }
     // roster
-    setText($('roster-count'), `${K.thralls.length} / ${Game.thrallCap()} · room for one more each new land`);
+    { const idle = K.thralls.filter((t, i) => !Game.thrallPost(i)).length, full = K.thralls.length >= Game.thrallCap();
+      setText($('roster-count'), `${K.thralls.length} / ${Game.thrallCap()} · ${idle ? idle + ' idle' : 'all at work'}`);
+      $('hire-full').classList.toggle('hidden', !full);
+      if (full) setText($('hire-full'), `Your ${Game.tierDef().name} is full: ${K.thralls.length} / ${Game.thrallCap()} thralls.${idle ? ` ${idle} of them ${idle > 1 ? 'are' : 'is'} idle — put them to work first.` : ' Dismiss one below to hire someone better.'}`); }
     const rh = K.thralls.map((t, i) => { const p = Game.thrallPost(i); return `<div class="row"><div class="row-main"><div class="row-title">${t.name} <span class="stars">${stars(t.stars)}</span> <span class="owned">${roleShort(t.role)} · Lv ${Game.thrallLevel(t)}</span></div><div class="row-sub">${p ? (p.as === 'overseer' ? 'Overseer' : p.as === 'accountant' ? 'Accountant' : 'Worker') + ' at the ' + Game.stepDef(p.id).name : '<span class="warn">Idle — Kingdom → a line → + Add worker</span>'} · Str ${t.str} · Spd ${t.spd} · ${f(t.xp || 0)} loads hauled</div></div><button class="kx big-x" data-dis="${i}" aria-label="Dismiss">×</button></div>`; }).join('');
     const rl = $('roster'); if (rl.__h !== rh) { rl.innerHTML = rh || '<div class="dim small">Nobody yet. Hire someone above.</div>'; rl.__h = rh; rl.querySelectorAll('[data-dis]').forEach(b => b.onclick = () => { const t = K.thralls[+b.dataset.dis]; ask('Dismiss ' + t.name + '?', `${t.name} (Lv ${Game.thrallLevel(t)}) leaves for good. This frees a place for someone new.`, 'Dismiss', () => { Game.dismiss(+b.dataset.dis); rl.__h = ''; for (const l in lineKey) lineKey[l] = ''; render(true); }); }); }
     // storehouse
