@@ -692,3 +692,5 @@ html, body { max-width: 100%; overflow-x: hidden; }
 #kingdom-subtabs button { font-size: 11px; padding: 7px 1px; }
 
 .kswap { min-width: 40px; padding: 6px 8px; font-size: 16px; }
+#market-mode { display: flex; margin-top: 8px; }
+#market-mode button { flex: 1; padding: 8px; font-size: 14px; }

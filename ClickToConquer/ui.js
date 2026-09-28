@@ -22,7 +22,7 @@ const UI = (() => {
 
   // In-game confirmation (no browser popups)
   let confirmCb = null;
-  let infoFlag = null;
+  let infoFlag = null, marketMode = 'sell';
   function showInfo(label, title, html, flag) { infoFlag = flag; setText($('demo-label'), label); setText($('demo-title'), title); $('demo-text').innerHTML = html; $('demo-modal').classList.remove('hidden'); }
   function ask(title, text, yesLabel, cb) { setText($('confirm-title'), title); setText($('confirm-text'), text); setText($('confirm-yes'), yesLabel || 'Yes'); confirmCb = cb; $('confirm-modal').classList.remove('hidden'); }
   function closeAsk() { confirmCb = null; $('confirm-modal').classList.add('hidden'); }
@@ -202,12 +202,17 @@ const UI = (() => {
       }
       wrap.appendChild(list); tx.appendChild(wrap);
     });
+    document.querySelectorAll('#market-mode [data-mm]').forEach(b => b.onclick = () => { marketMode = b.dataset.mm; document.querySelectorAll('#market-mode [data-mm]').forEach(x => x.classList.toggle('active', x === b)); render(true); });
     const ml = $('market-list'); ml.innerHTML = ''; rows.market = {};
     for (const k in R) {
       if (!R[k].sell) continue;
       const row = el('div', 'row market-row hidden');
-      row.innerHTML = `${ico(R[k].icon, 32, 'rowico')}<div class="row-main"><div class="row-title">${R[k].name} <span class="owned">×<b data-f="have">0</b></span></div><div class="row-sub"><span class="sellprice" data-f="price"></span> gold each · ${R[k].desc}</div></div>
-        <div class="btn-col-h"><button class="buy" data-f="s1">1</button><button class="buy" data-f="s10">10</button><button class="buy" data-f="sall">All</button></div>`;
+      row.innerHTML = `${ico(R[k].icon, 32, 'rowico')}<div class="row-main"><div class="row-title">${R[k].name} <span class="owned">×<b data-f="have">0</b></span></div><div class="row-sub"><span data-f="verb">Sells for</span> <span class="sellprice" data-f="price"></span> gold each · ${R[k].desc}</div></div>
+        <div class="btn-col-h mm-sell"><button class="buy" data-f="s1">1</button><button class="buy" data-f="s10">10</button><button class="buy" data-f="sall">All</button></div>
+        <div class="btn-col-h mm-buy hidden"><button class="buy" data-f="b1">+1</button><button class="buy" data-f="b10">+10</button><button class="buy" data-f="bmax">Max</button></div>`;
+      row.querySelector('[data-f=b1]').addEventListener('click', () => { if (Game.buyRes(k, 1)) flash(row); });
+      row.querySelector('[data-f=b10]').addEventListener('click', () => { if (Game.buyRes(k, 10)) flash(row); });
+      row.querySelector('[data-f=bmax]').addEventListener('click', () => { if (Game.buyRes(k, 'max')) flash(row); });
       row.querySelector('[data-f=s1]').addEventListener('click', () => { if (Game.sell(k, 1)) flash(row); });
       row.querySelector('[data-f=s10]').addEventListener('click', () => { if (Game.sell(k, 10)) flash(row); });
       row.querySelector('[data-f=sall]').addEventListener('click', () => { if (Game.sell(k, 'all')) flash(row); });
@@ -776,9 +781,13 @@ const UI = (() => {
     let anySell = false;
     for (const k in rows.market) {
       const row = rows.market[k], have = Math.floor(S.res[k] || 0);
-      if (!(S.lifetime[k] > 0)) { row.classList.add('hidden'); continue; }
+      const buying = marketMode === 'buy';
+      if (!(S.lifetime[k] > 0) || (buying && !Game.canBuyRes(k))) { row.classList.add('hidden'); continue; }
       row.classList.remove('hidden');
-      setText(row.querySelector('[data-f=have]'), f(have)); setText(row.querySelector('[data-f=price]'), f(Game.sellPrice(k)));
+      row.querySelector('.mm-sell').classList.toggle('hidden', buying); row.querySelector('.mm-buy').classList.toggle('hidden', !buying);
+      setText(row.querySelector('[data-f=verb]'), buying ? 'Costs' : 'Sells for');
+      setText(row.querySelector('[data-f=have]'), f(have)); setText(row.querySelector('[data-f=price]'), f(buying ? Game.buyPrice(k) : Game.sellPrice(k)));
+      if (buying) { const m = Game.buyMax(k); row.querySelector('[data-f=b1]').disabled = m < 1; row.querySelector('[data-f=b10]').disabled = m < 10; row.querySelector('[data-f=bmax]').disabled = m < 1; }
       row.querySelector('[data-f=s1]').disabled = have < 1; row.querySelector('[data-f=s10]').disabled = have < 10; row.querySelector('[data-f=sall]').disabled = have < 1;
       if (have >= 1 && R[k].tier >= 2 && k !== 'gold') anySell = true;
     }

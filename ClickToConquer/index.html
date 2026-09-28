@@ -12,7 +12,7 @@
   <title>Click to Conquer</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=a032">
+  <link rel="stylesheet" href="style.css?v=a033">
 </head>
 <body>
 
@@ -237,7 +237,7 @@
       </div>
     </div>
     <div id="tab-market" class="tab hidden">
-      <div class="card"><div class="card-title">Market</div><p class="dim small">Sell goods for gold. Refined and artisan goods fetch far more than raw — an ingot is worth ten ore, a plate ten ingots.</p></div>
+      <div class="card"><div class="card-title">Market</div><p class="dim small">Sell goods for gold, or buy what you are short of — at a merchant's markup. You can only buy goods you have found yourself.</p><div class="seg" id="market-mode"><button data-mm="sell" class="active">Sell</button><button data-mm="buy">Buy</button></div></div>
       <div id="market-list" class="list"></div>
     </div>
   </main>
@@ -353,9 +353,9 @@
 </div>
 
 
-<script src="config.js?v=a032"></script>
-<script src="game.js?v=a032"></script>
-<script src="ui.js?v=a032"></script>
+<script src="config.js?v=a033"></script>
+<script src="game.js?v=a033"></script>
+<script src="ui.js?v=a033"></script>
 <script>window.addEventListener("error", e => { const d = document.getElementById("err"); if (d) { d.textContent = "Error: " + e.message; d.classList.remove("hidden"); } });</script>
 </body>
 </html>

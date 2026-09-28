@@ -570,6 +570,11 @@ function questClaim() {
 
 // ---------- Market ----------
 function sellPrice(k) { const kp = kingdomPath(); return CONFIG.resources[k].sell * (1 + 0.10 * perkRank('haggler')) * (kp && kp.sellMult ? kp.sellMult : 1); }
+function buyPrice(k) { return (CONFIG.resources[k] && CONFIG.resources[k].buy) || 0; }
+function canBuyRes(k) { return buyPrice(k) > 0 && (S.lifetime[k] || 0) > 0; }
+function buyRoom(k) { const c = resCap(k); return Math.max(0, Math.floor((c === Infinity ? 1e9 : c) - (S.res[k] || 0))); }
+function buyMax(k) { if (!canBuyRes(k)) return 0; return Math.min(buyRoom(k), Math.floor((S.res.gold || 0) / buyPrice(k))); }
+function buyRes(k, n) { if (!canBuyRes(k)) return 0; n = Math.min(n === 'max' ? Infinity : n, buyMax(k)); if (n <= 0) return 0; S.res.gold -= n * buyPrice(k); add(k, n); S.stats.bought = (S.stats.bought || 0) + n; return n; }
 function sell(k, n) {
   const keep = S.legacy.foundings === 0 ? (CONFIG.legacy.tribute[k] && k !== 'gold' ? CONFIG.legacy.tribute[k] : 0) : 0;
   const have = Math.max(0, Math.floor(S.res[k] || 0) - keep); n = n === 'all' ? have : Math.min(n, have); if (n <= 0 || !sellPrice(k)) return 0;
@@ -786,7 +791,7 @@ window.Game = {
   questCurrent, questProgress, questClaim, suggestGoal, ground, setGround, groundUnlocked, dropToolMult, bestStageAll, groundDrops, toolSlotUnlocked,
   techDef, hasTech, techProgress, canResearch, research, researching, buildingUnlocked, gearTierUnlocked, dropUnlocked, counter,
   kingdomRates, kingdomNo, allSteps, stepDef, stepUnlocked, lineUnlocked, lineSteps, stepState, nextStep, stepMods, stepRate, stepRoundTrip, stepCart, stepOutput, stepLimit, stepUpCost, stepUpPlan, upgradeStep, stepWorkerSlots,
-  assignWorker, assignOverseer, unassign, thrallPost, useAbility, refreshOffers, hire, maxStars, storeUpCost, upgradeStore, orderGoods, foundRenownNeed, canDeliver, deliver, swapOrder, swapReady, rankIndex, rankInfo, heroFighting, thrallCount, sellPrice, sell,
+  assignWorker, assignOverseer, unassign, thrallPost, useAbility, refreshOffers, hire, maxStars, storeUpCost, upgradeStore, orderGoods, foundRenownNeed, canDeliver, deliver, swapOrder, swapReady, rankIndex, rankInfo, heroFighting, thrallCount, sellPrice, sell, buyPrice, buyRes, buyMax, canBuyRes,
   canAdvance, advance, retreat, canAfford, add, simulate, applyOffline, claimOffline,
   save, load, exportSave, importSave, hardReset,
   thrallName, resCap, atCap, storeCap, typeKey, typeKills, bestiaryTier, bestiaryBonus, trophyTier, trophyCount, pinned, togglePin,
