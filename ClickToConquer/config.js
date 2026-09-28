@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Alpha 0.9.6',
+  version: 'Alpha 0.9.7',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -450,6 +450,7 @@ const CONFIG = {
     { id: 'smith',     cat: 'craft',   name: 'Blacksmith',  icon: [4,4],  buildCost: { gold: 200, stone: 40, wood: 40 },   job: { time: 10, inputs: { ore: 5 },             outputs: { ingot: 1 } } },
     { id: 'tannery',   cat: 'craft',   name: 'Tannery',     icon: [8,2],  buildCost: { wood: 40, stone: 20, hide: 10 },              job: { time: 10, inputs: { hide: 3 },            outputs: { leather: 1 } } },
     { id: 'weaver',    cat: 'craft',   name: 'Weaver',      icon: [17,6], buildCost: { gold: 150, wood: 40 },              job: { time: 10, inputs: { wool: 3 },            outputs: { cloth: 1 } } },
+    ['0.9.7', 'The first quests ask a little more, and kill goals now count from when the quest starts — so a quest is never already finished when you reach it.'],
     ['0.9.6', 'Fixed: tapping an item in the Inventory crashed (thanks Monica!). Item details now list the city buildings, Quartermaster and Barracks correctly. Gathering shows when an item is full and stops popping +1 for things that can\'t be stored. Fixed gathering mastery speed.'],
     ['0.9.5', 'New skills. Paths: a passive web of 39 nodes in three branches (Might, Guard, Command) — every node has 10 ranks, points come from Combat levels and ★ from bosses, and nothing ever resets. Techniques: ten active moves unlocked by milestones, levelled by using them, with a mod to choose at Lv 5 and Lv 10. Your old Combat tree points are refunded — spend them in Paths!'],
     // Artisan
@@ -490,10 +491,10 @@ const CONFIG = {
   quests: [
     // ===== First Steps: everything by hand =====
     { id: 'f01', chain: 'First Steps', name: 'Naked in the Wild', text: 'You have nothing. Plants have fiber, and fiber can be twisted into cloth. Pull some by hand — one handful per click.',
-      steps: [ { label: 'Character → Activity → By hand → tap Plants ×10', check: { counter: 'fiber', need: 10 } } ],
+      steps: [ { label: 'Character → Activity → By hand → tap Plants ×15', check: { counter: 'fiber', need: 15 } } ],
       reward: { fiber: 5 }, focus: { tab: 'hero', sub: 'fight', el: 'hand:plants' } },
     { id: 'f01b', chain: 'First Steps', name: 'Bare Knuckles', text: 'Rats are bold here. You have no weapon, but you have fists — and fists harden with every kill. Punch a few rats.',
-      steps: [ { label: 'Character → Activity → Your hero is… → Fight', check: { activity: 'fight' } }, { label: 'Slay 10 rats with your fists', check: { counter: 'kills', need: 10 } } ],
+      steps: [ { label: 'Character → Activity → Your hero is… → Fight', check: { activity: 'fight' } }, { label: 'Slay 20 rats with your fists', check: { counter: 'kills', need: 20, since: true } } ],
       reward: { fiber: 5 }, focus: { tab: 'hero', sub: 'fight', el: 'act:fight' } },
     { id: 'f02', chain: 'First Steps', name: 'Twist and Knot', text: 'Knowing how is half of it. Research Fiber Clothing — it costs a little of the fiber you just pulled.',
       steps: [ { label: 'Kingdom → Tech → Fiber Clothing → Research', check: { tech: 'fiberclothing' } } ],
@@ -502,13 +503,13 @@ const CONFIG = {
       steps: [ { label: 'Character → Gear → tap the Chest slot → Forge (10 fiber, 5s)', check: { gear: 'chest' } } ],
       reward: { fiber: 4 }, focus: { tab: 'hero', sub: 'gear', el: 'gear:chest' } },
     { id: 'f04', chain: 'First Steps', name: 'A Sharpened Branch', text: 'Trees are open to you now. Snap branches by hand, then research the Wooden Sword.',
-      steps: [ { label: 'Character → Activity → By hand → tap Trees ×10', check: { counter: 'wood', need: 10 }, focus: { tab: 'hero', sub: 'fight', el: 'hand:trees' } }, { label: 'Kingdom → Tech → Wooden Sword → Research', check: { tech: 'woodensword' }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:woodensword' } } ],
+      steps: [ { label: 'Character → Activity → By hand → tap Trees ×15', check: { counter: 'wood', need: 15 }, focus: { tab: 'hero', sub: 'fight', el: 'hand:trees' } }, { label: 'Kingdom → Tech → Wooden Sword → Research', check: { tech: 'woodensword' }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:woodensword' } } ],
       reward: { wood: 5 }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:woodensword', el2: 'hand:trees' } },
     { id: 'f05', chain: 'First Steps', name: 'Armed', text: 'Make the sword. Click the Weapon slot.',
       steps: [ { label: 'Character → Gear → tap the Weapon slot → Forge (10 wood, 5s)', check: { gear: 'weapon' } } ],
       reward: { wood: 10 }, focus: { tab: 'hero', sub: 'gear', el: 'gear:weapon' } },
     { id: 'f06', chain: 'First Steps', name: 'Sharper Fights', text: 'Crafting a sword makes fighting much more efficient: a sharpened branch hits twice as hard as a fist, so every fight ends sooner. Set him back to Fight — he keeps at it even when the game is closed.',
-      steps: [ { label: 'Character → Activity → Your hero is… → Fight', check: { activity: 'fight' } }, { label: 'Slay 20 enemies in total', check: { counter: 'kills', need: 20 } } ],
+      steps: [ { label: 'Character → Activity → Your hero is… → Fight', check: { activity: 'fight' } }, { label: 'Slay 40 enemies with the sword', check: { counter: 'kills', need: 40, since: true } } ],
       reward: { fiber: 10 }, focus: { tab: 'hero', sub: 'fight', el: 'act:fight' } },
     // ===== Settling In =====
     // Each quest is a checklist of steps. Step checks: activity, ground, tool, gear, tech, counter, plots, building, jobs, sold, stage, boss, founded, thrall.
@@ -517,12 +518,12 @@ const CONFIG = {
     { id: 'q01', chain: 'Settling In', name: 'Onward', text: 'Deeper stages have tougher enemies but drop more loot and experience — pushing is how you grow. If he starts losing, Retreat a stage and upgrade.',
       steps: [
         { label: 'Fight in The Wilds', check: { activity: 'fight', ground: 'wilds' } },
-        { label: 'Fill the bar (10 kills)', check: { counter: 'kills', need: 10 } },
-        { label: 'Press Advance once the kills bar is full', check: { stage: 2 } },
+        { label: 'Slay 30 more enemies', check: { counter: 'kills', need: 30, since: true } },
+        { label: 'Fill the kills bar and press Advance — reach stage 4', check: { stage: 4 } },
       ], reward: { wood: 20 }, focus: { tab: 'hero', sub: 'fight', el: 'id:advance-btn' } },
     { id: 'q02', name: 'Woodcraft', text: 'Tools open up the wild. Woodcraft is the first thing you can research: crude tools carved from wood.',
       steps: [
-        { label: 'Slay 25 enemies', check: { counter: 'kills', need: 25 } },
+        { label: 'Slay 60 enemies', check: { counter: 'kills', need: 60, since: true } },
         { label: 'Have 25 wood (Trees box)', check: { have: 'wood', need: 25 } },
         { label: 'Kingdom → Tech → Research Woodcraft', check: { tech: 'stonetools' } },
       ], reward: { wood: 40 }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:stonetools' } },
@@ -538,20 +539,20 @@ const CONFIG = {
     { id: 'q04', name: 'Timber', text: 'A hero does one thing at a time — fight, or work. He keeps working even when the game is closed.',
       steps: [
         { label: 'Activity → Chop Wood', check: { activity: 'wood' } },
-        { label: 'Chop 30 wood with the axe', check: { harvested: 'wood', need: 30 } },
+        { label: 'Chop 50 wood with the axe', check: { harvested: 'wood', need: 50 } },
         { label: 'Click the Axe slot → Upgrade once (faster swings, more wood)', check: { toolLevel: 'axe', need: 1 } },
       ], reward: { stone: 10 }, focus: { tab: 'hero', sub: 'fight', el: 'act:wood', el2: 'tool:axe' } },
     { id: 'q05', name: 'Skinner', text: 'Beasts have hides, if you know how to take them.',
       steps: [
         { label: 'Activity → Fight', check: { activity: 'fight' } },
-        { label: 'Slay 50 enemies', check: { counter: 'kills', need: 50 } },
+        { label: 'Slay 100 enemies', check: { counter: 'kills', need: 100, since: true } },
         { label: 'Kingdom → Tech → Research Skinning', check: { tech: 'skinning' } },
       ], reward: { hide: 5 }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:skinning', el2: 'act:fight' } },
     { id: 'q06', name: 'Hunter', text: 'Only beasts have hides, and beasts live in the Wilds. A better knife takes more hide per kill.',
       steps: [
         { label: 'Click the Skinning Knife slot → Make (10 wood)', check: { tool: 'knife' } },
         { label: 'Fight in The Wilds', check: { activity: 'fight', ground: 'wilds' } },
-        { label: 'Take 20 hide from beasts', check: { looted: 'hide', need: 20 } },
+        { label: 'Take 30 hide from beasts', check: { looted: 'hide', need: 30 } },
       ], reward: { hide: 15 }, focus: { tab: 'hero', sub: 'gear', el: 'tool:knife', el2: 'ground:wilds' } },
     { id: 'q06b', name: 'Leatherworking', text: 'Hide becomes armor once you know how.',
       steps: [
@@ -577,7 +578,7 @@ const CONFIG = {
     { id: 'q13a', name: 'Highwayman', text: 'Bandits carry the gold they stole. The Roads pay better the deeper you go.',
       steps: [
         { label: 'Fight on The Roads', check: { activity: 'fight', ground: 'roads' } },
-        { label: 'Loot 100 gold from bandits', check: { looted: 'gold', need: 100 } },
+        { label: 'Loot 250 gold from bandits', check: { looted: 'gold', need: 250 } },
       ], reward: { gold: 60 }, focus: { tab: 'hero', sub: 'fight', el: 'ground:roads' } },
     { id: 'q14', name: 'To Market', text: 'Bandits carry coin — and so does everything you gather, once sold. Gold levels skills, buys buildings, and founds kingdoms. Refined goods are worth far more than raw — an ingot sells for ten times its ore.',
       steps: [
@@ -587,7 +588,7 @@ const CONFIG = {
       steps: [
         { label: 'Click the Pickaxe slot → Make (10 wood)', check: { tool: 'pick' } },
         { label: 'Activity → Mine', check: { activity: 'mine' } },
-        { label: 'Quarry 40 stone with the pick', check: { harvested: 'stone', need: 40 } },
+        { label: 'Quarry 60 stone with the pick', check: { harvested: 'stone', need: 60 } },
       ], reward: { stone: 40 }, focus: { tab: 'hero', sub: 'gear', el: 'tool:pick', el2: 'act:mine' } },
     { id: 'q12b', name: 'Prospecting', text: 'Some of that rock glitters. Learn to tell ore from stone and every swing of the pick — and every Mine — starts turning up iron too.',
       steps: [
@@ -618,7 +619,7 @@ const CONFIG = {
         { label: 'Kingdom → Tech → Research Butchery', check: { tech: 'butchery' } },
         { label: "Gear → click the Butcher's Cleaver slot → Make (10 wood)", check: { tool: 'cleaver' }, focus: { tab: 'hero', sub: 'gear', el: 'tool:cleaver' } },
         { label: 'Fight in The Wilds', check: { activity: 'fight', ground: 'wilds' } },
-        { label: 'Take 10 meat from boars or bigger beasts (rats have none)', check: { looted: 'meat', need: 10 } },
+        { label: 'Take 20 meat from boars or bigger beasts (rats have none)', check: { looted: 'meat', need: 20 } },
       ], reward: { meat: 10 }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:butchery', el2: 'ground:wilds' } },
     { id: 'q16', name: 'Stage 20', text: 'Upgrade your weapon when fights get slow — that is what the hide and stone are for.',
       steps: [

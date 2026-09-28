@@ -710,17 +710,20 @@ function grantTechTiers(n) { for (const t of CONFIG.techs) if (t.tier < n) S.tec
 // ---------- Quests ----------
 function questCurrent() { return CONFIG.quests[S.quests.index] || null; }
 function questProgress(q) { // {done, parts:[{label, done, have, need}]}
-  const parts = q.steps.map(s => ({ ...questCheck(s.check), label: s.label }));
+  _qid = q.id; const parts = q.steps.map(s => ({ ...questCheck(s.check), label: s.label })); _qid = null;
   return { done: parts.every(p => p.done), have: parts.filter(p => p.done).length, need: parts.length, parts };
 }
+let _qid = null; // quest being checked — steps marked `since` count only what happened after the quest started
+function questBase(key, now) { if (!_qid || _qid !== S.quests.cur) return now; S.quests.base = S.quests.base || {}; const B = S.quests.base[_qid] || (S.quests.base[_qid] = {}); if (B[key] == null) B[key] = now; return B[key]; }
+function sinceVal(key, now, c) { return c.since ? Math.max(0, now - questBase(key, now)) : now; }
 function questCheck(c) {
   if (c.gearTier) { const it = S.hero.gear[c.gearTier]; const t = it ? it.tier : -1; return { done: t >= c.need, have: t + 1, need: c.need + 1, simple: true }; }
   if (c.talent) { const r = S.hero.talents[c.talent] || 0; return { done: r >= 1, have: r, need: 1 }; }
   if (c.talentSpent) return { done: talentPointsSpent() >= c.talentSpent, have: talentPointsSpent(), need: c.talentSpent };
   if (c.heroLevel) return { done: S.hero.level >= c.heroLevel, have: S.hero.level, need: c.heroLevel };
   if (c.skillEquipped) { const ok = S.hero.loadout.includes(c.skillEquipped); return { done: ok, have: ok ? 1 : 0, need: 1 }; }
-  if (c.looted) { const n = (S.stats.looted && S.stats.looted[c.looted]) || 0; return { done: n >= c.need, have: n, need: c.need }; }
-  if (c.harvested) { const n = (S.stats.harvested && S.stats.harvested[c.harvested]) || 0; return { done: n >= c.need, have: n, need: c.need }; }
+  if (c.looted) { const n = sinceVal('l:' + c.looted, (S.stats.looted && S.stats.looted[c.looted]) || 0, c); return { done: n >= c.need, have: n, need: c.need }; }
+  if (c.harvested) { const n = sinceVal('h:' + c.harvested, (S.stats.harvested && S.stats.harvested[c.harvested]) || 0, c); return { done: n >= c.need, have: n, need: c.need }; }
   if (c.perk) return { done: perkRank(c.perk) >= (c.need || 1), have: perkRank(c.perk), need: c.need || 1 };
   if (c.disc) return { done: discLevel(c.disc) >= c.need, have: discLevel(c.disc), need: c.need };
   if (c.path) { const r = pathRank(c.path); return { done: r >= c.need, have: r, need: c.need }; }
@@ -730,7 +733,7 @@ function questCheck(c) {
   if (c.activity) { const ok = (S.hero.activity === c.activity || (!c.ground && (S.hero.chose || {})[c.activity])) && (!c.ground || S.hero.ground === c.ground); return { done: ok, have: ok ? 1 : 0, need: 1 }; }
   if (c.have) return { done: (S.res[c.have] || 0) >= c.need, have: Math.floor(S.res[c.have] || 0), need: c.need };
   if (c.toolLevel) { const t = S.hero.tools[c.toolLevel]; const lv = t ? t.level : 0; return { done: lv >= c.need, have: lv, need: c.need }; }
-  if (c.counter) return { done: counter(c.counter) >= c.need, have: counter(c.counter), need: c.need };
+  if (c.counter) { const n = sinceVal('c:' + c.counter, counter(c.counter), c); return { done: n >= c.need, have: n, need: c.need }; }
   if (c.tech) return { done: hasTech(c.tech), have: hasTech(c.tech) ? 1 : 0, need: 1 };
   if (c.tool) return { done: !!S.hero.tools[c.tool], have: S.hero.tools[c.tool] ? 1 : 0, need: 1 };
   if (c.gear) return { done: !!S.hero.gear[c.gear], have: S.hero.gear[c.gear] ? 1 : 0, need: 1 };
@@ -797,7 +800,7 @@ function questClaim() {
   const q = questCurrent(); if (!q || !questProgress(q).done) return false;
   for (const k in q.reward) { if (k === 'talent') S.hero.bonusTalent = (S.hero.bonusTalent || 0) + q.reward[k]; else if (k === 'crystal') {} else add(k, q.reward[k]); }
   if (q.reward && q.reward.crystal) { S.legacy.knowledge += q.reward.crystal; log(`+${q.reward.crystal} Crystal`); }
-  S.quests.done[q.id] = true; S.quests.index++; S.quests.cur = (CONFIG.quests[S.quests.index] || {}).id || null; log(`Quest complete: ${q.name}`); return true;
+  S.quests.done[q.id] = true; if (S.quests.base) delete S.quests.base[q.id]; S.quests.index++; S.quests.cur = (CONFIG.quests[S.quests.index] || {}).id || null; log(`Quest complete: ${q.name}`); return true;
 }
 
 // ---------- Market ----------
