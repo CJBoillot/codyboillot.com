@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Alpha 0.3.7',
+  version: 'Alpha 0.3.8',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,

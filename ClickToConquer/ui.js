@@ -568,7 +568,7 @@ const UI = (() => {
       const row = el('div', 'tree-row'); row.style.gridTemplateColumns = `repeat(${list.length}, 1fr)`;
       for (const n of list) {
         const d = el('div', 'node' + (n.capstone ? ' capstone' : '') + (n.tech ? ' tech' : ''));
-        d.innerHTML = `${ico(n.icon, 24)}<div class="n-name">${n.name}</div><div class="n-rank" data-f="rank"></div><div class="n-desc">${n.desc}</div><div class="n-bar"><div data-f="bar"></div></div><button class="buy" data-f="btn">+</button>`;
+        d.innerHTML = `${ico(n.icon, 24)}<div class="n-name">${n.name}</div><div class="n-rank" data-f="rank"></div><div class="n-desc">${n.desc}</div><div class="n-bar"><div data-f="bar"></div></div><div class="n-act" data-f="btn">+1</div>`;
         d.title = n.parent ? `Opens when ${(nodes.find(x => x.id === n.parent) || {}).name} is maxed` : '';
         d.setAttribute('role', 'button'); d.tabIndex = 0; const tap = () => { if (Game.rankNode(curDisc, n.id)) { flash(d); render(true); } }; d.addEventListener('click', tap); d.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); tap(); } });
         rows.node[n.id] = d; row.appendChild(d);
@@ -590,7 +590,7 @@ const UI = (() => {
       d.classList.toggle('locked', !open); d.classList.toggle('maxed', r >= max); d.classList.toggle('can', can);
       setText(d.querySelector('[data-f=rank]'), Game.nodeQuestLocked(curDisc, n.id) ? '🔒 Quest' : n.capstone ? (r ? 'Learned' : '1 talent') : `${r} / ${max}`);
       d.querySelector('[data-f=bar]').style.width = (100 * r / max) + '%';
-      const b = d.querySelector('[data-f=btn]'); b.disabled = !can; setText(b, r >= max ? '✓' : n.capstone ? '★ Learn' : '+1');
+      const b = d.querySelector('[data-f=btn]'); setText(b, r >= max ? '✓ Maxed' : !open ? '' : n.capstone ? (can ? '★ Learn' : 'needs a talent point') : (can ? '+1' : 'no points'));
       const link = $('tree').querySelector(`[data-link="${n.id}"]`); if (link) link.classList.toggle('on', open);
     }
     $('badge-skills').classList.toggle('hidden', !any);

@@ -713,3 +713,7 @@ html, body { max-width: 100%; overflow-x: hidden; }
 .node button { pointer-events: none; }
 .node.can { cursor: pointer; border-color: var(--bronze2); }
 .node.can:active { transform: scale(.97); background: #1f1812; }
+.node .n-act { margin-top: 4px; font-size: 10px; font-weight: 400; color: var(--dim); opacity: .7; min-height: 16px; letter-spacing: .02em; }
+.node.can .n-act { color: var(--bronze2); font-size: 15px; font-weight: 700; opacity: 1; }
+.node.maxed .n-act { color: #8fd18f; font-size: 11px; opacity: 1; }
+.node.can { background: linear-gradient(180deg, #221a13, #16110d); box-shadow: 0 0 0 1px var(--bronze-dim) inset; }

@@ -12,7 +12,7 @@
   <title>Click to Conquer</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=a037">
+  <link rel="stylesheet" href="style.css?v=a038">
 </head>
 <body>
 
@@ -135,7 +135,7 @@
             <div class="pt-row"><b id="disc-pts" class="pt-num">0</b><div><b>Skill points</b> <span class="dim small">for this tree</span><div class="small dim" id="disc-how">You get 1 every time this skill levels up.</div></div></div>
             <div class="pt-row"><b id="talent-free" class="pt-num gold">0</b><div><b>Talent points</b> <span class="dim small">any tree</span><div class="small dim">You get 1 for the first kill of each boss (and from some quests). Spend them on the gold ★ talents at the bottom of a tree.</div></div></div>
           </div>
-          <p class="dim small" style="margin:6px 0 0">Spend skill points with <b>+1</b> on a node. A node has 10 ranks; the node below it opens when it is maxed.</p>
+          <p class="dim small" style="margin:6px 0 0">Tap a node to spend a skill point on it. A node has 10 ranks; the node below it opens when it is maxed.</p>
         </div>
         <div id="tree" class="tree"></div>
         <button id="respec-btn" class="wide" style="margin-top:12px">Respec all trees (<span id="respec-cost"></span> 🪙)</button>
@@ -377,9 +377,9 @@
 </div>
 
 
-<script src="config.js?v=a037"></script>
-<script src="game.js?v=a037"></script>
-<script src="ui.js?v=a037"></script>
+<script src="config.js?v=a038"></script>
+<script src="game.js?v=a038"></script>
+<script src="ui.js?v=a038"></script>
 <script>window.addEventListener("error", e => { const d = document.getElementById("err"); if (d) { d.textContent = "Error: " + e.message; d.classList.remove("hidden"); } });</script>
 </body>
 </html>
