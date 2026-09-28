@@ -12,7 +12,7 @@
   <title>Click to Conquer</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=a0910">
+  <link rel="stylesheet" href="style.css?v=a0911">
 </head>
 <body>
 
@@ -84,11 +84,13 @@
           </div>
           <div id="skill-bar" class="skill-bar"></div>
           <div class="progress-row"><div class="bar kills"><div id="kills-bar"></div><span id="kills-text"></span></div></div>
+          <div class="progress-row auto-row"><div class="bar autoadv" id="auto-barbox"><div id="auto-bar"></div><span id="auto-text"></span></div></div>
+          <div id="auto-why" class="auto-why small hidden"></div>
           <div id="army-line" class="army-line hidden"></div>
           <div id="conquest-box" class="conquest hidden"><div class="row-between small"><b id="cq-name"></b><span id="cq-pct" class="dim"></span></div><div class="bar cq-bar"><div id="cq-bar"></div><span id="cq-text"></span></div><div id="cq-ticks" class="cq-ticks"></div></div>
           <div class="btn-row">
             <button id="retreat-btn">◀ Retreat</button>
-            <button id="rally-btn" class="rally-btn hidden">⚔ Rally</button>
+            <button id="rally-btn" class="rally-btn hidden" title="Your marching army strikes the enemy. Costs 1 Supply per tap.">⚔ Rally<span class="rally-sub" id="rally-sub">1 Supply</span></button>
             <button id="advance-btn" class="primary" disabled>Advance ▶</button>
           </div>
           <div id="retreat-note" class="retreat-note hidden"><span id="retreat-text"></span><button id="retreat-x" class="retreat-x" aria-label="Dismiss">×</button></div>
@@ -486,11 +488,11 @@
 </div>
 
 
-<script src="config.js?v=a0910"></script>
-<script src="cloud-config.js?v=a0910"></script>
-<script src="game.js?v=a0910"></script>
-<script src="ui.js?v=a0910"></script>
-<script src="cloud.js?v=a0910"></script>
+<script src="config.js?v=a0911"></script>
+<script src="cloud-config.js?v=a0911"></script>
+<script src="game.js?v=a0911"></script>
+<script src="ui.js?v=a0911"></script>
+<script src="cloud.js?v=a0911"></script>
 <script>window.addEventListener("error", e => { const d = document.getElementById("err"); if (d) { d.textContent = "Error: " + e.message; d.classList.remove("hidden"); } });</script>
 </body>
 </html>

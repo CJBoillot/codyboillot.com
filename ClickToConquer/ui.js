@@ -1039,7 +1039,7 @@ const UI = (() => {
       $('conquest-box').classList.toggle('hidden', !LN);
       if (LN) { const pct = Game.landPct(LN); setText($('cq-name'), `Conquest of ${G.name}`); setText($('cq-pct'), pct + '%'); $('cq-bar').style.width = pct + '%'; setText($('cq-text'), Game.landDone(LN) ? `Conquered · 👑 ${G.crown}` : `Stage ${h.stage} / ${G.stages}`);
         const ck = LN + '|' + G.stages; if ($('cq-ticks').__k !== ck) { $('cq-ticks').__k = ck; setHtml($('cq-ticks'), `<span>Captains every 10 stages</span><span>👑 ${G.ruler} · stage ${G.stages}</span>`); } }
-      const rb = $('rally-btn'); rb.classList.toggle('hidden', !p3 || !Game.heroFighting() || Game.marching() <= 0); rb.disabled = !Game.canRally(); }
+      const rb = $('rally-btn'); rb.classList.toggle('hidden', !p3 || !Game.heroFighting() || Game.marching() <= 0); rb.disabled = !Game.canRally(); if (!rb.classList.contains('hidden')) setText($('rally-sub'), `hits ${Game.fmt(st.attack * CONFIG.kingdom.army.rallyMult * (1 + 0.2 * Game.perkRank('warcry')))} · 1 Supply`); }
     { const G = Game.ground(), drops = Game.groundDrops(), pool = Game.stagePool();
       const why = k => k === 'hide' ? (Game.dropUnlocked('hide') ? 'needs a Skinning Knife' : 'needs Skinning') : !Game.dropUnlocked(k) ? 'needs ' + (CONFIG.techs.find(t => t.unlocks.drop === k) || {}).name : '';
       const pills = Object.keys(pool).map(k => drops[k] !== undefined
@@ -1058,9 +1058,10 @@ const UI = (() => {
     $('enemy-hpbar').style.width = (100 * eHp / eMax) + '%';
     setText($('enemy-hptext'), `${f(eHp)} / ${f(eMax)}`);
     setText($('enemy-dps'), f(Game.effectiveEnemyDps(st)));
-    const need = Game.killsNeeded(), kt = killsLine();
-    $('kills-bar').style.width = kt.pct + '%'; $('kills-bar').parentElement.classList.toggle('auto', kt.auto);
-    setText($('kills-text'), kt.text);
+    const need = Game.killsNeeded(), kt = killsLine(), at = autoLine();
+    $('kills-bar').style.width = kt.pct + '%'; setText($('kills-text'), kt.text);
+    $('auto-bar').style.width = at.pct + '%'; setText($('auto-text'), at.text); $('auto-barbox').className = 'bar autoadv ' + at.cls;
+    $('auto-why').classList.toggle('hidden', !at.why); if (at.why) setText($('auto-why'), at.why);
     $('auto-adv').checked = S.settings.autoAdvance !== false;
     { const rn = h.retreatNote, show = !!rn && !rn.seen && h.time - rn.t < 600; $('retreat-note').classList.toggle('hidden', !show);
       if (show) setText($('retreat-text'), rn.boss ? `The ${rn.foe} was too strong — your hero had to retreat to stage ${rn.to}. Upgrade your gear or raise his healing, then face it again.` : `${rn.away ? 'While you were away, your' : 'Your'} hero had to retreat to stage ${rn.to} — stage ${rn.from} hits harder than he can heal. Upgrade your armor or weapon (Gear), or raise his healing, to push deeper.`); }
@@ -1333,7 +1334,7 @@ const UI = (() => {
       setText($('mini-title'), `${h.resting ? 'Resting' : 'Fighting'} · ${Game.stageLabel()}`); setText($('mini-sub'), `${Game.enemyName()} · ${Game.ground().name}`);
       const eHp = h.enemyHp > 0 ? h.enemyHp : eMax; $('mini-target').classList.add('enemy');
       $('mini-target-bar').style.width = (100 * eHp / eMax) + '%'; setText($('mini-target-text'), `${f(eHp)} / ${f(eMax)}`);
-      const kt = killsLine(); $('mini-action-bar').style.width = kt.pct + '%'; setText($('mini-action-text'), kt.text);
+      const kt = killsLine(), at = autoLine(), ready = Game.canAdvance(); $('mini-action-bar').style.width = (ready ? at.pct : kt.pct) + '%'; setText($('mini-action-text'), ready ? at.text : kt.text);
     } else {
       const a = CONFIG.activities[act], t = Game.harvestTime(act), rates = Game.harvestRates(act);
       setText($('mini-title'), a.name); setText($('mini-sub'), Object.entries(rates).map(([k, v]) => `${f(v)} ${R[k].name}/s`).join(', '));
@@ -1431,17 +1432,21 @@ const UI = (() => {
     const b = C.backupInfo && C.backupInfo(), rb = $('cloud-restore'); rb.classList.toggle('hidden', !b);
     if (b && b.meta) setText(rb, `Restore previous save (${b.meta.place}, Hero Lv ${b.meta.heroLv}, set aside ${C.ago(b.at)})`);
   }
-  // Kills bar: first the kills to unlock Advance, then the count toward auto-advance (or why he won't push on).
+  // Kills bar = kills to unlock Advance. Auto bar = kills toward auto-advance, or why it is paused.
   function killsLine() {
     const h = Game.S.hero, need = Game.killsNeeded(), k = h.kills;
-    if (k < need || Game.isBoss()) return { pct: Math.min(100, 100 * k / need), text: `${Math.min(k, need)} / ${need} kills`, auto: false };
-    const block = Game.autoAdvanceBlock(), an = Game.autoKillsNeeded(), left = Math.max(0, an - k);
-    const pct = Math.min(100, 100 * (k - need) / Math.max(1, an - need));
-    if (block === 'end') return { pct: 100, text: `${k} kills`, auto: false };
-    if (block === 'boss') return { pct: 100, text: `${k} kills · Boss ahead — Advance when ready`, auto: false };
-    if (block === 'tough') return { pct: 100, text: `${k} kills · Next stage too tough — gear up`, auto: false };
-    if (block === 'off') return { pct: 100, text: `${k} kills · Advance ready`, auto: false };
-    return { pct, text: `Advance ready · auto in ${left} kill${left === 1 ? '' : 's'}`, auto: true };
+    return { pct: Math.min(100, 100 * k / need), text: `${Math.min(k, need)} / ${need} kills${Game.canAdvance() ? ' · Advance ready' : ''}` };
+  }
+  function autoLine() {
+    const S = Game.S, h = S.hero, k = h.kills, an = Game.autoKillsNeeded(), block = Game.autoAdvanceBlock(), f = Game.fmt;
+    const pct = Math.min(100, 100 * k / an), next = h.stage + 1;
+    if (block === 'off') return { pct: 0, cls: 'off', text: 'Auto-advance is off', why: 'Tick “Auto-advance” below to let him push on by himself.' };
+    if (block === 'end') return { pct: 100, cls: 'paused', text: 'Last stage of this ground', why: Game.isBoss() ? `Defeat the ${Game.enemyName()} to finish it.` : '' };
+    if (Game.isBoss()) return { pct: 0, cls: '', text: 'Auto-advance: beat the boss', why: `Once the ${Game.enemyName()} falls he moves on by himself.` };
+    if (block === 'boss') return { pct, cls: 'paused', text: `Auto-advance paused · boss next`, why: `The ${Game.enemyName(next)} waits at stage ${next}. He won't face a boss on his own — tap Advance when you're ready.` };
+    if (block === 'tough') { const d = Game.stageDanger(next);
+      return { pct, cls: 'paused', text: 'Auto-advance paused · too tough ahead', why: d >= 1 ? `One fight at stage ${next} would beat him. Upgrade your armor or weapon (Gear) first.` : `At stage ${next} he would lose about ${Math.max(1, Math.round(d * 100))}% HP per fight after healing — he'd end up retreating. Upgrade your armor or weapon (Gear), or raise his healing.` }; }
+    return { pct, cls: '', text: `Auto-advance · ${Math.min(k, an)} / ${an} kills`, why: '' };
   }
   function renderChangelog() { const el = $('whatsnew'); if (!el || el.__done) return; el.innerHTML = CONFIG.changelog.map(([v, t]) => `<div class="small"><b>${v}</b> <span class="dim">${t}</span></div>`).join(''); el.__done = true; }
   setTimeout(renderChangelog, 0);

@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Alpha 0.9.10',
+  version: 'Alpha 0.9.11',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -450,6 +450,7 @@ const CONFIG = {
     { id: 'mine',      cat: 'gather',  name: 'Mine',        icon: [4,5],  buildCost: { wood: 40, stone: 30 },               job: { time: 10, inputs: {},                     outputs: { stone: 1, ore: 1 } } },
     { id: 'farm',      cat: 'gather',  name: 'Farm',        icon: [12,5], buildCost: { wood: 30, stone: 10, fiber: 10 },               job: { time: 10, inputs: {},                     outputs: { grain: 1 } } },
     // Crafting (refining)
+    ['0.9.11', 'A second bar under the kills bar shows the countdown to auto-advance — and when it is paused, it says why (boss next, or the next stage is too tough and what to upgrade). The Rally button now shows what it does: your army strikes for the damage shown, 1 Supply per tap.'],
     ['0.9.10', 'The hero pushes on by himself: after 50 kills on a stage he advances — but only into a stage he can hold, and never into a boss (you choose those fights). No more resting mid-fight: he catches his breath after every kill instead. If a fight goes badly he retreats a stage and tells you what to upgrade. You can turn auto-advance off under the kills bar.'],
     { id: 'smith',     cat: 'craft',   name: 'Blacksmith',  icon: [4,4],  buildCost: { gold: 200, stone: 40, wood: 40 },   job: { time: 10, inputs: { ore: 5 },             outputs: { ingot: 1 } } },
     { id: 'tannery',   cat: 'craft',   name: 'Tannery',     icon: [8,2],  buildCost: { wood: 40, stone: 20, hide: 10 },              job: { time: 10, inputs: { hide: 3 },            outputs: { leather: 1 } } },
