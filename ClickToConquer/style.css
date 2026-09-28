@@ -727,3 +727,5 @@ html, body { max-width: 100%; overflow-x: hidden; }
 .kseg.on { box-shadow: inset 0 0 0 1px var(--bronze2); }
 .kcyc-lab { margin-top: 4px; text-align: center; }
 .kx.big-x { font-size: 22px; padding: 4px 10px; color: #b85a4a; }
+.settle-list { display: flex; flex-direction: column; gap: 5px; }
+.kbuild .buy.wide { width: 100%; margin-top: 8px; }

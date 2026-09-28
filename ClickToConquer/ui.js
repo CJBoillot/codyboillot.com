@@ -97,6 +97,8 @@ const UI = (() => {
     $('set-reload').addEventListener('click', async () => { Game.save(); try { if (window.caches) { const ks = await caches.keys(); await Promise.all(ks.map(k => caches.delete(k))); } } catch (e) {} location.replace(location.pathname + '?v=' + Date.now()); });
     $('set-reset').addEventListener('click', () => ask('Reset all progress?', 'This wipes everything — hero, kingdom, Crystals, Legacy perks, trophies. There is no undo.', 'Wipe everything', () => Game.debug.resetAll()));
     $('tech-hide-known').addEventListener('change', e => { Game.S.settings.techHideKnown = e.target.checked; render(true); });
+    $('settle-pay').addEventListener('click', () => { if (Game.contribute()) render(true); });
+    $('settle-raise').addEventListener('click', () => { const nx = CONFIG.kingdom.tiers[Game.kTier() + 1]; ask(`Raise to ${nx.name}?`, `Your settlement becomes a ${nx.name}. Nothing is lost: new buildings unlock, the Storehouse holds ${nx.cap} of each good and each building takes ${nx.slots} worker${nx.slots > 1 ? 's' : ''}.`, `Raise to ${nx.name}`, () => { if (Game.raiseTier()) { for (const l in lineKey) lineKey[l] = ''; render(true); } }); });
     $('offer-refresh').addEventListener('click', () => { if (Game.refreshOffers(true)) { $('hire-list').__h = ''; render(true); } });
     $('store-up').addEventListener('click', () => { if (Game.upgradeStore()) render(true); });
     $('item-pin').addEventListener('click', () => { if (invItem) { Game.togglePin(invItem); openItem(invItem); } });
@@ -139,7 +141,7 @@ const UI = (() => {
       if (gain === false) return;
       $('found-modal').classList.add('hidden'); buildLists(); for (const l in lineKey) lineKey[l] = '';
       document.querySelector('[data-tab=hero]').click();
-      if (Game.S.legacy.foundings === 1 && !Game.S.settings.demoSeen) showInfo('Kingdom 1', 'You founded a kingdom.', '<p class="small">The wild is behind you. From here on your land works while you are away.</p><p class="small"><b>Forest</b> — hire thralls in the Keep and put them to work at the Logging camp. Upgrade Work rate, Haul speed and Cart size with gold.</p><p class="small"><b>Keep</b> — fill Imperial Orders for gold and Renown. Earn <b>500 Renown</b> to found a new fief: each fief unlocks one new step, and pays out Crystals.</p><p class="small dim">Alpha 0.3 — numbers are rough and will change.</p>', 'demoSeen');
+      if (Game.S.legacy.foundings === 1 && !Game.S.settings.demoSeen) showInfo('Camp', 'You founded a kingdom.', '<p class="small">The wild is behind you. From here on your land works while you are away.</p><p class="small"><b>Market → Tavern</b> — hire thralls. <b>Kingdom → Forest</b> — put them to work at Logging, and upgrade Work, Cart and Haul with gold.</p><p class="small"><b>Keep</b> — fill Imperial Orders for gold and Renown, and grow your settlement: <b>Camp → Hamlet → Village → City</b>. Each step up costs goods, never your progress.</p><p class="small dim">Alpha — numbers are rough and will change.</p>', 'demoSeen');
     });
     $('demo-continue').addEventListener('click', () => { if (infoFlag) Game.S.settings[infoFlag] = true; Game.save(); $('demo-modal').classList.add('hidden'); });
     if (Game.S.migrated03 && !Game.S.settings.migSeen) showInfo('Alpha 0.3', 'The kingdom has been rebuilt.', '<p class="small">Combat, gear and the whole kingdom were redesigned for 0.3, so your old run could not carry over. Your <b>Crystals, Legacy perks and Bestiary kills</b> are kept.</p><p class="small">The wild now starts with bare fists, a 100-item pack and a tribute to the Empire. Past it lies a new idle kingdom of production lines, thralls and Imperial Orders.</p>', 'migSeen');
@@ -403,7 +405,11 @@ const UI = (() => {
     L.steps.forEach((st, i) => {
       const open = Game.stepUnlocked(st.id);
       if (i > 0) h += `<div class="kflow">▼ ${R[L.steps[i - 1].make].name}${open ? ' feed the ' + st.name : ''}</div>`;
-      if (!open) { h += `<div class="card kstep locked-step"><div class="kstep-head">${ico(st.icon, 24)}<div><div class="kstep-name">${st.name}</div><div class="tiny dim">Makes ${R[st.make].name}${st.from ? ' from ' + R[st.from].name : ''}</div></div><div class="kout dim small">Unlocks with<br><b>Kingdom ${st.unlock}</b></div></div></div>`; return; }
+      if (!open) {
+        const avail = Game.stepAvailable(st.id);
+        if (!avail) { h += `<div class="card kstep locked-step"><div class="kstep-head">${ico(st.icon, 24)}<div><div class="kstep-name">${st.name}</div><div class="tiny dim">Makes ${R[st.make].name}${st.from ? ' from ' + R[st.from].name : ''}</div></div><div class="kout dim small">Unlocks at<br><b>${CONFIG.kingdom.tiers[st.tier].name}</b></div></div></div>`; return; }
+        h += `<div class="card kstep kbuild" data-build="${st.id}"><div class="kstep-head">${ico(st.icon, 24)}<div><div class="kstep-name">${st.name}</div><div class="tiny dim">Makes ${R[st.make].name}${st.from ? ' from ' + R[st.from].name : ''}</div></div></div><button class="buy wide" data-f="build"><span class="small">Build the ${st.name}</span><br><span class="cost" data-f="bcost"></span></button></div>`; return;
+      }
       const ss = Game.stepState(st.id);
       h += `<div class="card kstep" data-step="${st.id}">
         <div class="kstep-head">${ico(st.icon, 24)}<div><div class="kstep-name">${st.name}</div><div class="tiny dim">${st.from ? `${st.ratio} ${R[st.from].name} → 1 ${R[st.make].name}` : 'Gathers ' + R[st.make].name}</div></div><div class="kout"><b data-f="out"></b> <span class="small dim">/s</span><div class="tiny" data-f="lim"></div></div></div>
@@ -413,18 +419,21 @@ const UI = (() => {
         <div class="kstaff">
           <div class="kslot"><span class="small dim">Workers <b data-f="wn"></b></span><span data-f="wlist" class="small"></span><button data-f="wadd" class="buy kpick">+ Add worker</button></div>
           <div class="kslot"><span class="small dim">Overseer</span><span data-f="ov" class="small"></span><button data-f="ovsel" class="buy kpick">Choose</button><button data-f="ab" class="buy small-btn">Double shift</button></div>
+          ${st.tier === 2 ? `<div class="kslot"><span class="small dim">Accountant</span><span data-f="ac" class="small"></span><button data-f="acsel" class="buy kpick">Choose</button></div>` : ''}
         </div>
       </div>`;
     });
     const steps = Game.lineSteps(lid), last = steps[steps.length - 1];
     if (last) h += `<div class="kflow">▼ ${R[last.make].name} to the Storehouse</div>`;
     box.innerHTML = h; rows.step[lid] = {};
+    box.querySelectorAll('[data-build]').forEach(card => { const id = card.dataset.build; rows.step[lid][id] = card; card.querySelector('[data-f=build]').addEventListener('click', () => { if (Game.buildStep(id)) { lineKey[lid] = ''; render(true); } }); });
     box.querySelectorAll('[data-step]').forEach(card => {
       const id = card.dataset.step; rows.step[lid][id] = card;
       card.querySelectorAll('[data-t]').forEach(tr => tr.querySelector('[data-f=up]').addEventListener('click', () => { if (Game.upgradeStep(id, tr.dataset.t, kBuy)) { flash(tr); render(true); } }));
       card.querySelector('[data-f=wadd]').addEventListener('click', () => openPicker(id, 'worker', lid));
       card.querySelector('[data-f=ovsel]').addEventListener('click', () => openPicker(id, 'overseer', lid));
       card.querySelector('[data-f=ab]').addEventListener('click', () => { if (Game.useAbility(id)) flash(card); });
+      const acb = card.querySelector('[data-f=acsel]'); if (acb) acb.addEventListener('click', () => openPicker(id, 'accountant', lid));
     });
     box.closest('.ksub').querySelector('[data-kbar]').innerHTML = kbarHtml();
     box.closest('.ksub').querySelectorAll('[data-kbuy]').forEach(b => b.addEventListener('click', () => { kBuy = b.dataset.kbuy === 'max' ? 'max' : +b.dataset.kbuy; for (const l in lineKey) lineKey[l] = ''; render(true); }));
@@ -432,9 +441,10 @@ const UI = (() => {
   }
   function renderLine(lid) {
     const S = Game.S, f = Game.fmt;
-    const key = Game.kingdomNo() + '|' + S.kingdom.thralls.length + '|' + kBuy + '|' + Game.lineSteps(lid).map(st => { const s = Game.stepState(st.id); return s.workers.join(',') + '/' + s.overseer + '/' + Game.stepWorkerSlots(st.id); }).join(';');
+    const key = Game.kingdomNo() + '|' + Game.kTier() + '|' + JSON.stringify(S.kingdom.built || {}) + '|' + S.kingdom.thralls.length + '|' + kBuy + '|' + Game.lineSteps(lid).map(st => { const s = Game.stepState(st.id); return s.workers.join(',') + '/' + s.overseer + '/' + s.accountant + '/' + Game.stepWorkerSlots(st.id); }).join(';');
     if (lineKey[lid] !== key) { lineKey[lid] = key; buildLine(lid); }
     let anyUp = false;
+    for (const st of CONFIG.kingdom.lines[lid].steps) { const bc = rows.step[lid] && rows.step[lid][st.id]; if (!bc || !bc.dataset.build) continue; setHtml(bc.querySelector('[data-f=bcost]'), costHtml(st.build)); const cb = Game.canBuild(st.id); bc.querySelector('[data-f=build]').disabled = !cb; if (cb) anyUp = true; }
     for (const st of Game.lineSteps(lid)) {
       const card = rows.step[lid] && rows.step[lid][st.id]; if (!card) continue;
       const s = Game.stepState(st.id), m = Game.stepMods(st.id), hasOv = s.overseer !== null, lim = Game.stepLimit(st.id);
@@ -456,7 +466,7 @@ const UI = (() => {
       { const PHS = Game.stepPhases(st.id), cyc = PHS[0] + PHS[1] + PHS[2];
         card.querySelectorAll('[data-seg]').forEach(seg => { const i = +seg.dataset.seg; seg.style.flexGrow = (PHS[i] / cyc).toFixed(4); const fill = !m.working ? 0 : i < s.phase ? 100 : i > s.phase ? 0 : 100 * Math.min(1, s.t / PHS[i]); seg.firstChild.style.width = fill + '%'; seg.classList.toggle('on', m.working && i === s.phase); });
         setText(card.querySelector('[data-f=cartlab]'), !m.working ? 'Idle — no workers' : `${Game.stepBatch(st.id)} ${R[st.make].name.toLowerCase()} every ${cyc.toFixed(1)}s · now: ${[st.from ? 'crafting' : 'working', 'loading the cart', 'hauling'][s.phase]}${s.phase === 0 && lim === 'starved' ? ' (waiting for ' + R[st.from].name.toLowerCase() + ')' : ''}`); }
-      if (st.from) { card.querySelector('[data-f=inbar]').style.width = Math.min(100, 100 * s.inBuf / CONFIG.kingdom.bufferCap) + '%'; setText(card.querySelector('[data-f=inlab]'), `${Math.floor(s.inBuf)} waiting`); }
+      if (st.from) { card.querySelector('[data-f=inbar]').style.width = Math.min(100, 100 * s.inBuf / (st.ratio * st.batch * 2)) + '%'; setText(card.querySelector('[data-f=inlab]'), `${Math.floor(s.inBuf)} waiting`); }
       setText(card.querySelector('[data-f=wn]'), `${s.workers.length}/${Game.stepWorkerSlots(st.id)}`);
       setHtml(card.querySelector('[data-f=wlist]'), s.workers.map(i => `<span class="kchip">${S.kingdom.thralls[i].name} <button class="kx" data-rm="${i}" aria-label="Remove">×</button></span>`).join(' ') || '<span class="warn">none</span>');
       card.querySelectorAll('[data-rm]').forEach(b => b.onclick = () => { Game.unassign(+b.dataset.rm); lineKey[lid] = ''; render(true); });
@@ -464,6 +474,7 @@ const UI = (() => {
       const ov = s.overseer !== null ? S.kingdom.thralls[s.overseer] : null;
       setHtml(card.querySelector('[data-f=ov]'), ov ? `<b>${ov.name}</b> <span class="stars">${stars(ov.stars)}</span> <span class="dim">${roleShort(ov.role)} ×${CONFIG.kingdom.starMult[ov.stars]}</span>` : '<span class="dim">empty</span>');
       setText(card.querySelector('[data-f=ovsel]'), ov ? 'Change' : 'Choose');
+      if (st.tier === 2) { const ac = s.accountant != null ? S.kingdom.thralls[s.accountant] : null; setHtml(card.querySelector('[data-f=ac]'), ac ? `<b>${ac.name}</b> <span class="dim">sells ${R[st.make].name.toLowerCase()} above ${f(Math.floor(Game.resCap(st.make) * CONFIG.kingdom.accountantReserve))}</span>` : '<span class="dim">empty</span>'); setText(card.querySelector('[data-f=acsel]'), ac ? 'Change' : 'Choose'); }
       const ab = card.querySelector('[data-f=ab]'), now = S.hero.time; ab.classList.toggle('hidden', !ov);
       if (ov) { ab.disabled = s.abilityReady > now; setText(ab, s.abilityUntil > now ? `Active ${Math.ceil(s.abilityUntil - now)}s` : s.abilityReady > now ? `Ready in ${Game.fmtTime(s.abilityReady - now)}` : 'Double shift'); }
     }
@@ -473,15 +484,16 @@ const UI = (() => {
   // In-game picker for staffing a step (replaces native dropdowns)
   function openPicker(stepId, as, lid) {
     const S = Game.S, K = S.kingdom, st = Game.stepDef(stepId), ss = Game.stepState(stepId), list = $('pick-list');
-    setText($('pick-title'), as === 'worker' ? `Worker for the ${st.name}` : `Overseer for the ${st.name}`);
-    setText($('pick-sub'), as === 'worker' ? 'Workers run the step. Speed shortens Work, Strength shortens Cart. Thralls level up as they work.' : 'An Overseer reports the bottleneck and boosts one track by role: Foreman → work rate, Carter → haul speed, Packer → cart size.');
+    setText($('pick-title'), as === 'worker' ? `Worker for the ${st.name}` : as === 'accountant' ? `Accountant for the ${st.name}` : `Overseer for the ${st.name}`);
+    setText($('pick-sub'), as === 'accountant' ? `An Accountant sells ${R[st.make].name.toLowerCase()} the Storehouse does not need (above a quarter of its cap), at half the Market price.` : as === 'worker' ? 'Workers run the step. Speed shortens Work, Strength shortens Cart. Thralls level up as they work.' : 'An Overseer reports the bottleneck and boosts one track by role: Foreman → work rate, Carter → haul speed, Packer → cart size.');
     const close = () => { $('pick-modal').classList.add('hidden'); lineKey[lid] = ''; render(true); };
     let h = '';
+    if (as === 'accountant' && ss.accountant != null) h += `<button class="pick-row danger-btn" data-pick="remove"><div class="row-main"><b>Remove ${K.thralls[ss.accountant].name}</b></div></button>`;
     if (as === 'overseer' && ss.overseer !== null) h += `<button class="pick-row danger-btn" data-pick="remove"><div class="row-main"><b>Remove ${K.thralls[ss.overseer].name}</b><div class="small dim">Leave the Overseer slot empty</div></div></button>`;
-    const cand = K.thralls.map((t, i) => ({ t, i, p: Game.thrallPost(i) })).filter(c => as === 'worker' ? !ss.workers.includes(c.i) : c.i !== ss.overseer)
+    const cand = K.thralls.map((t, i) => ({ t, i, p: Game.thrallPost(i) })).filter(c => as === 'worker' ? !ss.workers.includes(c.i) : as === 'accountant' ? c.i !== ss.accountant : c.i !== ss.overseer)
       .sort((a, b) => (!!a.p - !!b.p) || (b.t.stars - a.t.stars));
     for (const c of cand) {
-      const where = c.p ? `${c.p.as === 'overseer' ? 'Overseer' : 'Worker'} at the ${Game.stepDef(c.p.id).name}` : 'Idle';
+      const where = c.p ? `${c.p.as === 'overseer' ? 'Overseer' : c.p.as === 'accountant' ? 'Accountant' : 'Worker'} at the ${Game.stepDef(c.p.id).name}` : 'Idle';
       const perk = `Lv ${Game.thrallLevel(c.t)} · ` + (as === 'worker' ? `Str ${c.t.str} · Spd ${c.t.spd}` : `${ROLE[c.t.role]} ×${CONFIG.kingdom.starMult[c.t.stars]}`);
       h += `<button class="pick-row" data-pick="${c.i}"><div class="row-main"><b>${c.t.name}</b> <span class="stars">${stars(c.t.stars)}</span> <span class="owned">${roleShort(c.t.role)}</span><div class="small dim">${perk}</div></div><span class="tag ${c.p ? '' : 'idle'}">${c.p ? 'Move from ' + Game.stepDef(c.p.id).name : 'Idle'}</span></button>`;
     }
@@ -490,8 +502,8 @@ const UI = (() => {
     list.querySelectorAll('[data-pick]').forEach(b => b.onclick = () => {
       const v = b.dataset.pick;
       if (v === 'tavern') { $('pick-modal').classList.add('hidden'); goTavern(); return; }
-      if (v === 'remove') { ss.overseer = null; }
-      else if (as === 'worker') Game.assignWorker(stepId, +v); else Game.assignOverseer(stepId, +v);
+      if (v === 'remove') { if (as === 'accountant') ss.accountant = null; else ss.overseer = null; }
+      else if (as === 'worker') Game.assignWorker(stepId, +v); else if (as === 'accountant') Game.assignAccountant(stepId, +v); else Game.assignOverseer(stepId, +v);
       close();
     });
     $('pick-modal').classList.remove('hidden');
@@ -500,9 +512,32 @@ const UI = (() => {
     if (desktop) { const r = document.querySelector('[data-rtab=market]'); if (r) r.click(); } else document.querySelector('[data-tab=market]').click();
     document.querySelector('[data-msub=tavern]').click();
   }
+  let keepHint = false;
   function renderKeep() {
+    keepHint = false;
     const S = Game.S, f = Game.fmt, K = S.kingdom, inK = Game.kingdomNo() > 0;
     $('keep-kingdom').classList.toggle('hidden', !inK); if (!inK) return false;
+    { // settlement
+      const T = CONFIG.kingdom.tiers, t = Game.kTier(), td = T[t], nx = T[t + 1], need = Game.tierNeed(), paid = Game.tierPaid();
+      setText($('settle-name'), td.name); setText($('settle-tier'), `${t + 1} of ${T.length}${nx ? ' · next: ' + nx.name : ''}`);
+      let lh = '';
+      if (nx) {
+        setText($('settle-need'), `To become a ${nx.name}: ${td.need} Then pay in ${td.cap} of every good you make — a little at a time is fine. Nothing is lost.${t > 0 ? ' Tip: a building uses up what feeds it — take its workers off for a while to stock up.' : ''}`);
+        const cur = CONFIG.kingdom.lines; const stepsHere = Game.allSteps().filter(st => st.tier === t);
+        lh += stepsHere.map(st => { const ok = Game.stepBuilt(st.id) && Game.stepState(st.id).workers.length > 0; return `<div class="row-between small"><span>${ok ? '✓' : '○'} ${st.name}</span><span class="${ok ? 'good' : 'dim'}">${Game.stepBuilt(st.id) ? (ok ? 'working' : 'needs a worker') : 'not built'}</span></div>`; }).join('');
+        lh += Object.keys(need).map(k => { const g = Math.min(need[k], paid[k] || 0); return `<div class="bar kob"><div style="width:${100 * g / need[k]}%"></div><span>${R[k].name} ${f(g)} / ${f(need[k])}${g < need[k] ? ` · have ${f(Math.floor(S.res[k] || 0))}` : ' ✓'}</span></div>`; }).join('');
+        const canPay = Object.keys(need).some(k => (paid[k] || 0) < need[k] && (S.res[k] || 0) >= 1);
+        $('settle-pay').disabled = !canPay; $('settle-pay').classList.toggle('hidden', Game.tierPaidDone());
+        const cr = Game.canRaise(); $('settle-raise').disabled = !cr; setText($('settle-raise'), `Raise to ${nx.name}`); $('settle-raise').classList.remove('hidden');
+        if (cr) keepHint = true;
+      } else {
+        setText($('settle-need'), td.need + ' Then this land is conquered, and you can settle new lands.');
+        const c = Game.cityChecks(); const row = (lab, a, b) => `<div class="row-between small"><span>${a >= b ? '✓' : '○'} ${lab}</span><span class="${a >= b ? 'good' : 'dim'}">${a} / ${b}</span></div>`;
+        lh += row('Buildings with 3 workers', c.crews, c.steps) + row('Buildings with an Overseer', c.overseers, c.steps) + row('Accountants on final goods', c.accountants, c.finals);
+        $('settle-pay').classList.add('hidden'); $('settle-raise').classList.add('hidden');
+      }
+      setHtml($('settle-list'), lh);
+    }
     const ri = Game.rankInfo();
     setText($('rank-now'), `${ri.cur.name}${ri.next ? '' : ' (highest)'}`);
     $('rank-bar').style.width = (ri.next ? 100 * (ri.renown - ri.cur.renown) / (ri.next.renown - ri.cur.renown) : 100) + '%';
@@ -521,7 +556,7 @@ const UI = (() => {
     const hl = $('hire-list'); if (hl.__h !== hh) { hl.innerHTML = hh; hl.__h = hh; hl.querySelectorAll('[data-hire]').forEach(b => b.onclick = () => { if (Game.hire(+b.dataset.hire)) { hl.__h = ''; for (const l in lineKey) lineKey[l] = ''; render(true); } }); }
     // roster
     setText($('roster-count'), `${K.thralls.length} / ${Game.thrallCap()} · room for one more each new land`);
-    const rh = K.thralls.map((t, i) => { const p = Game.thrallPost(i); return `<div class="row"><div class="row-main"><div class="row-title">${t.name} <span class="stars">${stars(t.stars)}</span> <span class="owned">${roleShort(t.role)} · Lv ${Game.thrallLevel(t)}</span></div><div class="row-sub">${p ? (p.as === 'overseer' ? 'Overseer' : 'Worker') + ' at the ' + Game.stepDef(p.id).name : '<span class="warn">Idle — Kingdom → a line → + Add worker</span>'} · Str ${t.str} · Spd ${t.spd} · ${f(t.xp || 0)} loads hauled</div></div><button class="kx big-x" data-dis="${i}" aria-label="Dismiss">×</button></div>`; }).join('');
+    const rh = K.thralls.map((t, i) => { const p = Game.thrallPost(i); return `<div class="row"><div class="row-main"><div class="row-title">${t.name} <span class="stars">${stars(t.stars)}</span> <span class="owned">${roleShort(t.role)} · Lv ${Game.thrallLevel(t)}</span></div><div class="row-sub">${p ? (p.as === 'overseer' ? 'Overseer' : p.as === 'accountant' ? 'Accountant' : 'Worker') + ' at the ' + Game.stepDef(p.id).name : '<span class="warn">Idle — Kingdom → a line → + Add worker</span>'} · Str ${t.str} · Spd ${t.spd} · ${f(t.xp || 0)} loads hauled</div></div><button class="kx big-x" data-dis="${i}" aria-label="Dismiss">×</button></div>`; }).join('');
     const rl = $('roster'); if (rl.__h !== rh) { rl.innerHTML = rh || '<div class="dim small">Nobody yet. Hire someone above.</div>'; rl.__h = rh; rl.querySelectorAll('[data-dis]').forEach(b => b.onclick = () => { const t = K.thralls[+b.dataset.dis]; ask('Dismiss ' + t.name + '?', `${t.name} (Lv ${Game.thrallLevel(t)}) leaves for good. This frees a place for someone new.`, 'Dismiss', () => { Game.dismiss(+b.dataset.dis); rl.__h = ''; for (const l in lineKey) lineKey[l] = ''; render(true); }); }); }
     // storehouse
     setText($('store-lv'), K.storeLv || 0); setText($('store-cap'), f(Game.storeCap('wood')));
@@ -531,7 +566,7 @@ const UI = (() => {
     const sc = Game.storeUpCost(); setHtml($('store-cost'), costHtml(sc)); $('store-up').disabled = !Game.canAfford(sc);
     const canHire = (K.offers || []).some(o => (S.res.gold || 0) >= o.price) && K.thralls.length < Math.min(2, Game.thrallCap());
     $('badge-tavern').classList.toggle('hidden', !canHire);
-    return anyOrder;
+    return anyOrder || keepHint;
   }
 
 
@@ -915,7 +950,7 @@ const UI = (() => {
     fmPick.hero = L.heroPath || 'warrior'; fmPick.kingdom = L.kingdomPath || 'benevolent';
     { const g = Game.knowledgeGain(); setText($('fm-gain'), `${g} Crystal${g === 1 ? '' : 's'}`); }
     { const first = Game.S.legacy.foundings === 0; setText($('fm-title'), first ? 'Found Your Kingdom' : 'Settle New Lands'); setText($('fm-confirm'), first ? 'Found' : 'Ride out'); }
-    setText($('fm-worker'), (() => { const n = Game.allSteps().find(st => st.unlock === Game.S.legacy.foundings + 1); return n ? 'a new step: ' + n.name : 'a fresh kingdom'; })());
+    setText($('fm-worker'), Game.S.legacy.foundings === 0 ? 'your first Camp' : 'a new Camp in new lands');
     const build = (holder, list, key) => {
       holder.innerHTML = '';
       for (const p of list) {
@@ -940,12 +975,12 @@ const UI = (() => {
     setText($('knowledge'), L.knowledge); setText($('knowledge2'), L.knowledge); setText($('foundings'), L.foundings); setText($('throne-best'), S.hero.bestStage);
     setText($('found-gain'), '+' + Game.knowledgeGain());
     const cost = Game.foundCost(); setHtml($('found-cost'), Object.keys(cost).length ? costHtml(cost) : '<span class="dim">free — Renown is the price</span>');
-    const first = S.legacy.foundings === 0, nextStep = Game.allSteps().find(st => st.unlock === S.legacy.foundings + 1);
+    const first = S.legacy.foundings === 0;
     setText($('found-title'), first ? 'Pay Tribute to the Empire' : 'Settle New Lands');
-    setText($('found-text'), first ? 'Pay tribute and the Empire grants you land: your first kingdom, with a Forest to work. Your hero keeps everything.' : `Conquer this land, then move on. Your hero, your thralls, Legacy and trophies go with you; the lands, stores and gold stay behind. Next lands bring: ${nextStep ? nextStep.name + ' (' + CONFIG.kingdom.lines[nextStep.line].name + ')' : 'nothing new yet'}, and room for one more thrall.`);
+    setText($('found-text'), first ? 'Pay tribute and the Empire grants you land: your first kingdom, with a Forest to work. Your hero keeps everything.' : 'Once your City is complete, this land is conquered. Settle new lands: your hero, your thralls, Legacy and trophies go with you; the lands, buildings, stores and gold stay behind, and a new Camp begins.');
     $('found-btn').textContent = first ? 'Pay Tribute' : 'Settle New Lands';
     if (first) { const reqStage = CONFIG.legacy.foundRequiresStage, okStage = Game.bestStageAll() >= reqStage; setText($('found-req'), okStage ? (Game.canAfford(cost) ? 'Ready.' : 'Gather the tribute: 100 gold and the Rat King\'s Tooth.') : `Reach stage ${reqStage} to pay tribute (best: ${Game.bestStageAll()}).`); }
-    else { const need = Game.foundRenownNeed(), have = S.kingdom.renown || 0; setText($('found-req'), have >= need ? 'Ready.' : `Earn ${Game.fmt(need)} Renown to conquer this land — you have ${Game.fmt(have)}.`); }
+    else { setText($('found-req'), Game.canFound() ? 'Ready. This land is conquered.' : `Grow your settlement into a complete City first (now: ${Game.tierDef().name}).`); }
     $('found-btn').disabled = !Game.canFound();
     $('badge-throne').classList.toggle('hidden', !Game.canFound());
     let anyPerk = false;

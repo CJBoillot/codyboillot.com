@@ -12,7 +12,7 @@
   <title>Click to Conquer</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=a041">
+  <link rel="stylesheet" href="style.css?v=a050">
 </head>
 <body>
 
@@ -166,6 +166,12 @@
       </div>
       <div id="ksub-keep" class="ksub hidden">
         <div id="keep-kingdom">
+          <div class="card" id="settle-card">
+            <div class="row-between"><div class="card-title" style="margin:0" id="settle-name">Camp</div><span class="small dim" id="settle-tier"></span></div>
+            <p class="small dim" id="settle-need" style="margin:4px 0 8px"></p>
+            <div id="settle-list" class="settle-list"></div>
+            <div class="btn-row" style="margin-top:8px"><button id="settle-pay">Contribute</button><button id="settle-raise" class="primary">Raise</button></div>
+          </div>
           <div class="card">
             <div class="row-between"><div class="card-title" style="margin:0">Renown</div><span class="small dim" id="rank-now"></span></div>
             <div class="bar purple-bar"><div id="rank-bar"></div><span id="rank-text"></span></div>
@@ -378,9 +384,9 @@
 </div>
 
 
-<script src="config.js?v=a041"></script>
-<script src="game.js?v=a041"></script>
-<script src="ui.js?v=a041"></script>
+<script src="config.js?v=a050"></script>
+<script src="game.js?v=a050"></script>
+<script src="ui.js?v=a050"></script>
 <script>window.addEventListener("error", e => { const d = document.getElementById("err"); if (d) { d.textContent = "Error: " + e.message; d.classList.remove("hidden"); } });</script>
 </body>
 </html>

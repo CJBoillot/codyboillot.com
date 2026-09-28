@@ -1,4 +1,4 @@
-# Click to Conquer — Alpha 0.4.0
+# Click to Conquer — Alpha 0.5.0
 
 Mobile-first AFK / incremental game. Vanilla HTML + JS, no build: open `index.html`. Full design in the project doc `design/v0.3-design.md`.
 
@@ -6,21 +6,20 @@ Mobile-first AFK / incremental game. Vanilla HTML + JS, no build: open `index.ht
 
 **P0 — the wild (played once).** The hero starts naked, punching rats. Quests teach the UI: gather by hand, research, forge gear, set an activity, fight up to stage 20. Everything fits under a **100-item pack** (150 with Leatherwork); when a harvest fills the pack the hero rests. P0 ends with the **tribute**: 100 gold + the Rat King's Tooth → Kingdom 1. Bot pace: ~28 min.
 
-**P1+ — the kingdom (the idle game).** Three production lines, each its own screen:
+**The kingdom (the idle game).** One land grows through four settlements, and nothing is lost along the way:
 
-| Line | Step 1 | Step 2 | Step 3 |
-|---|---|---|---|
-| Forest | Logging (K1) wood | Sawmill (K4) planks | Carpenter (K7) treated lumber |
-| Farm | Fields (K2) grain | Mill (K5) flour | Baker (K8) bread |
-| Mine | Shaft (K3) ore | Smelter (K6) ingots | Forge (K9) iron swords |
+| Settlement | Buildings unlocked (built with goods you already make) | Workers per building | Thrall cap | Storehouse |
+|---|---|---|---|---|
+| Camp | Logging (free) · Fields (40 wood, 60 gold) · Mine Shaft (60 wood, 30 grain, 100 gold) | 1 | 5 | 200 |
+| Hamlet | Sawmill · Mill · Smelter (T1 goods + 300 gold) | 2 | 12 | 350 |
+| Village | Carpenter · Baker · Forge (T2 goods + 800 gold) | 3 | 30 | 500 |
+| City | — | 3 | 42 | 800 |
 
-Each step runs one **cycle** shown as a single three-part bar: **Work** (make a batch) → **Cart** (load it) → **Haul** (deliver it). Each part has its own upgrade track, bought with gold; every level shortens that part by 12% of base (hyperbolic, so it never ends). Cycle time = the sum, output = batch ÷ cycle. A step runs only with a thrall on it; unstaffed later steps are skipped. An **Overseer** flags the slowest part and speeds up one part by role (Foreman → Work, Packer → Cart, Carter → Haul).
+To raise the settlement: every building of the current tier built and staffed, then pay in the tier's cap (200 / 350 / 500) of **every good made so far** — contribute a bit at a time. The City is complete when all 9 buildings have 3 workers and an Overseer and each final good (lumber, bread, swords) has an **Accountant** (sells stock above 25% of cap at ½ price). Only then can you **Settle New Lands** (the real prestige): hero and thralls ride with you, a new Camp begins, Crystals = √(Renown / 40).
 
-**Thralls** are hired in **Market → Tavern** (pick 1 of 3). They level up as they haul (Lv = 1 + ⌊√(loads / 4)⌋, +10% Str/Spd per level) and **ride with you** to new lands. Thrall cap = 2 + kingdom number. Dismiss from the roster.
+Each building runs one **cycle** shown as a single bar: **Work → Cart → Haul**; each part has its own upgrade track (every level shortens that part; endless). A building feeds the next one only what it can use (a buffer of 2 cycles of input); the rest goes to the Storehouse. Goods that don't fit the Storehouse are auto-sold at ¼ price. Thralls are hired in **Market → Tavern** and level up as they work.
 
-**Keep:** Imperial Orders (speed bonus in the first 10 min, ⇄ swap every 2 min), Renown ranks, Storehouse. Goods that don't fit are **auto-sold at ¼ price**. Gold caps at 10× the Storehouse cap.
-
-**Settle New Lands (prestige):** needs 500 Renown × kingdom number. The hero and thralls go with you; lands, stores, gold, orders and renown stay behind. Pays √(renown / 40) Crystals, one new step and +1 thrall slot. Bot pace: 55–80 min per land through K9.
+Bot pace (fresh Camp → City complete): Camp ~70 min, Hamlet ~2 h, Village ~5 h, ~8 h total.
 
 ## Combat (number squish)
 
