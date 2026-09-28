@@ -459,10 +459,13 @@ const UI = (() => {
         ${st.from ? `<div class="kin"><span class="small dim">${R[st.from].name} in</span><div class="bar green-bar"><div data-f="inbar"></div><span data-f="inlab"></span></div></div>` : ''}
         <div class="ktracks">${['rate', 'cart', 'haul'].map(t => `<div class="ktrack" data-t="${t}"><div><div class="ktl">${t === 'rate' && st.from ? 'Craft' : TRACK[t]} <span class="dim small">Lv <b data-f="lv"></b></span></div><div class="small dim" data-f="v"></div><div class="kflag hidden">Bottleneck</div></div><button class="buy" data-f="up"><span class="small" data-f="uplab">Upgrade</span><br><span class="cost" data-f="cost"></span></button></div>`).join('')}</div>
         <div class="kcycle">${[0, 1, 2].map(i => `<div class="kseg kseg${i}" data-seg="${i}"><div class="kfill"></div><span>${i === 0 && st.from ? "Craft" : PH[i]}</span></div>`).join("")}</div><div class="tiny dim kcyc-lab" data-f="cartlab"></div>
-        <div class="kstaff">
-          <div class="kslot"><span class="small dim">Workers <b data-f="wn"></b></span><span data-f="wlist" class="small"></span><button data-f="wadd" class="buy kpick">+ Add worker</button></div>
-          <div class="kslot"><span class="small dim">Overseer</span><span data-f="ov" class="small"></span><button data-f="ovsel" class="buy kpick">Choose</button><button data-f="ab" class="buy small-btn">Double shift</button></div>
-          ${st.tier === 2 ? `<div class="kslot"><span class="small dim">Accountant</span><span data-f="ac" class="small"></span><button data-f="acsel" class="buy kpick">Choose</button></div>` : ''}
+        <div class="kcrew">
+          <div class="kcrew-head"><span>Workers</span><b data-f="wn"></b></div>
+          <div class="kslots" data-f="wslots"></div>
+          <div class="kcrew-warn hidden" data-f="wwarn"></div>
+          <div class="krole"><div class="krole-ic">👁</div><div class="krole-txt"><div class="krole-k">Overseer</div><div data-f="ov"></div></div><button data-f="ovsel" class="buy">Choose</button></div>
+          <button data-f="ab" class="buy kshift">Double shift</button>
+          ${st.tier === 2 ? `<div class="krole"><div class="krole-ic">⚖</div><div class="krole-txt"><div class="krole-k">Accountant</div><div data-f="ac"></div></div><button data-f="acsel" class="buy">Choose</button></div>` : ''}
         </div>
       </div>`;
     });
@@ -473,7 +476,6 @@ const UI = (() => {
     box.querySelectorAll('[data-step]').forEach(card => {
       const id = card.dataset.step; rows.step[lid][id] = card;
       card.querySelectorAll('[data-t]').forEach(tr => tr.querySelector('[data-f=up]').addEventListener('click', () => { if (Game.upgradeStep(id, tr.dataset.t, kBuy)) { flash(tr); render(true); } }));
-      card.querySelector('[data-f=wadd]').addEventListener('click', () => openPicker(id, 'worker', lid));
       card.querySelector('[data-f=ovsel]').addEventListener('click', () => openPicker(id, 'overseer', lid));
       card.querySelector('[data-f=ab]').addEventListener('click', () => { if (Game.useAbility(id)) flash(card); });
       const acb = card.querySelector('[data-f=acsel]'); if (acb) acb.addEventListener('click', () => openPicker(id, 'accountant', lid));
@@ -510,14 +512,24 @@ const UI = (() => {
         card.querySelectorAll('[data-seg]').forEach(seg => { const i = +seg.dataset.seg; seg.style.flexGrow = (PHS[i] / cyc).toFixed(4); const fill = !m.working ? 0 : i < s.phase ? 100 : i > s.phase ? 0 : 100 * Math.min(1, s.t / PHS[i]); seg.firstChild.style.width = fill + '%'; seg.classList.toggle('on', m.working && i === s.phase); });
         setText(card.querySelector('[data-f=cartlab]'), !m.working ? 'Idle — no workers' : `${Game.stepBatch(st.id)} ${R[st.make].name.toLowerCase()} every ${cyc.toFixed(1)}s · now: ${[st.from ? 'crafting' : 'working', 'loading the cart', 'hauling'][s.phase]}${s.phase === 0 && lim === 'starved' ? ' (waiting for ' + R[st.from].name.toLowerCase() + ')' : ''}`); }
       if (st.from) { card.querySelector('[data-f=inbar]').style.width = Math.min(100, 100 * s.inBuf / (st.ratio * st.batch * 2)) + '%'; setText(card.querySelector('[data-f=inlab]'), `${Math.floor(s.inBuf)} waiting`); }
-      setText(card.querySelector('[data-f=wn]'), `${s.workers.length}/${Game.stepWorkerSlots(st.id)}`);
-      setHtml(card.querySelector('[data-f=wlist]'), s.workers.map(i => `<span class="kchip">${S.kingdom.thralls[i].name} <button class="kx" data-rm="${i}" aria-label="Remove">×</button></span>`).join(' ') || '<span class="warn">none</span>');
-      card.querySelectorAll('[data-rm]').forEach(b => b.onclick = () => { Game.unassign(+b.dataset.rm); lineKey[lid] = ''; render(true); });
-      const wsel = card.querySelector('[data-f=wadd]'); wsel.classList.toggle('hidden', s.workers.length >= Game.stepWorkerSlots(st.id));
+      { const cap = Game.stepWorkerSlots(st.id), open = cap - s.workers.length, T = CONFIG.kingdom.tiers;
+        setText(card.querySelector('[data-f=wn]'), `${s.workers.length} / ${cap}`);
+        const box = card.querySelector('[data-f=wslots]'), wkey = s.workers.map(i => i + ':' + Game.thrallLevel(S.kingdom.thralls[i])).join(',') + '|' + cap;
+        if (box.dataset.k !== wkey) { box.dataset.k = wkey; let h = '';
+          for (let n = 0; n < 3; n++) {
+            if (n < s.workers.length) { const t = S.kingdom.thralls[s.workers[n]]; h += `<div class="kslot-t"><button class="kslot-x" data-rm="${s.workers[n]}" aria-label="Remove ${t.name}">×</button><div class="kav">${t.name[0]}</div><div class="kslot-n">${t.name}</div><div class="kslot-l">Lv ${Game.thrallLevel(t)}</div></div>`; }
+            else if (n < cap) h += `<button class="kslot-t empty" data-add="1"><span class="kslot-plus">+</span><span class="kslot-a">Add worker</span></button>`;
+            else { const nt = T.find(x => x.slots > n); h += `<div class="kslot-t locked"><span>🔒</span><span class="kslot-a">${nt ? nt.name : ''}</span></div>`; }
+          }
+          box.innerHTML = h;
+          box.querySelectorAll('[data-rm]').forEach(b => b.onclick = () => { Game.unassign(+b.dataset.rm); lineKey[lid] = ''; render(true); });
+          box.querySelectorAll('[data-add]').forEach(b => b.onclick = () => openPicker(st.id, 'worker', lid)); }
+        const ww = card.querySelector('[data-f=wwarn]'); ww.classList.toggle('hidden', open <= 0);
+        if (open > 0) setText(ww, s.workers.length ? `⚠ ${open} empty slot${open > 1 ? 's' : ''}: each worker speeds up this building` : '⚠ No workers: this building is idle'); }
       const ov = s.overseer !== null ? S.kingdom.thralls[s.overseer] : null;
-      setHtml(card.querySelector('[data-f=ov]'), ov ? `<b>${ov.name}</b> <span class="stars">${stars(ov.stars)}</span> <span class="dim">${roleShort(ov.role)} ×${CONFIG.kingdom.starMult[ov.stars]}</span>` : '<span class="dim">empty</span>');
+      setHtml(card.querySelector('[data-f=ov]'), ov ? `<div class="krole-v">${ov.name} <span class="stars">${stars(ov.stars)}</span></div><div class="krole-e">${roleShort(ov.role)}: ${({ foreman: st.from ? 'Craft' : 'Work', carter: 'Haul', packer: 'Cart' })[ov.role]} ×${CONFIG.kingdom.starMult[ov.stars]} faster</div>` : '<div class="krole-v dim">Empty</div><div class="krole-e dim">Boosts one track and reports the bottleneck</div>');
       setText(card.querySelector('[data-f=ovsel]'), ov ? 'Change' : 'Choose');
-      if (st.tier === 2) { const ac = s.accountant != null ? S.kingdom.thralls[s.accountant] : null; setHtml(card.querySelector('[data-f=ac]'), ac ? `<b>${ac.name}</b> <span class="dim">sells ${R[st.make].name.toLowerCase()} above ${f(Math.floor(Game.resCap(st.make) * CONFIG.kingdom.accountantReserve))}</span>` : '<span class="dim">empty</span>'); setText(card.querySelector('[data-f=acsel]'), ac ? 'Change' : 'Choose'); }
+      if (st.tier === 2) { const ac = s.accountant != null ? S.kingdom.thralls[s.accountant] : null; setHtml(card.querySelector('[data-f=ac]'), ac ? `<div class="krole-v">${ac.name}</div><div class="krole-e">Sells ${R[st.make].name.toLowerCase()} above ${f(Math.floor(Game.resCap(st.make) * CONFIG.kingdom.accountantReserve))}</div>` : `<div class="krole-v dim">Empty</div><div class="krole-e dim">Sells spare ${R[st.make].name.toLowerCase()} for gold</div>`); setText(card.querySelector('[data-f=acsel]'), ac ? 'Change' : 'Choose'); }
       const ab = card.querySelector('[data-f=ab]'), now = S.hero.time; ab.classList.toggle('hidden', !ov);
       if (ov) { ab.disabled = s.abilityReady > now; setText(ab, s.abilityUntil > now ? `Active ${Math.ceil(s.abilityUntil - now)}s` : s.abilityReady > now ? `Ready in ${Game.fmtTime(s.abilityReady - now)}` : 'Double shift'); }
     }
@@ -528,7 +540,7 @@ const UI = (() => {
   function openPicker(stepId, as, lid) {
     const S = Game.S, K = S.kingdom, st = Game.stepDef(stepId), ss = Game.stepState(stepId), list = $('pick-list');
     setText($('pick-title'), as === 'worker' ? `Worker for the ${st.name}` : as === 'accountant' ? `Accountant for the ${st.name}` : `Overseer for the ${st.name}`);
-    setText($('pick-sub'), as === 'accountant' ? `An Accountant sells ${R[st.make].name.toLowerCase()} the Storehouse does not need (above a quarter of its cap), at half the Market price.` : as === 'worker' ? 'Workers run the step. Each worker speeds up Work and Cart by their stats. Thralls level up as they work.' : 'An Overseer reports the bottleneck and boosts one track by role: Foreman → work rate, Carter → haul speed, Packer → cart size.');
+    setText($('pick-sub'), as === 'accountant' ? `An Accountant sells ${R[st.make].name.toLowerCase()} the Storehouse does not need (above a quarter of its cap), at half the Market price.` : as === 'worker' ? 'Workers run the step. Each worker speeds up Work and Cart by their stats. Thralls level up as they work.' : 'An Overseer reports the bottleneck and speeds up one part of the bar by role: Foreman → Work, Packer → Cart, Carter → Haul.');
     const close = () => { $('pick-modal').classList.add('hidden'); lineKey[lid] = ''; render(true); };
     let h = '';
     if (as === 'accountant' && ss.accountant != null) h += `<button class="pick-row danger-btn" data-pick="remove"><div class="row-main"><b>Remove ${K.thralls[ss.accountant].name}</b></div></button>`;

@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Alpha 0.6.8',
+  version: 'Alpha 0.6.9',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -157,7 +157,7 @@ const CONFIG = {
   ],
   // What the hero can spend his time on. Harvest: one swing per `time` s (÷ tool speed), yields outputs × tool power.
   activities: {
-    idle:   { name: 'Rest',      icon: [4,2],  desc: 'Doing nothing but healing. Make a weapon to fight.' },
+    idle:   { name: 'Rest',      icon: [4,2],  desc: 'Doing nothing but healing.' },
     fight:  { name: 'Fight',     icon: [5,1],  desc: 'Slay enemies for XP and loot. Bandits on the Roads carry gold.' },
     wood:   { name: 'Chop Wood', icon: [4,6],  tool: 'axe',    time: 5, outputs: { wood: 1 },              desc: 'Fell trees in the wild. Needs an axe.' },
     mine:   { name: 'Mine',      icon: [4,5],  tool: 'pick',   time: 6, outputs: { stone: 1, ore: 1 },     desc: 'Work a rockface for stone. Needs a pickaxe. Iron ore once you know Prospecting.' },
@@ -420,6 +420,7 @@ const CONFIG = {
   // jobs (jobs completed by hand or thrall), sold (gold earned at market), stage, boss, founded, thrall (assigned), activity (swings).
   // Shown in Settings → What's new (newest first). Keep each line short.
   changelog: [
+    ['0.6.9', 'Building crews redesigned: a tile for each worker slot (empty slots show + Add worker), with Overseer and Accountant rows that say what they do. Clearer sword and quest wording.'],
     ['0.6.8', 'The Back button now returns to the tab you were on (and closes an open popup first) instead of leaving the game.'],
     ['0.6.7', 'Fix: on desktop the first quest could be pushed off the bottom of the screen and hidden.'],
     ['0.6.6', 'Painted icons for every gear piece and tool, changing with each tier.'],
@@ -451,14 +452,14 @@ const CONFIG = {
     { id: 'f05', chain: 'First Steps', name: 'Armed', text: 'Make the sword. Click the Weapon slot.',
       steps: [ { label: 'Character → Gear → tap the Weapon slot → Forge (10 wood, 5s)', check: { gear: 'weapon' } } ],
       reward: { wood: 10 }, focus: { tab: 'hero', sub: 'gear', el: 'gear:weapon' } },
-    { id: 'f06', chain: 'First Steps', name: 'Let Him Fight', text: 'A sharpened branch hits twice as hard as a fist. Set him back to Fight — he keeps at it even when the game is closed.',
-      steps: [ { label: 'Character → Activity → Your hero is… → Fight', check: { activity: 'fight' } }, { label: 'Slay 20 enemies in total (he does this on his own)', check: { counter: 'kills', need: 20 } } ],
+    { id: 'f06', chain: 'First Steps', name: 'Sharper Fights', text: 'Crafting a sword makes fighting much more efficient: a sharpened branch hits twice as hard as a fist, so every fight ends sooner. Set him back to Fight — he keeps at it even when the game is closed.',
+      steps: [ { label: 'Character → Activity → Your hero is… → Fight', check: { activity: 'fight' } }, { label: 'Slay 20 enemies in total', check: { counter: 'kills', need: 20 } } ],
       reward: { fiber: 10 }, focus: { tab: 'hero', sub: 'fight', el: 'act:fight' } },
     // ===== Settling In =====
     // Each quest is a checklist of steps. Step checks: activity, ground, tool, gear, tech, counter, plots, building, jobs, sold, stage, boss, founded, thrall.
-    { id: 'f07', chain: 'First Steps', name: 'Keep Your Progress', text: 'Your hero now fights on his own, and the game saves itself on this device. Sign in with Google to back your progress up and play on any device — or carry on as a guest.',
+    { id: 'f07', chain: 'First Steps', name: 'Keep Your Progress', text: 'Your hero keeps fighting even while the game is closed, and the game saves itself on this device. Sign in with Google to back your progress up and play on any device — or carry on as a guest.',
       steps: [ { label: 'Settings (⚙) → Sign in with Google, or Continue as guest', check: { account: 1 } } ], reward: { fiber: 10 }, focus: { el: 'id:dev-toggle', el2: 'id:cloud-box' } },
-    { id: 'q01', chain: 'Settling In', name: 'Onward', text: 'Your hero fights by himself. Deeper stages have tougher enemies but drop more loot and experience — pushing is how you grow. If he starts losing, Retreat a stage and upgrade.',
+    { id: 'q01', chain: 'Settling In', name: 'Onward', text: 'Deeper stages have tougher enemies but drop more loot and experience — pushing is how you grow. If he starts losing, Retreat a stage and upgrade.',
       steps: [
         { label: 'Fight in The Wilds', check: { activity: 'fight', ground: 'wilds' } },
         { label: 'Fill the bar (10 kills)', check: { counter: 'kills', need: 10 } },
@@ -577,7 +578,7 @@ const CONFIG = {
       steps: [
         { label: 'Kingdom → Legacy → unlock Bestiary (1 Crystal)', check: { perk: 'bestiary' } },
       ], reward: { gold: 100 }, focus: { tab: 'kingdom', ksub: 'legacy', rtab: 'kingdom', el: 'perk:bestiary' } },
-    { id: 'k01', chain: 'A Kingdom', name: 'Hands for Hire', text: 'A kingdom needs hands. The Tavern always has three thralls looking for work — each has a role (Foreman, Carter, Packer), stars and stats. Hire one.',
+    { id: 'k01', chain: 'A Kingdom', name: 'Hands for Hire', text: 'A kingdom needs hands. The Tavern always has three thralls looking for work — each has a role (Foreman, Packer, Carter), stars and stats. Hire one.',
       steps: [ { label: 'Market → Tavern → Hire', check: { hired: 1 } } ], reward: { gold: 40 }, focus: { tab: 'market', msub: 'tavern', rtab: 'market', el: 'id:hire-list' } },
     { id: 'k02', chain: 'A Kingdom', name: 'Fell the Forest', text: 'A step only runs while a thrall works it. Put your thrall to work at Logging and watch the bar: Work (fell the trees) → Cart (load them) → Haul (take them to the Storehouse), over and over.',
       steps: [ { label: 'Kingdom → Forest → Logging → + Add worker', check: { working: 'logging' } }, { label: 'Haul 40 wood to the Storehouse', check: { made: 'wood', need: 40 } } ], reward: { gold: 60 }, focus: { tab: 'kingdom', ksub: 'forest', rtab: 'kingdom', el: 'step:logging' } },
@@ -585,7 +586,7 @@ const CONFIG = {
       steps: [ { label: 'Logging → Work → Upgrade', check: { stepLv: 'logging:rate', need: 2 } }, { label: 'Logging → Cart → Upgrade', check: { stepLv: 'logging:cart', need: 2 } }, { label: 'Logging → Haul → Upgrade', check: { stepLv: 'logging:haul', need: 2 } } ], reward: { gold: 80 }, focus: { tab: 'kingdom', ksub: 'forest', rtab: 'kingdom', el: 'step:logging' } },
     { id: 'k04', chain: 'A Kingdom', name: 'Imperial Orders', text: 'The Empire, the Guild and the villages post Orders at your Keep. There is no deadline — but finishing inside the speed window pays 20% more. Orders pay gold and Renown.',
       steps: [ { label: 'Kingdom → Keep → Orders → Deliver one', check: { orders: 1 } } ], reward: { gold: 100 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:order-list' } },
-    { id: 'k05', chain: 'A Kingdom', name: 'An Overseer', text: 'An overseer names the slowest part of a step. Put a thrall in the Overseer slot: their role speeds up one part (Foreman → Work, Packer → Cart, Carter → Haul), and they can call a Double Shift.',
+    { id: 'k05', chain: 'A Kingdom', name: 'An Overseer', text: 'An overseer names the slowest part of a step. Put a thrall in the Overseer slot: their role speeds up one part of the bar (Foreman → Work, Packer → Cart, Carter → Haul), and they can call a Double Shift.',
       steps: [ { label: 'Market → Tavern → hire a second thrall', check: { hired: 2 }, focus: { tab: 'market', msub: 'tavern', rtab: 'market', el: 'id:hire-list' } }, { label: 'Kingdom → Forest → Logging → Overseer → Choose', check: { overseer: 1 } } ], reward: { gold: 150 }, focus: { tab: 'kingdom', ksub: 'forest', rtab: 'kingdom', el: 'step:logging' } },
     { id: 'c01', chain: 'Camp', name: 'The Fields', text: 'A camp needs food as well as wood. Build the Fields on the Farm screen and put a thrall on them.',
       steps: [ { label: 'Kingdom → Farm → Fields → Build', check: { built: 'fields' } }, { label: 'Fields → + Add worker', check: { working: 'fields' } }, { label: 'Haul 40 grain', check: { made: 'grain', need: 40 } } ], reward: { gold: 150 }, focus: { tab: 'kingdom', ksub: 'farm', rtab: 'kingdom', el: 'step:fields' } },
@@ -607,7 +608,7 @@ const CONFIG = {
       steps: [ { label: 'Kingdom → Keep → Storehouse → Expand', check: { storeLv: 1 } } ], reward: { gold: 150 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:store-up' } },
     { id: 'h06', chain: 'Hamlet', name: 'Raise a Village', text: 'A Village costs 350 of every good you make. It brings the finishing buildings and 3 workers per building.',
       steps: [ { label: 'Kingdom → Keep → Settlement → Contribute everything asked', check: { tierPaid: 2 } }, { label: 'Keep → Raise to Village', check: { tier: 2 } } ], reward: { gold: 250 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:settle-card' } },
-    { id: 'v01', chain: 'Village', name: 'The Carpenter', text: 'Planks feed the Carpenter: 2 planks become 1 treated beam, wanted for forts and ships.',
+    { id: 'v01', chain: 'Village', name: 'The Carpenter', text: 'Planks feed the Carpenter: 2 planks become 1 treated lumber, wanted for forts and ships.',
       steps: [ { label: 'Kingdom → Forest → Carpenter → Build', check: { built: 'carpenter' } }, { label: 'Carpenter → + Add worker', check: { working: 'carpenter' } }, { label: 'Make 15 treated lumber', check: { made: 'lumber', need: 15 } } ], reward: { gold: 150 }, focus: { tab: 'kingdom', ksub: 'forest', rtab: 'kingdom', el: 'step:carpenter' } },
     { id: 'v02', chain: 'Village', name: 'The Baker', text: 'Flour feeds the Baker: armies march on bread.',
       steps: [ { label: 'Kingdom → Farm → Baker → Build', check: { built: 'baker' } }, { label: 'Baker → + Add worker', check: { working: 'baker' } }, { label: 'Bake 15 bread', check: { made: 'bread', need: 15 } } ], reward: { gold: 150 }, focus: { tab: 'kingdom', ksub: 'farm', rtab: 'kingdom', el: 'step:baker' } },
@@ -635,7 +636,7 @@ const CONFIG = {
     // Tier 0 — Camp
     { id: 'skinning',   tier: 0, name: 'Skinning',         icon: [17,8],  req: { kills: 50 },            cost: { wood: 20, fiber: 15 },         unlocks: { drop: 'hide', tool: 'knife' }, desc: 'Lets you make a Skinning Knife. With one, beasts in the Wilds drop Hide — better knife, better chance.' },
     { id: 'fiberclothing', tier: 0, name: 'Fiber Clothing', icon: [7,9], req: { fiber: 10 }, cost: { fiber: 5 }, unlocks: { gearTier: 0, slots: ['chest', 'helm', 'gloves', 'boots', 'trinket'] }, desc: 'Twist plant fiber into clothes. Something between you and the wind.' },
-    { id: 'woodensword',   tier: 0, name: 'Wooden Sword',   icon: [5,0], req: { wood: 10 },  cost: { wood: 5 },  unlocks: { gearTier: 0, slots: ['weapon'] },                  desc: 'A sharpened branch. With it, your hero can fight on his own.' },
+    { id: 'woodensword',   tier: 0, name: 'Wooden Sword',   icon: [5,0], req: { wood: 10 },  cost: { wood: 5 },  unlocks: { gearTier: 0, slots: ['weapon'] },                  desc: 'A sharpened branch. Crafting a sword makes fighting much more efficient: it hits twice as hard as your fists.' },
     { id: 'stonetools', tier: 0, name: 'Woodcraft',        icon: [10,1],  req: { kills: 25 },            cost: { wood: 25 },                     unlocks: { toolTier: 0 },           desc: 'Carve wooden axes, picks, sickles and knives.' },
     { id: 'leatherwork',tier: 0, name: 'Leatherworking',   icon: [7,6],   req: { hide: 20 },             cost: { hide: 10, wood: 10 },           unlocks: { gearTier: 1, slots: ['chest', 'helm', 'gloves', 'boots', 'trinket'] }, desc: 'Forge Leather armor.' },
     { id: 'stoneweapons',tier: 0, name: 'Stone Weapons',    icon: [17,1],  req: { stone: 30 },            cost: { stone: 10, wood: 5 },           unlocks: { gearTier: 1, slots: ['weapon'] }, desc: 'Knap a stone edge onto a wooden haft. Weapons go Wood → Stone → Iron → Steel.' },
