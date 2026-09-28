@@ -76,14 +76,14 @@
       });
       if (res === 'conflict') { C.busy = false; C.status = 'error'; C.error = 'Newer progress on another device.'; UIhook(); showConflict(); return false; }
       setLink(C.user.uid, meta.lastTick, meta.played); C.lastSync = Date.now(); lastPush = Date.now(); C.dirty = false; C.status = 'ok'; C.error = '';
-    } catch (e) { C.status = navigator.onLine ? 'error' : 'offline'; C.error = (e && e.code === 'resource-exhausted') ? 'Cloud is busy today — saved on this device.' : 'Could not save to the cloud — saved on this device.'; }
+    } catch (e) { C.status = navigator.onLine ? 'error' : 'offline'; C.error = (e && e.code === 'resource-exhausted') ? 'Cloud is busy today — saved on this device.' : `Could not save to the cloud — saved on this device. (${(e && (e.code || e.message)) || 'unknown'})`; try { console.warn('cloud push', e); } catch (x) {} }
     C.busy = false; UIhook(); return C.status === 'ok';
   }
 
   // ---------- sign-in resolution: which save wins ----------
   async function afterSignIn(u) {
     C.status = 'syncing'; UIhook();
-    let cloud; try { cloud = await pull(); } catch (e) { C.status = 'error'; C.error = 'Could not read your cloud save.'; UIhook(); return; }
+    let cloud; try { cloud = await pull(); } catch (e) { C.status = 'error'; C.error = `Could not read your cloud save. (${(e && (e.code || e.message)) || 'unknown'})`; UIhook(); return; }
     const localStr = Game.saveString(), local = Game.saveMeta(localStr), L = link();
     if (!cloud) { await push(true); return; }
     if (versionNewer(cloud.version, CONFIG.version)) { C.status = 'error'; C.error = 'Your cloud save is from a newer version — tap Reload game.'; UIhook(); return; }

@@ -748,3 +748,4 @@ html, body { max-width: 100%; overflow-x: hidden; }
 .cs-title { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--dim); }
 .cs-place { font-family: var(--font-head); font-size: 16px; color: var(--bronze2); }
 #cloud-modal { z-index: 58; }
+.cloud-user .avatar-img img, .avatar-btn .avatar-img img { width: 100% !important; height: 100% !important; max-width: none; object-fit: cover; display: block; }
