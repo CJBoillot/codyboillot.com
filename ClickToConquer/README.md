@@ -1,4 +1,4 @@
-# Click to Conquer — Alpha 0.5.0
+# Click to Conquer — Alpha 0.6.1
 
 Mobile-first AFK / incremental game. Vanilla HTML + JS, no build: open `index.html`. Full design in the project doc `design/v0.3-design.md`.
 
@@ -19,7 +19,7 @@ To raise the settlement: every building of the current tier built and staffed, t
 
 Each building runs one **cycle** shown as a single bar: **Work → Cart → Haul**; each part has its own upgrade track (every level shortens that part; endless). A building feeds the next one only what it can use (a buffer of 2 cycles of input); the rest goes to the Storehouse. Goods that don't fit the Storehouse are auto-sold at ¼ price. Thralls are hired in **Market → Tavern** and level up as they work.
 
-Bot pace (fresh Camp → City complete): Camp ~70 min, Hamlet ~2 h, Village ~5 h, ~8 h total.
+Bot pace (fresh Camp → City complete): Camp ~1.5 h, Hamlet ~2 h, Village ~4–5 h, ~8 h total. Orders pay 2.5× Market price; builds cost 40–80 gold (Camp), 200 (Hamlet), 500 (Village).
 
 ## Combat (number squish)
 

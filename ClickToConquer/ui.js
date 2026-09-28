@@ -98,6 +98,7 @@ const UI = (() => {
     $('set-reset').addEventListener('click', () => ask('Reset all progress?', 'This wipes everything — hero, kingdom, Crystals, Legacy perks, trophies. There is no undo.', 'Wipe everything', () => Game.debug.resetAll()));
     $('tech-hide-known').addEventListener('change', e => { Game.S.settings.techHideKnown = e.target.checked; render(true); });
     $('avatar-btn').addEventListener('click', () => $('dev-toggle').click());
+    $('cloud-guest').addEventListener('click', () => { Game.S.settings.guest = true; Game.save(); render(true); });
     $('cloud-signin').addEventListener('click', () => window.Cloud && Cloud.signIn());
     $('cloud-signout').addEventListener('click', () => window.Cloud && Cloud.signOut());
     $('cloud-now').addEventListener('click', () => window.Cloud && Cloud.push());
@@ -1085,6 +1086,7 @@ const UI = (() => {
     const ai = $('avatar-img'); const want = pic || sil; if (ai.__h !== want) { ai.innerHTML = want; ai.__h = want; }
     const dot = $('avatar-dot'); dot.classList.toggle('hidden', !u); dot.className = 'avatar-dot ' + (u ? ({ ok: 'ok', syncing: 'busy', error: 'bad', offline: 'off', idle: 'off' }[C.status] || 'off') : 'hidden');
     $('cloud-out').classList.toggle('hidden', !!u); $('cloud-in').classList.toggle('hidden', !u);
+    $('cloud-guest').classList.toggle('hidden', !!Game.S.settings.guest || !C.available);
     const sb = $('cloud-signin'); sb.disabled = !C.ready; sb.querySelector('span').textContent = !C.available ? 'Cloud saves — coming soon' : C.ready ? 'Sign in with Google' : 'Connecting…';
     if (u) { $('cloud-pic').innerHTML = pic || sil; setHtml($('cloud-name'), `<b>${(u.displayName || 'Signed in').replace(/</g, '&lt;')}</b>`);
       setText($('cloud-sync'), C.status === 'syncing' ? 'Syncing…' : C.status === 'offline' ? 'Offline — saved on this device' : C.lastSync ? `Synced ${C.ago(C.lastSync)}` : 'Signed in'); }

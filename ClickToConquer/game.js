@@ -609,6 +609,7 @@ function questCheck(c) {
   if (c.sold) return { done: S.stats.sold >= c.sold, have: Math.floor(S.stats.sold), need: c.sold };
   if (c.stage) return { done: bestStageAll() >= c.stage, have: bestStageAll(), need: c.stage, simple: c.stage <= 2 };
   if (c.boss) { const n = Object.keys(S.hero.bossesKilled).length; return { done: n >= c.boss, have: n, need: c.boss }; }
+  if (c.account) { const ok = !!(S.settings.guest || (window.Cloud && (Cloud.user || !Cloud.available))); return { done: ok, have: ok ? 1 : 0, need: 1 }; }
   if (c.built) { const n = stepBuilt(c.built) ? 1 : 0; return { done: !!n, have: n, need: 1 }; }
   if (c.tierPaid !== undefined) { const ok = kTier() >= c.tierPaid || (kTier() === c.tierPaid - 1 && tierPaidDone()); const need = tierNeed() || {}, tot = Object.values(need).reduce((a, b) => a + b, 0), got = Object.keys(need).reduce((a, k) => a + Math.min(need[k], tierPaid()[k] || 0), 0); return { done: ok, have: ok ? 1 : (tot ? got / tot : 0), need: 1, simple: true }; }
   if (c.tier !== undefined) { const ok = kTier() >= c.tier; return { done: ok, have: ok ? 1 : 0, need: 1 }; }

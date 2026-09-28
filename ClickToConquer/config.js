@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Alpha 0.6.0',
+  version: 'Alpha 0.6.1',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -334,21 +334,21 @@ const CONFIG = {
     lines: {
       forest: { name: 'Forest', icon: [4,6], steps: [
         { id: 'logging',   name: 'Logging',    icon: [17,0],  make: 'wood',   base: 0.5, batch: 6,  tier: 0, build: null, desc: 'Thralls fell trees.' },
-        { id: 'sawmill',   name: 'Sawmill',    icon: [19,11], make: 'planks', from: 'wood',   ratio: 2, base: 0.3, batch: 4,  tier: 1, build: { wood: 100, ore: 40, gold: 300 }, desc: '2 logs → 1 plank.' },
-        { id: 'carpenter', name: 'Carpenter',  icon: [10,4],  make: 'lumber', from: 'planks', ratio: 2, base: 0.15, batch: 3, tier: 2, build: { planks: 120, ingot: 30, gold: 800 }, desc: '2 planks → 1 treated lumber.' } ] },
+        { id: 'sawmill',   name: 'Sawmill',    icon: [19,11], make: 'planks', from: 'wood',   ratio: 2, base: 0.3, batch: 4,  tier: 1, build: { wood: 100, ore: 40, gold: 200 }, desc: '2 logs → 1 plank.' },
+        { id: 'carpenter', name: 'Carpenter',  icon: [10,4],  make: 'lumber', from: 'planks', ratio: 2, base: 0.15, batch: 3, tier: 2, build: { planks: 120, ingot: 30, gold: 500 }, desc: '2 planks → 1 treated lumber.' } ] },
       farm: { name: 'Grain Farm', icon: [12,5], steps: [
-        { id: 'fields', name: 'Fields', icon: [14,13], make: 'grain', base: 0.5, batch: 6,  tier: 0, build: { wood: 40, gold: 60 }, desc: 'Thralls sow and reap.' },
-        { id: 'mill',   name: 'Mill',   icon: [15,10], make: 'flour', from: 'grain', ratio: 2, base: 0.3, batch: 4,  tier: 1, build: { wood: 80, grain: 100, gold: 300 }, desc: '2 grain → 1 flour.' },
-        { id: 'baker',  name: 'Baker',  icon: [14,14], make: 'bread', from: 'flour', ratio: 2, base: 0.15, batch: 3, tier: 2, build: { flour: 120, planks: 60, gold: 800 }, desc: '2 flour → 1 bread.' } ] },
+        { id: 'fields', name: 'Fields', icon: [14,13], make: 'grain', base: 0.5, batch: 6,  tier: 0, build: { wood: 40, gold: 40 }, desc: 'Thralls sow and reap.' },
+        { id: 'mill',   name: 'Mill',   icon: [15,10], make: 'flour', from: 'grain', ratio: 2, base: 0.3, batch: 4,  tier: 1, build: { wood: 80, grain: 100, gold: 200 }, desc: '2 grain → 1 flour.' },
+        { id: 'baker',  name: 'Baker',  icon: [14,14], make: 'bread', from: 'flour', ratio: 2, base: 0.15, batch: 3, tier: 2, build: { flour: 120, planks: 60, gold: 500 }, desc: '2 flour → 1 bread.' } ] },
       mine: { name: 'Iron Mine', icon: [4,5], steps: [
-        { id: 'shaft',   name: 'Mine Shaft', icon: [17,2], make: 'ore',    base: 0.5, batch: 6,  tier: 0, build: { wood: 60, grain: 30, gold: 100 }, desc: 'Thralls dig iron ore.' },
-        { id: 'smelter', name: 'Smelter',    icon: [17,3], make: 'ingot',  from: 'ore',   ratio: 2, base: 0.3, batch: 4,  tier: 1, build: { ore: 100, wood: 80, gold: 300 }, desc: '2 ore → 1 ingot.' },
-        { id: 'forge',   name: 'Forge',      icon: [5,1],  make: 'swords', from: 'ingot', ratio: 2, base: 0.15, batch: 3, tier: 2, build: { ingot: 120, planks: 60, gold: 800 }, desc: '2 ingots → 1 iron sword.' } ] },
+        { id: 'shaft',   name: 'Mine Shaft', icon: [17,2], make: 'ore',    base: 0.5, batch: 6,  tier: 0, build: { wood: 60, grain: 30, gold: 80 }, desc: 'Thralls dig iron ore.' },
+        { id: 'smelter', name: 'Smelter',    icon: [17,3], make: 'ingot',  from: 'ore',   ratio: 2, base: 0.3, batch: 4,  tier: 1, build: { ore: 100, wood: 80, gold: 200 }, desc: '2 ore → 1 ingot.' },
+        { id: 'forge',   name: 'Forge',      icon: [5,1],  make: 'swords', from: 'ingot', ratio: 2, base: 0.15, batch: 3, tier: 2, build: { ingot: 120, planks: 60, gold: 500 }, desc: '2 ingots → 1 iron sword.' } ] },
     },
     startGold: 50, foundRenown: 500, swapCooldown: 120,
     // Settlement tiers inside one land. Raising a tier costs `cap` of every good made so far (pay in as you go) and loses nothing.
     tiers: [
-      { name: 'Camp',    cap: 200, slots: 1, thralls: 5,  need: 'Build and staff Logging, Fields and the Mine Shaft.' },
+      { name: 'Camp',    cap: 200, slots: 1, thralls: 6,  need: 'Build and staff Logging, Fields and the Mine Shaft.' },
       { name: 'Hamlet',  cap: 350, slots: 2, thralls: 12, need: 'Build and staff the Sawmill, Mill and Smelter.' },
       { name: 'Village', cap: 500, slots: 3, thralls: 30, need: 'Build and staff the Carpenter, Baker and Forge.' },
       { name: 'City',    cap: 800, slots: 3, thralls: 42, need: 'Every building: 3 workers and an Overseer. An Accountant on each final good.' },
@@ -369,7 +369,7 @@ const CONFIG = {
     orderBase: { wood: 40, grain: 40, ore: 30, planks: 20, flour: 20, ingot: 15, lumber: 10, bread: 10, swords: 6, hide: 25, meat: 15, stone: 40, fiber: 40, berries: 30 },
     heroOrderGoods: ['hide', 'meat', 'stone', 'fiber', 'berries'],   // when the kingdom makes fewer than 3 goods, Orders ask for what the hero gathers
     renownPer: { wood: 0.5, grain: 0.5, ore: 0.7, planks: 1.5, flour: 1.5, ingot: 2, lumber: 4, bread: 4, swords: 6, hide: 0.8, meat: 1, stone: 0.4, fiber: 0.4, berries: 0.4 },
-    orderGoldMult: 1.5, orderBonusSeconds: 600, speedBonus: 0.2,
+    orderGoldMult: 2.5, orderBonusSeconds: 600, speedBonus: 0.2,
   },
 
   // ---------- Kingdom (pre-0.3, unused): plots, buildings, jobs ----------
@@ -426,6 +426,8 @@ const CONFIG = {
       reward: { fiber: 10 }, focus: { tab: 'hero', sub: 'fight', el: 'act:fight' } },
     // ===== Settling In =====
     // Each quest is a checklist of steps. Step checks: activity, ground, tool, gear, tech, counter, plots, building, jobs, sold, stage, boss, founded, thrall.
+    { id: 'f07', chain: 'First Steps', name: 'Keep Your Progress', text: 'Your hero now fights on his own, and the game saves itself on this device. Sign in with Google to back your progress up and play on any device — or carry on as a guest.',
+      steps: [ { label: 'Settings (⚙) → Sign in with Google, or Continue as guest', check: { account: 1 } } ], reward: { fiber: 10 }, focus: { el: 'id:dev-toggle', el2: 'id:cloud-box' } },
     { id: 'q01', chain: 'Settling In', name: 'Onward', text: 'Your hero fights by himself. Deeper stages have tougher enemies but drop more loot and experience — pushing is how you grow. If he starts losing, Retreat a stage and upgrade.',
       steps: [
         { label: 'Fight in The Wilds', check: { activity: 'fight', ground: 'wilds' } },
@@ -499,7 +501,7 @@ const CONFIG = {
       steps: [
         { label: 'Click the Pickaxe slot → Make (10 wood)', check: { tool: 'pick' } },
         { label: 'Activity → Mine', check: { activity: 'mine' } },
-        { label: 'Quarry 60 stone with the pick', check: { harvested: 'stone', need: 60 } },
+        { label: 'Quarry 40 stone with the pick', check: { harvested: 'stone', need: 40 } },
       ], reward: { stone: 40 }, focus: { tab: 'hero', sub: 'gear', el: 'tool:pick', el2: 'act:mine' } },
     { id: 'q12b', name: 'Prospecting', text: 'Some of that rock glitters. Learn to tell ore from stone and every swing of the pick — and every Mine — starts turning up iron too.',
       steps: [
@@ -549,8 +551,8 @@ const CONFIG = {
       steps: [ { label: 'Market → Tavern → Hire', check: { hired: 1 } } ], reward: { gold: 40 }, focus: { tab: 'market', msub: 'tavern', rtab: 'market', el: 'id:hire-list' } },
     { id: 'k02', chain: 'A Kingdom', name: 'Fell the Forest', text: 'A step only runs while a thrall works it. Put your thrall to work at Logging and watch the bar: Work (fell the trees) → Cart (load them) → Haul (take them to the Storehouse), over and over.',
       steps: [ { label: 'Kingdom → Forest → Logging → + Add worker', check: { working: 'logging' } }, { label: 'Haul 40 wood to the Storehouse', check: { made: 'wood', need: 40 } } ], reward: { gold: 60 }, focus: { tab: 'kingdom', ksub: 'forest', rtab: 'kingdom', el: 'step:logging' } },
-    { id: 'k03', chain: 'A Kingdom', name: 'Faster Hands', text: 'Each step has three upgrades, one for each part of the bar: Work, Cart and Haul. Each upgrade makes its part faster, forever. Upgrade the longest part first.',
-      steps: [ { label: 'Logging → Work to Lv 3', check: { stepLv: 'logging:rate', need: 3 } }, { label: 'Logging → Cart to Lv 3', check: { stepLv: 'logging:cart', need: 3 } }, { label: 'Logging → Haul to Lv 3', check: { stepLv: 'logging:haul', need: 3 } } ], reward: { gold: 80 }, focus: { tab: 'kingdom', ksub: 'forest', rtab: 'kingdom', el: 'step:logging' } },
+    { id: 'k03', chain: 'A Kingdom', name: 'Faster Hands', text: 'Each step has three upgrades, one for each part of the bar: Work, Cart and Haul. Each upgrade makes its part faster, forever. Buy one of each, then keep upgrading whichever part is longest.',
+      steps: [ { label: 'Logging → Work → Upgrade', check: { stepLv: 'logging:rate', need: 2 } }, { label: 'Logging → Cart → Upgrade', check: { stepLv: 'logging:cart', need: 2 } }, { label: 'Logging → Haul → Upgrade', check: { stepLv: 'logging:haul', need: 2 } } ], reward: { gold: 80 }, focus: { tab: 'kingdom', ksub: 'forest', rtab: 'kingdom', el: 'step:logging' } },
     { id: 'k04', chain: 'A Kingdom', name: 'Imperial Orders', text: 'The Empire, the Guild and the villages post Orders at your Keep. There is no deadline — but finishing inside the speed window pays 20% more. Orders pay gold and Renown.',
       steps: [ { label: 'Kingdom → Keep → Orders → Deliver one', check: { orders: 1 } } ], reward: { gold: 100 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:order-list' } },
     { id: 'k05', chain: 'A Kingdom', name: 'An Overseer', text: 'An overseer names the slowest part of a step. Put a thrall in the Overseer slot: their role speeds up one part (Foreman → Work, Packer → Cart, Carter → Haul), and they can call a Double Shift.',
