@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Alpha 0.9.11',
+  version: 'Alpha 0.9.12',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -393,7 +393,7 @@ const CONFIG = {
     minLv: 10,                                           // a complete City: every building at this level
     // The army (0.9): the Barracks trains soldiers from Food + Supplies; soldiers eat every minute.
     army: { build: { lumber: 150, swords: 60, gold: 600 }, trainPerMin: 2, housingBase: 40, housingPer: 20, cost: { food: 1, supplies: 1 },
-      foodUpkeep: 0.05, supplyUpkeep: 0.02, bonusDiv: 5, hpDiv: 400, rallyFood: 1, rallyMult: 0.5, costBase: 60, costExp: 1.6, desertPerMin: 0.02 },
+      foodUpkeep: 0.05, supplyUpkeep: 0.02, bonusDiv: 5, hpDiv: 400, costBase: 60, costExp: 1.6, desertPerMin: 0.02 },
     // Hero buildings in the city (0.9)
     halls: [
       { id: 'yard',       name: 'Training Yard', icon: 'assets/gear/weapon_t1.webp', tier: 1, build: { gold: 300, planks: 30 },  per: 0.10, effect: 'xpPct',    desc: 'Hero XP +10% per level' },
@@ -450,6 +450,7 @@ const CONFIG = {
     { id: 'mine',      cat: 'gather',  name: 'Mine',        icon: [4,5],  buildCost: { wood: 40, stone: 30 },               job: { time: 10, inputs: {},                     outputs: { stone: 1, ore: 1 } } },
     { id: 'farm',      cat: 'gather',  name: 'Farm',        icon: [12,5], buildCost: { wood: 30, stone: 10, fiber: 10 },               job: { time: 10, inputs: {},                     outputs: { grain: 1 } } },
     // Crafting (refining)
+    ['0.9.12', 'Rally is gone — the army already fights at the hero\'s side on its own. If you bought the War Cry perk, its Crowns are back.'],
     ['0.9.11', 'A second bar under the kills bar shows the countdown to auto-advance — and when it is paused, it says why (boss next, or the next stage is too tough and what to upgrade). The Rally button now shows what it does: your army strikes for the damage shown, 1 Supply per tap.'],
     ['0.9.10', 'The hero pushes on by himself: after 50 kills on a stage he advances — but only into a stage he can hold, and never into a boss (you choose those fights). No more resting mid-fight: he catches his breath after every kill instead. If a fight goes badly he retreats a stage and tells you what to upgrade. You can turn auto-advance off under the kills bar.'],
     { id: 'smith',     cat: 'craft',   name: 'Blacksmith',  icon: [4,4],  buildCost: { gold: 200, stone: 40, wood: 40 },   job: { time: 10, inputs: { ore: 5 },             outputs: { ingot: 1 } } },
@@ -775,7 +776,6 @@ const CONFIG = {
       { id: 'drill',     tree: 'war',       name: 'Drill Sergeants', icon: [1,4],  max: 5,  cost: 4,  costMult: 1.7, desc: 'Barracks train 20% faster per rank' },
       { id: 'rations',   tree: 'war',       name: 'Rations',         icon: [14,14], max: 5, cost: 5,  costMult: 1.7, desc: 'Soldiers eat 10% less per rank' },
       { id: 'standing',  tree: 'war',       name: 'Standing Army',   icon: [7,1],  max: 3,  cost: 8,  costMult: 2,   desc: 'Begin each dynasty with 25 soldiers per rank' },
-      { id: 'warcry',    tree: 'war',       name: 'War Cry',         icon: [0,9],  max: 5,  cost: 5,  costMult: 1.8, desc: 'Rally strikes +20% per rank' },
       { id: 'tax',       tree: 'realm',     name: 'Tax Collectors',  icon: [12,7], max: 10, cost: 3,  costMult: 1.5, desc: '+25% taxes per rank' },
       { id: 'autocollect', tree: 'realm',   name: 'Stewards',        icon: [13,11], max: 1, cost: 15, costMult: 1,   desc: 'Taxes flow in by themselves — no need to Collect' },
       { id: 'spoils',    tree: 'realm',     name: 'Plunder',         icon: [12,15], max: 5, cost: 5,  costMult: 1.8, desc: '+25% spoils per rank' },

@@ -123,7 +123,6 @@ const UI = (() => {
     $('found-btn').addEventListener('click', openFound);
     $('barracks-up').addEventListener('click', () => { if (Game.upgradeBarracks()) { flash($('barracks-card')); render(true); } });
     $('tax-collect').addEventListener('click', () => { if (Game.collectTaxes()) { flash($('lands-card')); render(true); } });
-    $('rally-btn').addEventListener('click', () => { if (Game.rally()) { const b = $('rally-btn'); b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop'); } });
     $('build-cancel').addEventListener('click', () => $('build-modal').classList.add('hidden'));
     $('slot-close').addEventListener('click', closeSlot);
     $('doll').addEventListener('click', e => { const s = e.target.closest('.doll-slot'); if (s && s.dataset.slot) openSlot(s.dataset.kind, s.dataset.slot); });
@@ -1039,7 +1038,7 @@ const UI = (() => {
       $('conquest-box').classList.toggle('hidden', !LN);
       if (LN) { const pct = Game.landPct(LN); setText($('cq-name'), `Conquest of ${G.name}`); setText($('cq-pct'), pct + '%'); $('cq-bar').style.width = pct + '%'; setText($('cq-text'), Game.landDone(LN) ? `Conquered · 👑 ${G.crown}` : `Stage ${h.stage} / ${G.stages}`);
         const ck = LN + '|' + G.stages; if ($('cq-ticks').__k !== ck) { $('cq-ticks').__k = ck; setHtml($('cq-ticks'), `<span>Captains every 10 stages</span><span>👑 ${G.ruler} · stage ${G.stages}</span>`); } }
-      const rb = $('rally-btn'); rb.classList.toggle('hidden', !p3 || !Game.heroFighting() || Game.marching() <= 0); rb.disabled = !Game.canRally(); if (!rb.classList.contains('hidden')) setText($('rally-sub'), `hits ${Game.fmt(st.attack * CONFIG.kingdom.army.rallyMult * (1 + 0.2 * Game.perkRank('warcry')))} · 1 Supply`); }
+      }
     { const G = Game.ground(), drops = Game.groundDrops(), pool = Game.stagePool();
       const why = k => k === 'hide' ? (Game.dropUnlocked('hide') ? 'needs a Skinning Knife' : 'needs Skinning') : !Game.dropUnlocked(k) ? 'needs ' + (CONFIG.techs.find(t => t.unlocks.drop === k) || {}).name : '';
       const pills = Object.keys(pool).map(k => drops[k] !== undefined

@@ -12,7 +12,7 @@
   <title>Click to Conquer</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=a0911">
+  <link rel="stylesheet" href="style.css?v=a0912">
 </head>
 <body>
 
@@ -90,7 +90,6 @@
           <div id="conquest-box" class="conquest hidden"><div class="row-between small"><b id="cq-name"></b><span id="cq-pct" class="dim"></span></div><div class="bar cq-bar"><div id="cq-bar"></div><span id="cq-text"></span></div><div id="cq-ticks" class="cq-ticks"></div></div>
           <div class="btn-row">
             <button id="retreat-btn">◀ Retreat</button>
-            <button id="rally-btn" class="rally-btn hidden" title="Your marching army strikes the enemy. Costs 1 Supply per tap.">⚔ Rally<span class="rally-sub" id="rally-sub">1 Supply</span></button>
             <button id="advance-btn" class="primary" disabled>Advance ▶</button>
           </div>
           <div id="retreat-note" class="retreat-note hidden"><span id="retreat-text"></span><button id="retreat-x" class="retreat-x" aria-label="Dismiss">×</button></div>
@@ -488,11 +487,11 @@
 </div>
 
 
-<script src="config.js?v=a0911"></script>
-<script src="cloud-config.js?v=a0911"></script>
-<script src="game.js?v=a0911"></script>
-<script src="ui.js?v=a0911"></script>
-<script src="cloud.js?v=a0911"></script>
+<script src="config.js?v=a0912"></script>
+<script src="cloud-config.js?v=a0912"></script>
+<script src="game.js?v=a0912"></script>
+<script src="ui.js?v=a0912"></script>
+<script src="cloud.js?v=a0912"></script>
 <script>window.addEventListener("error", e => { const d = document.getElementById("err"); if (d) { d.textContent = "Error: " + e.message; d.classList.remove("hidden"); } });</script>
 </body>
 </html>

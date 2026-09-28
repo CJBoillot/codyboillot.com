@@ -1055,14 +1055,6 @@ function tickArmy(dt) {
   }
   let over = garrisoned() - soldiers(); if (over > 0) for (const k of Object.keys(S.kingdom.lands || {}).sort((a, b) => b - a)) { const L = S.kingdom.lands[k], t = Math.min(over, L.garrison || 0); L.garrison -= t; over -= t; if (over <= 0) break; }
 }
-function canRally() { return phase() === 3 && heroFighting() && marching() > 0 && (S.res.supplies || 0) >= AC().rallyFood && !S.hero.resting; }
-function rally() {
-  if (!canRally()) return false; S.res.supplies -= AC().rallyFood;
-  const st = stats(), dmg = st.attack * AC().rallyMult * (1 + 0.2 * perkRank('warcry'));
-  hitEnemy(dmg); pushEvent({ who: 'hero', dmg, crit: false, rally: true }); S.stats.rallies = (S.stats.rallies || 0) + 1;
-  if (S.hero.enemyHp <= 0) { onKill(st); S.hero.enemyHp = 0; }
-  return true;
-}
 
 // ---- Lands, garrisons, taxes ----
 const LC = () => KC().lands;
@@ -1181,6 +1173,7 @@ function load() {
     S.hero.tree = S.hero.tree || {}; S.hero.dxp = S.hero.dxp || {};
     if (!S.hero.dxp.combat && S.hero.level > 1) { let x = 0; for (let l = 1; l < S.hero.level; l++) x += CONFIG.discXpToLevel(l); S.hero.dxp.combat = x; } // old save: seed Combat from hero level
     migrateSkills();
+    if (S.legacy.perks && S.legacy.perks.warcry) { const r = S.legacy.perks.warcry; let back = 0; for (let i = 0; i < r; i++) back += Math.ceil(5 * Math.pow(1.8, i)); S.legacy.knowledge = (S.legacy.knowledge || 0) + back; delete S.legacy.perks.warcry; } // 0.9.12: Rally removed — its War Cry perk is refunded
     if (S.legacy.perks && S.legacy.perks.bestiary) { delete S.legacy.perks.bestiary; S.legacy.knowledge = (S.legacy.knowledge || 0) + 1; } // 0.9.8: the Bestiary unlocks by playing — its Crown comes back
     return S;
   } catch (e) { return null; }
@@ -1231,7 +1224,7 @@ function boot() {
 window.Game = {
   stepLv, stepName, milestoneCount, nextMilestone, levelCap, cityComplete, minBuildingLv, tierThreat,
   hallDef, hallLv, hallAvailable, hallCost, canHall, upgradeHall,
-  barracksLv, barracksBuilt, barracksCost, canUpBarracks, upgradeBarracks, trainPerMin, housing, foodPerMin, suppliesPerMin, upkeepPerMin, armyLimit, armyLimitBy, soldiers, garrisoned, marching, armyMult, armyHpMult, canRally, rally,
+  barracksLv, barracksBuilt, barracksCost, canUpBarracks, upgradeBarracks, trainPerMin, housing, foodPerMin, suppliesPerMin, upkeepPerMin, armyLimit, armyLimitBy, soldiers, garrisoned, marching, armyMult, armyHpMult,
   landId, landN, landDef, landState, landDone, landPct, landsHeld, landOpen, landsTouched, garrisonNeed, garrisonFill, taxFull, taxPerHour, spoilPerHour, cofferCap, cofferTotal, taxTotalPerHour, collectTaxes, setGarrison,
   rulerCrowns, vaultCount, canPassCrown, crownsIfPass, passCrown, lapActive,
   repairPosts,
