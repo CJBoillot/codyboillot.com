@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Alpha 0.3.0',
+  version: 'Alpha 0.3.1',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -194,7 +194,7 @@ const CONFIG = {
       { id: 'haste',     name: 'Haste',       icon: [2,6],  row: 0, per: { speedPct: 0.03 },   desc: '+3% attack speed per rank' },
       { id: 'precision', name: 'Precision',   icon: [0,8],  row: 0, per: { crit: 0.01 },       desc: '+1% crit chance per rank' },
       { id: 'toughness', name: 'Toughness',   icon: [1,0],  row: 0, per: { hpPct: 0.05 },      desc: '+5% max HP per rank' },
-      { id: 'strike',    name: 'Power Strike',icon: [3,0],  row: 1, parent: 'power',     tech: 'strike',  desc: 'Technique. Rank 1 unlocks it; each rank hits harder' },
+      { id: 'strike',    name: 'Power Strike',icon: [3,0],  row: 1, parent: 'power',     tech: 'strike', quest: 'q13c',  desc: 'Technique. Rank 1 unlocks it; each rank hits harder' },
       { id: 'cleave',    name: 'Cleave',      icon: [3,2],  row: 1, parent: 'haste',     tech: 'cleave',  desc: 'Technique. Damage carries to the next enemy' },
       { id: 'plunderer', name: 'Plunderer',   icon: [11,11],row: 1, parent: 'precision', per: { dropPct: 0.03 }, desc: '+3% loot per rank' },
       { id: 'vigor',     name: 'Vigor',       icon: [1,1],  row: 1, parent: 'toughness', per: { regenPct: 0.08 }, desc: '+8% HP regen per rank' },
@@ -515,7 +515,7 @@ const CONFIG = {
       steps: [
         { label: 'Reach stage 20 in any ground', check: { stage: 20 } },
       ], reward: { gold: 200 }, focus: { tab: 'hero', sub: 'fight', el: 'act:fight', el2: 'id:advance-btn' } },
-    { id: 'q17', name: 'A New Kingdom', text: 'You have survived the wild alone. Pay tribute to the Empire — 100 gold and the Rat King\'s Tooth — and it grants you land. Founding resets your stage and gear progress in the wild; your hero keeps his levels and skills. This is where the kingdom begins.',
+    { id: 'q17', name: 'A New Kingdom', text: 'You have survived the wild alone. Pay tribute to the Empire — 100 gold and the Rat King\'s Tooth — and it grants you land. Your hero keeps everything he has earned — levels, skills and gear — but the goods in your pack stay behind. This is where the kingdom begins.',
       steps: [
         { label: 'Kingdom → Throne → Pay tribute (100 gold + Rat King\'s Tooth)', check: { founded: 1 } },
       ], reward: { gold: 100 }, focus: { tab: 'kingdom', ksub: 'throne', rtab: 'kingdom', el: 'id:found-btn' } },

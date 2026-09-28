@@ -162,7 +162,8 @@ function gainDiscXp(d, n) { if (!CONFIG.disciplines[d]) return; S.hero.dxp = S.h
 function treeNode(d, id) { return (CONFIG.trees[d] || []).find(n => n.id === id); }
 function nodeRank(d, id) { return (S.hero.tree && S.hero.tree[d] && S.hero.tree[d][id]) || 0; }
 function nodeMax(n) { return n.capstone ? 1 : CONFIG.treeRanks; }
-function nodeOpen(d, id) { const n = treeNode(d, id); if (!n) return false; if (!n.parent) return true; const p = treeNode(d, n.parent); return nodeRank(d, n.parent) >= nodeMax(p); }
+function nodeQuestLocked(d, id) { const n = treeNode(d, id); if (!n || !n.quest || S.legacy.foundings > 0 || nodeRank(d, id) > 0) return false; const qi = CONFIG.quests.findIndex(q => q.id === n.quest); return qi >= 0 && S.quests.index < qi; }
+function nodeOpen(d, id) { const n = treeNode(d, id); if (!n) return false; if (nodeQuestLocked(d, id)) return false; if (!n.parent) return true; const p = treeNode(d, n.parent); return nodeRank(d, n.parent) >= nodeMax(p); }
 function treePointsTotal(d) { return discLevel(d) - 1 + (d === 'combat' ? perkRank('veteran') * 3 : 0); }
 function treePointsSpent(d) { let n = 0; for (const node of CONFIG.trees[d] || []) if (!node.capstone) n += nodeRank(d, node.id); return n; }
 function treePointsFree(d) { return treePointsTotal(d) - treePointsSpent(d); }
@@ -775,7 +776,7 @@ function boot() {
 
 window.Game = {
   get S() { return S; }, fmt, pct, fmtTime, drainEvents: () => EVENTS.splice(0), afkEfficiency: () => afkEff(),
-  discXp, discLevel, discProgress, treeNode, nodeRank, nodeMax, nodeOpen, treePointsTotal, treePointsSpent, treePointsFree, canRankNode, rankNode, treeMods,
+  discXp, discLevel, discProgress, treeNode, nodeRank, nodeMax, nodeOpen, treePointsTotal, treePointsSpent, treePointsFree, canRankNode, rankNode, nodeQuestLocked, treeMods,
   fistLevel, slotValue, enemyHit, crafting, maxUpgradePlan, upgradeMax, stats, gearStats, itemStatPreview, gearCraftCost, gearUpgradeCost, canTierUp, craftGear, upgradeGear,
   talentPointsFree, talentPointsTotal, talentPointsSpent, respec, respecCost,
   skillDef, skillUnlocked, skillPower, skillCd, skillReady, castSkill, activeBuffs,

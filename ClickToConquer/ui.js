@@ -542,7 +542,7 @@ const UI = (() => {
     for (const n of CONFIG.trees[curDisc] || []) {
       const d = rows.node[n.id]; if (!d) continue; const r = Game.nodeRank(curDisc, n.id), max = Game.nodeMax(n), open = Game.nodeOpen(curDisc, n.id), can = Game.canRankNode(curDisc, n.id);
       d.classList.toggle('locked', !open); d.classList.toggle('maxed', r >= max); d.classList.toggle('can', can);
-      setText(d.querySelector('[data-f=rank]'), n.capstone ? (r ? 'Learned' : '1 talent') : `${r} / ${max}`);
+      setText(d.querySelector('[data-f=rank]'), Game.nodeQuestLocked(curDisc, n.id) ? '🔒 Quest' : n.capstone ? (r ? 'Learned' : '1 talent') : `${r} / ${max}`);
       d.querySelector('[data-f=bar]').style.width = (100 * r / max) + '%';
       const b = d.querySelector('[data-f=btn]'); b.disabled = !can; setText(b, r >= max ? '✓' : n.capstone ? '★ Learn' : '+1');
       const link = $('tree').querySelector(`[data-link="${n.id}"]`); if (link) link.classList.toggle('on', open);
