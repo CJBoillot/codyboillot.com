@@ -12,6 +12,8 @@ const UI = (() => {
   let welcomeData = null;
   // Sprite icon: [row,col] on the icon sheet. size in px (16/24/32).
   const ico = (rc, size = 16, cls = '') => { if (!rc) return ''; if (typeof rc === 'string') return `<span class="ico ico-img ${cls}" style="width:${size}px;height:${size}px"><img src="${rc}" alt="" loading="lazy" decoding="async"></span>`; const sc = size / CONFIG.iconSheet.cell; return `<span class="ico ${cls}" style="width:${size}px;height:${size}px;background-position:-${rc[1] * size}px -${rc[0] * size}px;background-size:${512 * sc}px auto"></span>`; };
+  // Painted gear / tool icons by tier (gear: bare, t0..t5; tools: t0..t2)
+  const gearIcon = (kind, slot, it) => kind === 'gear' ? `assets/gear/${slot}_${it ? 't' + Math.min(it.tier, 5) : 'bare'}.webp` : `assets/gear/${slot}_t${it ? Math.min(it.tier, 2) : 0}.webp`;
   // Painted resource icons: resources, the hand boxes and kingdom buildings use them (drawn a little larger than their box)
   (() => { const RS = CONFIG.resources, IM = CONFIG.resImages || {}; for (const k in IM) if (RS[k]) RS[k].icon = IM[k];
     for (const h of CONFIG.hand) if (IM[h.gives]) h.icon = IM[h.gives];
@@ -174,7 +176,7 @@ const UI = (() => {
     for (const slot in CONFIG.slots) {
       const row = el('div', 'row gear-row');
       row.innerHTML = `
-        ${ico(CONFIG.slots[slot].icon, 32, 'rowico')}
+        <span data-f="ico">${ico(gearIcon('gear', slot, null), 32, 'rowico')}</span>
         <div class="row-main">
           <div class="row-title" data-f="title"></div>
           <div class="row-sub" data-f="stats"></div>
@@ -193,7 +195,7 @@ const UI = (() => {
     const tl = $('tool-list'); tl.innerHTML = ''; rows.tool = {};
     for (const slot in CONFIG.toolSlots) {
       const row = el('div', 'row gear-row');
-      row.innerHTML = `${ico(CONFIG.toolSlots[slot].icon, 32, 'rowico')}<div class="row-main"><div class="row-title" data-f="title"></div><div class="row-sub" data-f="stats"></div></div>
+      row.innerHTML = `<span data-f="ico">${ico(gearIcon('tool', slot, null), 32, 'rowico')}</span><div class="row-main"><div class="row-title" data-f="title"></div><div class="row-sub" data-f="stats"></div></div>
         <div class="btn-col"><button class="buy" data-f="up"><span class="small">Upgrade</span><br><span class="cost" data-f="upcost"></span></button><button class="buy maxbtn" data-f="max"><span class="small">Max</span><br><span class="cost" data-f="maxn"></span></button><button class="buy shard" data-f="forge"><span class="small" data-f="forgelbl">Make</span><br><span class="cost" data-f="forgecost"></span></button></div>`;
       row.querySelector('[data-f=up]').addEventListener('click', () => { if (Game.upgradeTool(slot)) flash(row); });
       row.querySelector('[data-f=max]').addEventListener('click', () => { if (Game.upgradeMax('tool', slot)) flash(row); });
@@ -377,12 +379,12 @@ const UI = (() => {
     const S = Game.S, d = $('doll'), IS = desktop ? 22 : 28;
     let html = '<div class="doll-tools">';
     for (const s in CONFIG.toolSlots) { const def = CONFIG.toolSlots[s], it = S.hero.tools[s];
-      html += `<div class="doll-wrap"><div class="doll-slot tool ${it ? 'filled' : 'empty'}" data-kind="tool" data-slot="${s}" title="${it ? CONFIG.toolTiers[it.tier].name + ' ' : ''}${def.name}">${ico(def.icon, IS, it ? '' : 'ghost')}<div class="doll-name">${def.name === 'Skinning Knife' ? 'Knife' : def.name}</div>${it ? `<div class="doll-tier">${CONFIG.toolTiers[it.tier].name}</div>` : ''}</div><div class="doll-lvl">${it ? 'Lv' + it.level : ''}</div></div>`; }
+      html += `<div class="doll-wrap"><div class="doll-slot tool ${it ? 'filled' : 'empty'}" data-kind="tool" data-slot="${s}" title="${it ? CONFIG.toolTiers[it.tier].name + ' ' : ''}${def.name}">${ico(gearIcon('tool', s, it), IS, it ? '' : 'ghost')}<div class="doll-name">${def.name === 'Skinning Knife' ? 'Knife' : def.name}</div>${it ? `<div class="doll-tier">${CONFIG.toolTiers[it.tier].name}</div>` : ''}</div><div class="doll-lvl">${it ? 'Lv' + it.level : ''}</div></div>`; }
     html += '</div><div class="doll-gear">';
     for (const rowSlots of DOLL) { html += '<div class="doll-row">'; for (const s of rowSlots) {
       if (!s) { html += '<div class="doll-wrap"><div class="doll-slot blank"></div></div>'; continue; }
       const def = CONFIG.slots[s], it = S.hero.gear[s];
-      html += `<div class="doll-wrap"><div class="doll-slot ${it ? 'filled' : 'empty'}" data-kind="gear" data-slot="${s}" title="${it ? Game.tierName(s, it.tier) + ' ' : ''}${def.name}">${ico(def.icon, IS, it ? '' : 'ghost')}<div class="doll-name">${def.name}</div>${it ? `<div class="doll-tier">${Game.tierName(s, it.tier)}</div>` : ''}</div><div class="doll-lvl">${it ? 'Lv' + it.level : ''}</div></div>`;
+      html += `<div class="doll-wrap"><div class="doll-slot ${it ? 'filled' : 'empty'}" data-kind="gear" data-slot="${s}" title="${it ? Game.tierName(s, it.tier) + ' ' : ''}${def.name}">${ico(gearIcon('gear', s, it), IS, it ? '' : 'bare')}<div class="doll-name">${def.name}</div>${it ? `<div class="doll-tier">${Game.tierName(s, it.tier)}</div>` : ''}</div><div class="doll-lvl">${it ? 'Lv' + it.level : ''}</div></div>`;
     } html += '</div>'; }
     html += '</div>';
     if (d.__h !== html) { setHtml(d, html); glowKey = ''; }
@@ -806,6 +808,7 @@ const UI = (() => {
     let anyGear = false;
     for (const slot in CONFIG.slots) {
       const row = rows.gear[slot], def = CONFIG.slots[slot], it = h.gear[slot];
+      setHtml(row.querySelector('[data-f=ico]'), ico(gearIcon('gear', slot, it), 32, 'rowico'));
       const up = row.querySelector('[data-f=up]'), forge = row.querySelector('[data-f=forge]');
       if (!it) {
         const bv = Game.slotValue(slot), bst = Game.itemStatPreview(slot, -1, 0); bst[def.primary] = CONFIG.slots[slot].per * bv;
@@ -939,6 +942,7 @@ const UI = (() => {
     // Tools
     for (const slot in CONFIG.toolSlots) {
       const row = rows.tool[slot], def = CONFIG.toolSlots[slot], it = h.tools[slot];
+      setHtml(row.querySelector('[data-f=ico]'), ico(gearIcon('tool', slot, it), 32, it ? 'rowico' : 'rowico ghost'));
       const up = row.querySelector('[data-f=up]'), forge = row.querySelector('[data-f=forge]');
       if (!it) { setHtml(row.querySelector('[data-f=title]'), `${def.name} <span class="owned">none</span>`); setText(row.querySelector('[data-f=stats]'), def.activity ? `Needed to ${CONFIG.activities[def.activity].name.toLowerCase()}.` : `Needed to take ${R[def.boosts].name} in the Wilds. Better tool, better chance.`); up.classList.add('hidden'); row.querySelector('[data-f=max]').classList.add('hidden'); }
       else {
