@@ -160,8 +160,9 @@ function tickHarvest(dt) {
 
 // ---------- Disciplines & skill trees ----------
 function discXp(d) { return (S.hero.dxp && S.hero.dxp[d]) || 0; }
-function discLevel(d) { let lvl = 1, x = discXp(d); while (x >= CONFIG.discXpToLevel(lvl) && lvl < 5000) { x -= CONFIG.discXpToLevel(lvl); lvl++; } return lvl; }
-function discProgress(d) { let lvl = 1, x = discXp(d); while (x >= CONFIG.discXpToLevel(lvl) && lvl < 5000) { x -= CONFIG.discXpToLevel(lvl); lvl++; } return { level: lvl, have: x, need: CONFIG.discXpToLevel(lvl) }; }
+function discCurve(d) { return d === 'combat' ? CONFIG.combatXpToLevel : CONFIG.discXpToLevel; }
+function discLevel(d) { const C = discCurve(d); let lvl = 1, x = discXp(d); while (x >= C(lvl) && lvl < 5000) { x -= C(lvl); lvl++; } return lvl; }
+function discProgress(d) { const C = discCurve(d); let lvl = 1, x = discXp(d); while (x >= C(lvl) && lvl < 5000) { x -= C(lvl); lvl++; } return { level: lvl, have: x, need: C(lvl) }; }
 function gainDiscXp(d, n) { if (!CONFIG.disciplines[d]) return; S.hero.dxp = S.hero.dxp || {}; const before = discLevel(d); S.hero.dxp[d] = (S.hero.dxp[d] || 0) + n; const after = discLevel(d); if (after > before) log(`${CONFIG.disciplines[d].name} level ${after}!`); }
 function treeNode(d, id) { return (CONFIG.trees[d] || []).find(n => n.id === id); }
 function nodeRank(d, id) { return (S.hero.tree && S.hero.tree[d] && S.hero.tree[d][id]) || 0; }
@@ -219,10 +220,11 @@ function techUnlockMet(d, cl = discLevel('combat')) { const u = d.unlock || {}; 
 function techUnlockLabel(d) { const u = d.unlock || {}; return u.label || (u.combat ? `Reach Combat Lv ${u.combat}` : ''); }
 function checkTechUnlocks() {
   const cl = discLevel('combat');
-  for (const d of CONFIG.skills) if (!techUnlocked(d.id) && techUnlockMet(d, cl)) { techState(d.id).open = true; log(`New technique: ${d.name}!`); pushEvent({ who: 'technique', name: d.name }); if (S.hero.loadout.length < techSlots()) S.hero.loadout.push(d.id); }
+  for (const d of CONFIG.skills) if (!techUnlocked(d.id) && techUnlockMet(d, cl)) { techState(d.id).open = true; log(`New technique: ${d.name}!`); if (questReached('q13c')) pushEvent({ who: 'technique', name: d.name }); }
   if (!S.hero.landSlot && S.kingdom && landsHeld() >= 1) S.hero.landSlot = true;
 }
 function masteryNeed(lv) { return CONFIG.masteryBase * Math.pow(CONFIG.masteryGrowth, lv - 1); }
+function questReached(id) { const i = CONFIG.quests.findIndex(q => q.id === id); return i >= 0 && S.quests.index >= i; }
 function techMastery(id) { let lv = 1, x = (S.hero.techs && S.hero.techs[id] && S.hero.techs[id].xp) || 0; while (x >= masteryNeed(lv) && lv < 5000) { x -= masteryNeed(lv); lv++; } return { level: lv, have: x, need: masteryNeed(lv) }; }
 function techLevelOf(id) { return techMastery(id).level; }
 function gainMastery(id, x, quiet = false) { const st = techState(id), before = techLevelOf(id); st.xp += x; const after = techLevelOf(id); if (after > before && !quiet) { log(`${skillDef(id).name} mastery Lv ${after}!`); if (after === 5 || after === 10) pushEvent({ who: 'technique', name: skillDef(id).name + ' — choose a mod' }); } }
@@ -244,6 +246,7 @@ function migrateSkills() { // 0.9.5: the old Combat tree → Paths (points refun
     for (const nid in map) { const r = old[nid] || 0; if (r >= 1) { const st = techState(map[nid]); st.open = true; let x = 0; for (let l = 1; l < r; l++) x += masteryNeed(l); st.xp = Math.max(st.xp || 0, x); } }
     delete h.tree.combat;
   }
+  if (pathPointsSpent() > pathPointsTotal()) { h.paths = {}; log('Combat levels come slower now — your Paths were reset so you can spend your points again.'); } // 0.9.9 curve change
   const slots = techSlots(); h.loadout = (h.loadout || []).filter((id, i, a) => skillDef(id) && techUnlocked(id) && a.indexOf(id) === i).slice(0, slots);
   checkTechUnlocks();
 }
@@ -444,7 +447,7 @@ function kTier() { return S.kingdom.tier || 0; }
 function tierDef(t = kTier()) { return KC().tiers[Math.min(t, KC().tiers.length - 1)]; }
 // Phase 3 (the Kingdom) begins when the finished City is proclaimed. Steps with `phase: 3` (the Barracks) only exist after that.
 function phase() { return S.kingdom && S.kingdom.phase === 3 ? 3 : kingdomNo() > 0 ? 2 : 1; }
-function canProclaim() { return kingdomNo() > 0 && phase() < 3 && cityComplete(); }
+function canProclaim() { return kingdomNo() > 0 && phase() < 3 && cityComplete() && questReached('y04'); }
 function proclaim() {
   if (!canProclaim()) return false;
   const gain = knowledgeGain(); S.legacy.knowledge += gain; S.kingdom.phase = 3; S.kingdom.proclaimedAt = S.hero.time;
@@ -467,7 +470,8 @@ function tierPaidDone() { const need = tierNeed(); if (!need) return true; for (
 function tierStepsReady() { return allSteps().filter(st => st.tier === kTier() && !st.phase).every(st => stepBuilt(st.id)); }
 function tierThreat(t = kTier()) { const k = tierDef(t).threat; if (!k) return null; const [g, st] = k.split(':'), G = CONFIG.grounds[g], ty = G.line[Math.min(Math.floor((+st - 1) / 10), G.line.length - 1)]; return { key: k, ground: g, stage: +st, name: ty.boss, where: G.name, done: !!S.hero.bossesKilled[k] }; }
 function contribute() { const need = tierNeed(); if (!need) return 0; S.kingdom.tierPaid = S.kingdom.tierPaid || {}; let n = 0; for (const k in need) { const m = Math.min(Math.floor(S.res[k] || 0), need[k] - (S.kingdom.tierPaid[k] || 0)); if (m > 0) { S.res[k] -= m; S.kingdom.tierPaid[k] = (S.kingdom.tierPaid[k] || 0) + m; n += m; } } return n; }
-function canRaise() { const th = tierThreat(); return !!tierNeed() && tierPaidDone() && tierStepsReady() && (!th || th.done); }
+const RAISE_QUEST = ['c04', 'h07', 'v07']; // raising the settlement is a quest moment
+function canRaise() { const th = tierThreat(), rq = RAISE_QUEST[kTier()]; return !!tierNeed() && tierPaidDone() && tierStepsReady() && (!th || th.done) && (!rq || questReached(rq) || S.legacy.dynasty > 1); }
 function raiseTier() { if (!canRaise()) return false; S.kingdom.tier = kTier() + 1; S.kingdom.tierPaid = {}; log(`Your settlement is now a ${tierDef().name}!`); return true; }
 function accountantSteps() { return allSteps().filter(st => st.tier === 2); }
 function cityChecks() {
@@ -578,6 +582,7 @@ const QUESTS_090 = ['f01','f01b','f02','f03','f04','f05','f06','f07','q01','q02'
 function fixQuestIndex() {
   const Q = S.quests; if (!Q) return; const at = id => CONFIG.quests.findIndex(x => x.id === id);
   let id = Q.cur !== undefined ? Q.cur : (Q.index < QUESTS_090.length ? QUESTS_090[Q.index] : null);
+  const MERGED = { c03: 'c04', h06: 'h07', v06: 'v07' }; if (id && MERGED[id]) id = MERGED[id]; // 0.9.9: boss-threat quests folded into the Raise quests
   if (Q.cur === undefined && Q.index >= QUESTS_090.length) id = null;
   if (id && at(id) >= 0) Q.index = at(id); else if (id === null && Q.cur === undefined) Q.index = CONFIG.quests.length;
   Q.cur = (CONFIG.quests[Q.index] || {}).id || null;
@@ -717,7 +722,13 @@ function questProgress(q) { // {done, parts:[{label, done, have, need}]}
 let _qid = null; // quest being checked — steps marked `since` count only what happened after the quest started
 function questBase(key, now) { if (!_qid || _qid !== S.quests.cur) return now; S.quests.base = S.quests.base || {}; const B = S.quests.base[_qid] || (S.quests.base[_qid] = {}); if (B[key] == null) B[key] = now; return B[key]; }
 function sinceVal(key, now, c) { return c.since ? Math.max(0, now - questBase(key, now)) : now; }
-function questCheck(c) {
+function questCheck(c) { // steps marked `since` count only what happened after the quest started (need = how much more)
+  if (!c.since) return questCheckRaw(c);
+  const r = questCheckRaw({ ...c, since: false }), now = +r.have || 0, n = Math.max(0, now - questBase(JSON.stringify(c), now));
+  return { done: n >= c.need, have: n, need: c.need };
+}
+function gearUps(slot) { const sc = it => it ? (it.tier + 1) * 10 + it.level : 0; if (slot === 'armor') { let s = 0; for (const k in S.hero.gear) if (k !== 'weapon') s += sc(S.hero.gear[k]); return s; } return sc(S.hero.gear[slot]); }
+function questCheckRaw(c) {
   if (c.gearTier) { const it = S.hero.gear[c.gearTier]; const t = it ? it.tier : -1; return { done: t >= c.need, have: t + 1, need: c.need + 1, simple: true }; }
   if (c.talent) { const r = S.hero.talents[c.talent] || 0; return { done: r >= 1, have: r, need: 1 }; }
   if (c.talentSpent) return { done: talentPointsSpent() >= c.talentSpent, have: talentPointsSpent(), need: c.talentSpent };
@@ -730,6 +741,7 @@ function questCheck(c) {
   if (c.viewed) { const v = !!(S.stats.viewed && S.stats.viewed[c.viewed]); return { done: v, have: v ? 1 : 0, need: 1, simple: true }; }
   if (c.path) { const r = pathRank(c.path); return { done: r >= c.need, have: r, need: c.need }; }
   if (c.node) { const [d, id] = c.node.split(':'), r = nodeRank(d, id); return { done: r >= c.need, have: r, need: c.need }; }
+  if (c.casts && c.since) { const n = sinceVal('k:' + c.casts, (S.stats.casts || {})[c.casts] || 0, c); return { done: n >= c.need, have: n, need: c.need }; }
   if (c.casts) { const n = (S.stats.casts && S.stats.casts[c.casts]) || 0; return { done: n >= c.need, have: n, need: c.need }; }
   if (c.focused) return { done: (S.stats.focused || 0) >= c.focused, have: S.stats.focused || 0, need: c.focused };
   if (c.activity) { const ok = (S.hero.activity === c.activity || (!c.ground && (S.hero.chose || {})[c.activity])) && (!c.ground || S.hero.ground === c.ground); return { done: ok, have: ok ? 1 : 0, need: 1 }; }
@@ -755,6 +767,10 @@ function questCheck(c) {
   if (c.rank) { const n = rankIndex(); return { done: n >= c.rank, have: n, need: c.rank, simple: true }; }
   if (c.bLv) { const n = stepBuilt(c.bLv) ? stepLv(c.bLv) : 0; return { done: n >= c.need, have: n, need: c.need }; }
   if (c.bossKey) { const ok = !!S.hero.bossesKilled[c.bossKey]; return { done: ok, have: ok ? 1 : 0, need: 1 }; }
+  if (c.hallLv) { const n = hallLv(c.hallLv); return { done: n >= c.need, have: n, need: c.need }; }
+  if (c.gearUps) { const n = gearUps(c.gearUps); return { done: n >= c.need, have: n, need: c.need }; }
+  if (c.bLvSum) { let n = 0; for (const st of allSteps()) if (stepBuilt(st.id)) n += stepLv(st.id); return { done: n >= c.need, have: n, need: c.need }; }
+  if (c.hallSum) { let n = 0; for (const h of KC().halls) n += hallLv(h.id); return { done: n >= c.need, have: n, need: c.need }; }
   if (c.hall) { const n = hallLv(c.hall); return { done: n >= 1, have: Math.min(1, n), need: 1 }; }
   if (c.allLv) { const n = Math.max(0, minBuildingLv()); return { done: n >= c.allLv, have: n, need: c.allLv }; }
   if (c.barracks) { const n = barracksLv(); return { done: n >= c.barracks, have: n, need: c.barracks }; }
@@ -1201,7 +1217,7 @@ window.Game = {
   phase, canProclaim, proclaim,
   stockMode, setStockMode, stockTarget, stockDemand, STOCK_MODES,
   get S() { return S; }, saveString, saveMeta, restoreString, setSaveHook: f => { saveHook = f; }, SAVE_KEY, fmt, pct, fmtTime, drainEvents: () => EVENTS.splice(0), afkEfficiency: () => afkEff(),
-  markViewed, discXp, discLevel, discProgress, pathNodes, pathNode, pathRank, pathOpen, pathNeedsStar, pathPointsTotal, pathPointsSpent, pathPointsFree, pathPointsMax, starsTotal, starsSpent, starsFree, canRankPath, rankPath, pathMods, resetPaths, techUnlocked, techUnlockMet, techUnlockLabel, techMastery, techLevelOf, techMod, techMods, chooseMod, modPending, techSlots, equipTech, unequipTech, skillDur, skillCdBase, checkTechUnlocks, treeNode, nodeRank, nodeMax, nodeOpen, treePointsTotal, treePointsSpent, treePointsFree, canRankNode, rankNode, nodeQuestLocked, treeMods,
+  markViewed, questReached, discXp, discLevel, discProgress, pathNodes, pathNode, pathRank, pathOpen, pathNeedsStar, pathPointsTotal, pathPointsSpent, pathPointsFree, pathPointsMax, starsTotal, starsSpent, starsFree, canRankPath, rankPath, pathMods, resetPaths, techUnlocked, techUnlockMet, techUnlockLabel, techMastery, techLevelOf, techMod, techMods, chooseMod, modPending, techSlots, equipTech, unequipTech, skillDur, skillCdBase, checkTechUnlocks, treeNode, nodeRank, nodeMax, nodeOpen, treePointsTotal, treePointsSpent, treePointsFree, canRankNode, rankNode, nodeQuestLocked, treeMods,
   fistLevel, slotValue, enemyHit, crafting, maxUpgradePlan, upgradeMax, stats, gearStats, itemStatPreview, gearCraftCost, gearUpgradeCost, canTierUp, craftGear, upgradeGear,
   talentPointsFree, talentPointsTotal, talentPointsSpent, respec, respecCost,
   skillDef, skillUnlocked, skillPower, skillCd, skillReady, castSkill, activeBuffs,
@@ -1221,7 +1237,7 @@ window.Game = {
   debug: {
     giveAll(n) { for (const k in CONFIG.resources) add(k, n); },
     give(k, n) { add(k, n); },
-    levels(n) { for (let i = 0; i < n; i++) { const cl = discLevel('combat'); gainDiscXp('combat', CONFIG.discXpToLevel(cl) - discProgress('combat').have); S.hero.level++; } S.hero.hp = stats().maxHp; },
+    levels(n) { for (let i = 0; i < n; i++) { const cl = discLevel('combat'); gainDiscXp('combat', CONFIG.combatXpToLevel(cl) - discProgress('combat').have); S.hero.level++; } S.hero.hp = stats().maxHp; },
     setStage(n) { S.hero.stage = Math.max(1, n | 0); S.hero.bestStage = Math.max(S.hero.bestStage, S.hero.stage); S.hero.kills = 0; S.hero.enemyHp = 0; },
     knowledge(n) { S.legacy.knowledge += n; },
     kingdomLevel(n) { S.legacy.kingdomLevel = Math.max(1, S.legacy.kingdomLevel + n); ensureThralls(); },

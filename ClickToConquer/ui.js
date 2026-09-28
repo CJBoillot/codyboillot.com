@@ -291,6 +291,9 @@ const UI = (() => {
       case 'inventory': case 'inv': return reached('q05b');
       case 'best': return reached('q13x');
       case 'troph': return reached('q16b');
+      case 'sk-paths': return reached('q02b');
+      case 'sk-gather': return reached('q06c');
+      case 'sk-tech': return reached('q13c');
       default: return true;
     }
   }
@@ -302,6 +305,8 @@ const UI = (() => {
     });
     $('kline-row').classList.toggle('hidden', Game.kingdomNo() < 1);
     { const ma = document.querySelector('[data-msub].active'); if (ma && !tabUnlocked(ma.dataset.msub)) document.querySelector('[data-msub=trade]').click(); }
+    document.querySelectorAll('#skill-seg [data-sk]').forEach(b => { const ok = tabUnlocked('sk-' + b.dataset.sk); b.disabled = !ok; b.classList.toggle('locked-tab', !ok); });
+    if (!tabUnlocked('sk-' + skView)) { const first = ['paths', 'gather', 'tech'].find(k => tabUnlocked('sk-' + k)); if (first && first !== skView) setSkillView(first); }
     { const ca = document.querySelector('[data-csub].active'); if (ca && !tabUnlocked(ca.dataset.csub)) document.querySelector('[data-csub=inv]').click(); }
     { // screens a quest asks you to look at: count them as seen once they are on screen
       const inv = $('tab-inventory'); if (inv && inv.offsetParent) { const ca = document.querySelector('[data-csub].active'), k = ca ? { inv: 'inventory', best: 'bestiary', troph: 'trophies' }[ca.dataset.csub] : null; if (k) Game.markViewed(k); if (k !== 'inventory') Game.markViewed('inventory'); } }
@@ -747,7 +752,7 @@ const UI = (() => {
 
 
   // ---- Skills: Techniques (active) · Paths (passive) · Gathering ----
-  let skView = 'tech', pathSel = null; const pathEls = {}, techEls = {};
+  let skView = 'paths', pathSel = null; const pathEls = {}, techEls = {};
   function setSkillView(v) { skView = v; document.querySelectorAll('#skill-seg [data-sk]').forEach(b => b.classList.toggle('active', b.dataset.sk === v)); for (const k of ['tech', 'paths', 'gather']) $('sk-' + k).classList.toggle('hidden', k !== v); try { glowKey = ''; } catch (e) {} if (typeof render === 'function') try { render(true); } catch (e) {} }
   const MOD_LABEL = { attackPct: 'attack', speedPct: 'attack speed', crit: 'crit chance', critDmg: 'crit damage', bossDmg: 'damage to bosses', hpPct: 'max HP', regenPct: 'HP regen', dr: 'damage taken', restSpeed: 'resting speed', goldPct: 'gold', dropPct: 'loot', skillPct: 'technique power', armyPct: 'army bonus', xpPct: 'XP', cdr: 'cooldowns' };
   const LESS_IS_GOOD = { dr: 1, cdr: 1 };
