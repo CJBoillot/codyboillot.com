@@ -625,7 +625,7 @@
       <div class="sec-head reveal">
         <div class="sec-tag sec-tag-new">New Game · Alpha</div>
         <h2>Click to Conquer: a survival-crafting idle game</h2>
-        <p>Start naked in the wild, pull plant fiber by hand, and work your way from a sharpened branch to a kingdom of thralls. Your hero does one thing at a time: fight, chop, mine or forage, and keeps at it while the game is closed. Everything on screen is a real economy: raw goods refine into ingots and leather, artisans turn those into plate and blades, and founding a new kingdom trades it all for permanent Knowledge and another pair of hands.</p>
+        <p>Start naked in the wild, pull plant fiber by hand, and fight your way from a sharpened branch to a kingdom. Your hero fights, chops, mines and forages on his own, and keeps working while the game is closed. Then you settle a capital and grow it from a Camp to a Hamlet, a Village and a City, with thralls running production lines that feed each other. Every good on screen is part of one economy: raw goods refine into ingots, lumber and bread, and orders, storehouses and markets keep it moving.</p>
       </div>
       <div class="feature-grid">
         <a class="video-embed game-preview reveal" href="ClickToConquer/" aria-label="Play Click to Conquer">
@@ -636,15 +636,18 @@
           <div class="badge-row">
             <span class="pill">Playable alpha</span>
             <span class="pill ghost">Built from scratch</span>
-            <span class="pill ghost">Saves locally</span>
+            <span class="pill ghost">Cloud saves</span>
           </div>
           <div class="chips">
             <span class="chip">Vanilla JS</span>
             <span class="chip">No build step</span>
             <span class="chip">Desktop &amp; mobile</span>
             <span class="chip">Offline progress</span>
+            <span class="chip">Google sign-in</span>
+            <span class="chip">Firebase Auth &amp; Firestore</span>
           </div>
-          <p>Designed as a systems exercise: a tech tree gated by what you have actually done rather than a research currency, a quest chain that doubles as the tutorial, a deterministic offline model so eight hours away resolves instantly, and a prestige layer where each new kingdom is bigger than the last. Numbers live in one config file; the rest is the loop.</p>
+          <p>Designed as a systems exercise: a tech tree gated by what you have actually done, a quest chain that doubles as the tutorial, and a deterministic offline model so eight hours away resolves instantly. Pacing is tuned by headless bots that play the whole game and report how long each stage takes.</p>
+          <p>Shipped like a real product: one-tap Google sign-in and a serverless backend (Firebase Auth + Firestore) back up each player's progress and restore it on any device, with AFK gains applied on resume. Saves are compressed, locked to their owner by security rules, and guarded against two devices overwriting each other, with a choose-your-save screen when they disagree. It runs on the free tier with no servers to maintain, and includes a privacy page and in-game account deletion, ready for the app stores.</p>
           <a class="btn btn-primary" style="margin-top:1.3rem" href="ClickToConquer/">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3l14 9-14 9z"/></svg>
             Play the alpha
