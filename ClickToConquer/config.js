@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Alpha 0.9.12',
+  version: 'Alpha 0.10.0',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -392,8 +392,11 @@ const CONFIG = {
     lordship: 0.01,                                      // +1% production per hero level
     minLv: 10,                                           // a complete City: every building at this level
     // The army (0.9): the Barracks trains soldiers from Food + Supplies; soldiers eat every minute.
-    army: { build: { lumber: 150, swords: 60, gold: 600 }, trainPerMin: 2, housingBase: 40, housingPer: 20, cost: { food: 1, supplies: 1 },
-      foodUpkeep: 0.05, supplyUpkeep: 0.02, bonusDiv: 5, hpDiv: 400, costBase: 60, costExp: 1.6, desertPerMin: 0.02 },
+    // 0.10 war economy (income, not stockpiles): Forest's treated lumber = Housing, Mine's swords = Arms, Farm's bread = Food.
+    // Each soldier draws `upkeep` of each per minute (× (1 + demandPerLand × lands held)). The army fights at the strength of its weakest line.
+    army: { build: { lumber: 150, swords: 60, gold: 600 }, trainPerMin: 2, upkeep: { housing: 0.04, arms: 0.04, food: 0.04 }, demandPerLand: 0.15,
+      lines: { housing: { good: 'lumber', line: 'forest', name: 'Housing', verb: 'Houses the army' }, arms: { good: 'swords', line: 'mine', name: 'Arms', verb: 'Arms the army' }, food: { good: 'bread', line: 'farm', name: 'Food', verb: 'Feeds the army' } },
+      bonusDiv: 5, hpDiv: 400, costBase: 60, costExp: 1.6 },
     // Hero buildings in the city (0.9)
     halls: [
       { id: 'yard',       name: 'Training Yard', icon: 'assets/gear/weapon_t1.webp', tier: 1, build: { gold: 300, planks: 30 },  per: 0.10, effect: 'xpPct',    desc: 'Hero XP +10% per level' },
@@ -403,7 +406,7 @@ const CONFIG = {
     ],
     hallCost: { base: 100, exp: 1.7 },
     // Lands (0.9): conquered from the hero screen; taxes grow ×4 per land
-    lands: { taxBase: 1000, taxGrowth: 4, garrisonPer: 10, cofferHours: 8, shortStages: 50, longStages: 100, shortLands: 3, offsetStart: 6, offsetStep: 3, spoilPerHour: 6, victoryLap: 3 },
+    lands: { taxBase: 1000, taxGrowth: 4, garrisonPer: 10, cofferHours: 8, shortStages: 50, longStages: 100, shortLands: 3, offsetStart: 6, offsetStep: 3, spoilPerHour: 6, victoryLap: 3, heroHereCap: 0.5 },
     // Settlement tiers inside one land. Raising a tier costs `cap` of every good made so far (pay in as you go) and loses nothing.
     tiers: [
       { name: 'Camp',    cap: 300, slots: 1, thralls: 6,  lvCap: 25,  threat: 'roads:20',  need: 'Build Logging, the Fields and the Mine Shaft.' },
@@ -447,6 +450,7 @@ const CONFIG = {
   buildingTypes: [
     // Gathering
     { id: 'forest',    cat: 'gather',  name: 'Forest',      icon: [4,6],  buildCost: { wood: 40, stone: 10 },                         job: { time: 10, inputs: {},                     outputs: { wood: 1 } } },
+    ['0.10.0', 'The war economy. Your army now runs on income, not stockpiles: the Forest houses it (treated lumber), the Mine arms it (swords) and the Farm feeds it (bread). Soldiers join free while all three lines have income to spare, and the army fights at the strength of its weakest line. Every land you conquer makes each soldier need 15% more — rebalance your lines to keep up. In a land the hero now auto-advances through captains and the Ruler; after the Ruler comes the Endless Battle, the richest fighting in that land, where he rests instead of retreating. Only you choose the next land — and a land pays at most 50% taxes while your hero is still in it. Old Food and Supplies go back to the Storehouse as bread, swords and lumber.'],
     { id: 'mine',      cat: 'gather',  name: 'Mine',        icon: [4,5],  buildCost: { wood: 40, stone: 30 },               job: { time: 10, inputs: {},                     outputs: { stone: 1, ore: 1 } } },
     { id: 'farm',      cat: 'gather',  name: 'Farm',        icon: [12,5], buildCost: { wood: 30, stone: 10, fiber: 10 },               job: { time: 10, inputs: {},                     outputs: { grain: 1 } } },
     // Crafting (refining)
@@ -652,7 +656,7 @@ const CONFIG = {
     { id: 'c01', chain: 'A Kingdom', name: 'The Fields', text: 'A camp needs food as well as wood.',
       steps: [ { label: 'Kingdom → Farm → Fields → Build', check: { built: 'fields' } }, { label: 'Fields → Upgrade it 2 more levels', check: { bLv: 'fields', need: 2, since: true } } ], reward: { gold: 80 }, focus: { tab: 'kingdom', ksub: 'farm', rtab: 'kingdom', el: 'step:fields' } },
     { id: 'c02', chain: 'A Kingdom', name: 'Into the Hills', text: 'The hills hold iron. Build the Mine Shaft.',
-      steps: [ { label: 'Kingdom → Mine → Mine Shaft → Build', check: { built: 'shaft' } }, { label: 'Mine Shaft → Upgrade to Lv 3', check: { bLv: 'shaft', need: 3 } } ], reward: { gold: 100 }, focus: { tab: 'kingdom', ksub: 'mine', rtab: 'kingdom', el: 'step:shaft' } },
+      steps: [ { label: 'Kingdom → Mine → Mine Shaft → Build', check: { built: 'shaft' } }, { label: 'Mine Shaft → Upgrade it 2 more levels', check: { bLv: 'shaft', need: 2, since: true } } ], reward: { gold: 100 }, focus: { tab: 'kingdom', ksub: 'mine', rtab: 'kingdom', el: 'step:shaft' } },
     { id: 'c04', chain: 'A Kingdom', name: 'Raise a Hamlet', text: 'The Toll Baron taxes the road to your camp — only the hero can clear it. And a Hamlet costs 200 of every good you make — pay it in bit by bit, nothing is lost. It opens the refineries and the hero\'s halls.',
       steps: [ { label: 'Hero → The Roads → slay the Toll Baron (stage 20)', check: { bossKey: 'roads:20' }, focus: { tab: 'hero', sub: 'fight', el: 'ground:roads' } }, { label: 'Kingdom → Keep → Settlement → Contribute everything asked', check: { tierPaid: 1 } }, { label: 'Keep → Raise to Hamlet', check: { tier: 1 } } ], reward: { gold: 200 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:settle-card' } },
     { id: 'h01', chain: 'Hamlet', name: 'The Sawmill', text: 'Logging now feeds the Sawmill: 2 wood become 1 plank.',
@@ -690,8 +694,8 @@ const CONFIG = {
       steps: [ { label: 'Every building at Lv 10', check: { allLv: 10 } }, { label: 'Upgrade buildings 10 more times', check: { bLvSum: 1, need: 10, since: true } } ], reward: { gold: 1000 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:settle-card' } },
     { id: 'y04', chain: 'City', name: 'Proclaim the Kingdom', text: 'The City is complete. Proclaim the Kingdom: your City becomes the Capital — nothing is lost — and the conquest begins.',
       steps: [ { label: 'Kingdom → Keep → Proclaim the Kingdom', check: { proclaimed: 1 } } ], reward: { gold: 500 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:found-btn' } },
-    { id: 'w01', chain: 'The Kingdom', name: 'The Barracks', text: 'An army is trained, not bought. The Barracks turns Food (bread) and Supplies (swords, treated lumber) into soldiers — and soldiers eat every minute.',
-      steps: [ { label: 'Kingdom → Barracks → Build', check: { barracks: 1 } }, { label: 'Train 20 soldiers', check: { have: 'soldiers', need: 20 } } ], reward: { gold: 800 }, focus: { tab: 'kingdom', ksub: 'war', rtab: 'kingdom', el: 'id:army-card' } },
+    { id: 'w01', chain: 'The Kingdom', name: 'The Barracks', text: 'An army runs on income, not stockpiles. Every soldier needs Housing (the Forest\'s treated lumber), Arms (the Mine\'s swords) and Food (the Farm\'s bread) every minute. Soldiers join the Barracks while all three lines have income to spare.',
+      steps: [ { label: 'Kingdom → Barracks → Build', check: { barracks: 1 } }, { label: 'Recruit 20 soldiers', check: { have: 'soldiers', need: 20 } } ], reward: { gold: 800 }, focus: { tab: 'kingdom', ksub: 'war', rtab: 'kingdom', el: 'id:army-card' } },
     { id: 'w02', chain: 'The Kingdom', name: 'March on Ashford', text: 'The hero leads the conquest. The army marches with him and multiplies every blow. Choose Ashford Vale on the hero screen.',
       steps: [ { label: 'Hero → Where to fight → Ashford Vale', check: { landPct: 1, need: 1 } }, { label: 'Conquer 10% more of Ashford Vale', check: { landPct: 1, need: 10, since: true } } ], reward: { gold: 1000 }, focus: { tab: 'hero', sub: 'fight', el: 'ground:land1' } },
     { id: 'w03', chain: 'The Kingdom', name: 'A Garrison', text: 'A conquered land pays taxes — but only as much as its garrison can hold. Soldiers in a garrison do not march with the hero.',
@@ -769,12 +773,12 @@ const CONFIG = {
       { id: 'oldblade',  tree: 'bloodline', name: 'Old Blade',       icon: [5,1],  max: 1,  cost: 20, costMult: 1,   desc: 'Keep your weapon when you pass the crown' },
       { id: 'cache',     tree: 'crown',     name: "Founder's Cache", icon: [11,11], max: 5, cost: 4,  costMult: 1.6, desc: 'Begin each dynasty with 1,000 gold per rank' },
       { id: 'blueprints',tree: 'crown',     name: 'Blueprints',      icon: [13,12], max: 3, cost: 6,  costMult: 1.8, desc: 'Every building starts 5 levels higher per rank' },
-      { id: 'charter',   tree: 'war',       name: 'Full Granaries',  icon: [14,14], max: 3, cost: 6,  costMult: 2,   desc: 'Begin each dynasty with 500 Food and 500 Supplies per rank' },
+      { id: 'charter',   tree: 'war',       name: 'Quartermasters',  icon: [14,14], max: 3, cost: 6,  costMult: 2,   desc: '+10% Housing, Arms and Food income per rank' },
       { id: 'cellar',    tree: 'crown',     name: 'Deep Cellar',     icon: [19,9], max: 4,  cost: 5,  costMult: 1.7, desc: 'AFK cap +2h per rank' },
       { id: 'memory',    tree: 'crown',     name: 'Long Memory',     icon: [13,8], max: 3,  cost: 6,  costMult: 1.8, desc: 'AFK efficiency +10% per rank' },
       { id: 'haggler',   tree: 'crown',     name: 'Haggler',         icon: [12,10], max: 5, cost: 4,  costMult: 1.7, desc: 'Sell prices +10% per rank' },
-      { id: 'drill',     tree: 'war',       name: 'Drill Sergeants', icon: [1,4],  max: 5,  cost: 4,  costMult: 1.7, desc: 'Barracks train 20% faster per rank' },
-      { id: 'rations',   tree: 'war',       name: 'Rations',         icon: [14,14], max: 5, cost: 5,  costMult: 1.7, desc: 'Soldiers eat 10% less per rank' },
+      { id: 'drill',     tree: 'war',       name: 'Drill Sergeants', icon: [1,4],  max: 5,  cost: 4,  costMult: 1.7, desc: 'Soldiers join 20% faster per rank' },
+      { id: 'rations',   tree: 'war',       name: 'Rations',         icon: [14,14], max: 5, cost: 5,  costMult: 1.7, desc: 'Soldiers need 10% less Housing, Arms and Food per rank' },
       { id: 'standing',  tree: 'war',       name: 'Standing Army',   icon: [7,1],  max: 3,  cost: 8,  costMult: 2,   desc: 'Begin each dynasty with 25 soldiers per rank' },
       { id: 'tax',       tree: 'realm',     name: 'Tax Collectors',  icon: [12,7], max: 10, cost: 3,  costMult: 1.5, desc: '+25% taxes per rank' },
       { id: 'autocollect', tree: 'realm',   name: 'Stewards',        icon: [13,11], max: 1, cost: 15, costMult: 1,   desc: 'Taxes flow in by themselves — no need to Collect' },

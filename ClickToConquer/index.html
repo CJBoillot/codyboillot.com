@@ -12,7 +12,7 @@
   <title>Click to Conquer</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=a0912">
+  <link rel="stylesheet" href="style.css?v=a0100">
 </head>
 <body>
 
@@ -92,6 +92,7 @@
             <button id="retreat-btn">◀ Retreat</button>
             <button id="advance-btn" class="primary" disabled>Advance ▶</button>
           </div>
+          <div id="demand-note" class="demand-note hidden"></div>
           <div id="retreat-note" class="retreat-note hidden"><span id="retreat-text"></span><button id="retreat-x" class="retreat-x" aria-label="Dismiss">×</button></div>
           <div class="row-between adv-row"><label class="auto-toggle small"><input type="checkbox" id="auto-adv" checked> Auto-advance every 50 kills</label><span id="danger" class="dim small"></span></div>
           <div id="afk-info" class="dim small afk-info"></div>
@@ -194,9 +195,9 @@
     <div id="tab-kingdom" class="tab hidden">
       <nav class="subtabs subtabs2" id="kingdom-subtabs">
         <div class="subrow" id="kline-row">
-        <button data-ksub="forest" class="kline">Forest <span id="badge-forest" class="dot hidden"></span></button>
-        <button data-ksub="farm" class="kline">Farm <span id="badge-farm" class="dot hidden"></span></button>
-        <button data-ksub="mine" class="kline">Mine <span id="badge-mine" class="dot hidden"></span></button>
+        <button data-ksub="forest" class="kline">Forest<small class="kl-sub" id="klsub-forest"></small> <span id="badge-forest" class="dot hidden"></span></button>
+        <button data-ksub="farm" class="kline">Farm<small class="kl-sub" id="klsub-farm"></small> <span id="badge-farm" class="dot hidden"></span></button>
+        <button data-ksub="mine" class="kline">Mine<small class="kl-sub" id="klsub-mine"></small> <span id="badge-mine" class="dot hidden"></span></button>
         <button data-ksub="war" class="kline">Barracks <span id="badge-war" class="dot hidden"></span></button>
         </div><div class="subrow">
         <button data-ksub="tech" class="active">Tech <span id="badge-tech" class="dot hidden"></span></button>
@@ -206,15 +207,19 @@
         <button data-ksub="lands">Lands <span id="badge-lands" class="dot hidden"></span></button>
         </div>
       </nav>
-      <div id="ksub-forest" class="ksub hidden"><div class="kbar" data-kbar></div><div id="line-forest" class="kline-body"></div></div>
-      <div id="ksub-farm" class="ksub hidden"><div class="kbar" data-kbar></div><div id="line-farm" class="kline-body"></div></div>
-      <div id="ksub-mine" class="ksub hidden"><div class="kbar" data-kbar></div><div id="line-mine" class="kline-body"></div></div>
+      <div id="ksub-forest" class="ksub hidden"><div class="feed-banner hidden" id="feed-forest"></div><div class="kbar" data-kbar></div><div id="line-forest" class="kline-body"></div></div>
+      <div id="ksub-farm" class="ksub hidden"><div class="feed-banner hidden" id="feed-farm"></div><div class="kbar" data-kbar></div><div id="line-farm" class="kline-body"></div></div>
+      <div id="ksub-mine" class="ksub hidden"><div class="feed-banner hidden" id="feed-mine"></div><div class="kbar" data-kbar></div><div id="line-mine" class="kline-body"></div></div>
       <div id="ksub-war" class="ksub hidden">
         <div class="card" id="army-card">
-          <div class="row-between"><div class="card-title" style="margin:0">Your Army</div><span class="tag" id="army-tag"></span></div>
-          <div class="army-top"><div><div class="army-big"><b id="army-n">0</b> <span class="dim" id="army-lim"></span></div><div class="small dim" id="army-limtxt"></div></div><div class="army-mult"><span class="small dim">Hero power</span><b id="army-mult">×1.0</b></div></div>
-          <div class="bar gold-bar"><div id="army-bar"></div><span id="army-bartxt"></span></div>
-          <div class="small dim" id="army-split" style="margin-top:4px"></div>
+          <div class="row-between"><div class="card-title" style="margin:0">War economy</div><span class="small dim">per minute</span></div>
+          <div class="army-head"><span class="army-ico" id="army-ico"></span><b id="army-n">0</b><span class="dim small" id="army-lim"></span><span class="small dim" id="army-status"></span><b class="army-eff" id="army-eff">100%</b></div>
+          <p class="small dim" style="margin:4px 0 6px">Your army runs on income, not stockpiles. It fights at the strength of its <b>weakest</b> line.</p>
+          <div class="pipe" id="war-pipe"></div>
+          <div id="war-flows"></div>
+          <div class="flow-legend"><span><i class="lg-in"></i>income</span><span><i class="lg-dem"></i>army uses</span><span>past the line = spare → soldiers join</span></div>
+          <div class="war-tip" id="war-tip"></div>
+          <div class="small dim" id="army-split" style="margin-top:6px"></div>
         </div>
         <div class="card" id="barracks-card">
           <div class="row-between"><div class="card-title" style="margin:0">Barracks <span class="dim small" id="barracks-lv"></span></div><span class="small dim" id="barracks-rate"></span></div>
@@ -222,10 +227,11 @@
           <div class="bar"><div id="train-bar"></div><span id="train-txt"></span></div>
           <button id="barracks-up" class="buy wide" style="margin-top:8px"><span class="small" id="barracks-uplab">Build the Barracks</span><br><span class="cost" id="barracks-cost"></span></button>
         </div>
-        <div class="card" id="upkeep-card">
-          <div class="card-title">Upkeep · per minute</div>
-          <div id="upkeep-list" class="upkeep"></div>
-          <p class="small dim" id="upkeep-tip" style="margin:6px 0 0"></p>
+        <div class="card" id="demand-card">
+          <div class="card-title">Demand grows with your realm</div>
+          <div class="small">Each soldier needs, per minute:</div>
+          <div class="need-row" id="need-row"></div>
+          <div class="small dim" id="demand-txt" style="margin-top:6px"></div>
         </div>
       </div>
       <div id="ksub-lands" class="ksub hidden">
@@ -487,11 +493,11 @@
 </div>
 
 
-<script src="config.js?v=a0912"></script>
-<script src="cloud-config.js?v=a0912"></script>
-<script src="game.js?v=a0912"></script>
-<script src="ui.js?v=a0912"></script>
-<script src="cloud.js?v=a0912"></script>
+<script src="config.js?v=a0100"></script>
+<script src="cloud-config.js?v=a0100"></script>
+<script src="game.js?v=a0100"></script>
+<script src="ui.js?v=a0100"></script>
+<script src="cloud.js?v=a0100"></script>
 <script>window.addEventListener("error", e => { const d = document.getElementById("err"); if (d) { d.textContent = "Error: " + e.message; d.classList.remove("hidden"); } });</script>
 </body>
 </html>

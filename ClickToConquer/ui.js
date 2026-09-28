@@ -42,9 +42,13 @@ const UI = (() => {
     for (const k in R) {
       const d = el('div', 'res hidden'); d.id = 'res-' + k; d.title = `${R[k].name} — ${R[k].desc || ''}`;
       d.innerHTML = `${ico(R[k].icon, 22)}<div class="res-txt"><b data-f="amt">0</b><span class="res-name">${R[k].name}</span></div><span class="rrate" data-f="rate"></span>`;
-      d.addEventListener('click', () => { if (Game.phase() !== 3) return; const go = { soldiers: 'war', food: 'farm', supplies: 'mine', gold: 'lands' }[k]; if (!go) return; const t = document.querySelector('[data-tab=kingdom]'); if (t && !t.disabled) t.click(); const b = document.querySelector(`[data-ksub=${go}]`); if (b && !b.disabled) b.click(); const r = document.querySelector('[data-rtab=kingdom]'); if (r && desktop) r.click(); });
+      d.addEventListener('click', () => { if (Game.phase() !== 3) return; const go = { soldiers: 'war', gold: 'lands' }[k]; if (!go) return; const t = document.querySelector('[data-tab=kingdom]'); if (t && !t.disabled) t.click(); const b = document.querySelector(`[data-ksub=${go}]`); if (b && !b.disabled) b.click(); const r = document.querySelector('[data-rtab=kingdom]'); if (r && desktop) r.click(); });
       rb.appendChild(d);
     }
+    for (const wk of Game.WAR_KEYS) { const W = CONFIG.kingdom.army.lines[wk], d = el('div', 'res inc-chip hidden'); d.id = 'inc-' + wk; d.title = `${W.name} income per minute vs what the army uses`;
+      d.innerHTML = `${ico(R[W.good].icon, 18)}<div class="inc-txt"><span class="res-name">${W.name}</span><span class="inc-nums"><b data-f="in"></b><span data-f="out"></span></span><span class="inc-meter"><i data-f="m"></i></span></div>`;
+      d.addEventListener('click', () => { const t = document.querySelector('[data-tab=kingdom]'); if (t && !t.disabled) t.click(); const b = document.querySelector(`[data-ksub=${W.line}]`); if (b && !b.disabled) b.click(); });
+      rb.appendChild(d); }
     document.querySelectorAll('[data-tab]').forEach(b => b.addEventListener('click', () => {
       document.querySelectorAll('[data-tab]').forEach(x => x.classList.toggle('active', x === b));
       if (desktop) return;
@@ -581,24 +585,45 @@ const UI = (() => {
   // ---- 0.9: the army (Barracks tab) ----
   function renderArmy() {
     const S = Game.S, f = Game.fmt, p3 = Game.phase() === 3; if (!p3) return false;
-    const sol = Game.soldiers(), lim = Game.armyLimit(), hs = Game.housing(), built = Game.barracksBuilt(), by = Game.armyLimitBy();
-    setText($('army-n'), f(sol)); setText($('army-lim'), built ? '/ ' + f(lim) : '');
-    setText($('army-limtxt'), !built ? 'Build the Barracks to train soldiers.' : by === 'housing' ? 'limit: Barracks housing — upgrade the Barracks' : by === 'food' ? 'limit: Food — upgrade the Bakery (and the Mill, the Fields)' : 'limit: Supplies — upgrade the Forge or the Carpenter');
-    setText($('army-mult'), '×' + Game.armyMult().toFixed(2));
-    $('army-bar').style.width = (lim ? Math.min(100, 100 * sol / lim) : 0) + '%'; setText($('army-bartxt'), built ? `${f(sol)} / ${f(lim)} army limit` : '—');
-    setText($('army-split'), `${f(Game.marching())} march with the hero · ${f(Game.garrisoned())} in garrisons`);
-    const tag = $('army-tag'); tag.className = 'tag ' + (S.kingdom.deserting ? 'warn-tag' : 'good-tag'); setText(tag, S.kingdom.deserting ? 'Hungry — deserting' : built ? 'Fed' : '');
+    const sol = Game.soldiers(), lim = Game.armyLimit(), built = Game.barracksBuilt(), by = Game.armyLimitBy(), eff = Game.armyEff(), A = CONFIG.kingdom.army;
+    const lname = W => CONFIG.kingdom.lines[W.line].name.replace('Grain ', '').replace('Iron ', '');
+    if (!$('army-ico').__d) { setHtml($('army-ico'), ico(R.soldiers.icon, 20)); $('army-ico').__d = 1; }
+    setText($('army-n'), f(sol)); setText($('army-lim'), built ? `/ ${f(lim)} soldiers` : 'soldiers');
+    setText($('army-eff'), Math.round(eff * 100) + '%'); $('army-eff').className = 'army-eff ' + (eff < 1 ? 'bad' : 'good');
+    setText($('army-status'), !built ? '· build the Barracks' : eff < 1 ? '· recruiting paused' : sol < lim ? `· +${Game.trainPerMin().toFixed(1)} joining / min` : '· at full strength');
+    const lines = Game.WAR_KEYS.map(k => ({ k, W: A.lines[k], inc: Game.warIncome(k), dem: Game.warDemand(k), sup: Game.lineSupports(k), cov: Game.warCover(k) }));
+    const pk = lines.map(L => [L.inc.toFixed(1), L.dem.toFixed(1), L.sup].join()).join('|') + by + sol;
+    if ($('war-pipe').__k !== pk) { $('war-pipe').__k = pk;
+      setHtml($('war-pipe'), lines.map((L, i) => { const stall = sol > 0 && L.cov < 1, diff = L.inc - L.dem;
+        return `${i ? '<div class="pj">+</div>' : ''}<div class="pst${stall ? ' stall' : L.k === by ? ' lim' : ''}">${ico(R[L.W.good].icon, 26)}<div class="pn">${L.W.name}</div><div class="ps">${lname(L.W)}</div><div class="pp">${sol > 0 ? Math.round(Math.min(L.cov, 9.99) * 100) + '%' : f(L.sup)}</div><div class="ps">${sol > 0 ? (diff >= 0 ? '+' + diff.toFixed(1) + ' spare' : diff.toFixed(1) + ' short') : 'soldiers'}</div></div>`; }).join(''));
+      setHtml($('war-flows'), lines.map(L => { const mx = Math.max(L.inc, L.dem, 1e-9) * 1.25, stall = sol > 0 && L.cov < 1;
+        return `<div class="wf"><div class="row-between small"><span>${L.W.name} <span class="dim">· ${lname(L.W)} › ${R[L.W.good].name.toLowerCase()}</span></span><span class="tiny"><b class="${stall ? 'bad' : 'good'}">+${L.inc.toFixed(1)}</b> <span class="dim">/ uses ${L.dem.toFixed(1)}</span></span></div>
+          <div class="wbar"><i class="w-${L.k}${stall ? ' stall' : ''}" style="width:${Math.min(100, 100 * L.inc / mx)}%"></i><b class="wdem" style="left:${Math.min(99, 100 * L.dem / mx)}%"></b></div></div>`; }).join('')); }
+    { const L = lines.find(x => x.k === by), W = L && L.W, ln = W && CONFIG.kingdom.lines[W.line], last = ln && ln.steps[ln.steps.length - 1];
+      setHtml($('war-tip'), !built ? 'Build the Barracks to start recruiting.' : !W ? '' : eff < 1 ? `<b>${W.name} is short by ${(L.dem - L.inc).toFixed(1)} / min.</b> Upgrade the ${lname(W)} line — start with its slowest building — to get back to 100% and recruit again.`
+        : sol >= lim ? `<b>${W.name} sets your army size (${f(L.sup)}).</b> Grow the ${lname(W)} line (${last ? last.name : ''} first) to recruit more.` : `Soldiers are joining. <b>${W.name}</b> runs out first, at ${f(L.sup)} soldiers.`);
+      $('war-tip').classList.toggle('stall', eff < 1); }
+    setText($('army-split'), `${f(Game.marching())} march with the hero (hero damage ×${Game.armyMult().toFixed(2)}) · ${f(Game.garrisoned())} in garrisons`);
     setText($('barracks-lv'), built ? 'Lv ' + Game.barracksLv() : '');
-    setText($('barracks-rate'), built ? `${Game.trainPerMin().toFixed(1)} soldiers / min · houses ${f(hs)}` : '');
-    setHtml($('barracks-desc'), built ? `Each soldier costs <b>1 Food + 1 Supplies</b> to train. Food is bread; Supplies are iron swords and treated lumber — final goods beyond what the city keeps go to the army.` : `The Barracks trains soldiers from Food (bread) and Supplies (swords, treated lumber).`);
-    const B = S.kingdom.barracks || {}; $('train-bar').style.width = (built ? Math.min(100, 100 * (B.train || 0)) : 0) + '%';
-    setText($('train-txt'), !built ? '' : sol >= lim ? 'At the army limit' : (S.res.food || 0) < 1 ? 'Waiting for Food' : (S.res.supplies || 0) < 1 ? 'Waiting for Supplies' : 'Training…');
+    setText($('barracks-rate'), built ? `${Game.trainPerMin().toFixed(1)} soldiers join / min` : '');
+    setHtml($('barracks-desc'), built ? `Recruits cost nothing — they join while all three lines have income to spare. A higher Barracks level means they join faster.` : `The Barracks recruits soldiers. They cost nothing to join, but each one needs Housing, Arms and Food every minute.`);
+    const B = S.kingdom.barracks || {}; $('train-bar').style.width = (built && sol < lim && eff >= 1 ? Math.min(100, 100 * (B.train || 0)) : built ? 100 : 0) + '%';
+    setText($('train-txt'), !built ? '' : eff < 1 ? 'Paused — a line is short' : sol >= lim ? 'At full strength' : 'Recruiting…');
     const c = Game.barracksCost(); setText($('barracks-uplab'), built ? 'Upgrade the Barracks' : 'Build the Barracks'); setHtml($('barracks-cost'), costHtml(c)); $('barracks-up').disabled = !Game.canUpBarracks();
-    const up = Game.upkeepPerMin(), fp = Game.foodPerMin(), sp = Game.suppliesPerMin();
-    const ln = (ic, lab, v, cls) => `<div class="uk-row"><span>${ic ? ico(R[ic].icon, 16) : ''}</span><span>${lab}</span><span class="${cls}">${v}</span></div>`;
-    setHtml($('upkeep-list'), ln('food', 'Food from the city', '+' + fp.toFixed(1), 'good') + ln(null, `${f(sol)} soldiers eat`, '−' + up.food.toFixed(1), 'warn') + ln('supplies', 'Supplies from the city', '+' + sp.toFixed(1), 'good') + ln(null, `${f(sol)} soldiers use`, '−' + up.supplies.toFixed(1), 'warn'));
-    setText($('upkeep-tip'), `Food in store: ${f(Math.floor(S.res.food || 0))} · Supplies: ${f(Math.floor(S.res.supplies || 0))}. If either runs out, soldiers slowly desert. A bigger army always needs a bigger city.`);
-    return Game.canUpBarracks();
+    setHtml($('need-row'), lines.map(L => `<span class="need${L.k === by ? ' lim' : ''}">${ico(R[L.W.good].icon, 16)} ${L.W.name} ${Game.perSoldier(L.k).toFixed(3)}</span>`).join(''));
+    { const held = Game.landsHeld(), pct = Math.round(held * A.demandPerLand * 100), nx = Game.landDef(held + 1);
+      setHtml($('demand-txt'), `${held} land${held === 1 ? '' : 's'} held: <b>+${pct}%</b>.${nx ? ` Conquering <b>${nx.name}</b> raises it to <b class="warn">+${pct + Math.round(A.demandPerLand * 100)}%</b> — every line will need a push.` : ''}`); }
+    return !built && Game.canUpBarracks();
+  }
+  function renderFeeds() { // line tabs: what each line feeds, and whether it holds the army back
+    const p3 = Game.phase() === 3 && Game.barracksBuilt(), A = CONFIG.kingdom.army, by = Game.armyLimitBy(), sol = Game.soldiers(), f = Game.fmt;
+    for (const k of Game.WAR_KEYS) { const W = A.lines[k], ban = $('feed-' + W.line), sub = $('klsub-' + W.line); if (!ban) continue;
+      ban.classList.toggle('hidden', !p3); if (sub) sub.classList.toggle('hidden', !p3); if (!p3) continue;
+      const cov = Game.warCover(k), stall = sol > 0 && cov < 1, lim = k === by, sup = Game.lineSupports(k);
+      ban.className = 'feed-banner' + (stall ? ' stall' : lim ? ' lim' : '');
+      const key = [k, stall, lim, sup, Math.round(cov * 100)].join(); if (ban.__k !== key) { ban.__k = key;
+        setHtml(ban, `${ico(R[W.good].icon, 28)}<div><b class="fh">${W.verb}</b><div class="small">${R[W.good].name} becomes <b>${W.name}</b> · ${f(Game.warIncome(k))} / min — ${stall ? `<b class="bad">short: the army fights at ${Math.round(cov * 100)}%</b>` : lim ? `<b class="bad">this sets your army size (${f(sup)})</b>` : `enough for ${f(sup)} soldiers`}</div></div>`); }
+      if (sub) { setText(sub, sol > 0 ? `${W.name} ${Math.round(Math.min(cov, 9.99) * 100)}%` : `${W.name} ${f(sup)}`); sub.className = 'kl-sub' + (stall || lim ? ' bad' : ''); } }
   }
   // ---- 0.9: lands, garrisons, taxes ----
   let landKey = '';
@@ -617,9 +642,10 @@ const UI = (() => {
     for (const n of ns) { const row = $('land-list').querySelector(`[data-land="${n}"]`); if (!row) continue; const G = Game.landDef(n), L = Game.landState(n), pct = Game.landPct(n), done = Game.landDone(n), need = Game.garrisonNeed(n), g = L.garrison || 0;
       row.classList.toggle('full', done); row.classList.toggle('front', !done && pct > 0 || (!done && Game.landOpen(n)));
       setHtml(row.querySelector('[data-f=nm]'), `${n} · ${G.name}`);
-      setHtml(row.querySelector('[data-f=meta]'), done ? `100% conquered · 👑 ${G.ruler}` : pct > 0 ? `${pct}% conquered · ${G.ruler} waits at stage ${G.stages}` : `Not yet attacked · ${G.terrain}`);
+      const here = Game.heroInLand(n);
+      setHtml(row.querySelector('[data-f=meta]'), (done ? `100% conquered · 👑 ${G.ruler}` : pct > 0 ? `${pct}% conquered · ${G.ruler} waits at stage ${G.stages}` : `Not yet attacked · ${G.terrain}`) + (here && pct > 50 ? ` <span class="warn">· pays 50% while your hero is here — move on to collect it all</span>` : ''));
       setHtml(row.querySelector('[data-f=cof]'), `${ico(R.gold.icon, 14)} ${f(Math.floor(L.coffer || 0))}`);
-      setText(row.querySelector('[data-f=rate]'), pct > 0 ? `+${f(Game.taxPerHour(n))} / h${Game.garrisonFill(n) < 1 ? ` (full garrison: ${f(Game.taxFull(n) * pct / 100)})` : ''}` : `~${f(Game.taxFull(n))} / h when conquered`);
+      setText(row.querySelector('[data-f=rate]'), pct > 0 ? `+${f(Game.taxPerHour(n))} / h${Game.garrisonFill(n) < 1 ? ` (full garrison: ${f(Game.taxFull(n) * Game.landShare(n))})` : ''}` : `~${f(Game.taxFull(n))} / h when conquered`);
       setHtml(row.querySelector('[data-f=gar]'), pct > 0 ? `🛡 Garrison <b class="${g >= need ? 'good' : 'warn'}">${g} / ${need}</b> <span class="${g >= need ? 'good' : 'warn'}">· ${Math.round(100 * Math.min(1, g / need))}% taxes</span>` : '<span class="dim">Garrison once you hold part of it</span>');
       row.querySelectorAll('[data-g]').forEach(b => b.disabled = pct <= 0);
       if (pct > 0 && g < need && Game.marching() > 0) any = true; }
@@ -1006,7 +1032,7 @@ const UI = (() => {
   }
 
   // ---- Render ----
-  const WAR_CHIPS = ['gold', 'food', 'supplies', 'soldiers']; // Phase 3 header: the war chest
+  const WAR_CHIPS = ['gold', 'soldiers']; // Phase 3 header: gold, the army — and the three war incomes (built below)
   let lastRender = 0;
   function render(force) {
     const now = performance.now(); if (!force && now - lastRender < 100) return; lastRender = now;
@@ -1019,10 +1045,14 @@ const UI = (() => {
       e.style.order = p3 ? String(wi) : ''; e.classList.toggle('war-chip', p3 && wi >= 0);
       e.classList.toggle('hidden', !open); if (!open) continue;
       e.querySelector('.rrate').classList.toggle('hidden', !Game.perkRank('almanac'));
-      { const cap = Game.resCap(k), full = (S.res[k] || 0) >= cap - 1e-9; setHtml(e.querySelector('[data-f=amt]'), `${f(Math.floor((S.res[k] || 0) + 1e-6))}${k === 'officers' ? '' : `<span class="capn">/${f(cap)}</span>`}`); e.classList.toggle('full', full); }
+      { const cap = k === 'soldiers' ? Game.armyLimit() : Game.resCap(k), full = k !== 'soldiers' && (S.res[k] || 0) >= cap - 1e-9; setHtml(e.querySelector('[data-f=amt]'), `${f(Math.floor((S.res[k] || 0) + 1e-6))}${k === 'officers' ? '' : `<span class="capn">/${f(cap)}</span>`}`); e.classList.toggle('full', full); }
       const rate = (kr[k] || 0) + (hr[k] || 0) + (hrv[k] || 0);
       const re = e.querySelector('[data-f=rate]'); setText(re, (rate > 0 ? '+' + f(rate) : '0') + '/s'); re.classList.toggle('zero', !(rate > 0));
     }
+    { const p3 = Game.phase() === 3 && Game.barracksBuilt(); Game.WAR_KEYS.forEach((wk, i) => { const e = $('inc-' + wk); e.classList.toggle('hidden', !p3); if (!p3) return; e.style.order = String(1 + i);
+        const inc = Game.warIncome(wk), dem = Game.warDemand(wk), cov = Game.warCover(wk), stall = cov < 1 && Game.soldiers() > 0;
+        setText(e.querySelector('[data-f=in]'), '+' + f(inc)); setText(e.querySelector('[data-f=out]'), '−' + f(dem)); e.classList.toggle('stall', stall);
+        e.querySelector('[data-f=m]').style.width = Math.min(100, dem > 0 ? 100 * dem / Math.max(inc, 1e-9) : 0) + '%'; }); if (Game.phase() === 3) $('res-soldiers').style.order = '4'; }
     if (desktop) { const hh = document.querySelector('.sticky-head').offsetHeight + 'px'; if (document.documentElement.style.getPropertyValue('--headh') !== hh) document.documentElement.style.setProperty('--headh', hh); }
 
     // Fight
@@ -1034,9 +1064,11 @@ const UI = (() => {
       setText(b.querySelector('[data-f=st]'), G.land ? (Game.landDone(G.land) ? '👑 100%' : un ? `${Game.landPct(G.land)}% · stage ${gs.stage}` : G.reqText) : un ? Game.stageLabel(gs.stage, id) : G.reqText); }
     { const p3 = Game.phase() === 3, LN = Game.landN(), G = Game.ground();
       $('army-line').classList.toggle('hidden', !p3 || !Game.heroFighting());
-      if (p3) { const st2 = Game.stats(); setHtml($('army-line'), `${ico(R.soldiers.icon, 18)} <b>${f(Game.marching())}</b>&nbsp;soldiers march with you · hits <b>${f(st2.attack)}</b>&nbsp;<span class="dim">(${f(st2.gearAttack)} × army ×${st2.army.toFixed(2)}${st2.lap > 1 ? ' × victory lap ×' + st2.lap : ''})</span>`); }
+      if (p3) { const st2 = Game.stats(); setHtml($('army-line'), `${ico(R.soldiers.icon, 18)} <b>${f(Game.marching())}</b>&nbsp;soldiers march with you · hits <b>${f(st2.attack)}</b>&nbsp;<span class="dim">(${f(st2.gearAttack)} × army ×${st2.army.toFixed(2)}${st2.lap > 1 ? ' × victory lap ×' + st2.lap : ''})</span>${Game.armyEff() < 1 ? ` <b class="bad">· army at ${Math.round(Game.armyEff() * 100)}%</b>` : ''}`); $('army-line').classList.toggle('stall', Game.armyEff() < 1);
+        { const dn = S.kingdom.demandNote, show = !!dn && !dn.seen && h.time - dn.t < 1800; $('demand-note').classList.toggle('hidden', !show);
+          if (show) { const e = Game.armyEff(), by = Game.armyLimitBy(), W = CONFIG.kingdom.army.lines[by]; setHtml($('demand-note'), `<b class="dh">${dn.name} conquered 👑</b><br>A bigger realm is harder to supply: every soldier now needs <b>+${Math.round(CONFIG.kingdom.army.demandPerLand * 100)}%</b> more. ${e < 1 ? `Your <b class="bad">${W.name}</b> can't keep up — the army fights at <b class="bad">${Math.round(e * 100)}%</b> until you grow the ${CONFIG.kingdom.lines[W.line].name.replace('Grain ', '').replace('Iron ', '')} line.` : 'Your lines are keeping up — well supplied.'}<button class="retreat-x" aria-label="Dismiss" data-dn>×</button>`); const x = $('demand-note').querySelector('[data-dn]'); if (x) x.onclick = () => { dn.seen = true; }; } } }
       $('conquest-box').classList.toggle('hidden', !LN);
-      if (LN) { const pct = Game.landPct(LN); setText($('cq-name'), `Conquest of ${G.name}`); setText($('cq-pct'), pct + '%'); $('cq-bar').style.width = pct + '%'; setText($('cq-text'), Game.landDone(LN) ? `Conquered · 👑 ${G.crown}` : `Stage ${h.stage} / ${G.stages}`);
+      if (LN) { const pct = Game.landPct(LN); setText($('cq-name'), `Conquest of ${G.name}`); setText($('cq-pct'), pct + '%'); $('cq-bar').style.width = pct + '%'; setText($('cq-text'), Game.isEndless() ? `∞ Endless Battle · 👑 ${G.crown}` : Game.landDone(LN) ? `Conquered · 👑 ${G.crown}` : `Stage ${h.stage} / ${G.stages}`);
         const ck = LN + '|' + G.stages; if ($('cq-ticks').__k !== ck) { $('cq-ticks').__k = ck; setHtml($('cq-ticks'), `<span>Captains every 10 stages</span><span>👑 ${G.ruler} · stage ${G.stages}</span>`); } }
       }
     { const G = Game.ground(), drops = Game.groundDrops(), pool = Game.stagePool();
@@ -1139,7 +1171,7 @@ const UI = (() => {
 
     // Kingdom
     for (const lid in CONFIG.kingdom.lines) { const any = Game.lineUnlocked(lid) ? renderLine(lid) : false; $('badge-' + lid).classList.toggle('hidden', !any); }
-    $('badge-war').classList.toggle('hidden', !renderArmy()); $('badge-lands').classList.toggle('hidden', !renderLands()); $('badge-halls').classList.toggle('hidden', !renderHalls());
+    $('badge-war').classList.toggle('hidden', !renderArmy()); renderFeeds(); $('badge-lands').classList.toggle('hidden', !renderLands()); $('badge-halls').classList.toggle('hidden', !renderHalls());
     const keepAct = renderKeep();
     renderThrone();
 
@@ -1347,6 +1379,7 @@ const UI = (() => {
   }
   function tallyLoot(obj) { for (const k in obj) if (obj[k] > 0) { lootTally[k] = (lootTally[k] || 0) + obj[k]; lootFresh[k] = true; } }
   function hitPop(ev) {
+    if (ev.who === 'rest') { const a = $('hero-hpbar') && $('hero-hpbar').offsetParent ? $('hero-hpbar').parentElement : document.querySelector('.top'); const r = a.getBoundingClientRect(); const p = el('div', 'pop heal', '☾ Resting'); p.style.left = (r.left + r.width * 0.5) + 'px'; p.style.top = (r.top + 4) + 'px'; document.body.appendChild(p); setTimeout(() => p.remove(), 1600); return; }
     if (ev.who === 'retreat') { const a = $('hero-hpbar') && $('hero-hpbar').offsetParent ? $('hero-hpbar').parentElement : document.querySelector('.top'); const r = a.getBoundingClientRect(); const p = el('div', 'pop taken', `◀ Retreat to stage ${ev.to}`); p.style.left = (r.left + r.width * 0.5) + 'px'; p.style.top = (r.top + 4) + 'px'; document.body.appendChild(p); setTimeout(() => p.remove(), 1800); return; }
     if (ev.who === 'technique') { const a = document.querySelector('.top') || document.body; const r = a.getBoundingClientRect(); const p = el('div', 'pop craft', `⚔ ${ev.name}`); p.style.left = (r.left + r.width * 0.5) + 'px'; p.style.top = (Math.max(r.top, 80) + 20) + 'px'; document.body.appendChild(p); setTimeout(() => p.remove(), 1800); return; }
     if (ev.who === 'research') { const a = $('tech-tree').offsetParent ? $('tech-tree') : document.querySelector('.top'); const r = a.getBoundingClientRect(); const p = el('div', 'pop craft', `✦ ${ev.name} researched!`); p.style.left = (r.left + r.width * 0.5) + 'px'; p.style.top = (Math.max(r.top, 80) + 20) + 'px'; document.body.appendChild(p); setTimeout(() => p.remove(), 1400); return; }
@@ -1434,14 +1467,16 @@ const UI = (() => {
   // Kills bar = kills to unlock Advance. Auto bar = kills toward auto-advance, or why it is paused.
   function killsLine() {
     const h = Game.S.hero, need = Game.killsNeeded(), k = h.kills;
+    if (Game.isEndless()) return { pct: 100, text: h.resting ? 'Resting — back at full health' : `∞ Endless Battle · ${Game.fmt(k)} kills` };
     return { pct: Math.min(100, 100 * k / need), text: `${Math.min(k, need)} / ${need} kills${Game.canAdvance() ? ' · Advance ready' : ''}` };
   }
   function autoLine() {
     const S = Game.S, h = S.hero, k = h.kills, an = Game.autoKillsNeeded(), block = Game.autoAdvanceBlock(), f = Game.fmt;
     const pct = Math.min(100, 100 * k / an), next = h.stage + 1;
     if (block === 'off') return { pct: 0, cls: 'off', text: 'Auto-advance is off', why: 'Tick “Auto-advance” below to let him push on by himself.' };
+    if (block === 'endless') return { pct: 100, cls: 'endless', text: 'The land is yours · Endless Battle', why: `The richest fighting in ${Game.ground().name}. He fights here until you send him on — if he falls, he rests and returns. While he stays, this land pays only 50% taxes: choose the next land (Where to fight) to collect it all.` };
     if (block === 'end') return { pct: 100, cls: 'paused', text: 'Last stage of this ground', why: Game.isBoss() ? `Defeat the ${Game.enemyName()} to finish it.` : '' };
-    if (Game.isBoss()) return { pct: 0, cls: '', text: 'Auto-advance: beat the boss', why: `Once the ${Game.enemyName()} falls he moves on by himself.` };
+    if (Game.isBoss()) return { pct: 0, cls: '', text: 'Auto-advance: beat the boss', why: Game.ground().land && h.stage >= Game.ground().stages ? `Beat ${Game.enemyName()} to take the land — then the Endless Battle begins.` : `Once the ${Game.enemyName()} falls he moves on by himself.` };
     if (block === 'boss') return { pct, cls: 'paused', text: `Auto-advance paused · boss next`, why: `The ${Game.enemyName(next)} waits at stage ${next}. He won't face a boss on his own — tap Advance when you're ready.` };
     if (block === 'tough') { const d = Game.stageDanger(next);
       return { pct, cls: 'paused', text: 'Auto-advance paused · too tough ahead', why: d >= 1 ? `One fight at stage ${next} would beat him. Upgrade your armor or weapon (Gear) first.` : `At stage ${next} he would lose about ${Math.max(1, Math.round(d * 100))}% HP per fight after healing — he'd end up retreating. Upgrade your armor or weapon (Gear), or raise his healing.` }; }

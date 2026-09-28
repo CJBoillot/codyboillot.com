@@ -373,7 +373,7 @@ function enemyName(stage = S.hero.stage) {
   const T = enemyType(stage), loops = enemyTypeLoops(stage), pre = loops ? 'Elder '.repeat(Math.min(loops, 2)) : '';
   return pre + (isBoss(stage) ? T.boss : T.name);
 }
-function stageLabel(stage = S.hero.stage, gid = S.hero.ground) { const { k } = stageType(stage), T = enemyType(stage, gid); if (landN(gid)) return `Stage ${stage} · ${isBoss(stage) ? T.boss : T.name}`; return `${enemyTypeLoops(stage, gid) ? 'Elder ' : ''}${T.name} ${k}/${CONFIG.stages.perType}`; }
+function stageLabel(stage = S.hero.stage, gid = S.hero.ground) { const { k } = stageType(stage), T = enemyType(stage, gid); if (landN(gid)) return isEndless(stage, gid) ? `∞ Endless Battle · ${T.name}` : `Stage ${stage} · ${isBoss(stage) ? T.boss : T.name}`; return `${enemyTypeLoops(stage, gid) ? 'Elder ' : ''}${T.name} ${k}/${CONFIG.stages.perType}`; }
 function nextTypeName(stage = S.hero.stage) { const T = enemyType(stage + 1); return (enemyTypeLoops(stage + 1) ? 'Elder ' : '') + T.plural; }
 // Drop table for a stage: current type's pool at its stage chance, earlier types' pools at their stage-10 chance. Gated by tech / tool. Values are expected units per kill.
 function stagePool(stage = S.hero.stage, gid = S.hero.ground) {
@@ -404,14 +404,18 @@ function fightNet(stage = S.hero.stage, st = stats('sustained')) {
 }
 // Sustainable = he survives one fight from full HP and heals back at least what each fight costs him.
 function stageSustainable(stage = S.hero.stage) { const f = fightNet(stage); return f.taken < f.maxHp * 0.9 && f.net <= 0; }
-function farmRate(stage = S.hero.stage) { const f = fightNet(stage); return f.taken >= f.maxHp ? 0 : 1 / f.ttk; }
+function farmRate(stage = S.hero.stage) { const f = fightNet(stage); if (isEndless(stage)) { if (f.taken >= f.maxHp) return 0; const st = stats('sustained'), rest = f.net > 0 ? f.net / (st.regen * st.restSpeed) : 0; return 1 / (f.ttk + rest); } return f.taken >= f.maxHp ? 0 : 1 / f.ttk; } // the Endless Battle: he rests when beaten, never retreats
 // Danger = share of max HP lost per fight after healing (≥1: one fight would beat him).
 function stageDanger(stage = S.hero.stage) { const f = fightNet(stage); return f.taken >= f.maxHp ? f.taken / f.maxHp : Math.max(0, f.net) / f.maxHp; }
+function isEndless(stage = S.hero.stage, gid = S.hero.ground) { const G = CONFIG.grounds[gid]; return !!(G && G.land && G.stages && stage > G.stages); }
 function autoKillsNeeded(stage = S.hero.stage) { return isBoss(stage) ? H.bossKillsToAdvance : H.autoAdvanceKills; }
 function autoAdvanceBlock(stage = S.hero.stage) { // why the hero won't push on by himself (null = he will)
-  const G = ground(); if (G.stages && stage >= G.stages) return 'end';
+  const G = ground();
+  if (isEndless(stage)) return 'endless';
+  if (G.stages && stage >= G.stages && !(G.land && landDone(G.land))) return 'end';
   if (S.settings.autoAdvance === false) return 'off';
-  if (isBoss(stage + 1)) return 'boss';
+  if (G.land && G.stages && stage >= G.stages) return null; // the Ruler is beaten: on into the Endless Battle
+  if (isBoss(stage + 1) && !G.land) return 'boss'; // in a land he marches on through captains and the Ruler
   if (!stageSustainable(stage + 1)) return 'tough';
   return null;
 }
@@ -424,7 +428,7 @@ function heroRetreat(st) {
 }
 function offlineStages(kills) { // AFK: retreat to a stage he can hold, then push on every 50 kills while it is safe
   const h = S.hero, from = h.stage;
-  if (!stageSustainable(h.stage) && h.stage > 1) { while (h.stage > 1 && !stageSustainable(h.stage)) h.stage--; h.kills = 0; h.enemyHp = 0; h.retreatNote = { from, to: h.stage, boss: false, foe: enemyName(from), t: h.time, away: true }; log(`While you were away your hero had to retreat to stage ${h.stage}.`); }
+  if (!isEndless() && !stageSustainable(h.stage) && h.stage > 1) { while (h.stage > 1 && !stageSustainable(h.stage)) h.stage--; h.kills = 0; h.enemyHp = 0; h.retreatNote = { from, to: h.stage, boss: false, foe: enemyName(from), t: h.time, away: true }; log(`While you were away your hero had to retreat to stage ${h.stage}.`); }
   let rem = Math.floor(kills), guard = 0;
   while (guard++ < 500) {
     const need = Math.max(0, autoKillsNeeded() - h.kills); if (rem < need || autoAdvanceBlock()) break;
@@ -436,7 +440,7 @@ function offlineStages(kills) { // AFK: retreat to a stage he can hold, then pus
 // Caps: P0 = the Pack (100, Leather Pack 150). P1+ = the Storehouse (§7.6 of the v0.3 design).
 function resId(k) { return k; }
 function resCap(k) {
-  const R_ = CONFIG.resources[k]; if (R_ && R_.kind === 'war') { if (k === 'soldiers') return Math.max(1, housing()); return storeCap(k) * KC().war.supplyCapMult; }
+  const R_ = CONFIG.resources[k]; if (R_ && R_.kind === 'war') { if (k === 'soldiers') return 1e12; return storeCap(k) * KC().war.supplyCapMult; }
   if (k === 'gold' && S.kingdom && phase() === 3) return storeCap('gold') * Math.pow(LC().taxGrowth, landsHeld() + 1);
   if (S.legacy.foundings === 0) { const pk = hasTech('leatherwork') ? CONFIG.caps.leatherPack : CONFIG.caps.pack; return resId(k) === 'gold' ? pk * CONFIG.caps.goldMult : pk; }
   return storeCap(k);
@@ -645,7 +649,7 @@ function tickKingdom(dt) {
       }
     }
   }
-  if (phase() === 3) for (const st of accountantSteps()) { // 0.9: final goods above the stock target go to the army (bread → Food; swords, treated lumber → Supplies)
+  if (false) for (const st of accountantSteps()) { // 0.10: no more Quartermaster stockpiles — the army draws income directly (tickArmy)
     if (!stepBuilt(st.id)) continue; const to = KC().war.quartermaster[st.make]; if (!to) continue;
     const keep = stockTarget(st.make).target, room = Math.max(0, resCap(to) - (S.res[to] || 0)), n = Math.floor(Math.min((S.res[st.make] || 0) - keep, room));
     if (n > 0) { S.res[st.make] -= n; add(to, n); }
@@ -891,8 +895,8 @@ function gainXp(x) {
     log(`Level up! Now level ${S.hero.level}`);
   }
 }
-function canAdvance() { const G = ground(); if (G.stages && S.hero.stage >= G.stages) return false; return S.hero.kills >= killsNeeded(); }
-function advance() { if (!canAdvance()) return false; S.hero.stage++; S.hero.kills = 0; S.hero.enemyHp = 0; S.hero.carry = 0; S.hero.bestStage = Math.max(S.hero.bestStage, S.hero.stage); log(isBoss() ? `The ${enemyName()} awaits — BOSS` : stageType().k === 1 ? `Now hunting ${enemyType().plural}` : `Advanced: ${stageLabel()}`); return true; }
+function canAdvance() { const G = ground(); if (isEndless()) return false; if (G.stages && S.hero.stage >= G.stages && !(G.land && landDone(G.land))) return false; return S.hero.kills >= killsNeeded(); }
+function advance() { if (!canAdvance()) return false; S.hero.stage++; S.hero.kills = 0; S.hero.enemyHp = 0; S.hero.carry = 0; S.hero.bestStage = Math.max(S.hero.bestStage, S.hero.stage); if (isEndless()) { log(`${ground().name} is yours. The Endless Battle begins — the richest fighting in this land. Move on to the next land whenever you choose.`); return true; } log(isBoss() ? `The ${enemyName()} awaits — BOSS` : stageType().k === 1 ? `Now hunting ${enemyType().plural}` : `Advanced: ${stageLabel()}`); return true; }
 function retreat() { if (S.hero.stage <= 1) return false; S.hero.stage--; S.hero.kills = 0; S.hero.enemyHp = 0; S.hero.carry = 0; log(`Retreated to stage ${S.hero.stage}`); return true; }
 function log(msg) { S.log.unshift(msg); if (S.log.length > 30) S.log.length = 30; }
 
@@ -912,7 +916,7 @@ function simulate(dt) {
   if (!heroFighting()) { const st0 = stats(); h.hp = Math.min(st0.maxHp, h.hp + st0.regen * dt); tickHarvest(dt); return; }
   for (const id in h.cds) if (h.cds[id] > 0) h.cds[id] -= dt;
   const st = stats();
-  h.resting = false;
+  if (h.resting) { h.hp = Math.min(st.maxHp, h.hp + st.regen * st.restSpeed * dt); if (h.hp >= st.maxHp) { h.resting = false; h.atkTimer = 0; h.eTimer = 0; } else return; }
   h.hp = Math.min(st.maxHp, h.hp + st.regen * dt);
   if (h.enemyHp <= 0) { h.enemyHp = enemyMaxHp(); if (h.carry > 0) { h.enemyHp -= h.carry; h.carry = 0; } }
   for (const id of h.loadout) if (skillReady(id)) castSkill(id, false);
@@ -927,7 +931,7 @@ function simulate(dt) {
     const dmg = effectiveEnemyDps(st) * H.enemyAttackInterval;
     h.hp -= dmg; pushEvent({ who: 'enemy', dmg });
   }
-  if (h.hp <= 0) { heroRetreat(st); return; }
+  if (h.hp <= 0) { if (isEndless()) { h.hp = 0; h.resting = true; h.enemyHp = 0; h.carry = 0; h.atkTimer = 0; h.eTimer = 0; log('Your hero falls back to rest. He returns to the Endless Battle at full health.'); pushEvent({ who: 'rest' }); return; } heroRetreat(st); return; }
   if (h.enemyHp <= 0) { h.hp = Math.min(st.maxHp, h.hp + killHeal(st)); onKill(st); h.enemyHp = 0; h.atkTimer = Math.min(h.atkTimer, interval * 0.5); }
 }
 
@@ -948,12 +952,10 @@ function applyOffline(awaySeconds) {
     const fin = steps[steps.length - 1].make; let lost = top; for (let j = i + 1; j < steps.length; j++) lost /= steps[j].ratio; if (gains[fin]) gains[fin] = Math.max(0, gains[fin] - lost); } }
   const tax = {};
   if (phase() === 3) { // 0.9 while away: final goods reach the army, soldiers eat and train, lands fill their coffers
-    const mins = counted / 60, hrs = counted / 3600, qm = KC().war.quartermaster;
-    for (const k in qm) if (gains[k] > 0) { gains[qm[k]] = (gains[qm[k]] || 0) + gains[k]; gains[k] = 0; }
-    const up = upkeepPerMin(); gains.food = (gains.food || 0) - up.food * mins; gains.supplies = (gains.supplies || 0) - up.supplies * mins;
-    const room = Math.max(0, armyLimit() - soldiers()), avF = (S.res.food || 0) + gains.food, avS = (S.res.supplies || 0) + gains.supplies;
-    const n = Math.floor(Math.max(0, Math.min(trainPerMin() * mins, room, avF / AC().cost.food, avS / AC().cost.supplies)));
-    if (n > 0) { gains.soldiers = (gains.soldiers || 0) + n; gains.food -= n * AC().cost.food; gains.supplies -= n * AC().cost.supplies; }
+    const mins = counted / 60, hrs = counted / 3600;
+    for (const k of WAR_KEYS) { const gd = AC().lines[k].good; gains[gd] = (gains[gd] || 0) - warDemand(k) * mins; }
+    const n = Math.floor(Math.max(0, Math.min(trainPerMin() * mins, armyLimit() - soldiers())));
+    if (n > 0) gains.soldiers = (gains.soldiers || 0) + n;
     for (const ln of landsTouched()) { const t = taxPerHour(ln) * hrs; if (t > 0) tax[ln] = t; const sp = spoilPerHour(ln) * hrs * eff; if (sp > 0) gains[landDef(ln).spoil] = (gains[landDef(ln).spoil] || 0) + sp; }
   }
   let kills = 0;
@@ -963,7 +965,7 @@ function applyOffline(awaySeconds) {
 }
 function claimOffline(data, mult = 1) {
   for (const k in data.gains) add(k, data.gains[k] > 0 ? data.gains[k] * mult : data.gains[k]); // inputs consumed aren't doubled
-  for (const k of ['food', 'supplies', 'soldiers']) if ((S.res[k] || 0) < 0) S.res[k] = 0;
+  for (const k of ['food', 'supplies', 'soldiers', 'bread', 'swords', 'lumber']) if ((S.res[k] || 0) < 0) S.res[k] = 0;
   for (const n in (data.tax || {})) { const t = data.tax[n] * mult; if (perkRank('autocollect')) add('gold', t); else { const L = landState(+n); L.coffer = Math.min(cofferCap(+n), (L.coffer || 0) + t); } }
   if (heroFighting() && data.kills > 0) offlineStages(data.kills * mult);
   gainXp(data.kills * H.xpPerKill * CONFIG.stages.xpPerKill(S.hero.stage) * stats('sustained').xp * mult);
@@ -1027,32 +1029,38 @@ function barracksCost() { const l = barracksLv(); if (!l) return { ...AC().build
 function canUpBarracks() { return phase() === 3 && barracksLv() < levelCap() && canAfford(barracksCost()); }
 function upgradeBarracks() { if (!canUpBarracks()) return false; pay(barracksCost()); S.kingdom.barracks = S.kingdom.barracks || { lv: 0, train: 0 }; S.kingdom.barracks.lv++; if (S.kingdom.barracks.lv === 1) log('Built the Barracks.'); return true; }
 function trainPerMin() { return barracksBuilt() ? AC().trainPerMin * barracksLv() * (1 + 0.2 * perkRank('drill')) : 0; }
-function housing() { return barracksBuilt() ? AC().housingBase + AC().housingPer * (barracksLv() - 1) : 0; }
 function upkeepMult() { return Math.max(0.5, 1 - 0.1 * perkRank('rations')); }
-function foodPerMin() { const r = kingdomRates(); return (r.bread || 0) * 60 * 0.85; } // a margin: some bread stays in store for orders
-function suppliesPerMin() { const r = kingdomRates(); return ((r.swords || 0) + (r.lumber || 0)) * 60 * 0.85; }
-function upkeepPerMin(n = S.res.soldiers || 0) { return { food: n * AC().foodUpkeep * upkeepMult(), supplies: n * AC().supplyUpkeep * upkeepMult() }; }
-function armyLimit() { const fu = AC().foodUpkeep * upkeepMult(), su = AC().supplyUpkeep * upkeepMult(); return Math.max(0, Math.floor(Math.min(housing(), foodPerMin() / fu, suppliesPerMin() / su))); }
-function armyLimitBy() { const fu = AC().foodUpkeep * upkeepMult(), su = AC().supplyUpkeep * upkeepMult(), h = housing(), f = foodPerMin() / fu, p = suppliesPerMin() / su, m = Math.min(h, f, p); return m === h ? 'housing' : m === f ? 'food' : 'supplies'; }
+// ---- 0.10 war economy: three incomes (per minute) against the army's demand ----
+const WAR_KEYS = ['housing', 'arms', 'food'];
+let _warRates = null, _warAt = -1;
+function warRates() { const t = S.hero.time; if (_warRates && _warAt === t) return _warRates; _warAt = t; return (_warRates = kingdomRates()); }
+function warIncome(k) { const r = warRates(), g = AC().lines[k].good; return (r[g] || 0) * 60 * (1 + 0.1 * perkRank('charter')); }
+function demandMult() { return (1 + AC().demandPerLand * landsHeld()) * upkeepMult(); }
+function perSoldier(k) { return AC().upkeep[k] * demandMult(); }
+function warDemand(k, n = soldiers()) { return n * perSoldier(k); }
+function warCover(k) { const d = warDemand(k); return d > 0 ? warIncome(k) / d : Infinity; }
+function lineSupports(k) { return Math.floor(warIncome(k) / perSoldier(k)); }
+function armyEff() { if (phase() < 3 || soldiers() <= 0) return 1; return Math.max(0, Math.min(1, ...WAR_KEYS.map(warCover))); }
+function armyLimit() { return barracksBuilt() ? Math.max(0, Math.min(...WAR_KEYS.map(lineSupports))) : 0; }
+function armyLimitBy() { let best = null, m = Infinity; for (const k of WAR_KEYS) { const v = lineSupports(k); if (v < m) { m = v; best = k; } } return best; }
+function housing() { return armyLimit(); } // legacy name
+function upkeepPerMin(n = soldiers()) { const o = {}; for (const k of WAR_KEYS) o[k] = warDemand(k, n); return o; }
+function foodPerMin() { return warIncome('food'); } function suppliesPerMin() { return warIncome('arms'); }
 function soldiers() { return Math.floor(S.res.soldiers || 0); }
 function garrisoned() { let n = 0; for (const k in (S.kingdom.lands || {})) n += S.kingdom.lands[k].garrison || 0; return n; }
 function marching() { return Math.max(0, soldiers() - garrisoned()); }
-function armyMult() { return phase() === 3 ? 1 + Math.sqrt(marching()) / AC().bonusDiv : 1; }
-function armyHpMult() { return phase() === 3 ? 1 + marching() / AC().hpDiv : 1; }
+function armyMult() { return phase() === 3 ? 1 + Math.sqrt(marching()) / AC().bonusDiv * armyEff() : 1; }
+function armyHpMult() { return phase() === 3 ? 1 + marching() / AC().hpDiv * armyEff() : 1; }
 function tickArmy(dt) {
   if (phase() < 3) return;
-  const sol = S.res.soldiers || 0, up = upkeepPerMin(sol);
-  let short = false; const fu = up.food / 60 * dt, su = up.supplies / 60 * dt;
-  if ((S.res.food || 0) >= fu) S.res.food -= fu; else { S.res.food = 0; short = sol > 0; }
-  if ((S.res.supplies || 0) >= su) S.res.supplies -= su; else { S.res.supplies = 0; short = short || sol > 0; }
-  if (short) { S.res.soldiers = Math.max(0, sol - Math.max(0.02, sol * AC().desertPerMin / 60 * dt)); S.kingdom.deserting = true; } else S.kingdom.deserting = false;
-  const B = S.kingdom.barracks;
-  if (B && B.lv > 0 && (S.res.soldiers || 0) < Math.max(armyLimit(), 0)) {
+  // the army draws its upkeep from each line's final good as it is made; whatever is left over stays in the Storehouse
+  for (const k of WAR_KEYS) { const g = AC().lines[k].good, need = warDemand(k) / 60 * dt; if (need > 0) S.res[g] = Math.max(0, (S.res[g] || 0) - need); }
+  const B = S.kingdom.barracks, lim = armyLimit();
+  if (B && B.lv > 0 && soldiers() < lim) {
     B.train = Math.min(3, (B.train || 0) + trainPerMin() / 60 * dt);
-    const keepF = up.food + AC().cost.food, keepS = up.supplies + AC().cost.supplies; // training never eats the next minute of upkeep
-    while (B.train >= 1 && (S.res.soldiers || 0) + 1 <= Math.max(armyLimit(), 1) && (S.res.food || 0) >= keepF && (S.res.supplies || 0) >= keepS) {
-      B.train -= 1; S.res.food -= AC().cost.food; S.res.supplies -= AC().cost.supplies; S.res.soldiers = (S.res.soldiers || 0) + 1; S.stats.trained = (S.stats.trained || 0) + 1; S.lifetime.soldiers = (S.lifetime.soldiers || 0) + 1; }
+    while (B.train >= 1 && soldiers() + 1 <= lim) { B.train -= 1; S.res.soldiers = (S.res.soldiers || 0) + 1; S.stats.trained = (S.stats.trained || 0) + 1; S.lifetime.soldiers = (S.lifetime.soldiers || 0) + 1; }
   }
+  S.kingdom.deserting = false;
   let over = garrisoned() - soldiers(); if (over > 0) for (const k of Object.keys(S.kingdom.lands || {}).sort((a, b) => b - a)) { const L = S.kingdom.lands[k], t = Math.min(over, L.garrison || 0); L.garrison -= t; over -= t; if (over <= 0) break; }
 }
 
@@ -1072,8 +1080,10 @@ function garrisonNeed(n) { return LC().garrisonPer * n; }
 function garrisonFill(n) { return Math.min(1, (landState(n).garrison || 0) / garrisonNeed(n)); }
 function vaultCount() { return Object.keys(S.legacy.vault || {}).length; }
 function taxFull(n) { return LC().taxBase * Math.pow(LC().taxGrowth, n - 1) * (1 + 0.25 * perkRank('tax')) * (1 + 0.02 * vaultCount()); }
-function taxPerHour(n) { const pct = landPct(n) / 100; return pct > 0 ? taxFull(n) * pct * garrisonFill(n) : 0; }
-function spoilPerHour(n) { return LC().spoilPerHour * (landPct(n) / 100) * garrisonFill(n) * (1 + 0.25 * perkRank('spoils')); }
+function landShare(n) { const pct = landPct(n) / 100; return heroInLand(n) ? Math.min(pct, LC().heroHereCap) : pct; } // while the hero still fights in a land, it pays at most half
+function heroInLand(n) { return phase() === 3 && landN() === n; }
+function taxPerHour(n) { const pct = landShare(n); return pct > 0 ? taxFull(n) * pct * garrisonFill(n) : 0; }
+function spoilPerHour(n) { return LC().spoilPerHour * landShare(n) * garrisonFill(n) * (1 + 0.25 * perkRank('spoils')); }
 function cofferCap(n) { return taxFull(n) * LC().cofferHours; }
 function cofferTotal() { let g = 0; for (const k in (S.kingdom.lands || {})) g += S.kingdom.lands[k].coffer || 0; return g; }
 function taxTotalPerHour() { let g = 0; for (const n of landsTouched()) g += taxPerHour(n); return g; }
@@ -1094,6 +1104,7 @@ function onRulerSlain(n) {
   const G = landDef(n), v = rulerCrowns(n); S.kingdom.crownsRun = (S.kingdom.crownsRun || 0) + v;
   S.legacy.vault = S.legacy.vault || {}; const first = !S.legacy.vault[n]; if (first) S.legacy.vault[n] = G.crown;
   log(`${G.name} is conquered! You take ${G.crown} (+${v} 👑)${first ? ' — a new crown for the Vault' : ''}.`); pushEvent({ who: 'crown', n, v, first });
+  S.kingdom.demandNote = { land: n, name: G.name, t: S.hero.time, pct: Math.round(AC().demandPerLand * 100 * (landsHeld())) };
 }
 function canPassCrown() { return phase() === 3 && landsHeld() >= 1; }
 function crownsIfPass() { return S.kingdom.crownsRun || 0; }
@@ -1118,7 +1129,6 @@ function passCrown() {
   K.lands = {}; K.crownsRun = 0; K.orders = []; K.deserting = false; K.tierPaid = {};
   for (const k in S.res) S.res[k] = 0;
   add('gold', 500 + 1000 * perkRank('cache')); if (perkRank('standing')) S.res.soldiers = 25 * perkRank('standing');
-  if (perkRank('charter')) { S.res.food = 500 * perkRank('charter'); S.res.supplies = 500 * perkRank('charter'); }
   const w = CONFIG.quests.findIndex(q => q.id === 'w02'); if (w >= 0) { S.quests.index = w; S.quests.cur = 'w02'; }
   ensureThralls();
   log(`The crown passes to your heir. Dynasty ${leg.dynasty} begins with ${gain} new Crown${gain === 1 ? '' : 's'}.`); pushEvent({ who: 'crownpass', gain });
@@ -1173,6 +1183,7 @@ function load() {
     S.hero.tree = S.hero.tree || {}; S.hero.dxp = S.hero.dxp || {};
     if (!S.hero.dxp.combat && S.hero.level > 1) { let x = 0; for (let l = 1; l < S.hero.level; l++) x += CONFIG.discXpToLevel(l); S.hero.dxp.combat = x; } // old save: seed Combat from hero level
     migrateSkills();
+    if ((S.res.food || 0) > 0 || (S.res.supplies || 0) > 0) { S.res.bread = (S.res.bread || 0) + (S.res.food || 0); S.res.swords = (S.res.swords || 0) + (S.res.supplies || 0) / 2; S.res.lumber = (S.res.lumber || 0) + (S.res.supplies || 0) / 2; S.res.food = 0; S.res.supplies = 0; } // 0.10: stockpiles go back to the Storehouse
     if (S.legacy.perks && S.legacy.perks.warcry) { const r = S.legacy.perks.warcry; let back = 0; for (let i = 0; i < r; i++) back += Math.ceil(5 * Math.pow(1.8, i)); S.legacy.knowledge = (S.legacy.knowledge || 0) + back; delete S.legacy.perks.warcry; } // 0.9.12: Rally removed — its War Cry perk is refunded
     if (S.legacy.perks && S.legacy.perks.bestiary) { delete S.legacy.perks.bestiary; S.legacy.knowledge = (S.legacy.knowledge || 0) + 1; } // 0.9.8: the Bestiary unlocks by playing — its Crown comes back
     return S;
@@ -1231,7 +1242,7 @@ window.Game = {
   phase, canProclaim, proclaim,
   stockMode, setStockMode, stockTarget, stockDemand, STOCK_MODES,
   get S() { return S; }, saveString, saveMeta, restoreString, setSaveHook: f => { saveHook = f; }, SAVE_KEY, fmt, pct, fmtTime, drainEvents: () => EVENTS.splice(0), afkEfficiency: () => afkEff(),
-  markViewed, questReached, discXp, discLevel, discProgress, pathNodes, pathNode, pathRank, pathOpen, pathNeedsStar, pathPointsTotal, pathPointsSpent, pathPointsFree, pathPointsMax, starsTotal, starsSpent, starsFree, canRankPath, rankPath, pathMods, resetPaths, techUnlocked, techUnlockMet, techUnlockLabel, techMastery, techLevelOf, techMod, techMods, chooseMod, modPending, techSlots, equipTech, unequipTech, skillDur, skillCdBase, checkTechUnlocks, treeNode, nodeRank, nodeMax, nodeOpen, treePointsTotal, treePointsSpent, treePointsFree, canRankNode, rankNode, nodeQuestLocked, treeMods,
+  markViewed, questReached, isEndless, landShare, heroInLand, warIncome, warDemand, warCover, perSoldier, lineSupports, armyEff, demandMult, WAR_KEYS, discXp, discLevel, discProgress, pathNodes, pathNode, pathRank, pathOpen, pathNeedsStar, pathPointsTotal, pathPointsSpent, pathPointsFree, pathPointsMax, starsTotal, starsSpent, starsFree, canRankPath, rankPath, pathMods, resetPaths, techUnlocked, techUnlockMet, techUnlockLabel, techMastery, techLevelOf, techMod, techMods, chooseMod, modPending, techSlots, equipTech, unequipTech, skillDur, skillCdBase, checkTechUnlocks, treeNode, nodeRank, nodeMax, nodeOpen, treePointsTotal, treePointsSpent, treePointsFree, canRankNode, rankNode, nodeQuestLocked, treeMods,
   fistLevel, slotValue, enemyHit, crafting, maxUpgradePlan, upgradeMax, stats, gearStats, itemStatPreview, gearCraftCost, gearUpgradeCost, canTierUp, craftGear, upgradeGear,
   talentPointsFree, talentPointsTotal, talentPointsSpent, respec, respecCost,
   skillDef, skillUnlocked, skillPower, skillCd, skillReady, castSkill, activeBuffs,
