@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Alpha 0.9.0',
+  version: 'Alpha 0.9.1',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -450,6 +450,7 @@ const CONFIG = {
   // jobs (jobs completed by hand or thrall), sold (gold earned at market), stage, boss, founded, thrall (assigned), activity (swings).
   // Shown in Settings → What's new (newest first). Keep each line short.
   changelog: [
+    ['0.9.1', 'New quests take the hero\'s gear to Iron: research Iron Gear and forge an Iron blade in the Hamlet, then Iron armor in the Village before the Cult Priest.'],
     ['0.9.0', 'The big one. Buildings run on one level each — no more thralls, workers or Overseers — and double their output at Lv 10, 25, 50, 100. The hero clears a threat before each settlement can grow, and the city builds him Halls (Training Yard, Smithy, Apothecary, Stables). After you proclaim, the Barracks trains an army that eats Food and Supplies and multiplies the hero\'s power, and the hero leads the conquest from his own screen: lands of 50–100 stages, a Ruler with a crown at the end, garrisons and taxes. Crystals are now Crowns: take them from rulers, spend them in four trees, and Pass the Crown to start a stronger dynasty.'],
     ['0.7.2', 'Settle New Lands is now Conquer New Lands.'],
     ['0.7.1', 'New Your Stats card on the Gear screen: every combat stat, which piece drives it, and what to do next — the weakest piece is marked Best next. Tap a row to open that piece.'],
@@ -628,6 +629,10 @@ const CONFIG = {
       steps: [ { label: 'Kingdom → Farm → Mill → Build', check: { built: 'mill' } }, { label: 'Make 30 flour', check: { made: 'flour', need: 30 } } ], reward: { gold: 200 }, focus: { tab: 'kingdom', ksub: 'farm', rtab: 'kingdom', el: 'step:mill' } },
     { id: 'h03', chain: 'Hamlet', name: 'The Smelter', text: 'Ore feeds the Smelter: 2 ore become 1 ingot.',
       steps: [ { label: 'Kingdom → Mine → Smelter → Build', check: { built: 'smelter' } }, { label: 'Make 20 ingots', check: { made: 'ingot', need: 20 } } ], reward: { gold: 250 }, focus: { tab: 'kingdom', ksub: 'mine', rtab: 'kingdom', el: 'step:smelter' } },
+    { id: 'h03b', chain: 'Hamlet', name: 'Iron Secrets', text: 'Your Smelter makes ingots — iron for the hero. Once the kingdom has made 50 ingots, the smiths can learn to forge Iron gear.',
+      steps: [ { label: 'Make 50 ingots in total', check: { made: 'ingot', need: 50 } }, { label: 'Kingdom → Tech → Iron Gear → Research', check: { tech: 'irongear' } } ], reward: { gold: 300 }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:irongear' } },
+    { id: 'h03c', chain: 'Hamlet', name: 'An Iron Blade', text: 'Stone has done its work. Max the Stone blade to Lv 9, then forge Iron: ingots from the Smelter, hide from the Wilds or the Market. The Bone Lord waits in the Crypts.',
+      steps: [ { label: 'Gear → Weapon → max Stone to Lv 9, then forge Iron', check: { gearTier: 'weapon', need: 2 } } ], reward: { gold: 400, talent: 1 }, focus: { tab: 'hero', sub: 'gear', el: 'gear:weapon' } },
     { id: 'h04', chain: 'Hamlet', name: 'The Hero\'s Halls', text: 'The city can make the hero stronger. The Training Yard speeds his levels; the Smithy makes gear cheaper.',
       steps: [ { label: 'Kingdom → Halls → Training Yard → Build', check: { hall: 'yard' } }, { label: 'Halls → Smithy → Build', check: { hall: 'smithy' } } ], reward: { gold: 300 }, focus: { tab: 'kingdom', ksub: 'halls', rtab: 'kingdom', el: 'hall:yard' } },
     { id: 'h05', chain: 'Hamlet', name: 'Room to Store', text: 'Goods that do not fit the Storehouse are sold off cheap. A bigger Storehouse holds more goods — and more gold.',
@@ -642,6 +647,9 @@ const CONFIG = {
       steps: [ { label: 'Kingdom → Farm → Bakery → Build', check: { built: 'baker' } }, { label: 'Bake 15 bread', check: { made: 'bread', need: 15 } } ], reward: { gold: 400 }, focus: { tab: 'kingdom', ksub: 'farm', rtab: 'kingdom', el: 'step:baker' } },
     { id: 'v03', chain: 'Village', name: 'The Forge', text: 'Ingots feed the Forge: the army will need swords.',
       steps: [ { label: 'Kingdom → Mine → Forge → Build', check: { built: 'forge' } }, { label: 'Forge 10 iron swords', check: { made: 'swords', need: 10 } } ], reward: { gold: 400 }, focus: { tab: 'kingdom', ksub: 'mine', rtab: 'kingdom', el: 'step:forge' } },
+    { id: 'v03b', chain: 'Village', name: 'Iron Armor', text: 'The Cult Priest hits hard. Clad the hero in iron: max each Leather piece to Lv 9, then forge Iron. Ingots come from the Smelter, hide from the Wilds or the Market — the Smithy in the Halls makes it all cheaper.',
+      steps: [ { label: 'Gear → Helm → forge Iron', check: { gearTier: 'helm', need: 2 } }, { label: 'Gear → Chest → forge Iron', check: { gearTier: 'chest', need: 2 } }, { label: 'Gear → Gloves → forge Iron', check: { gearTier: 'gloves', need: 2 } },
+        { label: 'Gear → Boots → forge Iron', check: { gearTier: 'boots', need: 2 } }, { label: 'Gear → Trinket → forge Iron', check: { gearTier: 'trinket', need: 2 } } ], reward: { gold: 800, talent: 1 }, focus: { tab: 'hero', sub: 'gear', el: 'gear:chest' } },
     { id: 'v04', chain: 'Village', name: 'Baron', text: 'Renown comes from Orders. At 500 Renown you become a Baron, and your Storehouse doubles.',
       steps: [ { label: 'Earn 500 Renown from Orders', check: { renown: 500 } } ], reward: { gold: 300 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:order-list' } },
     { id: 'v05', chain: 'Village', name: 'Healers and Horses', text: 'The Apothecary heals the hero faster; the Stables make him strike faster.',

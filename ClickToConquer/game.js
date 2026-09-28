@@ -492,11 +492,11 @@ function migrate05() {
   const old = { logging: 1, fields: 2, shaft: 3, sawmill: 4, mill: 5, smelter: 6, carpenter: 7, baker: 8, forge: 9 }, f = S.legacy.foundings;
   K.built = {}; for (const id in old) if (f >= old[id]) K.built[id] = true;
   K.tier = f >= 7 ? 2 : f >= 4 ? 1 : 0; K.tierPaid = {};
-  const kq = CONFIG.quests.findIndex(q => q.id === 'k05'); if (kq >= 0 && S.quests.index > kq) S.quests.index = kq + 1;
+  const kq = CONFIG.quests.findIndex(q => q.id === 'k05'); if (kq >= 0 && S.quests.index > kq) { S.quests.index = kq + 1; S.quests.cur = (CONFIG.quests[S.quests.index] || {}).id || null; }
   S.legacy.foundings = 1; // everything so far was one land growing
 }
 // 0.8: saves that already used the old "Conquer New Lands" reset keep their land; the quest log waits at Proclaim the Kingdom.
-function migrate08() { if (S.legacy.foundings < 2 || phase() === 3) return; const y = CONFIG.quests.findIndex(q => q.id === 'y04'); if (y >= 0 && S.quests.index > y) S.quests.index = y; }
+function migrate08() { if (S.legacy.foundings < 2 || phase() === 3) return; const y = CONFIG.quests.findIndex(q => q.id === 'y04'); if (y >= 0 && S.quests.index > y) { S.quests.index = y; S.quests.cur = 'y04'; } }
 // Repair: free thralls stuck on buildings that no longer exist or are not built, drop bad indices, and keep each thrall in one post only.
 function repairPosts() {
   const K = S.kingdom; if (!K || !K.steps || !K.thralls) return 0; const n = K.thralls.length, seen = new Set(); let fixed = 0;
@@ -509,7 +509,16 @@ function repairPosts() {
   if (fixed) log(`${fixed} thrall post${fixed > 1 ? 's were' : ' was'} stuck on old buildings — they are free again.`);
   return fixed;
 }
-function ensureThralls() { const K = S.kingdom; migrate05(); migrate08(); migrate09(); repairPosts(); K.steps = K.steps || {}; K.thralls = K.thralls || []; if (!K.offers || !K.offers.length) refreshOffers(); K.orders = K.orders || []; while (kingdomNo() > 0 && K.orders.length < 3 && orderGoods(true).length) K.orders.push(makeOrder()); }
+// Quest list changes: find the save's quest by id (0.9.0 saves: by their position in the 0.9.0 list)
+const QUESTS_090 = ['f01','f01b','f02','f03','f04','f05','f06','f07','q01','q02','q02b','q03','q04','q05','q06','q06b','q06c','q07','q13','q13a','q14','q11','q12b','q13c','q13d','q13b','q14b','q16','q17','p01','k01','k02','c01','c02','c03','c04','h01','h02','h03','h04','h05','h06','h07','v01','v02','v03','v04','v05','v06','v07','y01','y04','w01','w02','w03','w04','w05','w06'];
+function fixQuestIndex() {
+  const Q = S.quests; if (!Q) return; const at = id => CONFIG.quests.findIndex(x => x.id === id);
+  let id = Q.cur !== undefined ? Q.cur : (Q.index < QUESTS_090.length ? QUESTS_090[Q.index] : null);
+  if (Q.cur === undefined && Q.index >= QUESTS_090.length) id = null;
+  if (id && at(id) >= 0) Q.index = at(id); else if (id === null && Q.cur === undefined) Q.index = CONFIG.quests.length;
+  Q.cur = (CONFIG.quests[Q.index] || {}).id || null;
+}
+function ensureThralls() { const K = S.kingdom; migrate05(); migrate08(); migrate09(); fixQuestIndex(); repairPosts(); K.steps = K.steps || {}; K.thralls = K.thralls || []; if (!K.offers || !K.offers.length) refreshOffers(); K.orders = K.orders || []; while (kingdomNo() > 0 && K.orders.length < 3 && orderGoods(true).length) K.orders.push(makeOrder()); }
 // Storehouse level
 function storeUpCost() { return { gold: Math.round(150 * Math.pow((S.kingdom.storeLv || 0) + 1, 1.8)) }; }
 function upgradeStore() { const c = storeUpCost(); if (!canAfford(c)) return false; pay(c); S.kingdom.storeLv = (S.kingdom.storeLv || 0) + 1; return true; }
@@ -724,7 +733,7 @@ function questClaim() {
   const q = questCurrent(); if (!q || !questProgress(q).done) return false;
   for (const k in q.reward) { if (k === 'talent') S.hero.bonusTalent = (S.hero.bonusTalent || 0) + q.reward[k]; else if (k === 'crystal') {} else add(k, q.reward[k]); }
   if (q.reward && q.reward.crystal) { S.legacy.knowledge += q.reward.crystal; log(`+${q.reward.crystal} Crystal`); }
-  S.quests.done[q.id] = true; S.quests.index++; log(`Quest complete: ${q.name}`); return true;
+  S.quests.done[q.id] = true; S.quests.index++; S.quests.cur = (CONFIG.quests[S.quests.index] || {}).id || null; log(`Quest complete: ${q.name}`); return true;
 }
 
 // ---------- Market ----------
@@ -1010,7 +1019,7 @@ function passCrown() {
   for (const k in S.res) S.res[k] = 0;
   add('gold', 500 + 1000 * perkRank('cache')); if (perkRank('standing')) S.res.soldiers = 25 * perkRank('standing');
   if (perkRank('charter')) { S.res.food = 500 * perkRank('charter'); S.res.supplies = 500 * perkRank('charter'); }
-  const w = CONFIG.quests.findIndex(q => q.id === 'w02'); if (w >= 0) S.quests.index = w;
+  const w = CONFIG.quests.findIndex(q => q.id === 'w02'); if (w >= 0) { S.quests.index = w; S.quests.cur = 'w02'; }
   ensureThralls();
   log(`The crown passes to your heir. Dynasty ${leg.dynasty} begins with ${gain} new Crown${gain === 1 ? '' : 's'}.`); pushEvent({ who: 'crownpass', gain });
   save(); return gain;
@@ -1028,7 +1037,7 @@ function migrate09() {
   if ((K.built || {}).barracks || (K.steps || {}).barracks) { const b = (K.steps || {}).barracks; K.barracks = { lv: Math.max(1, b ? Math.max(b.rate || 1, b.cart || 1, b.haul || 1) : 1), train: 0 }; delete (K.built || {}).barracks; delete (K.steps || {}).barracks; }
   if (S.res.equipment !== undefined || S.res.officers !== undefined) { S.res.food = S.res.supplies || 0; S.res.supplies = S.res.equipment || 0; delete S.res.equipment; delete S.res.officers; }
   for (const id in (S.legacy.perks || {})) { const p = CONFIG.legacy.perks.find(x => x.id === id); if (!p) { const r = S.legacy.perks[id]; let c = 0; const old = { headstart: [5, 1.6] }[id] || [5, 1.6]; for (let i = 0; i < r; i++) c += Math.ceil(old[0] * Math.pow(old[1], i)); S.legacy.knowledge += c; delete S.legacy.perks[id]; } }
-  const q = questCurrent(); if (!q || q.id !== 'p01') { const at = id => CONFIG.quests.findIndex(x => x.id === id); S.quests.index = phase() === 3 ? at('w01') : [at('k01'), at('h01'), at('v01'), at('y01')][Math.min(3, kTier())]; }
+  const q = questCurrent(); if (!q || q.id !== 'p01') { const at = id => CONFIG.quests.findIndex(x => x.id === id); S.quests.index = phase() === 3 ? at('w01') : [at('k01'), at('h01'), at('v01'), at('y01')][Math.min(3, kTier())]; S.quests.cur = CONFIG.quests[S.quests.index].id; }
 }
 
 // ---------- Save / Load ----------
@@ -1144,7 +1153,7 @@ window.Game = {
     setStage(n) { S.hero.stage = Math.max(1, n | 0); S.hero.bestStage = Math.max(S.hero.bestStage, S.hero.stage); S.hero.kills = 0; S.hero.enemyHp = 0; },
     knowledge(n) { S.legacy.knowledge += n; },
     kingdomLevel(n) { S.legacy.kingdomLevel = Math.max(1, S.legacy.kingdomLevel + n); ensureThralls(); },
-    questSkip() { S.quests.index = Math.min(CONFIG.quests.length, S.quests.index + 1); },
+    questSkip() { S.quests.index = Math.min(CONFIG.quests.length, S.quests.index + 1); S.quests.cur = (CONFIG.quests[S.quests.index] || {}).id || null; },
     techAll() { for (const t of CONFIG.techs) S.tech[t.id] = true; },
     resetRun() { const leg = S.legacy, st = S.settings; S = freshState(); S.legacy = leg; S.settings = st; save(); },
     resetAll() { hardReset(); save(); location.reload(); },
