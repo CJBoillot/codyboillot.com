@@ -459,7 +459,7 @@ function assignWorker(id, i) { if (!stepUnlocked(id) || !thrall(i)) return false
 function assignOverseer(id, i) { if (!stepUnlocked(id) || !thrall(i)) return false; unassign(i); const s = stepState(id); if (s.overseer !== null) s.overseer = null; s.overseer = i; return true; }
 function unassign(i) { for (const id in (S.kingdom.steps || {})) { const s = S.kingdom.steps[id]; s.workers = s.workers.filter(x => x !== i); if (s.overseer === i) s.overseer = null; if (s.accountant === i) s.accountant = null; } }
 function assignAccountant(id, i) { if (!stepUnlocked(id) || stepDef(id).tier !== 2 || !thrall(i)) return false; unassign(i); stepState(id).accountant = i; return true; }
-function thrallPost(i) { for (const id in (S.kingdom.steps || {})) { const s = S.kingdom.steps[id]; if (s.overseer === i) return { id, as: 'overseer' }; if (s.accountant === i) return { id, as: 'accountant' }; if (s.workers.includes(i)) return { id, as: 'worker' }; } return null; }
+function thrallPost(i) { for (const id in (S.kingdom.steps || {})) { const s = S.kingdom.steps[id]; if (!stepDef(id)) continue; if (s.overseer === i) return { id, as: 'overseer' }; if (s.accountant === i) return { id, as: 'accountant' }; if (s.workers.includes(i)) return { id, as: 'worker' }; } return null; }
 function useAbility(id) { const s = stepState(id), now = S.hero.time; if (s.overseer === null || s.abilityReady > now) return false; s.abilityUntil = now + KC().abilitySeconds; s.abilityReady = now + KC().abilityCooldown; S.stats.shifts = (S.stats.shifts || 0) + 1; log(`${thrallName(s.overseer)}: Double shift at the ${stepDef(id).name}!`); return true; }
 // Tavern: 3 offers, refresh on a timer or for gold
 function maxStars() { return 3 + (rankIndex() >= 2 ? 1 : 0) + (rankIndex() >= 3 ? 1 : 0); }
@@ -487,7 +487,19 @@ function migrate05() {
 }
 // 0.8: saves that already used the old "Conquer New Lands" reset keep their land; the quest log waits at Proclaim the Kingdom.
 function migrate08() { if (S.legacy.foundings < 2 || phase() === 3) return; const y = CONFIG.quests.findIndex(q => q.id === 'y04'); if (y >= 0 && S.quests.index > y) S.quests.index = y; }
-function ensureThralls() { const K = S.kingdom; migrate05(); migrate08(); K.steps = K.steps || {}; K.thralls = K.thralls || []; if (!K.offers || !K.offers.length) refreshOffers(); K.orders = K.orders || []; while (kingdomNo() > 0 && K.orders.length < 3 && orderGoods(true).length) K.orders.push(makeOrder()); }
+// Repair: free thralls stuck on buildings that no longer exist or are not built, drop bad indices, and keep each thrall in one post only.
+function repairPosts() {
+  const K = S.kingdom; if (!K || !K.steps || !K.thralls) return 0; const n = K.thralls.length, seen = new Set(); let fixed = 0;
+  const ok = i => { if (i === null || i === undefined || i < 0 || i >= n || seen.has(i)) { fixed++; return false; } seen.add(i); return true; };
+  for (const id in K.steps) { const s = K.steps[id];
+    if (!stepDef(id) || !stepBuilt(id)) { const had = (s.workers || []).length + (s.overseer != null ? 1 : 0) + (s.accountant != null ? 1 : 0); if (had) { fixed += had; s.workers = []; s.overseer = null; s.accountant = null; } if (!stepDef(id)) delete K.steps[id]; continue; }
+    s.workers = (s.workers || []).filter(ok).slice(0, stepWorkerSlots(id));
+    if (s.overseer != null && !ok(s.overseer)) s.overseer = null;
+    if (s.accountant != null && (stepDef(id).tier !== 2 || !ok(s.accountant))) s.accountant = null; }
+  if (fixed) log(`${fixed} thrall post${fixed > 1 ? 's were' : ' was'} stuck on old buildings — they are free again.`);
+  return fixed;
+}
+function ensureThralls() { const K = S.kingdom; migrate05(); migrate08(); repairPosts(); K.steps = K.steps || {}; K.thralls = K.thralls || []; if (!K.offers || !K.offers.length) refreshOffers(); K.orders = K.orders || []; while (kingdomNo() > 0 && K.orders.length < 3 && orderGoods(true).length) K.orders.push(makeOrder()); }
 // Storehouse level
 function storeUpCost() { return { gold: Math.round(150 * Math.pow((S.kingdom.storeLv || 0) + 1, 1.8)) }; }
 function upgradeStore() { const c = storeUpCost(); if (!canAfford(c)) return false; pay(c); S.kingdom.storeLv = (S.kingdom.storeLv || 0) + 1; return true; }
@@ -927,6 +939,7 @@ function boot() {
 }
 
 window.Game = {
+  repairPosts,
   phase, canProclaim, proclaim,
   stockMode, setStockMode, stockTarget, stockDemand, STOCK_MODES,
   get S() { return S; }, saveString, saveMeta, restoreString, setSaveHook: f => { saveHook = f; }, SAVE_KEY, fmt, pct, fmtTime, drainEvents: () => EVENTS.splice(0), afkEfficiency: () => afkEff(),
