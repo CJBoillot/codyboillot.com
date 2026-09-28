@@ -97,6 +97,12 @@ const UI = (() => {
     $('set-reload').addEventListener('click', async () => { Game.save(); try { if (window.caches) { const ks = await caches.keys(); await Promise.all(ks.map(k => caches.delete(k))); } } catch (e) {} location.replace(location.pathname + '?v=' + Date.now()); });
     $('set-reset').addEventListener('click', () => ask('Reset all progress?', 'This wipes everything — hero, kingdom, Crystals, Legacy perks, trophies. There is no undo.', 'Wipe everything', () => Game.debug.resetAll()));
     $('tech-hide-known').addEventListener('change', e => { Game.S.settings.techHideKnown = e.target.checked; render(true); });
+    $('avatar-btn').addEventListener('click', () => $('dev-toggle').click());
+    $('cloud-signin').addEventListener('click', () => window.Cloud && Cloud.signIn());
+    $('cloud-signout').addEventListener('click', () => window.Cloud && Cloud.signOut());
+    $('cloud-now').addEventListener('click', () => window.Cloud && Cloud.push());
+    $('cloud-delete').addEventListener('click', () => ask('Delete cloud save?', 'Your progress stays on this device. The copy in the cloud is deleted and you are signed out.', 'Delete cloud save', () => Cloud.deleteCloud()));
+    $('cloud-restore').addEventListener('click', () => ask('Restore previous save?', 'The save that was set aside comes back, and the one you are playing now is set aside instead.', 'Restore', () => Cloud.restoreBackup()));
     $('settle-pay').addEventListener('click', () => { if (Game.contribute()) render(true); });
     $('settle-raise').addEventListener('click', () => { const nx = CONFIG.kingdom.tiers[Game.kTier() + 1]; ask(`Raise to ${nx.name}?`, `Your settlement becomes a ${nx.name}. Nothing is lost: new buildings unlock, the Storehouse holds ${nx.cap} of each good and each building takes ${nx.slots} worker${nx.slots > 1 ? 's' : ''}.`, `Raise to ${nx.name}`, () => { if (Game.raiseTier()) { for (const l in lineKey) lineKey[l] = ''; render(true); } }); });
     $('offer-refresh').addEventListener('click', () => { if (Game.refreshOffers(true)) { $('hire-list').__h = ''; render(true); } });
@@ -1071,7 +1077,24 @@ const UI = (() => {
   }
   function claimWelcome(mult) { if (welcomeData) Game.claimOffline(welcomeData, mult); welcomeData = null; $('welcome').classList.add('hidden'); Game.save(); }
 
-  return { init, render, showWelcomeBack };
+  // ---- Cloud save UI ----
+  function renderCloud() {
+    const C = window.Cloud; if (!C) return;
+    const u = C.user, pic = u && u.photoURL ? `<img src="${u.photoURL}" alt="" referrerpolicy="no-referrer">` : null;
+    const sil = '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><circle cx="12" cy="8.5" r="4"/><path d="M4 20.5c.8-4 4.2-6 8-6s7.2 2 8 6z"/></svg>';
+    const ai = $('avatar-img'); const want = pic || sil; if (ai.__h !== want) { ai.innerHTML = want; ai.__h = want; }
+    const dot = $('avatar-dot'); dot.classList.toggle('hidden', !u); dot.className = 'avatar-dot ' + (u ? ({ ok: 'ok', syncing: 'busy', error: 'bad', offline: 'off', idle: 'off' }[C.status] || 'off') : 'hidden');
+    $('cloud-out').classList.toggle('hidden', !!u); $('cloud-in').classList.toggle('hidden', !u);
+    const sb = $('cloud-signin'); sb.disabled = !C.ready; sb.querySelector('span').textContent = !C.available ? 'Cloud saves — coming soon' : C.ready ? 'Sign in with Google' : 'Connecting…';
+    if (u) { $('cloud-pic').innerHTML = pic || sil; setHtml($('cloud-name'), `<b>${(u.displayName || 'Signed in').replace(/</g, '&lt;')}</b>`);
+      setText($('cloud-sync'), C.status === 'syncing' ? 'Syncing…' : C.status === 'offline' ? 'Offline — saved on this device' : C.lastSync ? `Synced ${C.ago(C.lastSync)}` : 'Signed in'); }
+    const e = $('cloud-err'); e.classList.toggle('hidden', !C.error); setText(e, C.error || '');
+    const b = C.backupInfo && C.backupInfo(), rb = $('cloud-restore'); rb.classList.toggle('hidden', !b);
+    if (b && b.meta) setText(rb, `Restore previous save (${b.meta.place}, Hero Lv ${b.meta.heroLv}, set aside ${C.ago(b.at)})`);
+  }
+  function rebuild() { buildLists(); for (const l in lineKey) lineKey[l] = ''; glowKey = ''; render(true); }
+  setInterval(renderCloud, 15000);
+  return { init, render, showWelcomeBack, renderCloud, rebuild };
 })();
 
 window.addEventListener('DOMContentLoaded', boot);

@@ -799,7 +799,20 @@ function buyPerk(id) {
 }
 
 // ---------- Save / Load ----------
-function save() { S.lastTick = Date.now(); try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) {} }
+let saveHook = null;
+function save() { S.lastTick = Date.now(); try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) {} if (saveHook) saveHook(); }
+// Cloud: the whole save as a string, and restoring one (runs migrations, then pays out AFK gains since that save)
+function saveString() { S.lastTick = Date.now(); return JSON.stringify(S); }
+function saveMeta(str) { try { const d = typeof str === 'string' ? JSON.parse(str) : str; const k = d.kingdom || {}, L = d.legacy || {}; const tiers = CONFIG.kingdom.tiers;
+  return { lastTick: d.lastTick || 0, heroLv: (d.hero || {}).level || 1, crystals: L.knowledge || 0, place: (L.foundings || 0) > 0 ? (tiers[Math.min(k.tier || 0, tiers.length - 1)].name) : 'The Wild', best: (d.hero || {}).bestStage || 1, played: (d.hero || {}).time || 0 }; } catch (e) { return null; } }
+function restoreString(str) {
+  const prev = localStorage.getItem(SAVE_KEY);
+  try { JSON.parse(str); localStorage.setItem(SAVE_KEY, str); if (!load()) throw new Error('bad save'); }
+  catch (e) { if (prev) { localStorage.setItem(SAVE_KEY, prev); load(); } return false; }
+  const away = Math.max(0, (Date.now() - (S.lastTick || Date.now())) / 1000);
+  S.lastTick = Date.now(); lastFrame = performance.now(); accumulator = 0;
+  resumeFromAfk(away); save(); return true;
+}
 function load() {
   try {
     let raw = localStorage.getItem(SAVE_KEY);
@@ -865,7 +878,7 @@ function boot() {
 }
 
 window.Game = {
-  get S() { return S; }, fmt, pct, fmtTime, drainEvents: () => EVENTS.splice(0), afkEfficiency: () => afkEff(),
+  get S() { return S; }, saveString, saveMeta, restoreString, setSaveHook: f => { saveHook = f; }, SAVE_KEY, fmt, pct, fmtTime, drainEvents: () => EVENTS.splice(0), afkEfficiency: () => afkEff(),
   discXp, discLevel, discProgress, treeNode, nodeRank, nodeMax, nodeOpen, treePointsTotal, treePointsSpent, treePointsFree, canRankNode, rankNode, nodeQuestLocked, treeMods,
   fistLevel, slotValue, enemyHit, crafting, maxUpgradePlan, upgradeMax, stats, gearStats, itemStatPreview, gearCraftCost, gearUpgradeCost, canTierUp, craftGear, upgradeGear,
   talentPointsFree, talentPointsTotal, talentPointsSpent, respec, respecCost,
