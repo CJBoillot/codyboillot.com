@@ -354,7 +354,7 @@ const UI = (() => {
     desktop = window.matchMedia('(min-width: 1024px)').matches;
     document.body.classList.toggle('desktop', desktop);
     if (desktop) {
-      dock('sub-gear', 'dock-left'); $('sub-gear').classList.remove('hidden');
+      dock('sub-gear', 'dock-left'); $('sub-gear').classList.remove('hidden'); dock('stat-card', 'sub-fight');
       $('gear-lists').classList.add('hidden'); dock('quest-card', 'dock-left'); dock('quest-done', 'dock-left');
       for (const k in RIGHT) dock(RIGHT[k], 'dock-right');
       // center shows only the hero's activity panel
@@ -363,7 +363,7 @@ const UI = (() => {
       $('hero-subtabs').classList.add('hidden');
       const cur = document.querySelector('[data-rtab].active'); rightShow(cur ? cur.dataset.rtab : 'kingdom');
     } else {
-      $('gear-lists').classList.remove('hidden'); undock('quest-card'); undock('quest-done'); undock('sub-gear'); for (const k in RIGHT) undock(RIGHT[k]);
+      $('gear-lists').classList.remove('hidden'); undock('stat-card'); undock('quest-card'); undock('quest-done'); undock('sub-gear'); for (const k in RIGHT) undock(RIGHT[k]);
       $('hero-subtabs').classList.remove('hidden');
       const t = document.querySelector('[data-tab].active') || document.querySelector('[data-tab]');
       document.querySelectorAll('.tab').forEach(x => x.classList.toggle('hidden', x.id !== 'tab-' + t.dataset.tab));
@@ -418,6 +418,43 @@ const UI = (() => {
     } html += '</div>'; }
     html += '</div>';
     if (d.__h !== html) { setHtml(d, html); glowKey = ''; }
+  }
+  // Stats summary: each combat stat, which gear drives it, and the next thing to do for it
+  const STAT_ROWS = [
+    { slot: 'weapon',  label: 'Attack power', val: st => Game.fmt(st.attack) + ' per hit' },
+    { slot: 'gloves',  label: 'Attack speed', val: st => st.speed.toFixed(2) + ' hits/s' },
+    { slot: 'trinket', label: 'Crit chance',  val: st => Math.round(st.crit * 100) + '%' },
+    { slot: 'chest',   label: 'Max HP',       val: st => Game.fmt(st.maxHp) },
+    { slot: 'helm',    label: 'Armor',        val: st => '−' + st.armor.toFixed(1) + ' per hit taken' },
+    { slot: 'boots',   label: 'Dodge',        val: st => Math.round(st.dodge * 100) + '%' },
+  ];
+  function gearAdvice(s) {
+    const S = Game.S, it = S.hero.gear[s], nm = s === 'weapon' ? 'Sword' : CONFIG.slots[s].name;
+    if (Game.crafting() && Game.crafting().slot === s) return { txt: 'Forging now…', ready: false };
+    if (!it) return Game.canTierUp(s) ? { txt: `Forge ${Game.tierName(s, 0)} ${nm}`, ready: Game.canAfford(Game.gearCraftCost(s)) } : { txt: `Research a ${nm.toLowerCase()} in Tech`, ready: false, locked: true };
+    if (it.level < CONFIG.tierUpAt) return { txt: `Upgrade ${nm} (Lv ${it.level} → ${CONFIG.tierUpAt})`, ready: Game.canAfford(Game.gearUpgradeCost(s)) };
+    if (Game.canTierUp(s)) return { txt: `Forge ${Game.tierName(s, it.tier + 1)} ${nm}`, ready: Game.canAfford(Game.gearCraftCost(s)) };
+    return { txt: `Maxed for now — research the next tier`, ready: false, locked: true };
+  }
+  function renderStats() {
+    const box = $('stat-list'); if (!box) return;
+    $('stat-card').classList.toggle('hidden', !tabUnlocked('gear'));
+    const S = Game.S, st = Game.stats();
+    // the weakest piece (lowest gear value) is the best next upgrade
+    const cand = STAT_ROWS.map(r => r.slot).filter(s => !gearAdvice(s).locked);
+    const best = cand.sort((a, b) => Game.slotValue(a) - Game.slotValue(b) || (a === 'weapon' ? -1 : b === 'weapon' ? 1 : 0))[0];
+    let h = `<div class="stat-top"><div><span class="dim small">Damage per second</span><b>${Game.fmt(st.dps)}</b></div><div><span class="dim small">Heal per second</span><b>${st.regen.toFixed(1)}</b></div></div>`;
+    for (const r of STAT_ROWS) {
+      const it = S.hero.gear[r.slot], a = gearAdvice(r.slot);
+      const sn = r.slot === 'weapon' ? 'Sword' : CONFIG.slots[r.slot].name, src = it ? `${Game.tierName(r.slot, it.tier)} ${sn} Lv ${it.level}` : (r.slot === 'weapon' ? 'Fists' : `No ${sn.toLowerCase()}`);
+      h += `<button class="stat-row ${r.slot === best ? 'best' : ''}" data-stat="${r.slot}">
+        <span class="stat-ic">${ico(gearIcon('gear', r.slot, it), 22, it ? '' : 'bare')}</span>
+        <span class="stat-main"><span class="stat-k">${r.label}</span><span class="stat-src">${src}</span></span>
+        <span class="stat-v">${r.val(st)}</span>
+        <span class="stat-tip ${a.locked ? 'dim' : ''}">${r.slot === best ? '<b class="stat-best">Best next</b> ' : ''}${a.txt}${a.ready ? ' <span class="stat-ready">ready</span>' : ''}</span>
+      </button>`;
+    }
+    if (box.__h !== h) { box.__h = h; box.innerHTML = h; box.querySelectorAll('[data-stat]').forEach(b => b.onclick = () => openSlot('gear', b.dataset.stat)); }
   }
   let slotOpen = null; // {row, home, next}
   function openSlot(kind, slot) {
@@ -1007,7 +1044,7 @@ const UI = (() => {
       else if (forgeState(forge, 'tool', slot, 'Make')) { forge.classList.remove('hidden'); }
       else { forge.classList.remove('hidden'); setText(row.querySelector('[data-f=forgelbl]'), it ? `Make ${CONFIG.toolTiers[nt].name}` : 'Make'); setHtml(forge.querySelector('[data-f=forgecost]'), can ? costHtml(fc) : (Game.toolTierUnlocked(nt) && Game.toolSlotUnlocked(slot)) ? `<span class="dim">needs Lv${CONFIG.tierUpAt}</span>` : `<span class="dim">needs tech</span>`); forge.disabled = !can || !Game.canAfford(fc) || !!Game.crafting(); }
     }
-    renderDoll();
+    renderDoll(); renderStats();
   }
 
   const fmPick = { hero: null, kingdom: null };

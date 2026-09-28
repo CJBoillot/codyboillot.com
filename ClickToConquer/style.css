@@ -813,3 +813,21 @@ html, body { max-width: 100%; overflow-x: hidden; }
 .kstock-seg button:first-child { border-left: 0; }
 .kstock-why { font-size: 12px; line-height: 1.3; }
 .kstock-fill { color: #e0a458; }
+/* Stats summary (0.7.1) */
+.stat-list { display: flex; flex-direction: column; gap: 6px; }
+.stat-top { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 2px; }
+.stat-top > div { display: flex; flex-direction: column; align-items: center; padding: 6px; border: 1px solid var(--line); border-radius: 8px; background: #15110e; }
+.stat-top b { font-size: 18px; color: var(--bronze2); font-variant-numeric: tabular-nums; }
+.stat-row { display: grid; grid-template-columns: 30px 1fr auto; grid-template-areas: "ic main v" "ic tip tip"; column-gap: 10px; row-gap: 2px; align-items: center; text-align: left; width: 100%; padding: 8px 10px; background: #15110e; border: 1px solid var(--line); border-radius: 8px; box-shadow: none; }
+.stat-row:hover { border-color: var(--line2); }
+.stat-row.best { border-color: var(--bronze); background: #1f1810; }
+.stat-ic { grid-area: ic; display: flex; align-items: center; justify-content: center; }
+.stat-main { grid-area: main; display: flex; flex-direction: column; min-width: 0; }
+.stat-k { font-weight: 600; font-size: 14px; }
+.stat-src { font-size: 11.5px; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.stat-v { grid-area: v; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; font-size: 14px; text-align: right; }
+.stat-tip { grid-area: tip; font-size: 12px; color: var(--hp2); }
+.stat-tip.dim { color: var(--dim); }
+.stat-best { color: #1a1208; background: var(--bronze2); border-radius: 8px; padding: 0 6px; font-size: 10.5px; letter-spacing: .5px; text-transform: uppercase; margin-right: 4px; }
+.stat-ready { color: var(--bronze2); font-size: 11px; border: 1px solid var(--bronze-dim); border-radius: 8px; padding: 0 6px; margin-left: 4px; }
+@media (min-width: 1024px) { .panel-left .stat-card { padding: 10px; margin: 0; flex: 0 0 auto; } .panel-left .stat-row { padding: 6px 8px; } }

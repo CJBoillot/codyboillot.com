@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Alpha 0.7.0',
+  version: 'Alpha 0.7.1',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -420,6 +420,7 @@ const CONFIG = {
   // jobs (jobs completed by hand or thrall), sold (gold earned at market), stage, boss, founded, thrall (assigned), activity (swings).
   // Shown in Settings → What's new (newest first). Keep each line short.
   changelog: [
+    ['0.7.1', 'New Your Stats card on the Gear screen: every combat stat, which piece drives it, and what to do next — the weakest piece is marked Best next. Tap a row to open that piece.'],
     ['0.7.0', 'Stock settings: buildings that feed another building now keep goods in the Storehouse for what you need (new buildings, the next settlement, orders). Auto splits half and half; or pick 0, ¼, ½ or Full.'],
     ['0.6.9', 'Building crews redesigned: a tile for each worker slot (empty slots show + Add worker), with Overseer and Accountant rows that say what they do. Clearer sword and quest wording.'],
     ['0.6.8', 'The Back button now returns to the tab you were on (and closes an open popup first) instead of leaving the game.'],
