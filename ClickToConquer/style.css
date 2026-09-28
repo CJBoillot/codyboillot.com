@@ -962,3 +962,11 @@ html, body { max-width: 100%; overflow-x: hidden; }
 .tc-act .buy { min-width: 110px; }
 
 .harvest-full { margin-top: 6px; padding: 6px 8px; border: 1px solid #7a5a2a; border-radius: 8px; background: #241a10; color: #e0a458; }
+
+/* 0.9.10 — auto-advance and retreat */
+.bar.kills.auto > div { background: linear-gradient(90deg, #6b8f3a, #a8c95a); }
+.adv-row { gap: 8px; margin-top: 6px; flex-wrap: wrap; }
+.auto-toggle { display: inline-flex; align-items: center; gap: 6px; color: var(--dim); cursor: pointer; user-select: none; }
+.auto-toggle input { accent-color: #c9973f; width: 16px; height: 16px; margin: 0; }
+.retreat-note { position: relative; margin-top: 8px; padding: 8px 30px 8px 10px; border: 1px solid #8a4a2a; border-radius: 8px; background: #2a150e; color: #f0b27a; font-size: 13px; line-height: 1.35; }
+.retreat-x { position: absolute; top: 4px; right: 4px; width: 24px; height: 24px; padding: 0; border: none; background: transparent; color: #f0b27a; font-size: 18px; line-height: 1; }

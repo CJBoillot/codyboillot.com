@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Alpha 0.9.9',
+  version: 'Alpha 0.9.10',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -112,6 +112,8 @@ const CONFIG = {
     respecCost: lvl => 500 * Math.pow(1.2, lvl), // gold, scales with hero level
     restThreshold: 0.4,         // rest below this HP fraction
     restUntil: 0.95,
+    killHeal: 0.20,             // after every kill the hero catches his breath: +20% max HP (more with healing bonuses). No more resting mid-fight.
+    autoAdvanceKills: 50,       // after this many kills the hero pushes on by himself — only into stages he can sustain, never into a boss
     killsToAdvance: 10,
     bossEvery: 10,
     bossHpMult: 4,
@@ -448,6 +450,7 @@ const CONFIG = {
     { id: 'mine',      cat: 'gather',  name: 'Mine',        icon: [4,5],  buildCost: { wood: 40, stone: 30 },               job: { time: 10, inputs: {},                     outputs: { stone: 1, ore: 1 } } },
     { id: 'farm',      cat: 'gather',  name: 'Farm',        icon: [12,5], buildCost: { wood: 30, stone: 10, fiber: 10 },               job: { time: 10, inputs: {},                     outputs: { grain: 1 } } },
     // Crafting (refining)
+    ['0.9.10', 'The hero pushes on by himself: after 50 kills on a stage he advances — but only into a stage he can hold, and never into a boss (you choose those fights). No more resting mid-fight: he catches his breath after every kill instead. If a fight goes badly he retreats a stage and tells you what to upgrade. You can turn auto-advance off under the kills bar.'],
     { id: 'smith',     cat: 'craft',   name: 'Blacksmith',  icon: [4,4],  buildCost: { gold: 200, stone: 40, wood: 40 },   job: { time: 10, inputs: { ore: 5 },             outputs: { ingot: 1 } } },
     { id: 'tannery',   cat: 'craft',   name: 'Tannery',     icon: [8,2],  buildCost: { wood: 40, stone: 20, hide: 10 },              job: { time: 10, inputs: { hide: 3 },            outputs: { leather: 1 } } },
     ['0.9.9', 'Every quest now has something new to do when you reach it — no more instant claims. Screens and Skills views (Paths, Gathering, Techniques) unlock when a quest sends you there. Combat levels come much slower, but each Path point is worth 50% more (if you had spent more points than you now have, your Paths were reset to re-spend). Boss threats are part of the Raise quests, and raising the settlement or proclaiming waits for its quest.'],
@@ -542,7 +545,7 @@ const CONFIG = {
     { id: 'q04', name: 'Timber', text: 'A hero does one thing at a time — fight, or work. He keeps working even when the game is closed.',
       steps: [
         { label: 'Activity → Chop Wood', check: { activity: 'wood' } },
-        { label: 'Chop 50 wood with the axe', check: { harvested: 'wood', need: 50 } },
+        { label: 'Chop 50 wood with the axe', check: { harvested: 'wood', need: 50, since: true } },
         { label: 'Click the Axe slot → Upgrade once (faster swings, more wood)', check: { toolLevel: 'axe', need: 1 } },
       ], reward: { stone: 10 }, focus: { tab: 'hero', sub: 'fight', el: 'act:wood', el2: 'tool:axe' } },
     { id: 'q05', name: 'Skinner', text: 'Beasts have hides, if you know how to take them.',
@@ -557,7 +560,7 @@ const CONFIG = {
       steps: [
         { label: 'Click the Skinning Knife slot → Make (10 wood)', check: { tool: 'knife' } },
         { label: 'Fight in The Wilds', check: { activity: 'fight', ground: 'wilds' } },
-        { label: 'Take 30 hide from beasts', check: { looted: 'hide', need: 30 } },
+        { label: 'Take 30 hide from beasts', check: { looted: 'hide', need: 30, since: true } },
       ], reward: { hide: 15 }, focus: { tab: 'hero', sub: 'gear', el: 'tool:knife', el2: 'ground:wilds' } },
     { id: 'q06b', name: 'Leatherworking', text: 'Hide becomes armor once you know how.',
       steps: [
@@ -584,7 +587,7 @@ const CONFIG = {
     { id: 'q13a', name: 'Highwayman', text: 'Bandits carry the gold they stole. The Roads pay better the deeper you go.',
       steps: [
         { label: 'Fight on The Roads', check: { activity: 'fight', ground: 'roads' } },
-        { label: 'Loot 250 gold from bandits', check: { looted: 'gold', need: 250 } },
+        { label: 'Loot 250 gold from bandits', check: { looted: 'gold', need: 250, since: true } },
       ], reward: { gold: 60 }, focus: { tab: 'hero', sub: 'fight', el: 'ground:roads' } },
     { id: 'q14', name: 'To Market', text: 'Bandits carry coin — and so does everything you gather, once sold. Gold levels skills, buys buildings, and founds kingdoms. Refined goods are worth far more than raw — an ingot sells for ten times its ore.',
       steps: [
@@ -594,12 +597,12 @@ const CONFIG = {
       steps: [
         { label: 'Click the Pickaxe slot → Make (10 wood)', check: { tool: 'pick' } },
         { label: 'Activity → Mine', check: { activity: 'mine' } },
-        { label: 'Quarry 60 stone with the pick', check: { harvested: 'stone', need: 60 } },
+        { label: 'Quarry 60 stone with the pick', check: { harvested: 'stone', need: 60, since: true } },
       ], reward: { stone: 40 }, focus: { tab: 'hero', sub: 'gear', el: 'tool:pick', el2: 'act:mine' } },
     { id: 'q12b', name: 'Prospecting', text: 'Some of that rock glitters. Learn to tell ore from stone and every swing of the pick — and every Mine — starts turning up iron too.',
       steps: [
         { label: 'Kingdom → Tech → Research Prospecting', check: { tech: 'prospecting' }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:prospecting' } },
-        { label: 'Activity → Mine: dig 30 iron ore', check: { harvested: 'ore', need: 30 }, focus: { tab: 'hero', sub: 'fight', el: 'act:mine' } },
+        { label: 'Activity → Mine: dig 30 iron ore', check: { harvested: 'ore', need: 30, since: true }, focus: { tab: 'hero', sub: 'fight', el: 'act:mine' } },
       ], reward: { ore: 20 } },
     { id: 'q13c', name: 'A Second Blow', text: 'Paths are slow and permanent: max a node and the ones past it open. Techniques are your active moves — Power Strike is unlocked. Equip it and it fires by itself; tap it in a fight for a harder hit.',
       steps: [
@@ -618,14 +621,14 @@ const CONFIG = {
       steps: [
         { label: 'Kingdom → Tech → Research Grave Robbing', check: { tech: 'graverobbing' } },
         { label: 'Fight in The Crypts', check: { activity: 'fight', ground: 'crypts' } },
-        { label: 'Take 3 ingots from the dead', check: { looted: 'ingot', need: 3 } },
+        { label: 'Take 3 ingots from the dead', check: { looted: 'ingot', need: 3, since: true } },
       ], reward: { gold: 100 }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:graverobbing', el2: 'ground:crypts' } },
     { id: 'q14b', name: 'Butcher', text: 'Beasts are meat as well as hide, if you have the blade for it. A better cleaver takes more meat per kill. Meat sells well — and your skills feed on it.',
       steps: [
         { label: 'Kingdom → Tech → Research Butchery', check: { tech: 'butchery' } },
         { label: "Gear → click the Butcher's Cleaver slot → Make (10 wood)", check: { tool: 'cleaver' }, focus: { tab: 'hero', sub: 'gear', el: 'tool:cleaver' } },
         { label: 'Fight in The Wilds', check: { activity: 'fight', ground: 'wilds' } },
-        { label: 'Take 20 meat from boars or bigger beasts (rats have none)', check: { looted: 'meat', need: 20 } },
+        { label: 'Take 20 meat from boars or bigger beasts (rats have none)', check: { looted: 'meat', need: 20, since: true } },
       ], reward: { meat: 10 }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:butchery', el2: 'ground:wilds' } },
     { id: 'q16', name: 'Deeper', text: 'Every stage deeper is more loot and more experience. When fights get slow, upgrade your weapon — that is what the hide and stone are for.',
       steps: [

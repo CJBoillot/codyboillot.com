@@ -58,6 +58,8 @@ const UI = (() => {
     }));
     $('advance-btn').addEventListener('click', () => Game.advance());
     $('mini-advance').addEventListener('click', () => Game.advance());
+    $('auto-adv').addEventListener('change', e => { Game.S.settings.autoAdvance = e.target.checked; });
+    $('retreat-x').addEventListener('click', () => { if (Game.S.hero.retreatNote) Game.S.hero.retreatNote.seen = true; });
     $('retreat-btn').addEventListener('click', () => Game.retreat());
     $('respec-btn').addEventListener('click', () => ask('Respec', 'Reset the points in Logging, Mining and Foraging? Capstones are kept. Costs ' + Game.fmt(Game.respecCost()) + ' gold.', 'Respec', () => Game.respec()));
     $('path-reset').addEventListener('click', () => ask('Reset Paths', 'Take every point back out of your Paths so you can spend them again? Costs ' + Game.fmt(Game.respecCost()) + ' gold.', 'Reset', () => Game.resetPaths()));
@@ -1056,16 +1058,19 @@ const UI = (() => {
     $('enemy-hpbar').style.width = (100 * eHp / eMax) + '%';
     setText($('enemy-hptext'), `${f(eHp)} / ${f(eMax)}`);
     setText($('enemy-dps'), f(Game.effectiveEnemyDps(st)));
-    const need = Game.killsNeeded();
-    $('kills-bar').style.width = Math.min(100, 100 * h.kills / need) + '%';
-    setText($('kills-text'), `${Math.min(h.kills, need)} / ${need} kills`);
+    const need = Game.killsNeeded(), kt = killsLine();
+    $('kills-bar').style.width = kt.pct + '%'; $('kills-bar').parentElement.classList.toggle('auto', kt.auto);
+    setText($('kills-text'), kt.text);
+    $('auto-adv').checked = S.settings.autoAdvance !== false;
+    { const rn = h.retreatNote, show = !!rn && !rn.seen && h.time - rn.t < 600; $('retreat-note').classList.toggle('hidden', !show);
+      if (show) setText($('retreat-text'), rn.boss ? `The ${rn.foe} was too strong — your hero had to retreat to stage ${rn.to}. Upgrade your gear or raise his healing, then face it again.` : `${rn.away ? 'While you were away, your' : 'Your'} hero had to retreat to stage ${rn.to} — stage ${rn.from} hits harder than he can heal. Upgrade your armor or weapon (Gear), or raise his healing, to push deeper.`); }
     $('advance-btn').disabled = !Game.canAdvance();
     setText($('advance-btn'), Game.isBoss() ? `Hunt ${Game.nextTypeName()} ▶` : Game.isBoss(h.stage + 1) ? `Face the ${Game.enemyName(h.stage + 1)} ▶` : 'Advance ▶');
     $('retreat-btn').disabled = h.stage <= 1;
     const dNext = Game.stageDanger(h.stage + 1), dHere = Game.stageDanger();
     setText($('danger'), !Game.perkRank('danger') ? (dHere >= 1 ? '⚠ You cannot survive here.' : '') : dHere >= 1 ? '⚠ You cannot survive here. Retreat or gear up.'
       : Game.canAdvance() ? (dNext >= 1 ? '⚠ Next stage would kill you. Gear up first.' : dNext > 0.6 ? 'Next stage looks dangerous.' : 'Next stage looks fine.')
-      : `Lose ${Math.round(dHere * 100)}% HP per fight here.`);
+      : dHere > 0 ? `He loses ground here — about ${Math.round(dHere * 100)}% HP per fight after healing.` : 'He heals faster than he is hurt here.');
     setText(rows.basic.querySelector('[data-f=dps]'), `${f(st.attack)}/hit · ${f(st.dps)} DPS`);
     rows.basic.style.setProperty('--cd', h.resting ? 0 : Math.min(1, (h.atkTimer || 0) * st.speed));
     for (let i = 0; i < CONFIG.skillSlots; i++) {
@@ -1328,7 +1333,7 @@ const UI = (() => {
       setText($('mini-title'), `${h.resting ? 'Resting' : 'Fighting'} · ${Game.stageLabel()}`); setText($('mini-sub'), `${Game.enemyName()} · ${Game.ground().name}`);
       const eHp = h.enemyHp > 0 ? h.enemyHp : eMax; $('mini-target').classList.add('enemy');
       $('mini-target-bar').style.width = (100 * eHp / eMax) + '%'; setText($('mini-target-text'), `${f(eHp)} / ${f(eMax)}`);
-      const need = Game.killsNeeded(); $('mini-action-bar').style.width = Math.min(100, 100 * h.kills / need) + '%'; setText($('mini-action-text'), `${Math.min(h.kills, need)} / ${need} kills${Game.canAdvance() ? ' · Advance ready' : ''}`);
+      const kt = killsLine(); $('mini-action-bar').style.width = kt.pct + '%'; setText($('mini-action-text'), kt.text);
     } else {
       const a = CONFIG.activities[act], t = Game.harvestTime(act), rates = Game.harvestRates(act);
       setText($('mini-title'), a.name); setText($('mini-sub'), Object.entries(rates).map(([k, v]) => `${f(v)} ${R[k].name}/s`).join(', '));
@@ -1342,6 +1347,7 @@ const UI = (() => {
   }
   function tallyLoot(obj) { for (const k in obj) if (obj[k] > 0) { lootTally[k] = (lootTally[k] || 0) + obj[k]; lootFresh[k] = true; } }
   function hitPop(ev) {
+    if (ev.who === 'retreat') { const a = $('hero-hpbar') && $('hero-hpbar').offsetParent ? $('hero-hpbar').parentElement : document.querySelector('.top'); const r = a.getBoundingClientRect(); const p = el('div', 'pop taken', `◀ Retreat to stage ${ev.to}`); p.style.left = (r.left + r.width * 0.5) + 'px'; p.style.top = (r.top + 4) + 'px'; document.body.appendChild(p); setTimeout(() => p.remove(), 1800); return; }
     if (ev.who === 'technique') { const a = document.querySelector('.top') || document.body; const r = a.getBoundingClientRect(); const p = el('div', 'pop craft', `⚔ ${ev.name}`); p.style.left = (r.left + r.width * 0.5) + 'px'; p.style.top = (Math.max(r.top, 80) + 20) + 'px'; document.body.appendChild(p); setTimeout(() => p.remove(), 1800); return; }
     if (ev.who === 'research') { const a = $('tech-tree').offsetParent ? $('tech-tree') : document.querySelector('.top'); const r = a.getBoundingClientRect(); const p = el('div', 'pop craft', `✦ ${ev.name} researched!`); p.style.left = (r.left + r.width * 0.5) + 'px'; p.style.top = (Math.max(r.top, 80) + 20) + 'px'; document.body.appendChild(p); setTimeout(() => p.remove(), 1400); return; }
     if (ev.who === 'craft') { const a = $('doll').offsetParent ? $('doll') : $('mini-hero').offsetParent ? $('mini-hero') : document.querySelector('.top'); const r = a.getBoundingClientRect(); const p = el('div', 'pop craft', `⚒ ${ev.name} forged!`); p.style.left = (r.left + r.width * 0.5) + 'px'; p.style.top = (r.top + Math.min(40, r.height * 0.3)) + 'px'; document.body.appendChild(p); setTimeout(() => p.remove(), 1400); return; }
@@ -1424,6 +1430,18 @@ const UI = (() => {
     const e = $('cloud-err'); e.classList.toggle('hidden', !C.error); setText(e, C.error || '');
     const b = C.backupInfo && C.backupInfo(), rb = $('cloud-restore'); rb.classList.toggle('hidden', !b);
     if (b && b.meta) setText(rb, `Restore previous save (${b.meta.place}, Hero Lv ${b.meta.heroLv}, set aside ${C.ago(b.at)})`);
+  }
+  // Kills bar: first the kills to unlock Advance, then the count toward auto-advance (or why he won't push on).
+  function killsLine() {
+    const h = Game.S.hero, need = Game.killsNeeded(), k = h.kills;
+    if (k < need || Game.isBoss()) return { pct: Math.min(100, 100 * k / need), text: `${Math.min(k, need)} / ${need} kills`, auto: false };
+    const block = Game.autoAdvanceBlock(), an = Game.autoKillsNeeded(), left = Math.max(0, an - k);
+    const pct = Math.min(100, 100 * (k - need) / Math.max(1, an - need));
+    if (block === 'end') return { pct: 100, text: `${k} kills`, auto: false };
+    if (block === 'boss') return { pct: 100, text: `${k} kills · Boss ahead — Advance when ready`, auto: false };
+    if (block === 'tough') return { pct: 100, text: `${k} kills · Next stage too tough — gear up`, auto: false };
+    if (block === 'off') return { pct: 100, text: `${k} kills · Advance ready`, auto: false };
+    return { pct, text: `Advance ready · auto in ${left} kill${left === 1 ? '' : 's'}`, auto: true };
   }
   function renderChangelog() { const el = $('whatsnew'); if (!el || el.__done) return; el.innerHTML = CONFIG.changelog.map(([v, t]) => `<div class="small"><b>${v}</b> <span class="dim">${t}</span></div>`).join(''); el.__done = true; }
   setTimeout(renderChangelog, 0);

@@ -396,22 +396,42 @@ function lootRarity(k) { return (CONFIG.resources[k] && CONFIG.resources[k].rari
 function killsNeeded(stage = S.hero.stage) { return isBoss(stage) ? H.bossKillsToAdvance : H.killsToAdvance; }
 
 // Closed-form farm rate (kills/sec) using sustained stats; 0 if the hero can't survive a fight.
-function farmRate(stage = S.hero.stage) {
-  const st = stats('sustained');
-  const dps = st.dps * (isBoss(stage) ? st.bossDmg : 1);
-  const ttk = enemyMaxHp(stage) / dps;
-  const net = (effectiveEnemyDps(st, stage) - st.regen) * ttk;
-  if (net >= st.maxHp) return 0;
-  const recovery = net > 0 ? net / (st.regen * st.restSpeed) : 0;
-  return 1 / (ttk + recovery);
+function killHeal(st) { return st.regen / H.regenPctOfMax * H.killHeal; } // scales with max HP and every healing bonus
+function fightNet(stage = S.hero.stage, st = stats('sustained')) {
+  const dps = st.dps * (isBoss(stage) ? st.bossDmg : 1), ttk = enemyMaxHp(stage) / dps;
+  const taken = Math.max(0, (effectiveEnemyDps(st, stage) - st.regen) * ttk);
+  return { ttk, taken, net: taken - killHeal(st), maxHp: st.maxHp };
 }
-function stageDanger(stage = S.hero.stage) {
-  const st = stats('sustained');
-  const dps = st.dps * (isBoss(stage) ? st.bossDmg : 1);
-  const ttk = enemyMaxHp(stage) / dps;
-  return Math.max(0, (effectiveEnemyDps(st, stage) - st.regen) * ttk) / st.maxHp;
+// Sustainable = he survives one fight from full HP and heals back at least what each fight costs him.
+function stageSustainable(stage = S.hero.stage) { const f = fightNet(stage); return f.taken < f.maxHp * 0.9 && f.net <= 0; }
+function farmRate(stage = S.hero.stage) { const f = fightNet(stage); return f.taken >= f.maxHp ? 0 : 1 / f.ttk; }
+// Danger = share of max HP lost per fight after healing (≥1: one fight would beat him).
+function stageDanger(stage = S.hero.stage) { const f = fightNet(stage); return f.taken >= f.maxHp ? f.taken / f.maxHp : Math.max(0, f.net) / f.maxHp; }
+function autoKillsNeeded(stage = S.hero.stage) { return isBoss(stage) ? H.bossKillsToAdvance : H.autoAdvanceKills; }
+function autoAdvanceBlock(stage = S.hero.stage) { // why the hero won't push on by himself (null = he will)
+  const G = ground(); if (G.stages && stage >= G.stages) return 'end';
+  if (S.settings.autoAdvance === false) return 'off';
+  if (isBoss(stage + 1)) return 'boss';
+  if (!stageSustainable(stage + 1)) return 'tough';
+  return null;
 }
-
+function heroRetreat(st) {
+  const h = S.hero, from = h.stage, boss = isBoss(from), foe = enemyName(from);
+  retreat(); h.hp = st.maxHp; h.enemyHp = 0; h.carry = 0; h.atkTimer = 0; h.eTimer = 0;
+  h.retreatNote = { from, to: h.stage, boss, foe, t: h.time };
+  log(boss ? `The ${foe} was too strong — your hero had to retreat to stage ${h.stage}.` : `Your hero had to retreat to stage ${h.stage} — stage ${from} hits harder than he can heal.`);
+  pushEvent({ who: 'retreat', from, to: h.stage, boss });
+}
+function offlineStages(kills) { // AFK: retreat to a stage he can hold, then push on every 50 kills while it is safe
+  const h = S.hero, from = h.stage;
+  if (!stageSustainable(h.stage) && h.stage > 1) { while (h.stage > 1 && !stageSustainable(h.stage)) h.stage--; h.kills = 0; h.enemyHp = 0; h.retreatNote = { from, to: h.stage, boss: false, foe: enemyName(from), t: h.time, away: true }; log(`While you were away your hero had to retreat to stage ${h.stage}.`); }
+  let rem = Math.floor(kills), guard = 0;
+  while (guard++ < 500) {
+    const need = Math.max(0, autoKillsNeeded() - h.kills); if (rem < need || autoAdvanceBlock()) break;
+    rem -= need; h.kills += need; if (!advance()) break;
+  }
+  h.kills += rem;
+}
 // ---------- Resources ----------
 // Caps: P0 = the Pack (100, Leather Pack 150). P1+ = the Storehouse (§7.6 of the v0.3 design).
 function resId(k) { return k; }
@@ -862,7 +882,7 @@ function onKill(st) {
   if (!S.hero.gear.weapon) { const b = fistLevel(); S.hero.fistKills = (S.hero.fistKills || 0) + 1; if (fistLevel() > b) { log(`Your fists harden: ${slotValue('weapon').toFixed(1)} damage`); pushEvent({ who: 'craft', name: 'Fists ' + slotValue('weapon').toFixed(1) }); } }
   { const key = typeKey(s); S.legacy.kills = S.legacy.kills || {}; const before = trophyTier(key), bt = bestiaryTier(key); S.legacy.kills[key] = (S.legacy.kills[key] || 0) + 1; const after = trophyTier(key); if (after > before) { log(`Trophy earned: ${CONFIG.trophies.tiers[after].name} ${enemyType(s).name} head!`); pushEvent({ who: 'trophy', key, tier: after }); } if (bestiaryTier(key) > bt) log(`Bestiary: ${enemyType(s).plural} — ${CONFIG.bestiary.tiers[bestiaryTier(key)].name}`); }
   if (isBoss(s)) { const bk = S.hero.ground + ':' + s; if (!S.hero.bossesKilled[bk]) { S.hero.bossesKilled[bk] = true; S.hero.stars = S.hero.stars || {}; const newStar = !S.hero.stars[bk]; S.hero.stars[bk] = true; if (LN && s === ground().stages) onRulerSlain(LN); const u = enemyType(s).unique; if (u && CONFIG.resources[u]) { add(u, 1); pushEvent({ who: 'loot', loot: { [u]: 1 }, unique: true }); } log(`Defeated ${enemyName(s)}!${newStar ? ' +1 ★' : ''}${u ? ' +' + CONFIG.resources[u].name : ''}`); } else { const u = enemyType(s).unique; if (u && S.legacy.foundings === 0 && CONFIG.legacy.tribute[u] && !(S.res[u] >= 1)) { add(u, 1); pushEvent({ who: 'loot', loot: { [u]: 1 }, unique: true }); } log(`Defeated ${enemyName(s)}!`); } }
-  if (CONFIG.automation.autoAdvance && canAdvance()) advance();
+  if (S.hero.kills >= autoKillsNeeded() && canAdvance() && !autoAdvanceBlock()) { advance(); S.hero.autoAdvanced = (S.hero.autoAdvanced || 0) + 1; }
 }
 function gainXp(x) {
   S.hero.xp += x; gainDiscXp('combat', x);
@@ -892,7 +912,7 @@ function simulate(dt) {
   if (!heroFighting()) { const st0 = stats(); h.hp = Math.min(st0.maxHp, h.hp + st0.regen * dt); tickHarvest(dt); return; }
   for (const id in h.cds) if (h.cds[id] > 0) h.cds[id] -= dt;
   const st = stats();
-  if (h.resting) { h.hp = Math.min(st.maxHp, h.hp + st.regen * st.restSpeed * dt); if (h.hp >= st.maxHp * H.restUntil) { h.resting = false; h.atkTimer = 0; h.eTimer = 0; } else return; }
+  h.resting = false;
   h.hp = Math.min(st.maxHp, h.hp + st.regen * dt);
   if (h.enemyHp <= 0) { h.enemyHp = enemyMaxHp(); if (h.carry > 0) { h.enemyHp -= h.carry; h.carry = 0; } }
   for (const id of h.loadout) if (skillReady(id)) castSkill(id, false);
@@ -907,8 +927,8 @@ function simulate(dt) {
     const dmg = effectiveEnemyDps(st) * H.enemyAttackInterval;
     h.hp -= dmg; pushEvent({ who: 'enemy', dmg });
   }
-  if (h.hp <= 0) { h.hp = 1; h.resting = true; h.enemyHp = 0; h.carry = 0; h.atkTimer = 0; log(`Knocked out by ${enemyName()}. Retreating.`); retreat(); return; }
-  if (h.enemyHp <= 0) { onKill(st); h.enemyHp = 0; h.atkTimer = Math.min(h.atkTimer, interval * 0.5); if (h.hp < st.maxHp * H.restThreshold) h.resting = true; }
+  if (h.hp <= 0) { heroRetreat(st); return; }
+  if (h.enemyHp <= 0) { h.hp = Math.min(st.maxHp, h.hp + killHeal(st)); onKill(st); h.enemyHp = 0; h.atkTimer = Math.min(h.atkTimer, interval * 0.5); }
 }
 
 // ---------- Offline ----------
@@ -945,6 +965,7 @@ function claimOffline(data, mult = 1) {
   for (const k in data.gains) add(k, data.gains[k] > 0 ? data.gains[k] * mult : data.gains[k]); // inputs consumed aren't doubled
   for (const k of ['food', 'supplies', 'soldiers']) if ((S.res[k] || 0) < 0) S.res[k] = 0;
   for (const n in (data.tax || {})) { const t = data.tax[n] * mult; if (perkRank('autocollect')) add('gold', t); else { const L = landState(+n); L.coffer = Math.min(cofferCap(+n), (L.coffer || 0) + t); } }
+  if (heroFighting() && data.kills > 0) offlineStages(data.kills * mult);
   gainXp(data.kills * H.xpPerKill * CONFIG.stages.xpPerKill(S.hero.stage) * stats('sustained').xp * mult);
   S.hero.totalKills += data.kills * mult;
   if (data.kills > 0) for (const id of S.hero.loadout) gainMastery(id, data.counted * CONFIG.offlineSkillWeight * mult, true);
@@ -1228,7 +1249,7 @@ window.Game = {
   techDef, hasTech, techProgress, canResearch, research, researching, buildingUnlocked, gearTierUnlocked, dropUnlocked, counter,
   kingdomRates, kingdomNo, allSteps, stepDef, stepUnlocked, lineUnlocked, lineSteps, stepState, nextStep, stepMods, kTier, tierDef, stepAvailable, stepBuilt, canBuild, buildStep, tierGoods, tierNeed, tierPaid, tierPaidDone, tierStepsReady, contribute, canRaise, raiseTier, accountantSteps, assignAccountant, cityChecks, cityComplete, stepRate, stepPhases, stepCycle, stepBatch, stepOutput, thrallLevel, thrallCap, dismiss, stepLimit, stepUpCost, stepUpPlan, upgradeStep, stepWorkerSlots,
   assignWorker, assignOverseer, unassign, thrallPost, useAbility, refreshOffers, hire, maxStars, storeUpCost, upgradeStore, orderGoods, foundRenownNeed, canDeliver, deliver, swapOrder, swapReady, rankIndex, rankInfo, heroFighting, thrallCount, sellPrice, sell, buyPrice, buyRes, buyMax, canBuyRes,
-  canAdvance, advance, retreat, canAfford, add, simulate, applyOffline, claimOffline,
+  canAdvance, advance, stageSustainable, autoAdvanceBlock, autoKillsNeeded, killHeal, retreat, canAfford, add, simulate, applyOffline, claimOffline,
   save, load, exportSave, importSave, hardReset,
   thrallName, resCap, atCap, storeCap, typeKey, typeKills, bestiaryTier, bestiaryBonus, trophyTier, trophyCount, pinned, togglePin,
   afkCap, afkEff, perkRank, perkCost, buyPerk, heroPath, kingdomPath,
