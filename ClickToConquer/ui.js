@@ -830,7 +830,7 @@ const UI = (() => {
     const S = Game.S, h = S.hero, f = Game.fmt, slots = Game.techSlots(); let any = false;
     const stored = CONFIG.skills.some(d => Game.techUnlocked(d.id) && !h.loadout.includes(d.id));
     for (const d of CONFIG.skills) {
-      const E = techEls[d.id], c = E.card, un = Game.techUnlocked(d.id), eq = h.loadout.includes(d.id), mp = Game.masteryProgress(d.id), pend = Game.modPending(d.id);
+      const E = techEls[d.id], c = E.card, un = Game.techUnlocked(d.id), eq = h.loadout.includes(d.id), mp = Game.techMastery(d.id), pend = Game.modPending(d.id);
       c.classList.toggle('locked', !un); c.classList.toggle('eq', eq); if (pend) any = true;
       setText(c.querySelector('[data-f=tag]'), !un ? 'locked' : eq ? 'equipped' : 'stored'); c.querySelector('[data-f=tag]').className = 'tc-tag' + (eq ? ' on' : '');
       setText(c.querySelector('[data-f=desc]'), techDesc(d.id)); setText(c.querySelector('[data-f=lv]'), un ? `Lv ${mp.level}` : '—');
@@ -844,7 +844,7 @@ const UI = (() => {
     let nextShown = false;
     techEls._slots.forEach((s, i) => {
       const id = h.loadout[i], cdE = s.querySelector('.ls-cd');
-      if (i < slots && id) { const d = Game.skillDef(id), cd = Math.max(0, (h.cds || {})[id] || 0); s.className = 'lslot on'; if (s.dataset.id !== id) { setHtml(s.querySelector('.ls-ic'), ico(d.icon, 24)); s.dataset.id = id; } setText(s.querySelector('.ls-n'), d.name); setText(s.querySelector('.ls-l'), `Lv ${Game.masteryLevel(id)}`); cdE.style.setProperty('--p', (cd > 0 ? 100 * cd / Game.skillCd(id) : 0) + '%'); }
+      if (i < slots && id) { const d = Game.skillDef(id), cd = Math.max(0, (h.cds || {})[id] || 0); s.className = 'lslot on'; if (s.dataset.id !== id) { setHtml(s.querySelector('.ls-ic'), ico(d.icon, 24)); s.dataset.id = id; } setText(s.querySelector('.ls-n'), d.name); setText(s.querySelector('.ls-l'), `Lv ${Game.techLevelOf(id)}`); cdE.style.setProperty('--p', (cd > 0 ? 100 * cd / Game.skillCd(id) : 0) + '%'); }
       else if (i < slots) { s.className = 'lslot empty'; s.dataset.id = ''; setHtml(s.querySelector('.ls-ic'), ''); setText(s.querySelector('.ls-n'), 'empty'); setText(s.querySelector('.ls-l'), ''); cdE.style.setProperty('--p', '0%'); if (stored) any = true; }
       else if (!nextShown) { nextShown = true; const req = CONFIG.techSlots[i]; s.className = 'lslot lock'; s.dataset.id = ''; setHtml(s.querySelector('.ls-ic'), '🔒'); setText(s.querySelector('.ls-n'), `Slot ${i + 1}`); setText(s.querySelector('.ls-l'), req.combat ? `Combat Lv ${req.combat}` : 'Conquer a land'); cdE.style.setProperty('--p', '0%'); }
       else s.className = 'lslot hidden';
@@ -933,8 +933,12 @@ const UI = (() => {
     const out = [];
     for (const hb of CONFIG.hand) if (hb.gives === k) out.push(`By hand: ${hb.name}`);
     for (const a in CONFIG.activities) { const A = CONFIG.activities[a]; if (A.outputs && A.outputs[k]) out.push(`Activity: ${A.name}`); }
-    for (const b of CONFIG.buildingTypes) if (b.job.outputs[k]) out.push(`Building: ${b.name}`);
-    for (const gid in CONFIG.grounds) { const G = CONFIG.grounds[gid], names = []; for (const T of G.line) { if (T.pool.some(p => p.k === k)) names.push(T.plural); if (T.unique === k) names.push(T.boss + ' (first kill)'); } if (names.length) out.push(`${G.name}: ${names.join(', ')}`); }
+    const KC = CONFIG.kingdom, QM = (KC.war && KC.war.quartermaster) || {};
+    for (const lid in KC.lines) for (const st of KC.lines[lid].steps) if (st.make === k) out.push(`City: ${st.name} (${KC.lines[lid].name})`);
+    { const from = Object.keys(QM).filter(g => QM[g] === k); if (from.length) out.push(`Quartermaster: turns ${from.map(g => R[g].name).join(', ')} into ${R[k].name}`); }
+    if (k === 'soldiers') out.push('Barracks: trains them from Food and Supplies');
+    if (Object.values(CONFIG.grounds).some(G => G.land && G.spoil === k)) out.push('Conquered lands: enemies drop it, and garrisoned lands send it as spoils');
+    for (const gid in CONFIG.grounds) { const G = CONFIG.grounds[gid], names = []; if (G.land) continue; for (const T of G.line) { if (T.pool.some(p => p.k === k)) names.push(T.plural); if (T.unique === k) names.push(T.boss + ' (first kill)'); } if (names.length) out.push(`${G.name}: ${names.join(', ')}`); }
     if (k === 'gold') out.push('Market: selling anything', 'Bandits on the Roads, the dead in the Crypts');
     const gate = CONFIG.techs.find(t => t.unlocks.drop === k); if (gate) out.push(`Needs the ${gate.name} tech`);
     return out;
@@ -944,9 +948,14 @@ const UI = (() => {
     for (const t of CONFIG.techs) if (t.cost[k]) out.push(`Tech: ${t.name}`);
     CONFIG.tiers.forEach((t, i) => { const names = new Set(); if (t.craftCost[k] || t.upgradeCost[k]) names.add(t.name); if (t.perSlot) for (const sl in t.perSlot) { const ps = t.perSlot[sl]; if ((ps.craftCost && ps.craftCost[k]) || (ps.upgradeCost && ps.upgradeCost[k])) names.add(ps.name + ' ' + CONFIG.slots[sl].name.toLowerCase()); } if (names.size) out.push(`Gear: ${[...names].join(', ')}`); });
     for (const t of CONFIG.toolTiers) if (t.craftCost[k] || t.upgradeCost[k]) out.push(`Tools: ${t.name}`);
-    for (const b of CONFIG.buildingTypes) { if (b.buildCost[k]) out.push(`Build: ${b.name}`); if (b.job.inputs[k]) out.push(`${b.name} turns it into ${Object.keys(b.job.outputs).map(o => R[o].name).join(', ')}`); }
-    if (CONFIG.skillLevelCost[k]) out.push('Skill levels');
-    if (k === 'gold') out.push('Plots, founding a kingdom, skill levels, later techs');
+    const KC = CONFIG.kingdom, QM = (KC.war && KC.war.quartermaster) || {};
+    for (const lid in KC.lines) for (const st of KC.lines[lid].steps) { if (st.build && st.build[k]) out.push(`Build: ${st.name}`); if (st.from === k) out.push(`${st.name} turns it into ${R[st.make].name}`); }
+    for (const h of KC.halls || []) if (h.build && h.build[k]) out.push(`Build: ${h.name}`);
+    if (KC.army && KC.army.build && KC.army.build[k]) out.push('Build: Barracks');
+    if (KC.army && KC.army.cost && KC.army.cost[k]) out.push('Barracks: training soldiers (and feeding them)');
+    if (QM[k]) out.push(`Quartermaster: turned into ${R[QM[k]].name} for the army`);
+    if (Object.values(KC.lines).some(L => L.steps.some(st => st.make === k))) out.push('Raising your settlement to its next tier');
+    if (k === 'gold') out.push('Upgrading buildings, halls, gear and tools; the Market');
     return out;
   }
   function openItem(k) {
@@ -1207,6 +1216,9 @@ const UI = (() => {
       $('harvest-yield').classList.toggle('hidden', !Game.perkRank('surveyor'));
       setText($('harvest-tool'), `${CONFIG.toolTiers[tool.tier].name} ${CONFIG.toolSlots[a.tool].name} Lv${tool.level} · power ×${Game.toolPower(a.tool).toFixed(2)}`);
       setText($('harvest-mastery'), `Mastery ${Game.masteryLevel(act)} (${h.mastery[act] || 0} swings)`);
+      { const outs = Object.keys(y), full = outs.filter(k => Game.atCap(k)), open = outs.filter(k => !Game.atCap(k));
+        $('harvest-full').classList.toggle('hidden', !full.length);
+        if (full.length) setText($('harvest-full'), `${full.map(k => R[k].name).join(' and ')} ${full.length > 1 ? 'are' : 'is'} full (${f(Game.resCap(full[0]))}) — ${open.length ? 'only ' + open.map(k => R[k].name).join(' and ') + ' ' + (open.length > 1 ? 'are' : 'is') + ' being gathered' : 'nothing more can be gathered'}. Spend it on gear or sell it at the Market to make room.`); }
       const hrv = Game.harvestRates(act);
       setHtml($('harvest-afk'), !Game.perkRank('ledger') ? `<span class="dim">AFK forecast — unlock <b>The Ledger</b> in Kingdom → Legacy.</span>` : `AFK: ${Game.pct(Game.afkEff())} of this while closed (max ${Game.fmtTime(Game.afkCap())}) → ` + Object.entries(hrv).map(([k, v]) => `<span class="costitem">${ico(R[k].icon, 14)}${f(v * Game.afkEff() * 3600)}/h</span>`).join(' '));
     }

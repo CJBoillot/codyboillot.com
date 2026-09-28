@@ -960,3 +960,5 @@ html, body { max-width: 100%; overflow-x: hidden; }
 .tc-tier .mod.choose { border-color: #6b9b5f; color: #7fd28f; background: #16241a; }
 .tc-act { display: flex; justify-content: flex-end; margin-top: 8px; }
 .tc-act .buy { min-width: 110px; }
+
+.harvest-full { margin-top: 6px; padding: 6px 8px; border: 1px solid #7a5a2a; border-radius: 8px; background: #241a10; color: #e0a458; }

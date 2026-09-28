@@ -155,7 +155,7 @@ function tickHarvest(dt) {
   if (!activityAvailable(id)) { S.hero.activity = 'idle'; return; }
   { const outs = Object.keys(harvestYield(id)); if (outs.length && outs.every(atCap) && !outs.some(questWantsHarvest)) { S.hero.activity = 'idle'; S.hero.harvestTimer = 0; log(`Pack full: ${outs.map(k => CONFIG.resources[k].name.toLowerCase()).join(', ')}. Resting.`); pushEvent({ who: 'packfull' }); return; } }
   S.hero.harvestTimer += dt; const t = harvestTime(id);
-  while (S.hero.harvestTimer >= t) { S.hero.harvestTimer -= t; const y = harvestYield(id), got = {}; for (const k in y) { const n = Math.floor(y[k]) + (Math.random() < y[k] - Math.floor(y[k]) ? 1 : 0); if (n > 0) { add(k, n); got[k] = n; S.stats.harvested = S.stats.harvested || {}; S.stats.harvested[k] = (S.stats.harvested[k] || 0) + n; } } S.hero.mastery[id] = (S.hero.mastery[id] || 0) + 1; gainDiscXp(id, CONFIG.discXpPerSwing); pushEvent({ who: 'harvest', yield: got }); }
+  while (S.hero.harvestTimer >= t) { S.hero.harvestTimer -= t; const y = harvestYield(id), got = {}; for (const k in y) { const n = Math.floor(y[k]) + (Math.random() < y[k] - Math.floor(y[k]) ? 1 : 0); if (n > 0) { const kept = add(k, n); if (kept > 0) got[k] = kept; S.stats.harvested = S.stats.harvested || {}; S.stats.harvested[k] = (S.stats.harvested[k] || 0) + n; } } S.hero.mastery[id] = (S.hero.mastery[id] || 0) + 1; gainDiscXp(id, CONFIG.discXpPerSwing); pushEvent({ who: 'harvest', yield: got }); }
 }
 
 // ---------- Disciplines & skill trees ----------
@@ -223,14 +223,14 @@ function checkTechUnlocks() {
   if (!S.hero.landSlot && S.kingdom && landsHeld() >= 1) S.hero.landSlot = true;
 }
 function masteryNeed(lv) { return CONFIG.masteryBase * Math.pow(CONFIG.masteryGrowth, lv - 1); }
-function masteryProgress(id) { let lv = 1, x = (S.hero.techs && S.hero.techs[id] && S.hero.techs[id].xp) || 0; while (x >= masteryNeed(lv) && lv < 5000) { x -= masteryNeed(lv); lv++; } return { level: lv, have: x, need: masteryNeed(lv) }; }
-function masteryLevel(id) { return masteryProgress(id).level; }
-function gainMastery(id, x, quiet = false) { const st = techState(id), before = masteryLevel(id); st.xp += x; const after = masteryLevel(id); if (after > before && !quiet) { log(`${skillDef(id).name} mastery Lv ${after}!`); if (after === 5 || after === 10) pushEvent({ who: 'technique', name: skillDef(id).name + ' — choose a mod' }); } }
+function techMastery(id) { let lv = 1, x = (S.hero.techs && S.hero.techs[id] && S.hero.techs[id].xp) || 0; while (x >= masteryNeed(lv) && lv < 5000) { x -= masteryNeed(lv); lv++; } return { level: lv, have: x, need: masteryNeed(lv) }; }
+function techLevelOf(id) { return techMastery(id).level; }
+function gainMastery(id, x, quiet = false) { const st = techState(id), before = techLevelOf(id); st.xp += x; const after = techLevelOf(id); if (after > before && !quiet) { log(`${skillDef(id).name} mastery Lv ${after}!`); if (after === 5 || after === 10) pushEvent({ who: 'technique', name: skillDef(id).name + ' — choose a mod' }); } }
 const MOD_LV = [5, 10];
-function techMod(id, tier) { const d = skillDef(id), st = S.hero.techs && S.hero.techs[id]; if (!st || !d.mods || masteryLevel(id) < MOD_LV[tier]) return null; return d.mods[tier].find(m => m.id === (st.mods || [])[tier]) || null; }
+function techMod(id, tier) { const d = skillDef(id), st = S.hero.techs && S.hero.techs[id]; if (!st || !d.mods || techLevelOf(id) < MOD_LV[tier]) return null; return d.mods[tier].find(m => m.id === (st.mods || [])[tier]) || null; }
 function techMods(id) { const o = { power: 0, cd: 0, dur: 0, boss: 0, leech: 0, twin: 0 }; for (const t of [0, 1]) { const m = techMod(id, t); if (m) for (const k in o) if (m[k]) o[k] += m[k]; } return o; }
-function chooseMod(id, tier, modId) { const d = skillDef(id); if (!techUnlocked(id) || !d.mods || masteryLevel(id) < MOD_LV[tier] || !d.mods[tier].some(m => m.id === modId)) return false; const st = techState(id); st.mods = st.mods || []; st.mods[tier] = modId; return true; }
-function modPending(id) { if (!techUnlocked(id)) return false; const st = techState(id), lv = masteryLevel(id); return [0, 1].some(t => lv >= MOD_LV[t] && !(st.mods || [])[t]); }
+function chooseMod(id, tier, modId) { const d = skillDef(id); if (!techUnlocked(id) || !d.mods || techLevelOf(id) < MOD_LV[tier] || !d.mods[tier].some(m => m.id === modId)) return false; const st = techState(id); st.mods = st.mods || []; st.mods[tier] = modId; return true; }
+function modPending(id) { if (!techUnlocked(id)) return false; const st = techState(id), lv = techLevelOf(id); return [0, 1].some(t => lv >= MOD_LV[t] && !(st.mods || [])[t]); }
 function techSlots() { const c = discLevel('combat'); let n = 0; for (const s of CONFIG.techSlots) if ((s.combat && c >= s.combat) || (s.land && S.hero.landSlot)) n++; return n; }
 function equipTech(id) { if (!techUnlocked(id) || S.hero.loadout.includes(id) || S.hero.loadout.length >= techSlots()) return false; S.hero.loadout.push(id); return true; }
 function unequipTech(id) { if (!S.hero.loadout.includes(id)) return false; S.hero.loadout = S.hero.loadout.filter(x => x !== id); delete S.hero.cds[id]; return true; }
@@ -252,7 +252,7 @@ function attrPointsFree() { return 0; } function spendAttr() { return false; } f
 // ---------- Skills ----------
 function skillDef(id) { return CONFIG.skills.find(s => s.id === id); }
 function skillUnlocked(id) { return techUnlocked(id); }
-function skillPower(id) { const d = skillDef(id); return (d.power + d.powerPerLevel * (masteryLevel(id) - 1)) * (1 + techMods(id).power); }
+function skillPower(id) { const d = skillDef(id); return (d.power + d.powerPerLevel * (techLevelOf(id) - 1)) * (1 + techMods(id).power); }
 function skillCdBase(id) { return skillDef(id).cd * (1 + techMods(id).cd); }
 function skillCd(id) { return skillCdBase(id) * (1 - stats().cdr); }
 function skillDur(id) { const d = skillDef(id); return (d.dur || 0) * (1 + techMods(id).dur); }
@@ -1195,7 +1195,7 @@ window.Game = {
   phase, canProclaim, proclaim,
   stockMode, setStockMode, stockTarget, stockDemand, STOCK_MODES,
   get S() { return S; }, saveString, saveMeta, restoreString, setSaveHook: f => { saveHook = f; }, SAVE_KEY, fmt, pct, fmtTime, drainEvents: () => EVENTS.splice(0), afkEfficiency: () => afkEff(),
-  discXp, discLevel, discProgress, pathNodes, pathNode, pathRank, pathOpen, pathNeedsStar, pathPointsTotal, pathPointsSpent, pathPointsFree, pathPointsMax, starsTotal, starsSpent, starsFree, canRankPath, rankPath, pathMods, resetPaths, techUnlocked, techUnlockMet, techUnlockLabel, masteryProgress, masteryLevel, techMod, techMods, chooseMod, modPending, techSlots, equipTech, unequipTech, skillDur, skillCdBase, checkTechUnlocks, treeNode, nodeRank, nodeMax, nodeOpen, treePointsTotal, treePointsSpent, treePointsFree, canRankNode, rankNode, nodeQuestLocked, treeMods,
+  discXp, discLevel, discProgress, pathNodes, pathNode, pathRank, pathOpen, pathNeedsStar, pathPointsTotal, pathPointsSpent, pathPointsFree, pathPointsMax, starsTotal, starsSpent, starsFree, canRankPath, rankPath, pathMods, resetPaths, techUnlocked, techUnlockMet, techUnlockLabel, techMastery, techLevelOf, techMod, techMods, chooseMod, modPending, techSlots, equipTech, unequipTech, skillDur, skillCdBase, checkTechUnlocks, treeNode, nodeRank, nodeMax, nodeOpen, treePointsTotal, treePointsSpent, treePointsFree, canRankNode, rankNode, nodeQuestLocked, treeMods,
   fistLevel, slotValue, enemyHit, crafting, maxUpgradePlan, upgradeMax, stats, gearStats, itemStatPreview, gearCraftCost, gearUpgradeCost, canTierUp, craftGear, upgradeGear,
   talentPointsFree, talentPointsTotal, talentPointsSpent, respec, respecCost,
   skillDef, skillUnlocked, skillPower, skillCd, skillReady, castSkill, activeBuffs,

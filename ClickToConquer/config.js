@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Alpha 0.9.5',
+  version: 'Alpha 0.9.6',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -450,6 +450,7 @@ const CONFIG = {
     { id: 'smith',     cat: 'craft',   name: 'Blacksmith',  icon: [4,4],  buildCost: { gold: 200, stone: 40, wood: 40 },   job: { time: 10, inputs: { ore: 5 },             outputs: { ingot: 1 } } },
     { id: 'tannery',   cat: 'craft',   name: 'Tannery',     icon: [8,2],  buildCost: { wood: 40, stone: 20, hide: 10 },              job: { time: 10, inputs: { hide: 3 },            outputs: { leather: 1 } } },
     { id: 'weaver',    cat: 'craft',   name: 'Weaver',      icon: [17,6], buildCost: { gold: 150, wood: 40 },              job: { time: 10, inputs: { wool: 3 },            outputs: { cloth: 1 } } },
+    ['0.9.6', 'Fixed: tapping an item in the Inventory crashed (thanks Monica!). Item details now list the city buildings, Quartermaster and Barracks correctly. Gathering shows when an item is full and stops popping +1 for things that can\'t be stored. Fixed gathering mastery speed.'],
     ['0.9.5', 'New skills. Paths: a passive web of 39 nodes in three branches (Might, Guard, Command) — every node has 10 ranks, points come from Combat levels and ★ from bosses, and nothing ever resets. Techniques: ten active moves unlocked by milestones, levelled by using them, with a mod to choose at Lv 5 and Lv 10. Your old Combat tree points are refunded — spend them in Paths!'],
     // Artisan
     { id: 'sawmill',   cat: 'artisan', name: 'Sawmill',     icon: [19,11], buildCost: { gold: 400, wood: 100, ingot: 5 },  job: { time: 20, inputs: { wood: 5 },            outputs: { planks: 1 } } },
