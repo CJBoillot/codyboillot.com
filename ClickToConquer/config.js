@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Alpha 0.9.1',
+  version: 'Alpha 0.9.2',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -450,6 +450,7 @@ const CONFIG = {
   // jobs (jobs completed by hand or thrall), sold (gold earned at market), stage, boss, founded, thrall (assigned), activity (swings).
   // Shown in Settings → What's new (newest first). Keep each line short.
   changelog: [
+    ['0.9.2', 'The ! on the top tabs is a clean round badge again.'],
     ['0.9.1', 'New quests take the hero\'s gear to Iron: research Iron Gear and forge an Iron blade in the Hamlet, then Iron armor in the Village before the Cult Priest.'],
     ['0.9.0', 'The big one. Buildings run on one level each — no more thralls, workers or Overseers — and double their output at Lv 10, 25, 50, 100. The hero clears a threat before each settlement can grow, and the city builds him Halls (Training Yard, Smithy, Apothecary, Stables). After you proclaim, the Barracks trains an army that eats Food and Supplies and multiplies the hero\'s power, and the hero leads the conquest from his own screen: lands of 50–100 stages, a Ruler with a crown at the end, garrisons and taxes. Crystals are now Crowns: take them from rulers, spend them in four trees, and Pass the Crown to start a stronger dynasty.'],
     ['0.7.2', 'Settle New Lands is now Conquer New Lands.'],
