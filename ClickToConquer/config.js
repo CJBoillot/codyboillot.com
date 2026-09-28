@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Alpha 0.3.3',
+  version: 'Alpha 0.3.4',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -148,6 +148,7 @@ const CONFIG = {
     pick:   { name: 'Pickaxe', icon: [10,2], activity: 'mine',   base: 1 },
     sickle: { name: 'Sickle',  icon: [5,5], activity: 'forage', base: 1 },
     knife:  { name: 'Skinning Knife', icon: [5,6], base: 1, boosts: 'hide' },
+    cleaver: { name: "Butcher's Cleaver", icon: [3,0], base: 1, boosts: 'meat' },
   },
   toolTiers: [
     { name: 'Wooden', mult: 1, craftCost: { wood: 10 },                      upgradeCost: { wood: 6 },                upgradeMult: 1.3 },
@@ -285,8 +286,8 @@ const CONFIG = {
     // Each ground is a LINE of enemy types. A type has 10 stages; stage 10 is its boss. Pool: per-kill drop chance = base + growth × (stage−1), capped.
     // Loot from earlier types carries over at its stage-10 chance. `unique` drops once, on the first boss kill (+1 talent point).
     // dropTool: the drop needs that tool and scales with it. Tech gating (Skinning → hide, Butchery → meat, Grave Robbing → ingot) applies by resource.
-    wilds:  { name: 'The Wilds',  icon: [17,8],  desc: 'Beasts. Hide and meat — no gold.',              goldMult: 0, dropTool: { hide: 'knife' }, line: [
-      { id: 'rat',   name: 'Rat',      plural: 'Rats',      boss: 'Rat King',    unique: 'ratkingtooth', pool: [{ k: 'hide', base: 0.10, growth: 0.05 }, { k: 'meat', base: 0.10, growth: 0.03 }, { k: 'rattail', base: 0.00, growth: 0.03 }] },
+    wilds:  { name: 'The Wilds',  icon: [17,8],  desc: 'Beasts. Hide and meat — no gold.',              goldMult: 0, dropTool: { hide: 'knife', meat: 'cleaver' }, line: [
+      { id: 'rat',   name: 'Rat',      plural: 'Rats',      boss: 'Rat King',    unique: 'ratkingtooth', pool: [{ k: 'hide', base: 0.10, growth: 0.05 }, { k: 'rattail', base: 0.00, growth: 0.03 }] },
       { id: 'boar',  name: 'Boar',     plural: 'Boars',     boss: 'Great Boar',  unique: 'greatboartusk', pool: [{ k: 'hide', base: 0.35, growth: 0.04 }, { k: 'meat', base: 0.25, growth: 0.04 }, { k: 'tusk', base: 0.03, growth: 0.03 }] },
       { id: 'wolf',  name: 'Wolf',     plural: 'Wolves',    boss: 'Alpha Wolf',  unique: 'alphafang',    pool: [{ k: 'hide', base: 0.45, growth: 0.04 }, { k: 'meat', base: 0.30, growth: 0.04 }, { k: 'wolfpelt', base: 0.03, growth: 0.03 }] },
       { id: 'bear',  name: 'Bear',     plural: 'Bears',     boss: 'Cave Bear',   unique: 'cavebearhide', pool: [{ k: 'hide', base: 0.55, growth: 0.05 }, { k: 'meat', base: 0.40, growth: 0.05 }, { k: 'bearclaw', base: 0.03, growth: 0.03 }] },
@@ -512,11 +513,12 @@ const CONFIG = {
         { label: 'Fight in The Crypts', check: { activity: 'fight', ground: 'crypts' } },
         { label: 'Take 3 ingots from the dead', check: { looted: 'ingot', need: 3 } },
       ], reward: { gold: 100 }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:graverobbing', el2: 'ground:crypts' } },
-    { id: 'q14b', name: 'Butcher', text: 'Beasts are meat as well as hide. Meat sells well — and your skills feed on it.',
+    { id: 'q14b', name: 'Butcher', text: 'Beasts are meat as well as hide, if you have the blade for it. A better cleaver takes more meat per kill. Meat sells well — and your skills feed on it.',
       steps: [
         { label: 'Kingdom → Tech → Research Butchery', check: { tech: 'butchery' } },
+        { label: "Gear → click the Butcher's Cleaver slot → Make (10 wood)", check: { tool: 'cleaver' }, focus: { tab: 'hero', sub: 'gear', el: 'tool:cleaver' } },
         { label: 'Fight in The Wilds', check: { activity: 'fight', ground: 'wilds' } },
-        { label: 'Take 10 meat from beasts', check: { looted: 'meat', need: 10 } },
+        { label: 'Take 10 meat from boars or bigger beasts (rats have none)', check: { looted: 'meat', need: 10 } },
       ], reward: { meat: 10 }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:butchery', el2: 'ground:wilds' } },
     { id: 'q16', name: 'Stage 20', text: 'Upgrade your weapon when fights get slow — that is what the hide and stone are for.',
       steps: [
@@ -561,7 +563,7 @@ const CONFIG = {
     { id: 'stoneweapons',tier: 0, name: 'Stone Weapons',    icon: [17,1],  req: { stone: 30 },            cost: { stone: 10, wood: 5 },           unlocks: { gearTier: 1, slots: ['weapon'] }, desc: 'Knap a stone edge onto a wooden haft. Weapons go Wood → Stone → Iron → Steel.' },
     // Tier 1 — Settlement
     { id: 'prospecting',tier: 1, name: 'Prospecting',      icon: [17,2],  req: { stone: 120 },           cost: { stone: 40, wood: 20 },          unlocks: { drop: 'ore' },           desc: 'Tell ore from rock. Mining — by pick or by Mine — now yields Iron Ore as well as stone.' },
-    { id: 'butchery',   tier: 1, name: 'Butchery',         icon: [15,1],  req: { kills: 100 },           cost: { hide: 10, wood: 10 },          unlocks: { drop: 'meat' },          desc: 'Beasts in the Wilds drop Meat. Sells well; levels skills.' },
+    { id: 'butchery',   tier: 1, name: 'Butchery',         icon: [15,1],  req: { kills: 100 },           cost: { hide: 10, wood: 10 },          unlocks: { drop: 'meat', tool: 'cleaver' }, desc: "Lets you make a Butcher's Cleaver. With one, beasts in the Wilds drop Meat — better cleaver, better chance." },
     { id: 'graverobbing',tier: 1, name: 'Grave Robbing',    icon: [0,0],   req: { bossKills: 1 },         cost: { gold: 100 },                   unlocks: { drop: 'ingot' },         desc: 'Open the Crypts: the dead carry gold and rusted iron.' },
     // Tier 2 — Ironworking
     { id: 'irongear',   tier: 2, name: 'Iron Gear',        icon: [5,1],   req: { ingot: 50 },            cost: { gold: 400, ingot: 10 },        unlocks: { gearTier: 2 },           desc: 'Forge Iron gear.' },

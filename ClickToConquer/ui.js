@@ -663,7 +663,7 @@ const UI = (() => {
       const pills = Object.keys(pool).map(k => drops[k] !== undefined
         ? `<span class="costitem loot-${Game.lootRarity(k)}" title="${R[k].name} (${CONFIG.rarities[Game.lootRarity(k)].name})">${ico(R[k].icon, 14)}${drops[k] < 1 ? Math.round(drops[k] * 100) + '%' : f(drops[k])}</span>`
         : `<span class="costitem lack" title="${R[k].name}: ${why(k)}">${ico(R[k].icon, 14, 'ghost')}<span class="dim">${why(k)}</span></span>`).join(' ');
-      setHtml($('ground-desc'), `${G.desc} <span class="dim">Loot per kill:</span> ${pills}` + (G.dropTool && S.hero.tools.knife && Game.dropUnlocked('hide') ? ` <span class="dim">· knife ×${Game.dropToolMult('knife').toFixed(1)}</span>` : '')); }
+      setHtml($('ground-desc'), `${G.desc} <span class="dim">Loot per kill:</span> ${pills}` + (G.dropTool ? Object.entries(G.dropTool).filter(([k, t]) => S.hero.tools[t] && Game.dropUnlocked(k)).map(([k, t]) => ` <span class="dim">· ${t} ×${Game.dropToolMult(t).toFixed(1)}</span>`).join('') : '')); }
     $('boss-tag').classList.toggle('hidden', !Game.isBoss());
     setText($('hero-lvl'), h.level);
     $('hero-hpbar').style.width = (100 * h.hp / st.maxHp) + '%';
@@ -849,7 +849,7 @@ const UI = (() => {
     for (const slot in CONFIG.toolSlots) {
       const row = rows.tool[slot], def = CONFIG.toolSlots[slot], it = h.tools[slot];
       const up = row.querySelector('[data-f=up]'), forge = row.querySelector('[data-f=forge]');
-      if (!it) { setHtml(row.querySelector('[data-f=title]'), `${def.name} <span class="owned">none</span>`); setText(row.querySelector('[data-f=stats]'), def.activity ? `Needed to ${CONFIG.activities[def.activity].name.toLowerCase()}.` : `Needed to take ${R[def.boosts].name} in the Wilds. Better knife, better chance.`); up.classList.add('hidden'); row.querySelector('[data-f=max]').classList.add('hidden'); }
+      if (!it) { setHtml(row.querySelector('[data-f=title]'), `${def.name} <span class="owned">none</span>`); setText(row.querySelector('[data-f=stats]'), def.activity ? `Needed to ${CONFIG.activities[def.activity].name.toLowerCase()}.` : `Needed to take ${R[def.boosts].name} in the Wilds. Better tool, better chance.`); up.classList.add('hidden'); row.querySelector('[data-f=max]').classList.add('hidden'); }
       else {
         setHtml(row.querySelector('[data-f=title]'), `${CONFIG.toolTiers[it.tier].name} ${def.name} <span class="owned">Lv${it.level}</span>`);
         setText(row.querySelector('[data-f=stats]'), def.activity ? `Power ×${Game.toolPower(slot).toFixed(2)} → ${CONFIG.activities[def.activity].name}: ${Object.entries(Game.harvestRates(def.activity)).map(([k, v]) => `${f(v)} ${R[k].name}/s`).join(', ')}` : `Power ×${Game.toolPower(slot).toFixed(2)} → ${R[def.boosts].name} chance ×${Game.dropToolMult(slot).toFixed(2)}`);
