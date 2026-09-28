@@ -410,7 +410,7 @@ function assignWorker(id, i) { if (!stepUnlocked(id) || !thrall(i)) return false
 function assignOverseer(id, i) { if (!stepUnlocked(id) || !thrall(i)) return false; unassign(i); const s = stepState(id); if (s.overseer !== null) s.overseer = null; s.overseer = i; return true; }
 function unassign(i) { for (const id in (S.kingdom.steps || {})) { const s = S.kingdom.steps[id]; s.workers = s.workers.filter(x => x !== i); if (s.overseer === i) s.overseer = null; } }
 function thrallPost(i) { for (const id in (S.kingdom.steps || {})) { const s = S.kingdom.steps[id]; if (s.overseer === i) return { id, as: 'overseer' }; if (s.workers.includes(i)) return { id, as: 'worker' }; } return null; }
-function useAbility(id) { const s = stepState(id), now = S.hero.time; if (s.overseer === null || s.abilityReady > now) return false; s.abilityUntil = now + KC().abilitySeconds; s.abilityReady = now + KC().abilityCooldown; log(`${thrallName(s.overseer)}: Double shift at the ${stepDef(id).name}!`); return true; }
+function useAbility(id) { const s = stepState(id), now = S.hero.time; if (s.overseer === null || s.abilityReady > now) return false; s.abilityUntil = now + KC().abilitySeconds; s.abilityReady = now + KC().abilityCooldown; S.stats.shifts = (S.stats.shifts || 0) + 1; log(`${thrallName(s.overseer)}: Double shift at the ${stepDef(id).name}!`); return true; }
 // Tavern: 3 offers, refresh on a timer or for gold
 function maxStars() { return 3 + (rankIndex() >= 2 ? 1 : 0) + (rankIndex() >= 3 ? 1 : 0); }
 function rollThrall() {
@@ -552,18 +552,26 @@ function questCheck(c) {
   if (c.sold) return { done: S.stats.sold >= c.sold, have: Math.floor(S.stats.sold), need: c.sold };
   if (c.stage) return { done: bestStageAll() >= c.stage, have: bestStageAll(), need: c.stage, simple: c.stage <= 2 };
   if (c.boss) { const n = Object.keys(S.hero.bossesKilled).length; return { done: n >= c.boss, have: n, need: c.boss }; }
+  if (c.storeLv) { const n = S.kingdom.storeLv || 0; return { done: n >= c.storeLv, have: n, need: c.storeLv }; }
+  if (c.thrallLv) { const n = Math.max(0, ...S.kingdom.thralls.map(thrallLevel)); return { done: n >= c.thrallLv, have: n, need: c.thrallLv }; }
+  if (c.shifts) { const n = S.stats.shifts || 0; return { done: n >= c.shifts, have: n, need: c.shifts }; }
+  if (c.rank) { const n = rankIndex(); return { done: n >= c.rank, have: n, need: c.rank, simple: true }; }
   if (c.founded) return { done: S.legacy.foundings >= c.founded, have: S.legacy.foundings, need: c.founded };
   if (c.hired) { const n = S.kingdom.thralls.length; return { done: n >= c.hired, have: n, need: c.hired }; }
   if (c.working) { const n = stepState(c.working).workers.length; return { done: n >= 1, have: n, need: 1 }; }
   if (c.overseer) { const n = Object.values(S.kingdom.steps || {}).filter(x => x.overseer !== null).length; return { done: n >= c.overseer, have: n, need: c.overseer }; }
   if (c.stepLv) { const [id, tr] = c.stepLv.split(':'), n = stepState(id)[tr]; return { done: n >= c.need, have: n, need: c.need }; }
   if (c.orders) { const n = S.stats.orders || 0; return { done: n >= c.orders, have: n, need: c.orders }; }
-  if (c.renown) { const n = S.kingdom.renown || 0; return { done: n >= c.renown, have: n, need: c.renown }; }
+  if (c.renown) { const n = S.kingdom.renown || 0, past = c.orFounded && S.legacy.foundings >= c.orFounded; return { done: past || n >= c.renown, have: past ? c.renown : Math.floor(n), need: c.renown }; }
   if (c.made) { const n = (S.stats.made && S.stats.made[c.made]) || 0; return { done: n >= c.need, have: n, need: c.need }; }
   return { done: false, have: 0, need: 1 };
 }
 // Auto-generated goal when the chain is exhausted: the tech you're closest to, with what it still needs.
 function suggestGoal() {
+  if (kingdomNo() > 0) { // the kingdom: the endless loop — Renown toward the next lands
+    const need = foundRenownNeed(), have = S.kingdom.renown || 0;
+    return { name: have >= need ? 'Settle New Lands' : 'Conquer This Land', text: have >= need ? 'This land is conquered. Settle new lands when you are ready — or keep upgrading here.' : 'Upgrade your lines, staff every step and fill Orders for Renown.', hint: 'Kingdom → Keep', parts: [{ done: have >= need, have: Math.floor(have), need, label: 'Renown' }], focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:order-list' } };
+  }
   let best = null;
   for (const t of CONFIG.techs) {
     if (hasTech(t.id)) continue;
