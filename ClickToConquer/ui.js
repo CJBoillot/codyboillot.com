@@ -42,7 +42,7 @@ const UI = (() => {
     for (const k in R) {
       const d = el('div', 'res hidden'); d.id = 'res-' + k; d.title = `${R[k].name} — ${R[k].desc || ''}`;
       d.innerHTML = `${ico(R[k].icon, 22)}<div class="res-txt"><b data-f="amt">0</b><span class="res-name">${R[k].name}</span></div><span class="rrate" data-f="rate"></span>`;
-      d.addEventListener('click', () => { if (Game.phase() !== 3) return; const go = { soldiers: 'war', officers: 'war', supplies: 'farm', equipment: 'mine', gold: 'keep' }[k]; if (!go) return; const t = document.querySelector('[data-tab=kingdom]'); if (t && !t.disabled) t.click(); const b = document.querySelector(`[data-ksub=${go}]`); if (b && !b.disabled) b.click(); const r = document.querySelector('[data-rtab=kingdom]'); if (r && desktop) r.click(); });
+      d.addEventListener('click', () => { if (Game.phase() !== 3) return; const go = { soldiers: 'war', food: 'farm', supplies: 'mine', gold: 'lands' }[k]; if (!go) return; const t = document.querySelector('[data-tab=kingdom]'); if (t && !t.disabled) t.click(); const b = document.querySelector(`[data-ksub=${go}]`); if (b && !b.disabled) b.click(); const r = document.querySelector('[data-rtab=kingdom]'); if (r && desktop) r.click(); });
       rb.appendChild(d);
     }
     document.querySelectorAll('[data-tab]').forEach(b => b.addEventListener('click', () => {
@@ -83,8 +83,8 @@ const UI = (() => {
     $('quest-claim').addEventListener('click', () => { if (Game.questClaim()) flash($('quest-card')); });
     $('dev-export').addEventListener('click', () => { $('dev-io').value = Game.exportSave(); $('dev-io').select(); });
     $('dev-import').addEventListener('click', () => { if (Game.importSave($('dev-io').value)) { buildLists(); alert('Imported.'); } else alert('Bad save string.'); });
-    $('dev-reset-run').addEventListener('click', () => ask('Reset this run', 'Reset this run? Kingdom level, Crystals, perks and workers are kept.', 'Reset run', () => { { Game.debug.resetRun(); buildLists(); } }));
-    $('dev-reset').addEventListener('click', () => ask('RESET ALL', 'RESET ALL progress? This wipes everything, including Crystals and Kingdom level.', 'Wipe everything', () => { Game.debug.resetAll(); }));
+    $('dev-reset-run').addEventListener('click', () => ask('Reset this run', 'Reset this run? Kingdom level, Crowns, perks and workers are kept.', 'Reset run', () => { { Game.debug.resetRun(); buildLists(); } }));
+    $('dev-reset').addEventListener('click', () => ask('RESET ALL', 'RESET ALL progress? This wipes everything, including Crowns and Kingdom level.', 'Wipe everything', () => { Game.debug.resetAll(); }));
     // Kingdom sub-tabs
     document.querySelectorAll('[data-ksub]').forEach(b => b.addEventListener('click', () => {
       document.querySelectorAll('[data-ksub]').forEach(x => x.classList.toggle('active', x === b));
@@ -102,7 +102,7 @@ const UI = (() => {
       document.querySelectorAll('.csub').forEach(t => t.classList.toggle('hidden', t.id !== 'csub-' + b.dataset.csub));
     }));
     $('set-reload').addEventListener('click', async () => { Game.save(); try { if (window.caches) { const ks = await caches.keys(); await Promise.all(ks.map(k => caches.delete(k))); } } catch (e) {} location.replace(location.pathname + '?v=' + Date.now()); });
-    $('set-reset').addEventListener('click', () => ask('Reset all progress?', 'This wipes everything — hero, kingdom, Crystals, Legacy perks, trophies. There is no undo.', 'Wipe everything', () => Game.debug.resetAll()));
+    $('set-reset').addEventListener('click', () => ask('Reset all progress?', 'This wipes everything — hero, kingdom, Crowns, Legacy perks, trophies. There is no undo.', 'Wipe everything', () => Game.debug.resetAll()));
     $('tech-hide-known').addEventListener('change', e => { Game.S.settings.techHideKnown = e.target.checked; render(true); });
     $('avatar-btn').addEventListener('click', () => $('dev-toggle').click());
     $('cloud-guest').addEventListener('click', () => { Game.S.settings.guest = true; Game.save(); render(true); });
@@ -118,6 +118,9 @@ const UI = (() => {
     $('item-pin').addEventListener('click', () => { if (invItem) { Game.togglePin(invItem); openItem(invItem); } });
     // Founding
     $('found-btn').addEventListener('click', openFound);
+    $('barracks-up').addEventListener('click', () => { if (Game.upgradeBarracks()) { flash($('barracks-card')); render(true); } });
+    $('tax-collect').addEventListener('click', () => { if (Game.collectTaxes()) { flash($('lands-card')); render(true); } });
+    $('rally-btn').addEventListener('click', () => { if (Game.rally()) { const b = $('rally-btn'); b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop'); } });
     $('build-cancel').addEventListener('click', () => $('build-modal').classList.add('hidden'));
     $('slot-close').addEventListener('click', closeSlot);
     $('doll').addEventListener('click', e => { const s = e.target.closest('.doll-slot'); if (s && s.dataset.slot) openSlot(s.dataset.kind, s.dataset.slot); });
@@ -159,7 +162,7 @@ const UI = (() => {
       if (Game.S.legacy.foundings === 1 && !Game.S.settings.demoSeen) showInfo('Camp', 'You founded a kingdom.', '<p class="small">The wild is behind you. From here on your land works while you are away.</p><p class="small"><b>Market → Tavern</b> — hire thralls. <b>Kingdom → Forest</b> — put them to work at Logging, and upgrade Work, Cart and Haul with gold.</p><p class="small"><b>Keep</b> — fill Imperial Orders for gold and Renown, and grow your settlement: <b>Camp → Hamlet → Village → City</b>. Each step up costs goods, never your progress.</p>' + (Game.S.settings.guest && window.Cloud && Cloud.available && !Cloud.user ? '<p class="small"><b>Your kingdom lives on this device.</b> Settings (⚙) → Sign in with Google to back it up and play anywhere.</p>' : '') + '<p class="small dim">Alpha — numbers are rough and will change.</p>', 'demoSeen');
     });
     $('demo-continue').addEventListener('click', () => { if (infoFlag) Game.S.settings[infoFlag] = true; Game.save(); $('demo-modal').classList.add('hidden'); });
-    if (Game.S.migrated03 && !Game.S.settings.migSeen) showInfo('Alpha 0.3', 'The kingdom has been rebuilt.', '<p class="small">Combat, gear and the whole kingdom were redesigned for 0.3, so your old run could not carry over. Your <b>Crystals, Legacy perks and Bestiary kills</b> are kept.</p><p class="small">The wild now starts with bare fists, a 100-item pack and a tribute to the Empire. Past it lies a new idle kingdom of production lines, thralls and Imperial Orders.</p>', 'migSeen');
+    if (Game.S.migrated03 && !Game.S.settings.migSeen) showInfo('Alpha 0.3', 'The kingdom has been rebuilt.', '<p class="small">Combat, gear and the whole kingdom were redesigned for 0.3, so your old run could not carry over. Your <b>Crowns, Legacy perks and Bestiary kills</b> are kept.</p><p class="small">The wild now starts with bare fists, a 100-item pack and a tribute to the Empire. Past it lies a new idle kingdom of production lines, thralls and Imperial Orders.</p>', 'migSeen');
     buildLists();
   }
 
@@ -206,11 +209,12 @@ const UI = (() => {
     }
     buildDiscBar();
     const pl = $('perk-list'); pl.innerHTML = ''; rows.perk = {};
+    const treeBox = {}; for (const t of CONFIG.legacy.trees) { const hd = el('div', 'perk-tree-head', `<b>${t.name}</b> <span class="dim small">· ${t.desc}</span>`); pl.appendChild(hd); treeBox[t.id] = el('div', 'list perk-tree'); pl.appendChild(treeBox[t.id]); }
     for (const p of CONFIG.legacy.perks) {
       const row = el('div', 'row');
       row.innerHTML = `${ico(p.icon, 32, 'rowico')}<div class="row-main"><div class="row-title">${p.name} <span class="owned"><b data-f="rank">0</b>/${p.max}</span></div><div class="row-sub">${p.desc}</div></div><button class="buy shard" data-f="btn"><span class="small">Learn</span><br><span class="cost" data-f="cost"></span></button>`;
       row.querySelector('[data-f=btn]').addEventListener('click', () => { if (Game.buyPerk(p.id)) flash(row); });
-      rows.perk[p.id] = row; pl.appendChild(row);
+      rows.perk[p.id] = row; (treeBox[p.tree] || pl).appendChild(row);
     }
     const tx = $('tech-tree'); tx.innerHTML = ''; rows.tech = {};
     CONFIG.techTiers.forEach((name, tier) => {
@@ -272,7 +276,10 @@ const UI = (() => {
     switch (key) {
       case 'kingdom': return reached('f02') || S.legacy.foundings > 0;
       case 'tech': return reached('f02');
-      case 'forest': case 'farm': case 'mine': case 'war': return Game.lineUnlocked(key);
+      case 'forest': case 'farm': case 'mine': return Game.lineUnlocked(key);
+      case 'war': case 'lands': return Game.phase() === 3;
+      case 'halls': return Game.kingdomNo() > 0 && Game.kTier() >= 1;
+      case 'tavern': return false;
       case 'keep': return reached('q17') || Game.bestStageAll() >= 20 || S.legacy.foundings > 0;
       case 'legacy': return S.legacy.foundings > 0 || S.legacy.knowledge > 0;
       case 'gear': return reached('f03');
@@ -491,66 +498,60 @@ const UI = (() => {
         if (!avail) { h += `<div class="card kstep locked-step"><div class="kstep-head">${ico(st.icon, 24)}<div><div class="kstep-name">${st.name}</div><div class="tiny dim">Makes ${R[st.make].name}${st.from ? ' from ' + R[st.from].name : ''}</div></div><div class="kout dim small">Unlocks at<br><b>${CONFIG.kingdom.tiers[st.tier].name}</b></div></div></div>`; return; }
         h += `<div class="card kstep kbuild" data-build="${st.id}"><div class="kstep-head">${ico(st.icon, 24)}<div><div class="kstep-name">${st.name}</div><div class="tiny dim">Makes ${R[st.make].name}${st.from ? ' from ' + R[st.from].name : ''}</div></div></div><button class="buy wide" data-f="build"><span class="small">Build the ${st.name}</span><br><span class="cost" data-f="bcost"></span></button></div>`; return;
       }
-      const ss = Game.stepState(st.id);
       h += `<div class="card kstep" data-step="${st.id}">
-        <div class="kstep-head">${ico(st.icon, 24)}<div><div class="kstep-name">${st.name}</div><div class="tiny dim">${st.pull ? st.desc : st.from ? `${st.ratio} ${R[st.from].name} → 1 ${R[st.make].name}` : 'Gathers ' + R[st.make].name}</div></div><div class="kout"><b data-f="out"></b> <span class="small dim">/s</span><div class="tiny" data-f="lim"></div></div></div>
+        <div class="kstep-head">${ico(st.icon, 24)}<div><div class="kstep-name" data-f="name">${st.name}</div><div class="tiny dim">${st.from ? `${st.ratio} ${R[st.from].name} → 1 ${R[st.make].name}` : 'Gathers ' + R[st.make].name}</div></div><div class="kout"><b data-f="out"></b> <span class="small dim">/s</span><div class="tiny" data-f="lim"></div></div></div>
         ${st.from ? `<div class="kin"><span class="small dim">${R[st.from].name} in</span><div class="bar green-bar"><div data-f="inbar"></div><span data-f="inlab"></span></div></div>` : ''}
-        <div class="ktracks">${['rate', 'cart', 'haul'].map(t => `<div class="ktrack" data-t="${t}"><div><div class="ktl">${st.ph ? st.ph[{ rate: 0, cart: 1, haul: 2 }[t]] : t === 'rate' && st.from ? 'Craft' : TRACK[t]} <span class="dim small">Lv <b data-f="lv"></b></span></div><div class="small dim" data-f="v"></div><div class="kflag hidden">Bottleneck</div></div><button class="buy" data-f="up"><span class="small" data-f="uplab">Upgrade</span><br><span class="cost" data-f="cost"></span></button></div>`).join('')}</div>
-        <div class="kcycle">${[0, 1, 2].map(i => `<div class="kseg kseg${i}" data-seg="${i}"><div class="kfill"></div><span>${st.ph ? st.ph[i] : i === 0 && st.from ? "Craft" : PH[i]}</span></div>`).join("")}</div><div class="tiny dim kcyc-lab" data-f="cartlab"></div>
+        <div class="klevel"><div class="klv"><div class="klv-top"><b>Lv <span data-f="lv"></span></b><span class="small dim" data-f="ms"></span></div><div class="bar gold-bar klv-bar"><div data-f="msbar"></div></div></div>
+          <button class="buy" data-f="up"><span class="small" data-f="uplab">Upgrade</span><br><span class="cost" data-f="cost"></span></button></div>
+        <div class="kcycle">${[0, 1, 2].map(i => `<div class="kseg kseg${i}" data-seg="${i}"><div class="kfill"></div><span>${i === 0 && st.from ? "Craft" : PH[i]}</span></div>`).join("")}</div><div class="tiny dim kcyc-lab" data-f="cartlab"></div>
+        <div class="kslow hidden" data-f="slow">▲ Slowest in this chain — upgrading it speeds up everything after it</div>
         ${L.steps[i + 1] && Game.stepBuilt(L.steps[i + 1].id) ? `<div class="kstock"><div class="kstock-head"><span>Keep ${R[st.make].name.toLowerCase()} in stock</span><span class="kstock-n" data-f="stn"></span></div><div class="seg kstock-seg">${Game.STOCK_MODES.map(m => `<button data-stock="${m}">${m === 'auto' ? 'Auto' : m === 0 ? '0' : m === 1 ? 'Full' : m === 0.5 ? '½' : '¼'}</button>`).join('')}</div><div class="tiny kstock-why" data-f="stwhy"></div></div>` : ''}
-        <div class="kcrew">
-          <div class="kcrew-head"><span>Workers</span><b data-f="wn"></b></div>
-          <div class="kslots" data-f="wslots"></div>
-          <div class="kcrew-warn hidden" data-f="wwarn"></div>
-          <div class="krole"><div class="krole-ic">👁</div><div class="krole-txt"><div class="krole-k">Overseer</div><div data-f="ov"></div></div><button data-f="ovsel" class="buy">Choose</button></div>
-          <button data-f="ab" class="buy kshift">Double shift</button>
-          ${st.tier === 2 ? `<div class="krole"><div class="krole-ic">⚖</div><div class="krole-txt"><div class="krole-k" data-f="ack">Accountant</div><div data-f="ac"></div></div><button data-f="acsel" class="buy">Choose</button></div>` : ''}
-        </div>
       </div>`;
     });
     const steps = Game.lineSteps(lid), last = steps[steps.length - 1];
-    if (last) h += `<div class="kflow">▼ ${R[last.make].name} to the ${R[last.make].kind === 'war' ? 'war chest' : 'Storehouse'}</div>`;
+    if (last) h += `<div class="kflow">▼ ${R[last.make].name} to the ${Game.phase() === 3 && CONFIG.kingdom.war.quartermaster[last.make] ? 'army (' + R[CONFIG.kingdom.war.quartermaster[last.make]].name + ')' : 'Storehouse'}</div>`;
     box.innerHTML = h; rows.step[lid] = {};
     box.querySelectorAll('[data-build]').forEach(card => { const id = card.dataset.build; rows.step[lid][id] = card; card.querySelector('[data-f=build]').addEventListener('click', () => { if (Game.buildStep(id)) { lineKey[lid] = ''; render(true); } }); });
     box.querySelectorAll('[data-step]').forEach(card => {
       const id = card.dataset.step; rows.step[lid][id] = card;
-      card.querySelectorAll('[data-t]').forEach(tr => tr.querySelector('[data-f=up]').addEventListener('click', () => { if (Game.upgradeStep(id, tr.dataset.t, kBuy)) { flash(tr); render(true); } }));
-      card.querySelector('[data-f=ovsel]').addEventListener('click', () => openPicker(id, 'overseer', lid));
-      card.querySelector('[data-f=ab]').addEventListener('click', () => { if (Game.useAbility(id)) flash(card); });
-      const acb = card.querySelector('[data-f=acsel]'); if (acb) acb.addEventListener('click', () => openPicker(id, 'accountant', lid));
+      card.querySelector('[data-f=up]').addEventListener('click', () => { if (Game.upgradeStep(id, null, kBuy)) { flash(card.querySelector('.klevel')); render(true); } });
       card.querySelectorAll('[data-stock]').forEach(b => b.addEventListener('click', () => { const v = b.dataset.stock; if (Game.setStockMode(Game.stepDef(id).make, v === 'auto' ? 'auto' : +v)) { Game.save(); render(true); } }));
     });
     box.closest('.ksub').querySelector('[data-kbar]').innerHTML = kbarHtml();
     box.closest('.ksub').querySelectorAll('[data-kbuy]').forEach(b => b.addEventListener('click', () => { kBuy = b.dataset.kbuy === 'max' ? 'max' : +b.dataset.kbuy; for (const l in lineKey) lineKey[l] = ''; render(true); }));
     glowKey = '';
   }
+  // the chain's slowest building: its output in final-good terms is the lowest
+  function slowestInLine(lid) {
+    const steps = Game.lineSteps(lid); if (steps.length < 2) return null; let best = null, min = Infinity;
+    steps.forEach((st, i) => { let cap = Game.stepOutput(st.id); for (let j = i + 1; j < steps.length; j++) cap /= steps[j].ratio; if (cap < min - 1e-9) { min = cap; best = st.id; } });
+    return best;
+  }
   function renderLine(lid) {
     const S = Game.S, f = Game.fmt;
-    const key = Game.kingdomNo() + '|' + Game.kTier() + '|' + JSON.stringify(S.kingdom.built || {}) + '|' + S.kingdom.thralls.length + '|' + kBuy + '|' + Game.lineSteps(lid).map(st => { const s = Game.stepState(st.id); return s.workers.join(',') + '/' + s.overseer + '/' + s.accountant + '/' + Game.stepWorkerSlots(st.id); }).join(';');
+    const key = Game.kingdomNo() + '|' + Game.kTier() + '|' + Game.phase() + '|' + JSON.stringify(S.kingdom.built || {}) + '|' + kBuy;
     if (lineKey[lid] !== key) { lineKey[lid] = key; buildLine(lid); }
     let anyUp = false;
     for (const st of CONFIG.kingdom.lines[lid].steps) { const bc = rows.step[lid] && rows.step[lid][st.id]; if (!bc || !bc.dataset.build) continue; setHtml(bc.querySelector('[data-f=bcost]'), costHtml(st.build)); const cb = Game.canBuild(st.id); bc.querySelector('[data-f=build]').disabled = !cb; if (cb) anyUp = true; }
+    const slow = slowestInLine(lid);
     for (const st of Game.lineSteps(lid)) {
       const card = rows.step[lid] && rows.step[lid][st.id]; if (!card) continue;
-      const s = Game.stepState(st.id), m = Game.stepMods(st.id), hasOv = s.overseer !== null, lim = Game.stepLimit(st.id);
-      setText(card.querySelector('[data-f=out]'), m.working ? Game.stepOutput(st.id).toFixed(2) : '0');
-      const limTxt = !m.working ? '<span class="warn">No workers</span>' : !hasOv ? '<span class="dim">no overseer to report</span>'
-        : lim === 'starved' ? `<span class="warn">${st.pull ? 'Needs Supplies and gold' : 'Waiting for ' + R[st.from].name.toLowerCase()}</span>` : lim === 'full' ? '<span class="warn">Storehouse full</span>' : `<span class="dim">slowest: ${lim === 'rate' ? (st.from ? 'craft' : 'work') : lim}</span>`;
-      setHtml(card.querySelector('[data-f=lim]'), limTxt);
-      for (const t of ['rate', 'haul', 'cart']) {
-        const tr = card.querySelector(`[data-t=${t}]`); setText(tr.querySelector('[data-f=lv]'), s[t]);
-        const PHS = Game.stepPhases(st.id), pi = { rate: 0, cart: 1, haul: 2 }[t];
-        setText(tr.querySelector('[data-f=v]'), st.ph ? (t === 'rate' ? `${PHS[0].toFixed(1)}s to muster ${Game.stepBatch(st.id)}` : t === 'cart' ? `${PHS[1].toFixed(1)}s to drill them` : `${PHS[2].toFixed(1)}s to march to the war chest`) : t === 'rate' ? `${PHS[0].toFixed(1)}s to ${st.from ? 'make' : 'gather'} ${Game.stepBatch(st.id)}` : t === 'cart' ? `${PHS[1].toFixed(1)}s to load the cart` : `${PHS[2].toFixed(1)}s to deliver`);
-        const bn = hasOv && m.working && lim === t;
-        tr.classList.toggle('bottleneck', bn); tr.querySelector('.kflag').classList.toggle('hidden', !bn);
-        const p = Game.stepUpPlan(st.id, t, kBuy), btn = tr.querySelector('[data-f=up]');
-        setText(tr.querySelector('[data-f=uplab]'), p.n > 1 ? `Upgrade +${p.n}` : 'Upgrade');
-        setHtml(tr.querySelector('[data-f=cost]'), costHtml(p.n ? p.cost : Game.stepUpCost(st.id, t)));
-        btn.disabled = !p.n; if (p.n) anyUp = true;
-      }
+      const s = Game.stepState(st.id), lim = Game.stepLimit(st.id), lv = Game.stepLv(st.id), nm = Game.nextMilestone(lv), prev = [0, ...CONFIG.kingdom.milestones].filter(m => m <= lv).pop();
+      setText(card.querySelector('[data-f=name]'), Game.stepName(st.id));
+      setText(card.querySelector('[data-f=out]'), Game.stepOutput(st.id).toFixed(2));
+      setHtml(card.querySelector('[data-f=lim]'), lim === 'starved' ? `<span class="warn">Waiting for ${R[st.from].name.toLowerCase()}</span>` : '');
+      setText(card.querySelector('[data-f=lv]'), lv);
+      const cap = Game.levelCap();
+      setText(card.querySelector('[data-f=ms]'), lv >= cap ? `max for a ${Game.tierDef().name}` : nm ? `×2 output at Lv ${nm}` : '');
+      card.querySelector('[data-f=msbar]').style.width = (nm ? 100 * (lv - prev) / (nm - prev) : 100) + '%';
+      const p = Game.stepUpPlan(st.id, null, kBuy), btn = card.querySelector('[data-f=up]');
+      setText(card.querySelector('[data-f=uplab]'), lv >= cap ? 'Max level' : p.n > 1 ? `Upgrade +${p.n}` : 'Upgrade');
+      setHtml(card.querySelector('[data-f=cost]'), lv >= cap ? `<span class="dim small">raise the settlement</span>` : costHtml(p.n ? p.cost : Game.stepUpCost(st.id)));
+      btn.disabled = !p.n; if (p.n) anyUp = true;
+      card.querySelector('[data-f=slow]').classList.toggle('hidden', st.id !== slow); card.classList.toggle('slowest', st.id === slow);
       { const PHS = Game.stepPhases(st.id), cyc = PHS[0] + PHS[1] + PHS[2];
-        card.querySelectorAll('[data-seg]').forEach(seg => { const i = +seg.dataset.seg; seg.style.flexGrow = (PHS[i] / cyc).toFixed(4); const fill = !m.working ? 0 : i < s.phase ? 100 : i > s.phase ? 0 : 100 * Math.min(1, s.t / PHS[i]); seg.firstChild.style.width = fill + '%'; seg.classList.toggle('on', m.working && i === s.phase); });
-        setText(card.querySelector('[data-f=cartlab]'), !m.working ? 'Idle — no workers' : `${Game.stepBatch(st.id)} ${R[st.make].name.toLowerCase()} every ${cyc.toFixed(1)}s · now: ${(st.ph ? ['mustering', 'drilling', 'marching'] : [st.from ? 'crafting' : 'working', 'loading the cart', 'hauling'])[s.phase]}${s.phase === 0 && lim === 'starved' ? ' (waiting for ' + R[st.from].name.toLowerCase() + ')' : ''}`); }
+        card.querySelectorAll('[data-seg]').forEach(seg => { const i = +seg.dataset.seg; seg.style.flexGrow = (PHS[i] / cyc).toFixed(4); const fill = i < s.phase ? 100 : i > s.phase ? 0 : 100 * Math.min(1, s.t / PHS[i]); seg.firstChild.style.width = fill + '%'; seg.classList.toggle('on', i === s.phase); });
+        setText(card.querySelector('[data-f=cartlab]'), `${Game.stepBatch(st.id)} ${R[st.make].name.toLowerCase()} every ${cyc.toFixed(1)}s · now: ${[st.from ? 'crafting' : 'working', 'loading the cart', 'hauling'][s.phase]}${s.phase === 0 && lim === 'starved' ? ' (waiting for ' + R[st.from].name.toLowerCase() + ')' : ''}`); }
       if (card.querySelector('[data-f=stn]')) { const k = st.make, T = Game.stockTarget(k), have = Math.floor(S.res[k] || 0), nx = Game.nextStep(st.id), nxn = nx ? nx.name : 'next building';
         card.querySelectorAll('[data-stock]').forEach(b => b.classList.toggle('active', String(T.mode) === b.dataset.stock));
         setText(card.querySelector('[data-f=stn]'), `${f(Math.min(have, T.target))} / ${f(T.target)}`);
@@ -558,30 +559,73 @@ const UI = (() => {
         if (T.target <= 0) { setHtml(why, `<span class="dim">Nothing needed — every ${R[k].name.toLowerCase()} feeds the ${nxn}.</span>`); }
         else if (have < T.target) setHtml(why, `<span class="kstock-fill">${T.share < 1 ? 'Half to the Storehouse' : 'Storehouse first'}${T.why.length ? ' for the ' + T.why.join(', the ').replace(/the orders$/, 'Keep orders') : ''}${T.share < 1 ? ', half to the ' + nxn : ', then the ' + nxn}.</span>`);
         else setHtml(why, `<span class="dim">Stock is full${T.why.length ? ' (' + T.why.join(', ') + ')' : ''} — the rest feeds the ${nxn}.</span>`); }
-      if (st.from) { card.querySelector('[data-f=inbar]').style.width = Math.min(100, 100 * s.inBuf / (st.ratio * st.batch * 2)) + '%'; setText(card.querySelector('[data-f=inlab]'), `${Math.floor(s.inBuf)} waiting`); }
-      { const cap = Game.stepWorkerSlots(st.id), open = cap - s.workers.length, T = CONFIG.kingdom.tiers;
-        setText(card.querySelector('[data-f=wn]'), `${s.workers.length} / ${cap}`);
-        const box = card.querySelector('[data-f=wslots]'), wkey = s.workers.map(i => i + ':' + Game.thrallLevel(S.kingdom.thralls[i])).join(',') + '|' + cap;
-        if (box.dataset.k !== wkey) { box.dataset.k = wkey; let h = '';
-          for (let n = 0; n < 3; n++) {
-            if (n < s.workers.length) { const t = S.kingdom.thralls[s.workers[n]]; h += `<div class="kslot-t"><button class="kslot-x" data-rm="${s.workers[n]}" aria-label="Remove ${t.name}">×</button><div class="kav">${t.name[0]}</div><div class="kslot-n">${t.name}</div><div class="kslot-l">Lv ${Game.thrallLevel(t)}</div></div>`; }
-            else if (n < cap) h += `<button class="kslot-t empty" data-add="1"><span class="kslot-plus">+</span><span class="kslot-a">Add worker</span></button>`;
-            else { const nt = T.find(x => x.slots > n); h += `<div class="kslot-t locked"><span>🔒</span><span class="kslot-a">${nt ? nt.name : ''}</span></div>`; }
-          }
-          box.innerHTML = h;
-          box.querySelectorAll('[data-rm]').forEach(b => b.onclick = () => { Game.unassign(+b.dataset.rm); lineKey[lid] = ''; render(true); });
-          box.querySelectorAll('[data-add]').forEach(b => b.onclick = () => openPicker(st.id, 'worker', lid)); }
-        const ww = card.querySelector('[data-f=wwarn]'); ww.classList.toggle('hidden', open <= 0);
-        if (open > 0) setText(ww, s.workers.length ? `⚠ ${open} empty slot${open > 1 ? 's' : ''}: each worker speeds up this building` : '⚠ No workers: this building is idle'); }
-      const ov = s.overseer !== null ? S.kingdom.thralls[s.overseer] : null;
-      setHtml(card.querySelector('[data-f=ov]'), ov ? `<div class="krole-v">${ov.name} <span class="stars">${stars(ov.stars)}</span></div><div class="krole-e">${roleShort(ov.role)}: ${({ foreman: st.from ? 'Craft' : 'Work', carter: 'Haul', packer: 'Cart' })[ov.role]} ×${CONFIG.kingdom.starMult[ov.stars]} faster</div>` : '<div class="krole-v dim">Empty</div><div class="krole-e dim">Boosts one track and reports the bottleneck</div>');
-      setText(card.querySelector('[data-f=ovsel]'), ov ? 'Change' : 'Choose');
-      if (st.tier === 2) { const ac = s.accountant != null ? S.kingdom.thralls[s.accountant] : null; const qm = Game.phase() === 3 && CONFIG.kingdom.war.quartermaster[st.make], qTo = qm ? R[qm].name : ''; setText(card.querySelector('[data-f=ack]'), qm ? 'Quartermaster' : 'Accountant');
-        setHtml(card.querySelector('[data-f=ac]'), ac ? `<div class="krole-v">${ac.name}</div><div class="krole-e">${qm ? `Sends spare ${R[st.make].name.toLowerCase()} to ${qTo}` : `Sells ${R[st.make].name.toLowerCase()} above ${f(Math.floor(Game.resCap(st.make) * CONFIG.kingdom.accountantReserve))}`}</div>` : `<div class="krole-v dim">Empty</div><div class="krole-e dim">${qm ? `Would send spare ${R[st.make].name.toLowerCase()} to ${qTo}` : `Sells spare ${R[st.make].name.toLowerCase()} for gold`}</div>`); setText(card.querySelector('[data-f=acsel]'), ac ? 'Change' : 'Choose'); }
-      const ab = card.querySelector('[data-f=ab]'), now = S.hero.time; ab.classList.toggle('hidden', !ov);
-      if (ov) { ab.disabled = s.abilityReady > now; setText(ab, s.abilityUntil > now ? `Active ${Math.ceil(s.abilityUntil - now)}s` : s.abilityReady > now ? `Ready in ${Game.fmtTime(s.abilityReady - now)}` : 'Double shift'); }
+      if (st.from) { card.querySelector('[data-f=inbar]').style.width = Math.min(100, 100 * s.inBuf / (st.ratio * Game.stepBatch(st.id) * 2)) + '%'; setText(card.querySelector('[data-f=inlab]'), `${Math.floor(s.inBuf)} waiting`); }
     }
     return anyUp;
+  }
+
+  // ---- 0.9: the army (Barracks tab) ----
+  function renderArmy() {
+    const S = Game.S, f = Game.fmt, p3 = Game.phase() === 3; if (!p3) return false;
+    const sol = Game.soldiers(), lim = Game.armyLimit(), hs = Game.housing(), built = Game.barracksBuilt(), by = Game.armyLimitBy();
+    setText($('army-n'), f(sol)); setText($('army-lim'), built ? '/ ' + f(lim) : '');
+    setText($('army-limtxt'), !built ? 'Build the Barracks to train soldiers.' : by === 'housing' ? 'limit: Barracks housing — upgrade the Barracks' : by === 'food' ? 'limit: Food — upgrade the Bakery (and the Mill, the Fields)' : 'limit: Supplies — upgrade the Forge or the Carpenter');
+    setText($('army-mult'), '×' + Game.armyMult().toFixed(2));
+    $('army-bar').style.width = (lim ? Math.min(100, 100 * sol / lim) : 0) + '%'; setText($('army-bartxt'), built ? `${f(sol)} / ${f(lim)} army limit` : '—');
+    setText($('army-split'), `${f(Game.marching())} march with the hero · ${f(Game.garrisoned())} in garrisons`);
+    const tag = $('army-tag'); tag.className = 'tag ' + (S.kingdom.deserting ? 'warn-tag' : 'good-tag'); setText(tag, S.kingdom.deserting ? 'Hungry — deserting' : built ? 'Fed' : '');
+    setText($('barracks-lv'), built ? 'Lv ' + Game.barracksLv() : '');
+    setText($('barracks-rate'), built ? `${Game.trainPerMin().toFixed(1)} soldiers / min · houses ${f(hs)}` : '');
+    setHtml($('barracks-desc'), built ? `Each soldier costs <b>1 Food + 1 Supplies</b> to train. Food is bread; Supplies are iron swords and treated lumber — final goods beyond what the city keeps go to the army.` : `The Barracks trains soldiers from Food (bread) and Supplies (swords, treated lumber).`);
+    const B = S.kingdom.barracks || {}; $('train-bar').style.width = (built ? Math.min(100, 100 * (B.train || 0)) : 0) + '%';
+    setText($('train-txt'), !built ? '' : sol >= lim ? 'At the army limit' : (S.res.food || 0) < 1 ? 'Waiting for Food' : (S.res.supplies || 0) < 1 ? 'Waiting for Supplies' : 'Training…');
+    const c = Game.barracksCost(); setText($('barracks-uplab'), built ? 'Upgrade the Barracks' : 'Build the Barracks'); setHtml($('barracks-cost'), costHtml(c)); $('barracks-up').disabled = !Game.canUpBarracks();
+    const up = Game.upkeepPerMin(), fp = Game.foodPerMin(), sp = Game.suppliesPerMin();
+    const ln = (ic, lab, v, cls) => `<div class="uk-row"><span>${ic ? ico(R[ic].icon, 16) : ''}</span><span>${lab}</span><span class="${cls}">${v}</span></div>`;
+    setHtml($('upkeep-list'), ln('food', 'Food from the city', '+' + fp.toFixed(1), 'good') + ln(null, `${f(sol)} soldiers eat`, '−' + up.food.toFixed(1), 'warn') + ln('supplies', 'Supplies from the city', '+' + sp.toFixed(1), 'good') + ln(null, `${f(sol)} soldiers use`, '−' + up.supplies.toFixed(1), 'warn'));
+    setText($('upkeep-tip'), `Food in store: ${f(Math.floor(S.res.food || 0))} · Supplies: ${f(Math.floor(S.res.supplies || 0))}. If either runs out, soldiers slowly desert. A bigger army always needs a bigger city.`);
+    return Game.canUpBarracks();
+  }
+  // ---- 0.9: lands, garrisons, taxes ----
+  let landKey = '';
+  function renderLands() {
+    const S = Game.S, f = Game.fmt; if (Game.phase() !== 3) return false;
+    const tot = Game.cofferTotal(), auto = Game.perkRank('autocollect') > 0;
+    setText($('tax-rate'), `All lands · +${f(Game.taxTotalPerHour())} gold / hour${auto ? ' · Stewards collect for you' : ''}`);
+    const cb = $('tax-collect'); setHtml(cb, auto ? 'Auto' : `Collect ${ico(R.gold.icon, 16)} ${f(Math.floor(tot))}`); cb.disabled = auto || tot < 1;
+    const ns = Game.landsTouched(); const k = ns.join(',') + '|' + Game.soldiers();
+    if (landKey !== k) { landKey = k;
+      $('land-list').innerHTML = ns.map(n => `<div class="land-row" data-land="${n}"><div class="lr-main"><div class="lr-name" data-f="nm"></div><div class="small dim" data-f="meta"></div></div><div class="lr-coffer"><b data-f="cof"></b><span class="small dim" data-f="rate"></span></div>
+        <div class="lr-gar"><span data-f="gar"></span><span class="lr-btns"><button class="buy" data-g="-10">−10</button><button class="buy" data-g="10">+10</button><button class="buy" data-g="fill">Fill</button></span></div></div>`).join('') || '<div class="dim small">Conquer your first land from the hero screen.</div>';
+      $('land-list').querySelectorAll('[data-land]').forEach(row => { const n = +row.dataset.land; row.querySelectorAll('[data-g]').forEach(b => b.onclick = () => { const L = Game.landState(n), v = b.dataset.g; Game.setGarrison(n, v === 'fill' ? Game.garrisonNeed(n) : (L.garrison || 0) + +v); landKey = ''; render(true); }); });
+    }
+    let any = false;
+    for (const n of ns) { const row = $('land-list').querySelector(`[data-land="${n}"]`); if (!row) continue; const G = Game.landDef(n), L = Game.landState(n), pct = Game.landPct(n), done = Game.landDone(n), need = Game.garrisonNeed(n), g = L.garrison || 0;
+      row.classList.toggle('full', done); row.classList.toggle('front', !done && pct > 0 || (!done && Game.landOpen(n)));
+      setHtml(row.querySelector('[data-f=nm]'), `${n} · ${G.name}`);
+      setHtml(row.querySelector('[data-f=meta]'), done ? `100% conquered · 👑 ${G.ruler}` : pct > 0 ? `${pct}% conquered · ${G.ruler} waits at stage ${G.stages}` : `Not yet attacked · ${G.terrain}`);
+      setHtml(row.querySelector('[data-f=cof]'), `${ico(R.gold.icon, 14)} ${f(Math.floor(L.coffer || 0))}`);
+      setText(row.querySelector('[data-f=rate]'), pct > 0 ? `+${f(Game.taxPerHour(n))} / h${Game.garrisonFill(n) < 1 ? ` (full garrison: ${f(Game.taxFull(n) * pct / 100)})` : ''}` : `~${f(Game.taxFull(n))} / h when conquered`);
+      setHtml(row.querySelector('[data-f=gar]'), pct > 0 ? `🛡 Garrison <b class="${g >= need ? 'good' : 'warn'}">${g} / ${need}</b> <span class="${g >= need ? 'good' : 'warn'}">· ${Math.round(100 * Math.min(1, g / need))}% taxes</span>` : '<span class="dim">Garrison once you hold part of it</span>');
+      row.querySelectorAll('[data-g]').forEach(b => b.disabled = pct <= 0);
+      if (pct > 0 && g < need && Game.marching() > 0) any = true; }
+    return !auto && tot >= 1 || any;
+  }
+  // ---- 0.9: the hero's halls ----
+  let hallKey = '';
+  function renderHalls() {
+    const S = Game.S, f = Game.fmt; if (Game.kingdomNo() < 1) return false;
+    const hs = CONFIG.kingdom.halls, k = hs.map(h => Game.hallAvailable(h.id)).join(',');
+    if (hallKey !== k) { hallKey = k; $('hall-list').innerHTML = hs.map(h => `<div class="card kstep hall" data-hall="${h.id}"><div class="kstep-head">${ico(h.icon, 24)}<div><div class="kstep-name">${h.name} <span class="dim small" data-f="lv"></span></div><div class="tiny dim">${h.desc}</div></div><div class="kout"><b data-f="eff"></b></div></div><button class="buy wide" data-f="up"><span class="small" data-f="lab"></span><br><span class="cost" data-f="cost"></span></button></div>`).join('');
+      $('hall-list').querySelectorAll('[data-hall]').forEach(c => c.querySelector('[data-f=up]').onclick = () => { if (Game.upgradeHall(c.dataset.hall)) { flash(c); render(true); } }); }
+    let any = false;
+    for (const h of hs) { const c = $('hall-list').querySelector(`[data-hall="${h.id}"]`); if (!c) continue; const lv = Game.hallLv(h.id), av = Game.hallAvailable(h.id);
+      setText(c.querySelector('[data-f=lv]'), lv ? 'Lv ' + lv : '');
+      setText(c.querySelector('[data-f=eff]'), lv ? (h.effect === 'gearCost' ? '−' + Math.round(100 * Math.min(0.6, h.per * lv)) + '%' : '+' + Math.round(100 * h.per * lv) + '%') : '');
+      setText(c.querySelector('[data-f=lab]'), !av ? `Unlocks at ${CONFIG.kingdom.tiers[h.tier].name}` : lv ? 'Upgrade' : `Build the ${h.name}`);
+      setHtml(c.querySelector('[data-f=cost]'), av ? costHtml(Game.hallCost(h.id)) : '');
+      const ok = Game.canHall(h.id); c.querySelector('[data-f=up]').disabled = !ok; c.classList.toggle('locked-step', !av); if (ok && !lv) any = true; }
+    return any;
   }
   function buildKeepLists() {}
   // In-game picker for staffing a step (replaces native dropdowns)
@@ -626,24 +670,20 @@ const UI = (() => {
       setText($('settle-name'), Game.phase() === 3 ? 'Capital' : td.name); setText($('settle-tier'), `${t + 1} of ${T.length}${nx ? ' · next: ' + nx.name : ''}`);
       let lh = '';
       if (nx) {
-        setText($('settle-need'), `To become a ${nx.name}: ${td.need} Then pay in ${td.cap} of every good you make — a little at a time, and goods you deliver in Orders count too. Nothing is lost.${t > 0 ? ' Tip: set Keep in stock on a building to save its goods for a payment.' : ''}`);
-        const cur = CONFIG.kingdom.lines; const stepsHere = Game.allSteps().filter(st => st.tier === t);
-        lh += stepsHere.map(st => { const ok = Game.stepBuilt(st.id) && Game.stepState(st.id).workers.length > 0; return `<div class="row-between small"><span>${ok ? '✓' : '○'} ${st.name}</span><span class="${ok ? 'good' : 'dim'}">${Game.stepBuilt(st.id) ? (ok ? 'working' : 'needs a worker') : 'not built'}</span></div>`; }).join('');
+        const th = Game.tierThreat();
+        setText($('settle-need'), `To become a ${nx.name}: ${td.need}${th ? ` The hero must defeat the ${th.name}.` : ''} Then pay in ${td.cap} of every good you make — a little at a time; goods delivered in Orders count too. Nothing is lost.`);
+        const stepsHere = Game.allSteps().filter(st => st.tier === t && !st.phase);
+        lh += stepsHere.map(st => { const ok = Game.stepBuilt(st.id); return `<div class="row-between small"><span>${ok ? '✓' : '○'} ${st.name}</span><span class="${ok ? 'good' : 'dim'}">${ok ? 'built' : 'not built'}</span></div>`; }).join('');
+        if (th) lh += `<div class="row-between small threat ${th.done ? '' : 'todo'}"><span>${th.done ? '✓' : '⚔'} Threat: <b>${th.name}</b></span><span class="${th.done ? 'good' : 'warn'}">${th.done ? 'defeated' : `Hero → ${th.where}, stage ${th.stage}`}</span></div>`;
         lh += Object.keys(need).map(k => { const g = Math.min(need[k], paid[k] || 0); return `<div class="bar kob"><div style="width:${100 * g / need[k]}%"></div><span>${R[k].name} ${f(g)} / ${f(need[k])}${g < need[k] ? ` · have ${f(Math.floor(S.res[k] || 0))}` : ' ✓'}</span></div>`; }).join('');
         const canPay = Object.keys(need).some(k => (paid[k] || 0) < need[k] && (S.res[k] || 0) >= 1);
         $('settle-pay').disabled = !canPay; $('settle-pay').classList.toggle('hidden', Game.tierPaidDone());
         const cr = Game.canRaise(); $('settle-raise').disabled = !cr; setText($('settle-raise'), `Raise to ${nx.name}`); $('settle-raise').classList.remove('hidden');
         if (cr) keepHint = true;
       } else {
-        setText($('settle-need'), Game.phase() === 3 ? 'Your City is the Capital. This list no longer blocks anything — a full crew and an Overseer still make every building faster.' : td.need + ' Then proclaim the Kingdom.');
-        const c = Game.cityChecks(); const row = (lab, a, b) => `<div class="row-between small"><span>${a >= b ? '✓' : '○'} ${lab}</span><span class="${a >= b ? 'good' : 'dim'}">${a} / ${b}</span></div>`;
-        lh += row('Buildings with 3 workers', c.crews, c.steps) + row('Buildings with an Overseer', c.overseers, c.steps) + row('Accountants on final goods', c.accountants, c.finals);
-        { const miss = []; for (const st of Game.allSteps().filter(x => !x.phase)) { if (!Game.stepBuilt(st.id)) { miss.push(`${st.name}: not built`); continue; } const ss = Game.stepState(st.id), need = [];
-            if (ss.workers.length < 3) need.push(`${3 - ss.workers.length} worker${3 - ss.workers.length > 1 ? 's' : ''}`); if (ss.overseer === null) need.push('an Overseer'); if (st.tier === 2 && ss.accountant == null) need.push('an Accountant');
-            if (need.length) miss.push(`<b>${st.name}</b> needs ${need.join(', ')}`); }
-          const idle = S.kingdom.thralls.filter((t, i) => !Game.thrallPost(i)).length;
-          if (miss.length) lh += `<div class="city-miss small">${miss.map(m => `<div>○ ${m}</div>`).join('')}</div>`;
-          if (idle) lh += `<div class="small good" style="margin-top:4px">${idle} idle thrall${idle > 1 ? 's' : ''} ready — open a building above and tap + Add worker.</div>`; }
+        const p3 = Game.phase() === 3, need = CONFIG.kingdom.minLv;
+        setText($('settle-need'), p3 ? 'Your City is the Capital. Keep upgrading: every level feeds the army and the conquest.' : `Raise every building to Lv ${need} — each doubles when it gets there — then proclaim the Kingdom.`);
+        if (!p3) { const rowsL = Game.allSteps().filter(x => !x.phase).map(st => { const b = Game.stepBuilt(st.id), lv = b ? Game.stepLv(st.id) : 0, ok = lv >= need; return `<div class="row-between small"><span>${ok ? '✓' : '○'} ${st.name}</span><span class="${ok ? 'good' : 'dim'}">${b ? 'Lv ' + lv + ' / ' + need : 'not built'}</span></div>`; }); lh += rowsL.join(''); }
         $('settle-pay').classList.add('hidden'); $('settle-raise').classList.add('hidden');
       }
       setHtml($('settle-list'), lh);
@@ -830,7 +870,7 @@ const UI = (() => {
   }
 
   // ---- Render ----
-  const WAR_CHIPS = ['gold', 'supplies', 'equipment', 'soldiers', 'officers']; // Phase 3 header: the war chest
+  const WAR_CHIPS = ['gold', 'food', 'supplies', 'soldiers']; // Phase 3 header: the war chest
   let lastRender = 0;
   function render(force) {
     const now = performance.now(); if (!force && now - lastRender < 100) return; lastRender = now;
@@ -852,7 +892,17 @@ const UI = (() => {
     // Fight
     const eMax = Game.enemyMaxHp();
     setText($('stage'), Game.stageLabel()); setText($('best-stage'), Game.stageLabel(h.bestStage));
-    for (const id in CONFIG.grounds) { const b = rows.ground[id], G = CONFIG.grounds[id], un = Game.groundUnlocked(id), gs = id === h.ground ? { stage: h.stage } : (h.grounds[id] || { stage: 1 }); b.classList.toggle('active', id === h.ground); b.disabled = !un; b.classList.toggle('locked', !un); setText(b.querySelector('[data-f=st]'), un ? Game.stageLabel(gs.stage, id) : G.reqText); }
+    for (const id in CONFIG.grounds) { const b = rows.ground[id], G = CONFIG.grounds[id], un = Game.groundUnlocked(id), gs = id === h.ground ? { stage: h.stage } : (h.grounds[id] || { stage: 1 });
+      if (G.land) { const show = Game.phase() === 3 && G.land <= Game.landsHeld() + 2; b.classList.toggle('hidden', !show); if (!show) continue; b.classList.toggle('land-done', Game.landDone(G.land)); }
+      b.classList.toggle('active', id === h.ground); b.disabled = !un; b.classList.toggle('locked', !un);
+      setText(b.querySelector('[data-f=st]'), G.land ? (Game.landDone(G.land) ? '👑 100%' : un ? `${Game.landPct(G.land)}% · stage ${gs.stage}` : G.reqText) : un ? Game.stageLabel(gs.stage, id) : G.reqText); }
+    { const p3 = Game.phase() === 3, LN = Game.landN(), G = Game.ground();
+      $('army-line').classList.toggle('hidden', !p3 || !Game.heroFighting());
+      if (p3) { const st2 = Game.stats(); setHtml($('army-line'), `${ico(R.soldiers.icon, 18)} <b>${f(Game.marching())}</b>&nbsp;soldiers march with you · hits <b>${f(st2.attack)}</b>&nbsp;<span class="dim">(${f(st2.gearAttack)} × army ×${st2.army.toFixed(2)}${st2.lap > 1 ? ' × victory lap ×' + st2.lap : ''})</span>`); }
+      $('conquest-box').classList.toggle('hidden', !LN);
+      if (LN) { const pct = Game.landPct(LN); setText($('cq-name'), `Conquest of ${G.name}`); setText($('cq-pct'), pct + '%'); $('cq-bar').style.width = pct + '%'; setText($('cq-text'), Game.landDone(LN) ? `Conquered · 👑 ${G.crown}` : `Stage ${h.stage} / ${G.stages}`);
+        const ck = LN + '|' + G.stages; if ($('cq-ticks').__k !== ck) { $('cq-ticks').__k = ck; setHtml($('cq-ticks'), `<span>Captains every 10 stages</span><span>👑 ${G.ruler} · stage ${G.stages}</span>`); } }
+      const rb = $('rally-btn'); rb.classList.toggle('hidden', !p3 || !Game.heroFighting() || Game.marching() <= 0); rb.disabled = !Game.canRally(); }
     { const G = Game.ground(), drops = Game.groundDrops(), pool = Game.stagePool();
       const why = k => k === 'hide' ? (Game.dropUnlocked('hide') ? 'needs a Skinning Knife' : 'needs Skinning') : !Game.dropUnlocked(k) ? 'needs ' + (CONFIG.techs.find(t => t.unlocks.drop === k) || {}).name : '';
       const pills = Object.keys(pool).map(k => drops[k] !== undefined
@@ -949,6 +999,7 @@ const UI = (() => {
 
     // Kingdom
     for (const lid in CONFIG.kingdom.lines) { const any = Game.lineUnlocked(lid) ? renderLine(lid) : false; $('badge-' + lid).classList.toggle('hidden', !any); }
+    $('badge-war').classList.toggle('hidden', !renderArmy()); $('badge-lands').classList.toggle('hidden', !renderLands()); $('badge-halls').classList.toggle('hidden', !renderHalls());
     const keepAct = renderKeep();
     renderThrone();
 
@@ -1005,7 +1056,7 @@ const UI = (() => {
       { const chain = q.chain || (CONFIG.quests.slice(0, S.quests.index).reverse().find(x => x.chain) || {}).chain || ''; const inChain = CONFIG.quests.filter((x, i) => (x.chain || (CONFIG.quests.slice(0, i).reverse().find(y => y.chain) || {}).chain) === chain); setText($('quest-n'), `${chain} · ${inChain.indexOf(q) + 1} / ${inChain.length}`); }
       setText($('quest-name'), q.name); setText($('quest-text'), q.text); setText($('quest-hint'), q.hint || ''); $('quest-hint').classList.toggle('hidden', !q.hint);
       setHtml($('quest-obj'), pr.parts.map(partHtml).join(''));
-      setHtml($('quest-reward'), 'Reward: ' + Object.entries(q.reward).map(([k, v]) => k === 'crystal' ? `<span class="costitem">💎 ${v} Crystal</span>` : k === 'talent' ? `<span class="costitem">★ ${v} talent point</span>` : `<span class="costitem">${ico(R[k].icon, 14)}${f(v)}</span>`).join(' '));
+      setHtml($('quest-reward'), 'Reward: ' + Object.entries(q.reward).map(([k, v]) => k === 'crystal' ? `<span class="costitem">👑 ${v} Crown</span>` : k === 'talent' ? `<span class="costitem">★ ${v} talent point</span>` : `<span class="costitem">${ico(R[k].icon, 14)}${f(v)}</span>`).join(' '));
       $('quest-claim').classList.remove('hidden'); $('quest-claim').disabled = !pr.done; $('quest-card').classList.toggle('ready', pr.done);
     } else if (goal) {
       setText($('quest-n'), ''); setText($('quest-name'), goal.name); setText($('quest-text'), goal.text); setText($('quest-hint'), goal.hint); $('quest-hint').classList.remove('hidden');
@@ -1063,12 +1114,14 @@ const UI = (() => {
 
   const fmPick = { hero: null, kingdom: null };
   function openFound() {
+    if (Game.phase() === 3) { if (!Game.canPassCrown()) return; const g = Game.crownsIfPass();
+      ask('Pass the Crown?', `Your heir takes the throne with ${g} new Crown${g === 1 ? '' : 's'}. Lands, taxes, the army and your stores start over; the Capital stands but its building levels go back to 1; the hero starts at level 1 in basic gear. Crowns, Legacy, the Crown Vault, trophies and tech stay.`, 'Pass the Crown', () => { if (Game.passCrown() !== false) { rebuild(); } }); return; }
     if (Game.S.legacy.foundings > 0) { if (!Game.canProclaim()) return;
-      ask('Proclaim the Kingdom', `Your City becomes the Capital. Nothing is lost. You gain ${Game.knowledgeGain()} Crystal${Game.knowledgeGain() === 1 ? '' : 's'}, the Barracks opens, and the header becomes your war chest.`, 'Proclaim', () => { if (Game.proclaim()) { rebuild(); flash($('found-btn')); } }); return; }
+      ask('Proclaim the Kingdom', `Your City becomes the Capital. Nothing is lost. You gain ${Game.knowledgeGain()} Crown${Game.knowledgeGain() === 1 ? '' : 's'}, the Barracks opens, and the header becomes your war chest.`, 'Proclaim', () => { if (Game.proclaim()) { rebuild(); flash($('found-btn')); } }); return; }
     if (!Game.canFound()) return;
     const L = Game.S.legacy;
     fmPick.hero = L.heroPath || 'warrior'; fmPick.kingdom = L.kingdomPath || 'benevolent';
-    { const g = Game.knowledgeGain(); setText($('fm-gain'), `${g} Crystal${g === 1 ? '' : 's'}`); }
+    { const g = Game.knowledgeGain(); setText($('fm-gain'), `${g} Crown${g === 1 ? '' : 's'}`); }
     { const first = Game.S.legacy.foundings === 0; setText($('fm-title'), first ? 'Found Your Kingdom' : 'Conquer New Lands'); setText($('fm-confirm'), first ? 'Found' : 'Ride out'); }
     setText($('fm-worker'), Game.S.legacy.foundings === 0 ? 'your first Camp' : 'a new Camp in new lands');
     const build = (holder, list, key) => {
@@ -1092,29 +1145,29 @@ const UI = (() => {
     const hp = Game.heroPath(), kp = Game.kingdomPath();
     setHtml($('paths-now'), hp || kp ? `${hp ? ico(hp.icon, 16) + ' ' + hp.name : ''} ${hp && kp ? '·' : ''} ${kp ? ico(kp.icon, 16) + ' ' + kp.name : ''}` : 'No path chosen yet — your first founding decides who you become.');
     $('crystal-chip').classList.toggle('hidden', !(L.knowledge > 0 || L.foundings > 0)); setText($('crystal-n'), L.knowledge);
-    setText($('knowledge'), L.knowledge); setText($('knowledge2'), L.knowledge); setText($('foundings'), L.foundings); setText($('throne-best'), S.hero.bestStage);
+    setText($('knowledge'), L.knowledge); setText($('knowledge2'), L.knowledge); setText($('foundings'), L.dynasty || 1); setText($('throne-best'), S.hero.bestStage);
     setText($('found-gain'), '+' + Game.knowledgeGain());
     const cost = Game.foundCost(); setHtml($('found-cost'), Object.keys(cost).length ? costHtml(cost) : '<span class="dim">free — Renown is the price</span>');
     const first = S.legacy.foundings === 0, p3 = Game.phase() === 3;
-    setText($('found-title'), first ? 'Pay Tribute to the Empire' : p3 ? 'The Kingdom' : 'Proclaim the Kingdom');
-    setText($('found-text'), first ? 'Pay tribute and the Empire grants you land: your first kingdom, with a Forest to work. Your hero keeps everything.' : p3 ? 'Your City is the Capital. The army musters at the Barracks; the Road to new lands opens in the next update.' : 'Once your City is complete, proclaim the Kingdom. Nothing is lost: your City becomes the Capital, and the war for new lands begins.');
-    $('found-btn').textContent = first ? 'Pay Tribute' : p3 ? 'Proclaimed' : 'Proclaim the Kingdom';
+    setText($('found-title'), first ? 'Pay Tribute to the Empire' : p3 ? 'Pass the Crown' : 'Proclaim the Kingdom');
+    setText($('found-text'), first ? 'Pay tribute and the Empire grants you land: your first kingdom, with a Forest to work. Your hero keeps everything.' : p3 ? `Your hero crowns an heir. The Crowns you took from fallen rulers become your dynasty's power (Legacy). Lands, taxes, the army and stores start over; the Capital stands, its building levels back to 1; the hero starts again at level 1. Crowns, Legacy perks, the Crown Vault, trophies and tech stay. In lands you conquered before, the hero hits ${3 + Game.perkRank('lap')}× harder.` : 'Once your City is complete, proclaim the Kingdom. Nothing is lost: your City becomes the Capital, and the war for new lands begins.');
+    $('found-btn').textContent = first ? 'Pay Tribute' : p3 ? `Pass the Crown (+${Game.crownsIfPass()} 👑)` : 'Proclaim the Kingdom';
     if (first) { const reqStage = CONFIG.legacy.foundRequiresStage, okStage = Game.bestStageAll() >= reqStage; setText($('found-req'), okStage ? (Game.canAfford(cost) ? 'Ready.' : 'Gather the tribute: 100 gold and the Rat King\'s Tooth.') : `Reach stage ${reqStage} to pay tribute (best: ${Game.bestStageAll()}).`); }
-    else { setText($('found-req'), p3 ? '' : Game.canProclaim() ? 'Ready. The City is complete.' : `Complete your City first (now: ${Game.tierDef().name}).`); }
-    const can = first ? Game.canFound() : Game.canProclaim();
-    setText($('found-gain-lab'), first ? 'Crystals on founding:' : 'Crystals when proclaimed:'); $('found-gain-row').classList.toggle('hidden', p3); $('found-cost-row').classList.toggle('hidden', !first);
-    $('found-btn').disabled = !can; $('found-btn').classList.toggle('hidden', p3);
-    $('badge-throne').classList.toggle('hidden', !can);
+    else { setText($('found-req'), p3 ? (Game.canPassCrown() ? `Crowns this dynasty: ${Game.crownsIfPass()} · lands held: ${Game.landsHeld()}` : 'Conquer your first land to pass the crown.') : Game.canProclaim() ? 'Ready. The City is complete.' : `Complete your City first (now: ${Game.tierDef().name}).`); }
+    const can = first ? Game.canFound() : p3 ? Game.canPassCrown() : Game.canProclaim();
+    setText($('found-gain-lab'), first ? 'Crowns on founding:' : 'Crowns when proclaimed:'); $('found-gain-row').classList.toggle('hidden', p3); $('found-cost-row').classList.toggle('hidden', !first);
+    $('found-btn').disabled = !can;
+    $('badge-throne').classList.toggle('hidden', !can || p3);
     let anyPerk = false;
     for (const p of CONFIG.legacy.perks) {
       const row = rows.perk[p.id], r = Game.perkRank(p.id), maxed = r >= p.max, c = Game.perkCost(p);
       setText(row.querySelector('[data-f=rank]'), r);
-      setHtml(row.querySelector('[data-f=cost]'), maxed ? 'Max' : `${c} ◆`);
+      setHtml(row.querySelector('[data-f=cost]'), maxed ? 'Max' : `${c} 👑`);
       const btn = row.querySelector('[data-f=btn]'); btn.disabled = maxed || L.knowledge < c; if (!btn.disabled) anyPerk = true;
     }
-    orderRows($('perk-list'), CONFIG.legacy.perks.map(p => ({ el: rows.perk[p.id], rank: Game.perkRank(p.id) >= p.max ? 2 : (L.knowledge >= Game.perkCost(p) ? 0 : 1) })));
     $('badge-legacy').classList.toggle('hidden', !anyPerk);
-    setHtml($('history'), L.history.length ? L.history.slice().reverse().map(h => `<div>Kingdom ${h.level}: stage ${h.bestStage}, hero Lv${h.heroLevel} → +${h.knowledge} Crystals</div>`).join('') : '<div class="dim">No foundings yet.</div>');
+    setHtml($('history'), L.history.length ? L.history.slice().reverse().map(h => h.dynasty ? `<div>Dynasty ${h.dynasty}: ${h.lands} land${h.lands === 1 ? '' : 's'} conquered, hero Lv ${h.heroLevel} → +${h.crowns} 👑</div>` : `<div>Kingdom ${h.level}: stage ${h.bestStage}, hero Lv${h.heroLevel} → +${h.knowledge} 👑</div>`).join('') : '<div class="dim">No dynasties yet.</div>');
+    { const V = L.vault || {}, ks = Object.keys(V).sort((a, b) => a - b); setText($('vault-n'), `${ks.length} crown${ks.length === 1 ? '' : 's'}`); setHtml($('vault-list'), ks.length ? ks.map(n => `<span class="vault-crown" title="Land ${n}">👑 ${V[n]}</span>`).join('') : '<span class="dim small">Empty — defeat a land\'s ruler.</span>'); }
   }
   // ---- Mini hero strip: mirrors the fight/harvest screen when that screen is off-tab ----
   const lootTally = {}; let lootFresh = {};

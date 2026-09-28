@@ -12,13 +12,13 @@
   <title>Click to Conquer</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=a078">
+  <link rel="stylesheet" href="style.css?v=a090">
 </head>
 <body>
 
 <div class="sticky-head">
   <header class="top">
-    <div class="brand"><img src="assets/logo.png" alt="Click to Conquer" class="logo"><div id="version" class="version"></div><div id="crystal-chip" class="crystal-chip hidden" title="Crystals — spend in Kingdom → Legacy">💎 <b id="crystal-n">0</b></div><div class="head-btns"><button id="avatar-btn" class="avatar-btn" title="Account" aria-label="Account"><span id="avatar-img" class="avatar-img"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><circle cx="12" cy="8.5" r="4"/><path d="M4 20.5c.8-4 4.2-6 8-6s7.2 2 8 6z"/></svg></span><span id="avatar-dot" class="avatar-dot hidden"></span></button><button id="dev-toggle" class="gear-btn" title="Settings" aria-label="Settings"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button></div></div>
+    <div class="brand"><img src="assets/logo.png" alt="Click to Conquer" class="logo"><div id="version" class="version"></div><div id="crystal-chip" class="crystal-chip hidden" title="Crowns — spend in Kingdom → Legacy">👑 <b id="crystal-n">0</b></div><div class="head-btns"><button id="avatar-btn" class="avatar-btn" title="Account" aria-label="Account"><span id="avatar-img" class="avatar-img"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><circle cx="12" cy="8.5" r="4"/><path d="M4 20.5c.8-4 4.2-6 8-6s7.2 2 8 6z"/></svg></span><span id="avatar-dot" class="avatar-dot hidden"></span></button><button id="dev-toggle" class="gear-btn" title="Settings" aria-label="Settings"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button></div></div>
     <div id="res-bar" class="res-bar"></div>
   </header>
   <nav class="tabs" id="main-tabs">
@@ -83,8 +83,11 @@
           </div>
           <div id="skill-bar" class="skill-bar"></div>
           <div class="progress-row"><div class="bar kills"><div id="kills-bar"></div><span id="kills-text"></span></div></div>
+          <div id="army-line" class="army-line hidden"></div>
+          <div id="conquest-box" class="conquest hidden"><div class="row-between small"><b id="cq-name"></b><span id="cq-pct" class="dim"></span></div><div class="bar cq-bar"><div id="cq-bar"></div><span id="cq-text"></span></div><div id="cq-ticks" class="cq-ticks"></div></div>
           <div class="btn-row">
             <button id="retreat-btn">◀ Retreat</button>
+            <button id="rally-btn" class="rally-btn hidden">⚔ Rally</button>
             <button id="advance-btn" class="primary" disabled>Advance ▶</button>
           </div>
           <div id="danger" class="dim small"></div>
@@ -157,6 +160,8 @@
         <button data-ksub="war" class="kline">Barracks <span id="badge-war" class="dot hidden"></span></button>
         </div><div class="subrow">
         <button data-ksub="keep">Keep <span id="badge-throne" class="dot hidden"></span></button>
+        <button data-ksub="lands">Lands <span id="badge-lands" class="dot hidden"></span></button>
+        <button data-ksub="halls">Halls <span id="badge-halls" class="dot hidden"></span></button>
         <button data-ksub="tech" class="active">Tech <span id="badge-tech" class="dot hidden"></span></button>
         <button data-ksub="legacy">Legacy <span id="badge-legacy" class="dot hidden"></span></button>
         </div>
@@ -164,7 +169,36 @@
       <div id="ksub-forest" class="ksub hidden"><div class="kbar" data-kbar></div><div id="line-forest" class="kline-body"></div></div>
       <div id="ksub-farm" class="ksub hidden"><div class="kbar" data-kbar></div><div id="line-farm" class="kline-body"></div></div>
       <div id="ksub-mine" class="ksub hidden"><div class="kbar" data-kbar></div><div id="line-mine" class="kline-body"></div></div>
-      <div id="ksub-war" class="ksub hidden"><div class="kbar" data-kbar></div><div id="line-war" class="kline-body"></div></div>
+      <div id="ksub-war" class="ksub hidden">
+        <div class="card" id="army-card">
+          <div class="row-between"><div class="card-title" style="margin:0">Your Army</div><span class="tag" id="army-tag"></span></div>
+          <div class="army-top"><div><div class="army-big"><b id="army-n">0</b> <span class="dim" id="army-lim"></span></div><div class="small dim" id="army-limtxt"></div></div><div class="army-mult"><span class="small dim">Hero power</span><b id="army-mult">×1.0</b></div></div>
+          <div class="bar gold-bar"><div id="army-bar"></div><span id="army-bartxt"></span></div>
+          <div class="small dim" id="army-split" style="margin-top:4px"></div>
+        </div>
+        <div class="card" id="barracks-card">
+          <div class="row-between"><div class="card-title" style="margin:0">Barracks <span class="dim small" id="barracks-lv"></span></div><span class="small dim" id="barracks-rate"></span></div>
+          <p class="small dim" id="barracks-desc" style="margin:4px 0 8px"></p>
+          <div class="bar"><div id="train-bar"></div><span id="train-txt"></span></div>
+          <button id="barracks-up" class="buy wide" style="margin-top:8px"><span class="small" id="barracks-uplab">Build the Barracks</span><br><span class="cost" id="barracks-cost"></span></button>
+        </div>
+        <div class="card" id="upkeep-card">
+          <div class="card-title">Upkeep · per minute</div>
+          <div id="upkeep-list" class="upkeep"></div>
+          <p class="small dim" id="upkeep-tip" style="margin:6px 0 0"></p>
+        </div>
+      </div>
+      <div id="ksub-lands" class="ksub hidden">
+        <div class="card" id="lands-card">
+          <div class="row-between"><div><div class="card-title" style="margin:0">Tax coffers</div><div class="small dim" id="tax-rate"></div></div><button id="tax-collect" class="primary">Collect</button></div>
+        </div>
+        <div id="land-list" class="list"></div>
+        <p class="small dim center" style="margin-top:6px">Soldiers in a garrison don't march with the hero — every soldier is a choice: <b>power now</b> or <b>gold every hour</b>.</p>
+      </div>
+      <div id="ksub-halls" class="ksub hidden">
+        <div class="card"><div class="card-title">The Hero's Halls</div><p class="small dim" style="margin:0">City buildings that make your hero stronger. They level like any building.</p></div>
+        <div id="hall-list" class="list"></div>
+      </div>
       <div id="ksub-locked" class="card dim small center hidden">Locked. Your quests will open this when you need it.</div>
       <div id="ksub-tech" class="ksub">
         <div class="card"><div class="card-title">Tech</div><p class="dim small">No research points. Each tech unlocks once you've <b>done</b> the thing it needs and paid its cost. Resets when you found a new kingdom; the Blueprints perk keeps tiers.</p>
@@ -199,15 +233,15 @@
           <div class="card-title">Kingdom <span id="kingdom-level"></span></div>
           <div id="paths-now" class="row-sub"></div>
           <div class="throne-stats">
-            <div><span class="dim">Crystals</span><b id="knowledge"></b></div>
-            <div><span class="dim">Foundings</span><b id="foundings"></b></div>
+            <div><span class="dim">Crowns</span><b id="knowledge"></b></div>
+            <div><span class="dim">Dynasty</span><b id="foundings"></b></div>
             <div><span class="dim">Best stage</span><b id="throne-best"></b></div>
           </div>
         </div>
         <div class="card">
           <div class="card-title" id="found-title">Found a New Kingdom</div>
           <p class="dim small" id="found-text">Start over with everything you learned.</p>
-          <div class="row-sub" id="found-gain-row"><span id="found-gain-lab">Crystals on founding:</span> <b id="found-gain" class="accent-inline"></b></div>
+          <div class="row-sub" id="found-gain-row"><span id="found-gain-lab">Crowns on founding:</span> <b id="found-gain" class="accent-inline"></b></div>
           <div class="row-sub" id="found-cost-row">Cost: <span id="found-cost"></span></div>
           <div id="found-req" class="dim small"></div>
           <button id="found-btn" class="big" disabled>Found a New Kingdom</button>
@@ -215,7 +249,8 @@
 
       </div>
       <div id="ksub-legacy" class="ksub hidden">
-        <div class="card row-between"><div><b>Crystals</b> <span class="dim">from founding and milestone quests. Legacy perks are the only thing that survives a founding.</span></div><b id="knowledge2" class="accent-text">0</b></div>
+        <div class="card row-between"><div><b>👑 Crowns</b> <span class="dim">taken from the rulers you defeat. Spend them here — perks are forever, through every dynasty.</span></div><b id="knowledge2" class="accent-text">0</b></div>
+        <div class="card" id="vault-card"><div class="row-between"><div class="card-title" style="margin:0">Crown Vault</div><span class="small dim" id="vault-n"></span></div><p class="small dim" style="margin:4px 0 6px">Every ruler's crown, kept forever. Each one: +2% hero attack and +2% taxes.</p><div id="vault-list" class="vault"></div></div>
         <div id="perk-list" class="list"></div>
         <div class="card-title" style="margin-top:14px">History</div>
         <div id="history" class="log card"></div>
@@ -239,7 +274,7 @@
         <div class="card"><div class="card-title">Bestiary</div><p class="dim small">The more of a creature you kill, the better you fight it: <b>Familiar</b> 10 kills (+2%), <b>Studied</b> 50 (+5%), <b>Known</b> 200 (+10%), <b>Mastered</b> 1,000 (+15%) damage dealt and less taken against that kind. Kill counts survive founding.</p>
           <div id="bestiary" class="list"></div>
         </div>
-        <div class="card" id="bestiary-locked"><div class="card-title">🔒 Bestiary</div><p class="dim small">Costs <b>1 Crystal</b> in Kingdom → Legacy. Your kills are counted either way.</p></div>
+        <div class="card" id="bestiary-locked"><div class="card-title">🔒 Bestiary</div><p class="dim small">Costs <b>1 Crown</b> in Kingdom → Legacy. Your kills are counted either way.</p></div>
       </div>
       <div id="csub-troph" class="csub hidden">
         <div class="card"><div class="card-title">Trophies</div><p class="dim small">Mounted heads for kill milestones: Wood 1,000 · Stone 2,000 · Bronze 5,000 · Silver 10,000 · Gold 25,000. Every trophy you own gives <b>+1% loot and XP</b>, forever. Trophies survive founding.</p>
@@ -251,7 +286,7 @@
     <div id="tab-market" class="tab hidden">
       <nav class="subtabs" id="market-subtabs">
         <button data-msub="trade" class="active">Trade</button>
-        <button data-msub="tavern">Tavern <span id="badge-tavern" class="dot hidden"></span></button>
+        <button data-msub="tavern" class="hidden">Tavern <span id="badge-tavern" class="dot hidden"></span></button>
       </nav>
       <div id="msub-trade" class="msub">
       <div class="card"><div class="card-title">Market</div><p class="dim small">Sell goods for gold, or buy what you are short of — at a merchant's markup. You can only buy goods you have found yourself.</p><div class="seg" id="market-mode"><button data-mm="sell" class="active">Sell</button><button data-mm="buy">Buy</button></div></div>
@@ -406,18 +441,18 @@
     <summary>Developer tools</summary>
     <div class="dev-row"><button id="dev-offline">AFK test 4h</button><button id="dev-tech">All tech</button><button id="dev-qskip">Skip quest</button></div>
     <div class="dev-row"><input id="dev-n" type="number" value="1000" class="dev-input"> <button id="dev-give-all">Give all</button><select id="dev-res" class="dev-input"></select><button id="dev-give-one">Give</button></div>
-    <div class="dev-row"><button id="dev-lvl">+5 levels</button><button id="dev-stage10">+10 stages</button><button id="dev-know">+50 Crystals</button><button id="dev-klvl">+1 Kingdom Lv</button></div>
+    <div class="dev-row"><button id="dev-lvl">+5 levels</button><button id="dev-stage10">+10 stages</button><button id="dev-know">+50 Crowns</button><button id="dev-klvl">+1 Kingdom Lv</button></div>
     <div class="dev-row"><button id="dev-reset-run" class="danger">Reset run (keep legacy)</button><button id="dev-reset" class="danger">RESET ALL</button></div>
   </details>
   <div class="dim small credits">Click to Conquer — created by <b>Cody J. Boillot</b>. © 2026, all rights reserved.<br>Icons: Shikashi's Fantasy Icons (CC-BY, Matt Firth / game-icons.net)</div>
 </div>
 
 
-<script src="config.js?v=a078"></script>
-<script src="cloud-config.js?v=a078"></script>
-<script src="game.js?v=a078"></script>
-<script src="ui.js?v=a078"></script>
-<script src="cloud.js?v=a078"></script>
+<script src="config.js?v=a090"></script>
+<script src="cloud-config.js?v=a090"></script>
+<script src="game.js?v=a090"></script>
+<script src="ui.js?v=a090"></script>
+<script src="cloud.js?v=a090"></script>
 <script>window.addEventListener("error", e => { const d = document.getElementById("err"); if (d) { d.textContent = "Error: " + e.message; d.classList.remove("hidden"); } });</script>
 </body>
 </html>

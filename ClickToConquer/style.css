@@ -834,3 +834,52 @@ html, body { max-width: 100%; overflow-x: hidden; }
 /* Phase 3 war chest chips (0.8.0) */
 .res.war-chip { border-color: var(--bronze-dim); cursor: pointer; }
 .city-miss { margin-top: 6px; padding: 6px 8px; border: 1px dashed var(--line2); border-radius: 6px; color: var(--dim); display: flex; flex-direction: column; gap: 2px; } .city-miss b { color: var(--text); }
+
+/* ===================== 0.9 ===================== */
+.klevel { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; margin: 8px 0 6px; padding: 8px; border: 1px solid var(--line); border-radius: 8px; background: #15110e; }
+.klv-top { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; margin-bottom: 4px; }
+.klv-top b { font-size: 15px; }
+.klv-bar { height: 8px; margin: 0; }
+.klevel .buy { min-width: 110px; }
+.kstep.slowest { border-color: #b8864a; }
+.kslow { font-size: 12px; color: #e0a458; margin-top: 6px; }
+.gold-bar > div { background: linear-gradient(90deg, #8a6a33, #e8c06a) !important; }
+.threat { margin-top: 4px; padding-top: 4px; border-top: 1px dashed var(--line); }
+.threat.todo b { color: #e0a458; }
+/* army */
+.army-top { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; margin: 6px 0 8px; }
+.army-big b { font-size: 30px; font-variant-numeric: tabular-nums; }
+.army-mult { display: flex; flex-direction: column; align-items: flex-end; }
+.army-mult b { font-size: 24px; color: var(--bronze2); }
+.tag.good-tag { background: #1d2c21; color: var(--hp2); border: 1px solid #2f4a36; border-radius: 6px; padding: 1px 7px; font-size: 11px; font-weight: 700; }
+.tag.warn-tag { background: rgba(224,164,88,.15); color: #e0a458; border: 1px solid #6b4e2a; border-radius: 6px; padding: 1px 7px; font-size: 11px; font-weight: 700; }
+.upkeep { display: flex; flex-direction: column; gap: 3px; }
+.uk-row { display: grid; grid-template-columns: 20px 1fr auto; gap: 6px; align-items: center; font-size: 13px; }
+.uk-row span:last-child { font-variant-numeric: tabular-nums; }
+.uk-row .good { color: var(--hp2); } .uk-row .warn { color: #e0a458; }
+/* lands */
+.land-row { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; padding: 10px; border: 1px solid var(--line); border-radius: 10px; background: #15110e; }
+.land-row.full { border-color: #2f4a36; background: #131a14; }
+.land-row.full .lr-name { color: var(--hp2); }
+.land-row.front { border-color: var(--bronze); background: #1f1810; }
+.lr-name { font-family: var(--font-head); font-size: 14px; }
+.lr-coffer { display: flex; flex-direction: column; align-items: flex-end; }
+.lr-coffer b { color: var(--bronze2); font-variant-numeric: tabular-nums; display: flex; align-items: center; gap: 4px; }
+.lr-gar { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 12.5px; }
+.lr-btns { display: flex; gap: 4px; } .lr-btns .buy { padding: 4px 9px; font-size: 12px; }
+#tax-collect { display: flex; align-items: center; gap: 4px; font-weight: 700; }
+/* hero screen */
+.army-line { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; font-size: 12.5px; margin-top: 6px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; background: rgba(0,0,0,.35); }
+.conquest { margin-top: 8px; }
+.cq-bar { margin: 3px 0 2px; } .cq-bar > div { background: linear-gradient(90deg, #8a6a33, #e8c06a) !important; }
+.cq-ticks { display: flex; justify-content: space-between; font-size: 10.5px; color: var(--dim); }
+.btn-row .rally-btn { border-color: var(--bronze); color: var(--bronze2); background: #2f2418; font-weight: 700; }
+.rally-btn.pop { animation: rallypop .25s ease-out; }
+@keyframes rallypop { 0% { transform: scale(1); } 40% { transform: scale(1.08); } 100% { transform: scale(1); } }
+.ground-btn.land-done { border-color: #2f4a36; }
+/* legacy */
+.perk-tree-head { margin: 12px 2px 6px; font-family: var(--font-head); color: var(--bronze2); letter-spacing: 1px; }
+.perk-tree-head .dim { font-family: var(--font-body); letter-spacing: 0; }
+.vault { display: flex; flex-wrap: wrap; gap: 5px; }
+.vault-crown { font-size: 12px; padding: 2px 8px; border: 1px solid var(--bronze-dim); border-radius: 10px; background: #1f1810; }
+.hall.locked-step { opacity: .6; }

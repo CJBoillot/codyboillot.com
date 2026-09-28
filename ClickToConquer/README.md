@@ -1,4 +1,4 @@
-# Click to Conquer — Alpha 0.8.0
+# Click to Conquer — Alpha 0.9.0
 
 Mobile-first AFK / incremental game. Vanilla HTML + JS, no build: open `index.html`. Full design in the project doc `design/v0.3-design.md`.
 
@@ -6,20 +6,11 @@ Mobile-first AFK / incremental game. Vanilla HTML + JS, no build: open `index.ht
 
 **P0 — the wild (played once).** The hero starts naked, punching rats. Quests teach the UI: gather by hand, research, forge gear, set an activity, fight up to stage 20. Everything fits under a **100-item pack** (150 with Leatherwork); when a harvest fills the pack the hero rests. P0 ends with the **tribute**: 100 gold + the Rat King's Tooth → Kingdom 1. Bot pace: ~28 min.
 
-**The kingdom (the idle game).** One land grows through four settlements, and nothing is lost along the way:
+**The city (0.9).** One land grows Camp → Hamlet → Village → City. Every building has **one level** and one Upgrade button; at Lv 10 / 25 / 50 / 100 … it doubles its output and gets a new name. The chains stay (logs → planks → treated lumber, grain → flour → bread, ore → ingots → swords) with stock targets; the chain's slowest building is highlighted. Each settlement tier needs goods **and the hero**: the Toll Baron (Roads 20) for a Hamlet, the Bone Lord (Crypts 10) for a Village, the Cult Priest (Crypts 20) for a City. The city builds the hero **Halls**: Training Yard (XP), Smithy (cheaper gear), Apothecary (healing), Stables (attack speed); hero level adds +1% production (Lordship). A City with every building at Lv 10 is **proclaimed** (no reset).
 
-| Settlement | Buildings unlocked (built with goods you already make) | Workers per building | Thrall cap | Storehouse |
-|---|---|---|---|---|
-| Camp | Logging (free) · Fields (40 wood, 60 gold) · Mine Shaft (60 wood, 30 grain, 100 gold) | 1 | 5 | 200 |
-| Hamlet | Sawmill · Mill · Smelter (T1 goods + 300 gold) | 2 | 12 | 350 |
-| Village | Carpenter · Baker · Forge (T2 goods + 800 gold) | 3 | 30 | 500 |
-| City | — | 3 | 42 | 800 |
+**The Kingdom (0.9).** The **Barracks** trains soldiers from Food (bread) and Supplies (swords, treated lumber); soldiers eat every minute, so the army limit is set by the city (housing, food, supplies). Marching soldiers multiply the hero's hits (×(1 + √n / 5)) and HP. The hero leads the conquest from his own screen: **lands** of 50 (lands 1–3) or 100 stages, a Captain every 10 stages and a **Ruler** at the end who gives a crown. Every land held pays **taxes** (1,000 gold/h × 4^(land−1) × conquered % × garrison fill) into coffers you **Collect**, and a spoil (Heartwood, Silver, Relics) for Hardened/Mythril gear. **Rally** (tap, 1 Supplies) strikes at ½ hero damage. **Crowns** (formerly Crystals) come from rulers; **Pass the Crown** banks them, keeps the Capital (building levels back to 1), resets lands/army/hero level and gear, and gives a victory lap in lands conquered before. Crowns buy perks in four trees: Bloodline, Crown, War, Realm. Full design: project doc `design/v0.9-design.md`.
 
-To raise the settlement: every building of the current tier built and staffed, then pay in the tier's cap (200 / 350 / 500) of **every good made so far** — contribute a bit at a time. The City is complete when all 9 buildings have 3 workers and an Overseer and each final good (lumber, bread, swords) has an **Accountant** (sells stock above 25% of cap at ½ price). Only then can you **Conquer New Lands** (the real prestige): hero and thralls ride with you, a new Camp begins, Crystals = √(Renown / 40).
-
-Each building runs one **cycle** shown as a single bar: **Work → Cart → Haul**; each part has its own upgrade track (every level shortens that part; endless). A building feeds the next one only what it can use (a buffer of 2 cycles of input); the rest goes to the Storehouse. **Stock targets** (0.7.0): an intermediate good (planks, flour, ingots) keeps a stock in the Storehouse. Auto = what's needed now (unbuilt buildings, then the next settlement payment once everything is built, plus open orders), split 50/50 with the next building while short; or fixed 0 / ¼ / ½ / Full of the cap, which fill the Storehouse first. Goods that don't fit the Storehouse are auto-sold at ¼ price. Thralls are hired in **Market → Tavern** and level up as they work.
-
-Bot pace (fresh Camp → City complete, no worker juggling): Hamlet ~50 min, Village ~3 h, City complete ~6.9 h. Orders pay 2.5× Market price; builds cost 40–80 gold (Camp), 200 (Hamlet), 500 (Village).
+Bot pace (from the end of P0): Hamlet ~0.5 h, Village ~2.2 h, City ~5.9 h, proclaim ~6 h, lands 1–3 within ~1 h of proclaiming, land 4 (first 100-stage land) ~8 h. Dynasty 2: lands 1–3 in the first hour.
 
 ## Combat (number squish)
 

@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Alpha 0.8.3',
+  version: 'Alpha 0.9.0',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -52,11 +52,14 @@ const CONFIG = {
     flour:   { name: 'Flour',    icon: [15,10], tier: 3, sell: 4, buy: 12,  desc: 'Mill: 2 grain into 1 flour.' },
     bread:   { name: 'Bread',    icon: [14,14], tier: 3, sell: 12, buy: 40, desc: 'Baker: 2 flour into 1 loaf. Armies march on it.' },
     swords:  { name: 'Iron Swords', icon: [5,1], tier: 3, sell: 45, buy: 150, desc: 'Forge: 2 ingots into 1 sword. The Legion always needs more.' },
+    // ---- Spoils of conquest (0.9): from the taxes of conquered lands ----
+    heartwood: { name: 'Heartwood', icon: 'assets/res/wood.webp',  tier: 4, sell: 40, desc: 'Ancient timber from conquered forests. Hardened and Mythril gear.' },
+    silver:    { name: 'Silver',    icon: 'assets/res/ingot.webp', tier: 4, sell: 60, desc: 'From conquered hills. Hardened and Mythril gear.' },
+    relic:     { name: 'Relic',     icon: 'assets/res/gold.webp',  tier: 4, sell: 200, desc: 'Holy relics from conquered shrines. Wonders, later.' },
     // ---- The war chest (Phase 3): shown in the header after the Kingdom is proclaimed ----
-    supplies:  { name: 'Supplies',  icon: 'assets/res/bread.webp',     kind: 'war', tier: 4, sell: 0, desc: 'Bread sent to the army by the Quartermaster. Every soldier is mustered on Supplies, and every march eats them.' },
-    equipment: { name: 'Equipment', icon: 'assets/gear/weapon_t2.webp', kind: 'war', tier: 4, sell: 0, desc: 'Iron swords and treated lumber sent to the army by the Quartermaster. One per soldier for full strength.' },
-    soldiers:  { name: 'Soldiers',  icon: 'assets/gear/helm_t2.webp',   kind: 'war', tier: 4, sell: 0, desc: 'Mustered at the Barracks from Supplies and gold.' },
-    officers:  { name: 'Officers',  icon: 'assets/gear/helm_t4.webp',   kind: 'war', tier: 4, sell: 0, desc: 'Your best thralls, promoted to lead the army. Promotion arrives with the Road.' },
+    food:      { name: 'Food',      icon: 'assets/res/bread.webp',      kind: 'war', tier: 4, sell: 0, desc: 'Bread sent to the army. Soldiers are trained on it and eat it every minute.' },
+    supplies:  { name: 'Supplies',  icon: 'assets/gear/weapon_t2.webp', kind: 'war', tier: 4, sell: 0, desc: 'Iron swords and treated lumber sent to the army. Soldiers are trained on them and wear them out.' },
+    soldiers:  { name: 'Soldiers',  icon: 'assets/gear/helm_t2.webp',   kind: 'war', tier: 4, sell: 0, desc: 'Trained at the Barracks. The army marches with the hero and multiplies his power.' },
     bricks:  { name: 'Bricks',   icon: [13,4],  tier: 3, sell: 12, buy: 40, desc: 'Kiln turns 5 stone into a brick. Hardened gear, grand buildings.' },
     // ---- Loot (kind: 'loot'): dropped by enemies, shown in the Inventory, not in the header bar ----
     rattail:   { name: 'Rat Tail',        icon: [16,2],  kind: 'loot', rarity: 'common',   sell: 3,   desc: 'Proof of a rat well killed. Sells for a little.' },
@@ -175,8 +178,8 @@ const CONFIG = {
     { name: 'Leather',     mult: 1,   perSlot: { weapon: { name: 'Stone', craftCost: { stone: 12, wood: 6 }, upgradeCost: { stone: 4, wood: 2 } } }, craftCost: { hide: 8, fiber: 4 }, upgradeCost: { hide: 2, fiber: 1 }, upgradeMult: 1.25 },
     { name: 'Iron',        mult: 3,   craftCost: { ingot: 5, hide: 6, gold: 300 },            upgradeCost: { ingot: 2, hide: 1 },           upgradeMult: 1.25 },
     { name: 'Steel',       mult: 9,   craftCost: { ingot: 10, lumber: 3, gold: 1500 },   upgradeCost: { ingot: 4, lumber: 1 },              upgradeMult: 1.25 },
-    { name: 'Hardened',    mult: 27,  craftCost: { ingot: 20, bricks: 10, cloth: 6, gold: 5000 },    upgradeCost: { ingot: 8, bricks: 2, cloth: 1 },   upgradeMult: 1.25 },
-    { name: 'Mythril',     mult: 81,  craftCost: { ingot: 40, planks: 10, bricks: 10, cloth: 10, gold: 20000 }, upgradeCost: { ingot: 15, bricks: 4, gold: 500 }, upgradeMult: 1.25 },
+    { name: 'Hardened',    mult: 27,  craftCost: { ingot: 20, silver: 8, heartwood: 4, gold: 5000 },    upgradeCost: { ingot: 8, silver: 2 },   upgradeMult: 1.25 },
+    { name: 'Mythril',     mult: 81,  craftCost: { ingot: 40, silver: 20, heartwood: 10, gold: 20000 }, upgradeCost: { ingot: 15, silver: 4, gold: 500 }, upgradeMult: 1.25 },
   ],
   // Per-slot cost scaling so armor pieces cost a bit different amounts
   slotCostMult: { weapon: 1, helm: 0.8, chest: 1.1, gloves: 0.8, boots: 0.7, trinket: 0.9 },
@@ -338,7 +341,7 @@ const CONFIG = {
     refHit: t => (t + 2) * (CONFIG.stages.refP[Math.min(t, CONFIG.stages.refP.length - 1)] * Math.pow(1.15, Math.max(0, t - CONFIG.stages.refP.length + 1))),
     refHeroHp: t => 10 * (t + 1.5),
     groundOffset: { wilds: 0, roads: 1, crypts: 3 },
-    goldPerKill: s => 1 * Math.pow(1.14, s - 1),
+    goldPerKill: s => s <= 20 ? Math.pow(1.14, s - 1) : Math.pow(1.14, 19) * (1 + 0.06 * (s - 20)), // exponential early, gentle after stage 20 (0.9)
     xpPerKill:  s => { const t = Math.floor((s - 1) / 10), k = (s - 1) % 10 + 1; return (k + 10 * t) * Math.pow(1.3, t); }, // Rat 1 → 1 XP, Rat 10 → 10, Boar 1 → 14
     dropCap: 0.95,
     carryOverFloor: 1.0,
@@ -358,23 +361,37 @@ const CONFIG = {
       farm: { name: 'Grain Farm', icon: [12,5], steps: [
         { id: 'fields', name: 'Fields', icon: [14,13], make: 'grain', base: 0.5, batch: 6,  tier: 0, build: { wood: 40, gold: 40 }, desc: 'Thralls sow and reap.' },
         { id: 'mill',   name: 'Mill',   icon: [15,10], make: 'flour', from: 'grain', ratio: 2, base: 0.3, batch: 4,  tier: 1, build: { wood: 80, grain: 100, gold: 200 }, desc: '2 grain → 1 flour.' },
-        { id: 'baker',  name: 'Baker',  icon: [14,14], make: 'bread', from: 'flour', ratio: 2, base: 0.15, batch: 3, tier: 2, build: { flour: 120, planks: 60, gold: 500 }, desc: '2 flour → 1 bread.' } ] },
+        { id: 'baker',  name: 'Bakery',  icon: [14,14], make: 'bread', from: 'flour', ratio: 2, base: 0.15, batch: 3, tier: 2, build: { flour: 120, planks: 60, gold: 500 }, desc: '2 flour → 1 bread.' } ] },
       mine: { name: 'Iron Mine', icon: [4,5], steps: [
         { id: 'shaft',   name: 'Mine Shaft', icon: [17,2], make: 'ore',    base: 0.5, batch: 6,  tier: 0, build: { wood: 60, grain: 30, gold: 80 }, desc: 'Thralls dig iron ore.' },
         { id: 'smelter', name: 'Smelter',    icon: [17,3], make: 'ingot',  from: 'ore',   ratio: 2, base: 0.3, batch: 4,  tier: 1, build: { ore: 100, wood: 80, gold: 200 }, desc: '2 ore → 1 ingot.' },
         { id: 'forge',   name: 'Forge',      icon: [5,1],  make: 'swords', from: 'ingot', ratio: 2, base: 0.15, batch: 3, tier: 2, build: { ingot: 120, planks: 60, gold: 500 }, desc: '2 ingots → 1 iron sword.' } ] },
-      war: { name: 'Barracks', icon: [8,1], steps: [
-        { id: 'barracks', name: 'Barracks', icon: 'assets/gear/helm_t2.webp', make: 'soldiers', from: 'supplies', pull: true, ratio: 1, base: 0.15, batch: 5, tier: 3, phase: 3,
-          ph: ['Muster', 'Drill', 'March'], build: { lumber: 200, swords: 100, gold: 600 }, desc: '1 Supplies + 2 gold → 1 soldier.' } ] },
     },
     startGold: 50, foundRenown: 500, swapCooldown: 120,
-    war: { thrallBonus: 10, supplyCapMult: 2, soldierCapBase: 50, soldierCapPerTier: 25, soldierGold: 2, quartermaster: { bread: 'supplies', swords: 'equipment', lumber: 'equipment' } },
+    war: { thrallBonus: 10, supplyCapMult: 2, soldierCapBase: 50, soldierCapPerTier: 25, soldierGold: 2, quartermaster: { bread: 'food', swords: 'supplies', lumber: 'supplies' } },
+    // ---- 0.9: buildings are one level each ----
+    milestones: [10, 25, 50, 100, 200, 300, 400, 500],   // ×2 output at each
+    lordship: 0.01,                                      // +1% production per hero level
+    minLv: 10,                                           // a complete City: every building at this level
+    // The army (0.9): the Barracks trains soldiers from Food + Supplies; soldiers eat every minute.
+    army: { build: { lumber: 150, swords: 60, gold: 600 }, trainPerMin: 2, housingBase: 40, housingPer: 20, cost: { food: 1, supplies: 1 },
+      foodUpkeep: 0.05, supplyUpkeep: 0.02, bonusDiv: 5, hpDiv: 400, rallyFood: 1, rallyMult: 0.5, costBase: 60, costExp: 1.6, desertPerMin: 0.02 },
+    // Hero buildings in the city (0.9)
+    halls: [
+      { id: 'yard',       name: 'Training Yard', icon: 'assets/gear/weapon_t1.webp', tier: 1, build: { gold: 300, planks: 30 },  per: 0.10, effect: 'xpPct',    desc: 'Hero XP +10% per level' },
+      { id: 'smithy',     name: 'Smithy',        icon: 'assets/gear/weapon_t2.webp', tier: 1, build: { gold: 400, ingot: 20 },   per: 0.03, effect: 'gearCost', desc: 'Gear and tool costs −3% per level (up to −60%)' },
+      { id: 'apothecary', name: 'Apothecary',    icon: 'assets/res/berries.webp',    tier: 2, build: { gold: 800, flour: 60 },   per: 0.10, effect: 'regenPct', desc: 'Hero healing +10% per level' },
+      { id: 'stables',    name: 'Stables',       icon: 'assets/gear/boots_t2.webp',  tier: 2, build: { gold: 800, lumber: 20 },  per: 0.03, effect: 'speedPct', desc: 'Hero attack speed +3% per level' },
+    ],
+    hallCost: { base: 100, exp: 1.7 },
+    // Lands (0.9): conquered from the hero screen; taxes grow ×4 per land
+    lands: { taxBase: 1000, taxGrowth: 4, garrisonPer: 10, cofferHours: 8, shortStages: 50, longStages: 100, shortLands: 3, offsetStart: 6, offsetStep: 3, spoilPerHour: 6, victoryLap: 3 },
     // Settlement tiers inside one land. Raising a tier costs `cap` of every good made so far (pay in as you go) and loses nothing.
     tiers: [
-      { name: 'Camp',    cap: 200, slots: 1, thralls: 6,  need: 'Build and staff Logging, Fields and the Mine Shaft.' },
-      { name: 'Hamlet',  cap: 350, slots: 2, thralls: 12, need: 'Build and staff the Sawmill, Mill and Smelter.' },
-      { name: 'Village', cap: 500, slots: 3, thralls: 30, need: 'Build and staff the Carpenter, Baker and Forge.' },
-      { name: 'City',    cap: 800, slots: 3, thralls: 42, need: 'Every building: 3 workers and an Overseer. An Accountant on each final good.' },
+      { name: 'Camp',    cap: 300, slots: 1, thralls: 6,  lvCap: 25,  threat: 'roads:20',  need: 'Build Logging, the Fields and the Mine Shaft.' },
+      { name: 'Hamlet',  cap: 600, slots: 2, thralls: 12, lvCap: 50,  threat: 'crypts:10', need: 'Build the Sawmill, the Mill and the Smelter.' },
+      { name: 'Village', cap: 1000, slots: 3, thralls: 30, lvCap: 100, threat: 'crypts:20', need: 'Build the Carpenter, the Bakery and the Forge.' },
+      { name: 'City',    cap: 800, slots: 3, thralls: 42, lvCap: 1e9, need: 'Raise every building to Lv 10.' },
     ],
     statPct: 0.05,                  // each point of a worker's Speed / Strength: 5% faster Work / Cart
     tierOrders: true,               // goods delivered in Orders also count toward the next settlement
@@ -383,7 +400,7 @@ const CONFIG = {
     // A cycle: Work (batch ÷ rate) → Cart (loadBase) → Haul (haulBase). Every track level shortens its phase by trackGrowth (hyperbolic: never zero, never ends).
     trackGrowth: 0.12, loadBase: 6, haulBase: 12, autoSell: 0.25,
     thrallCapBase: 2, thrallXpDiv: 4, thrallLvBonus: 0.1,
-    costBase: 40, costExp: 1.6, haulCostMult: 0.8,
+    costBase: 60, costExp: 1.7, haulCostMult: 0.8,
     bufferCap: 200,                          // most input a refiner can hold waiting
     workerMilestones: [10, 25, 50],          // +1 worker slot at these step levels (highest track)
     extraWorker: 0.25,                       // each worker after the first: +25% rate
@@ -433,6 +450,7 @@ const CONFIG = {
   // jobs (jobs completed by hand or thrall), sold (gold earned at market), stage, boss, founded, thrall (assigned), activity (swings).
   // Shown in Settings → What's new (newest first). Keep each line short.
   changelog: [
+    ['0.9.0', 'The big one. Buildings run on one level each — no more thralls, workers or Overseers — and double their output at Lv 10, 25, 50, 100. The hero clears a threat before each settlement can grow, and the city builds him Halls (Training Yard, Smithy, Apothecary, Stables). After you proclaim, the Barracks trains an army that eats Food and Supplies and multiplies the hero\'s power, and the hero leads the conquest from his own screen: lands of 50–100 stages, a Ruler with a crown at the end, garrisons and taxes. Crystals are now Crowns: take them from rulers, spend them in four trees, and Pass the Crown to start a stronger dynasty.'],
     ['0.7.2', 'Settle New Lands is now Conquer New Lands.'],
     ['0.7.1', 'New Your Stats card on the Gear screen: every combat stat, which piece drives it, and what to do next — the weakest piece is marked Best next. Tap a row to open that piece.'],
     ['0.7.0', 'Stock settings: buildings that feed another building now keep goods in the Storehouse for what you need (new buildings, the next settlement, orders). Auto splits half and half; or pick 0, ¼, ½ or Full.'],
@@ -590,64 +608,64 @@ const CONFIG = {
         { label: 'Kingdom → Throne → Pay tribute (100 gold + Rat King\'s Tooth)', check: { founded: 1 } },
       ], reward: { gold: 100 }, focus: { tab: 'kingdom', ksub: 'throne', rtab: 'kingdom', el: 'id:found-btn' } },
     // ===== A Kingdom: after the first founding =====
-    { id: 'p01', chain: 'A Kingdom', name: 'What Survives', text: 'Everything reset — except your Crystals. Legacy perks are permanent: they survive every founding. Spend your first Crystal on the Bestiary, so every creature you have ever killed keeps teaching you how to fight it.',
-      steps: [
-        { label: 'Kingdom → Legacy → unlock Bestiary (1 Crystal)', check: { perk: 'bestiary' } },
-      ], reward: { gold: 100 }, focus: { tab: 'kingdom', ksub: 'legacy', rtab: 'kingdom', el: 'perk:bestiary' } },
-    { id: 'k01', chain: 'A Kingdom', name: 'Hands for Hire', text: 'A kingdom needs hands. The Tavern always has three thralls looking for work — each has a role (Foreman, Packer, Carter), stars and stats. Hire one.',
-      steps: [ { label: 'Market → Tavern → Hire', check: { hired: 1 } } ], reward: { gold: 40 }, focus: { tab: 'market', msub: 'tavern', rtab: 'market', el: 'id:hire-list' } },
-    { id: 'k02', chain: 'A Kingdom', name: 'Fell the Forest', text: 'A step only runs while a thrall works it. Put your thrall to work at Logging and watch the bar: Work (fell the trees) → Cart (load them) → Haul (take them to the Storehouse), over and over.',
-      steps: [ { label: 'Kingdom → Forest → Logging → + Add worker', check: { working: 'logging' } }, { label: 'Haul 40 wood to the Storehouse', check: { made: 'wood', need: 40 } } ], reward: { gold: 60 }, focus: { tab: 'kingdom', ksub: 'forest', rtab: 'kingdom', el: 'step:logging' } },
-    { id: 'k03', chain: 'A Kingdom', name: 'Faster Hands', text: 'Each step has three upgrades, one for each part of the bar: Work, Cart and Haul. Each upgrade makes its part faster, forever. Buy one of each, then keep upgrading whichever part is longest.',
-      steps: [ { label: 'Logging → Work → Upgrade', check: { stepLv: 'logging:rate', need: 2 } }, { label: 'Logging → Cart → Upgrade', check: { stepLv: 'logging:cart', need: 2 } }, { label: 'Logging → Haul → Upgrade', check: { stepLv: 'logging:haul', need: 2 } } ], reward: { gold: 80 }, focus: { tab: 'kingdom', ksub: 'forest', rtab: 'kingdom', el: 'step:logging' } },
-    { id: 'k04', chain: 'A Kingdom', name: 'Imperial Orders', text: 'The Empire, the Guild and the villages post Orders at your Keep. There is no deadline — but finishing inside the speed window pays 20% more. Orders pay gold and Renown.',
-      steps: [ { label: 'Kingdom → Keep → Orders → Deliver one', check: { orders: 1 } } ], reward: { gold: 100 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:order-list' } },
-    { id: 'k05', chain: 'A Kingdom', name: 'An Overseer', text: 'An overseer names the slowest part of a step. Put a thrall in the Overseer slot: their role speeds up one part of the bar (Foreman → Work, Packer → Cart, Carter → Haul), and they can call a Double Shift.',
-      steps: [ { label: 'Market → Tavern → hire a second thrall', check: { hired: 2 }, focus: { tab: 'market', msub: 'tavern', rtab: 'market', el: 'id:hire-list' } }, { label: 'Kingdom → Forest → Logging → Overseer → Choose', check: { overseer: 1 } } ], reward: { gold: 150 }, focus: { tab: 'kingdom', ksub: 'forest', rtab: 'kingdom', el: 'step:logging' } },
-    { id: 'c01', chain: 'Camp', name: 'The Fields', text: 'A camp needs food as well as wood. Build the Fields on the Farm screen and put a thrall on them.',
-      steps: [ { label: 'Kingdom → Farm → Fields → Build', check: { built: 'fields' } }, { label: 'Fields → + Add worker', check: { working: 'fields' } }, { label: 'Haul 40 grain', check: { made: 'grain', need: 40 } } ], reward: { gold: 150 }, focus: { tab: 'kingdom', ksub: 'farm', rtab: 'kingdom', el: 'step:fields' } },
-    { id: 'c02', chain: 'Camp', name: 'Into the Hills', text: 'The hills hold iron. Build the Mine Shaft and put a thrall in it.',
-      steps: [ { label: 'Kingdom → Mine → Mine Shaft → Build', check: { built: 'shaft' } }, { label: 'Mine Shaft → + Add worker', check: { working: 'shaft' } }, { label: 'Haul 40 iron ore', check: { made: 'ore', need: 40 } } ], reward: { gold: 150 }, focus: { tab: 'kingdom', ksub: 'mine', rtab: 'kingdom', el: 'step:shaft' } },
-    { id: 'c03', chain: 'Camp', name: 'Double Shift', text: 'An Overseer can call a Double Shift: everything at that step runs twice as fast for 30 seconds, then needs 10 minutes to recover.',
-      steps: [ { label: 'Any step with an Overseer → Double shift', check: { shifts: 1 } } ], reward: { gold: 100 }, focus: { tab: 'kingdom', ksub: 'forest', rtab: 'kingdom', el: 'step:logging' } },
-    { id: 'c04', chain: 'Camp', name: 'Raise a Hamlet', text: 'All three camps are working. A Hamlet costs 200 of every good you make — pay it in bit by bit, nothing else is lost. A Hamlet brings second-tier buildings and 2 workers per building.',
-      steps: [ { label: 'Kingdom → Keep → Settlement → Contribute everything asked', check: { tierPaid: 1 } }, { label: 'Keep → Raise to Hamlet', check: { tier: 1 } } ], reward: { gold: 250 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:settle-card' } },
-    { id: 'h01', chain: 'Hamlet', name: 'The Sawmill', text: 'Logging now feeds the Sawmill: 2 wood become 1 plank. While the Sawmill has no worker, wood still goes to the Storehouse.',
-      steps: [ { label: 'Kingdom → Forest → Sawmill → Build', check: { built: 'sawmill' } }, { label: 'Sawmill → + Add worker', check: { working: 'sawmill' } }, { label: 'Make 30 planks', check: { made: 'planks', need: 30 } } ], reward: { gold: 150 }, focus: { tab: 'kingdom', ksub: 'forest', rtab: 'kingdom', el: 'step:sawmill' } },
+    { id: 'p01', chain: 'A Kingdom', name: 'What Survives', text: 'Crowns are forever: Legacy perks survive every new dynasty. Spend your first Crown on the Bestiary, so every creature you have ever killed keeps teaching you how to fight it.',
+      steps: [ { label: 'Kingdom → Legacy → unlock Bestiary (1 Crown)', check: { perk: 'bestiary' } } ], reward: { gold: 50 }, focus: { tab: 'kingdom', ksub: 'legacy', rtab: 'kingdom', el: 'perk:bestiary' } },
+    { id: 'k01', chain: 'A Kingdom', name: 'The First Camp', text: 'Buildings work on their own. Each level makes one faster — and every 10 levels it doubles and gets a new name.',
+      steps: [ { label: 'Kingdom → Forest → Logging → Upgrade to Lv 3', check: { bLv: 'logging', need: 3 } }, { label: 'Haul 60 wood to the Storehouse', check: { made: 'wood', need: 60 } } ], reward: { gold: 60 }, focus: { tab: 'kingdom', ksub: 'forest', rtab: 'kingdom', el: 'step:logging' } },
+    { id: 'k02', chain: 'A Kingdom', name: 'Imperial Orders', text: 'The Empire, the Guild and the villages post Orders at your Keep. They pay gold and Renown — no deadline, but a speed bonus.',
+      steps: [ { label: 'Kingdom → Keep → Orders → Deliver one', check: { orders: 1 } } ], reward: { gold: 60 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:order-list' } },
+    { id: 'c01', chain: 'A Kingdom', name: 'The Fields', text: 'A camp needs food as well as wood.',
+      steps: [ { label: 'Kingdom → Farm → Fields → Build', check: { built: 'fields' } }, { label: 'Fields → Upgrade to Lv 3', check: { bLv: 'fields', need: 3 } } ], reward: { gold: 80 }, focus: { tab: 'kingdom', ksub: 'farm', rtab: 'kingdom', el: 'step:fields' } },
+    { id: 'c02', chain: 'A Kingdom', name: 'Into the Hills', text: 'The hills hold iron. Build the Mine Shaft.',
+      steps: [ { label: 'Kingdom → Mine → Mine Shaft → Build', check: { built: 'shaft' } }, { label: 'Mine Shaft → Upgrade to Lv 3', check: { bLv: 'shaft', need: 3 } } ], reward: { gold: 100 }, focus: { tab: 'kingdom', ksub: 'mine', rtab: 'kingdom', el: 'step:shaft' } },
+    { id: 'c03', chain: 'A Kingdom', name: 'The Toll Baron', text: 'The Toll Baron taxes the road to your camp. A Hamlet needs safe roads — only the hero can clear them.',
+      steps: [ { label: 'Hero → The Roads → slay the Toll Baron (stage 20)', check: { bossKey: 'roads:20' } } ], reward: { gold: 150 }, focus: { tab: 'hero', sub: 'fight', el: 'ground:roads' } },
+    { id: 'c04', chain: 'A Kingdom', name: 'Raise a Hamlet', text: 'A Hamlet costs 200 of every good you make — pay it in bit by bit, nothing is lost. It opens the refineries and the hero\'s halls.',
+      steps: [ { label: 'Kingdom → Keep → Settlement → Contribute everything asked', check: { tierPaid: 1 } }, { label: 'Keep → Raise to Hamlet', check: { tier: 1 } } ], reward: { gold: 200 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:settle-card' } },
+    { id: 'h01', chain: 'Hamlet', name: 'The Sawmill', text: 'Logging now feeds the Sawmill: 2 wood become 1 plank.',
+      steps: [ { label: 'Kingdom → Forest → Sawmill → Build', check: { built: 'sawmill' } }, { label: 'Make 30 planks', check: { made: 'planks', need: 30 } } ], reward: { gold: 200 }, focus: { tab: 'kingdom', ksub: 'forest', rtab: 'kingdom', el: 'step:sawmill' } },
     { id: 'h02', chain: 'Hamlet', name: 'The Mill', text: 'Grain feeds the Mill: 2 grain become 1 flour.',
-      steps: [ { label: 'Kingdom → Farm → Mill → Build', check: { built: 'mill' } }, { label: 'Mill → + Add worker', check: { working: 'mill' } }, { label: 'Make 30 flour', check: { made: 'flour', need: 30 } } ], reward: { gold: 150 }, focus: { tab: 'kingdom', ksub: 'farm', rtab: 'kingdom', el: 'step:mill' } },
+      steps: [ { label: 'Kingdom → Farm → Mill → Build', check: { built: 'mill' } }, { label: 'Make 30 flour', check: { made: 'flour', need: 30 } } ], reward: { gold: 200 }, focus: { tab: 'kingdom', ksub: 'farm', rtab: 'kingdom', el: 'step:mill' } },
     { id: 'h03', chain: 'Hamlet', name: 'The Smelter', text: 'Ore feeds the Smelter: 2 ore become 1 ingot.',
-      steps: [ { label: 'Kingdom → Mine → Smelter → Build', check: { built: 'smelter' } }, { label: 'Smelter → + Add worker', check: { working: 'smelter' } }, { label: 'Make 20 ingots', check: { made: 'ingot', need: 20 } } ], reward: { gold: 150 }, focus: { tab: 'kingdom', ksub: 'mine', rtab: 'kingdom', el: 'step:smelter' } },
-    { id: 'h04', chain: 'Hamlet', name: 'Seasoned Hands', text: 'Thralls get better with every load they haul, and they follow you from land to land. Keep your best ones working.',
-      steps: [ { label: 'Get a thrall to Lv 3 (Market → Tavern shows levels)', check: { thrallLv: 3 } } ], reward: { gold: 150 }, focus: { tab: 'market', msub: 'tavern', rtab: 'market', el: 'id:roster' } },
+      steps: [ { label: 'Kingdom → Mine → Smelter → Build', check: { built: 'smelter' } }, { label: 'Make 20 ingots', check: { made: 'ingot', need: 20 } } ], reward: { gold: 250 }, focus: { tab: 'kingdom', ksub: 'mine', rtab: 'kingdom', el: 'step:smelter' } },
+    { id: 'h04', chain: 'Hamlet', name: 'The Hero\'s Halls', text: 'The city can make the hero stronger. The Training Yard speeds his levels; the Smithy makes gear cheaper.',
+      steps: [ { label: 'Kingdom → Halls → Training Yard → Build', check: { hall: 'yard' } }, { label: 'Halls → Smithy → Build', check: { hall: 'smithy' } } ], reward: { gold: 300 }, focus: { tab: 'kingdom', ksub: 'halls', rtab: 'kingdom', el: 'hall:yard' } },
     { id: 'h05', chain: 'Hamlet', name: 'Room to Store', text: 'Goods that do not fit the Storehouse are sold off cheap. A bigger Storehouse holds more goods — and more gold.',
-      steps: [ { label: 'Kingdom → Keep → Storehouse → Expand', check: { storeLv: 1 } } ], reward: { gold: 150 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:store-up' } },
-    { id: 'h06', chain: 'Hamlet', name: 'Raise a Village', text: 'A Village costs 350 of every good you make. It brings the finishing buildings and 3 workers per building.',
-      steps: [ { label: 'Kingdom → Keep → Settlement → Contribute everything asked', check: { tierPaid: 2 } }, { label: 'Keep → Raise to Village', check: { tier: 2 } } ], reward: { gold: 250 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:settle-card' } },
-    { id: 'v01', chain: 'Village', name: 'The Carpenter', text: 'Planks feed the Carpenter: 2 planks become 1 treated lumber, wanted for forts and ships.',
-      steps: [ { label: 'Kingdom → Forest → Carpenter → Build', check: { built: 'carpenter' } }, { label: 'Carpenter → + Add worker', check: { working: 'carpenter' } }, { label: 'Make 15 treated lumber', check: { made: 'lumber', need: 15 } } ], reward: { gold: 150 }, focus: { tab: 'kingdom', ksub: 'forest', rtab: 'kingdom', el: 'step:carpenter' } },
-    { id: 'v02', chain: 'Village', name: 'The Baker', text: 'Flour feeds the Baker: armies march on bread.',
-      steps: [ { label: 'Kingdom → Farm → Baker → Build', check: { built: 'baker' } }, { label: 'Baker → + Add worker', check: { working: 'baker' } }, { label: 'Bake 15 bread', check: { made: 'bread', need: 15 } } ], reward: { gold: 150 }, focus: { tab: 'kingdom', ksub: 'farm', rtab: 'kingdom', el: 'step:baker' } },
-    { id: 'v03', chain: 'Village', name: 'The Forge', text: 'Ingots feed the Forge: the Legion always needs swords.',
-      steps: [ { label: 'Kingdom → Mine → Forge → Build', check: { built: 'forge' } }, { label: 'Forge → + Add worker', check: { working: 'forge' } }, { label: 'Forge 10 iron swords', check: { made: 'swords', need: 10 } } ], reward: { gold: 150 }, focus: { tab: 'kingdom', ksub: 'mine', rtab: 'kingdom', el: 'step:forge' } },
+      steps: [ { label: 'Kingdom → Keep → Storehouse → Expand', check: { storeLv: 1 } } ], reward: { gold: 200 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:store-up' } },
+    { id: 'h06', chain: 'Hamlet', name: 'The Dead Walk', text: 'The Bone Lord stirs in the Crypts beside your fields. No Village will rise until the hero puts him down.',
+      steps: [ { label: 'Hero → The Crypts → slay the Bone Lord (stage 10)', check: { bossKey: 'crypts:10' } } ], reward: { gold: 400 }, focus: { tab: 'hero', sub: 'fight', el: 'ground:crypts' } },
+    { id: 'h07', chain: 'Hamlet', name: 'Raise a Village', text: 'A Village costs 350 of every good you make. It opens the workshops and two more halls.',
+      steps: [ { label: 'Kingdom → Keep → Settlement → Contribute everything asked', check: { tierPaid: 2 } }, { label: 'Keep → Raise to Village', check: { tier: 2 } } ], reward: { gold: 400 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:settle-card' } },
+    { id: 'v01', chain: 'Village', name: 'The Carpenter', text: 'Planks feed the Carpenter: 2 planks become 1 treated lumber.',
+      steps: [ { label: 'Kingdom → Forest → Carpenter → Build', check: { built: 'carpenter' } }, { label: 'Make 15 treated lumber', check: { made: 'lumber', need: 15 } } ], reward: { gold: 400 }, focus: { tab: 'kingdom', ksub: 'forest', rtab: 'kingdom', el: 'step:carpenter' } },
+    { id: 'v02', chain: 'Village', name: 'The Bakery', text: 'Flour feeds the Bakery: armies march on bread.',
+      steps: [ { label: 'Kingdom → Farm → Bakery → Build', check: { built: 'baker' } }, { label: 'Bake 15 bread', check: { made: 'bread', need: 15 } } ], reward: { gold: 400 }, focus: { tab: 'kingdom', ksub: 'farm', rtab: 'kingdom', el: 'step:baker' } },
+    { id: 'v03', chain: 'Village', name: 'The Forge', text: 'Ingots feed the Forge: the army will need swords.',
+      steps: [ { label: 'Kingdom → Mine → Forge → Build', check: { built: 'forge' } }, { label: 'Forge 10 iron swords', check: { made: 'swords', need: 10 } } ], reward: { gold: 400 }, focus: { tab: 'kingdom', ksub: 'mine', rtab: 'kingdom', el: 'step:forge' } },
     { id: 'v04', chain: 'Village', name: 'Baron', text: 'Renown comes from Orders. At 500 Renown you become a Baron, and your Storehouse doubles.',
-      steps: [ { label: 'Earn 500 Renown from Orders', check: { renown: 500 } } ], reward: { gold: 200 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:order-list' } },
-    { id: 'v05', chain: 'Village', name: 'Raise a City', text: 'A City costs 500 of every good you make. The last stretch: full crews everywhere.',
-      steps: [ { label: 'Kingdom → Keep → Settlement → Contribute everything asked', check: { tierPaid: 3 } }, { label: 'Keep → Raise to City', check: { tier: 3 } } ], reward: { gold: 250 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:settle-card' } },
-    { id: 'y01', chain: 'City', name: 'Full Crews', text: 'A City runs on people. Every one of the nine buildings needs three workers.',
-      steps: [ { label: 'All 9 buildings: 3 workers each', check: { crews: 9 } } ], reward: { gold: 500 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:settle-card' } },
-    { id: 'y02', chain: 'City', name: 'Overseers', text: 'Every building needs someone watching it.',
-      steps: [ { label: 'All 9 buildings: an Overseer each', check: { overseer: 9 } } ], reward: { gold: 500 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:settle-card' } },
-    { id: 'y03', chain: 'City', name: 'Accountants', text: 'An Accountant sits on each final good — treated lumber, bread and iron swords — and sells what the Storehouse does not need, at half the Market price.',
-      steps: [ { label: 'Carpenter, Baker and Forge → Accountant', check: { accountants: 3 } } ], reward: { gold: 500 }, focus: { tab: 'kingdom', ksub: 'forest', rtab: 'kingdom', el: 'step:carpenter' } },
-    { id: 'y04', chain: 'City', name: 'Proclaim the Kingdom', text: 'The City is complete. Proclaim the Kingdom: your City becomes the Capital — nothing is lost — and the war for new lands begins.',
+      steps: [ { label: 'Earn 500 Renown from Orders', check: { renown: 500 } } ], reward: { gold: 300 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:order-list' } },
+    { id: 'v05', chain: 'Village', name: 'Healers and Horses', text: 'The Apothecary heals the hero faster; the Stables make him strike faster.',
+      steps: [ { label: 'Kingdom → Halls → Apothecary → Build', check: { hall: 'apothecary' } }, { label: 'Halls → Stables → Build', check: { hall: 'stables' } } ], reward: { gold: 500 }, focus: { tab: 'kingdom', ksub: 'halls', rtab: 'kingdom', el: 'hall:apothecary' } },
+    { id: 'v06', chain: 'Village', name: 'The Cult Priest', text: 'A cult gathers in the deep Crypts and demands tribute. A City will not rise under its shadow.',
+      steps: [ { label: 'Hero → The Crypts → slay the Cult Priest (stage 20)', check: { bossKey: 'crypts:20' } } ], reward: { gold: 600 }, focus: { tab: 'hero', sub: 'fight', el: 'ground:crypts' } },
+    { id: 'v07', chain: 'Village', name: 'Raise a City', text: 'A City costs 500 of every good you make. The last stretch.',
+      steps: [ { label: 'Kingdom → Keep → Settlement → Contribute everything asked', check: { tierPaid: 3 } }, { label: 'Keep → Raise to City', check: { tier: 3 } } ], reward: { gold: 600 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:settle-card' } },
+    { id: 'y01', chain: 'City', name: 'A Worthy Capital', text: 'A Capital needs strong foundations. Raise every building to Lv 10 — each doubles when it gets there.',
+      steps: [ { label: 'Every building at Lv 10', check: { allLv: 10 } } ], reward: { gold: 1000 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:settle-card' } },
+    { id: 'y04', chain: 'City', name: 'Proclaim the Kingdom', text: 'The City is complete. Proclaim the Kingdom: your City becomes the Capital — nothing is lost — and the conquest begins.',
       steps: [ { label: 'Kingdom → Keep → Proclaim the Kingdom', check: { proclaimed: 1 } } ], reward: { gold: 500 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:found-btn' } },
-    { id: 'w01', chain: 'The Kingdom', name: 'The Barracks', text: 'An army is mustered, not bought. Build the Barracks and put a thrall to work: 1 Supplies and 2 gold become 1 soldier.',
-      steps: [ { label: 'Kingdom → Barracks → Build', check: { built: 'barracks' } }, { label: 'Barracks → + Add worker', check: { staffed: 'barracks' } } ], reward: { gold: 500 }, focus: { tab: 'kingdom', ksub: 'war', rtab: 'kingdom', el: 'step:barracks' } },
-    { id: 'w02', chain: 'The Kingdom', name: 'Quartermaster', text: 'In the Kingdom your Accountants become Quartermasters: instead of selling, they send spare bread to the army as Supplies, and swords and treated lumber as Equipment.',
-      steps: [ { label: 'Gather 50 Supplies (Baker → Accountant)', check: { have: 'supplies', need: 50 } }, { label: 'Gather 30 Equipment (Forge, Carpenter → Accountant)', check: { have: 'equipment', need: 30 } } ], reward: { gold: 500 }, focus: { tab: 'kingdom', ksub: 'farm', rtab: 'kingdom', el: 'step:baker' } },
-    { id: 'w03', chain: 'The Kingdom', name: 'Muster', text: 'Soldiers wait in the war chest for the road ahead. Muster a company.',
-      steps: [ { label: 'Muster 25 soldiers', check: { have: 'soldiers', need: 25 } } ], reward: { gold: 1000 }, focus: { tab: 'kingdom', ksub: 'war', rtab: 'kingdom', el: 'step:barracks' } },
+    { id: 'w01', chain: 'The Kingdom', name: 'The Barracks', text: 'An army is trained, not bought. The Barracks turns Food (bread) and Supplies (swords, treated lumber) into soldiers — and soldiers eat every minute.',
+      steps: [ { label: 'Kingdom → Barracks → Build', check: { barracks: 1 } }, { label: 'Train 20 soldiers', check: { have: 'soldiers', need: 20 } } ], reward: { gold: 800 }, focus: { tab: 'kingdom', ksub: 'war', rtab: 'kingdom', el: 'id:army-card' } },
+    { id: 'w02', chain: 'The Kingdom', name: 'March on Ashford', text: 'The hero leads the conquest. The army marches with him and multiplies every blow. Choose Ashford Vale on the hero screen.',
+      steps: [ { label: 'Hero → Where to fight → Ashford Vale', check: { landPct: 1, need: 1 } }, { label: 'Conquer 20% of Ashford Vale (stage 11)', check: { landPct: 1, need: 20 } } ], reward: { gold: 1000 }, focus: { tab: 'hero', sub: 'fight', el: 'ground:land1' } },
+    { id: 'w03', chain: 'The Kingdom', name: 'A Garrison', text: 'A conquered land pays taxes — but only as much as its garrison can hold. Soldiers in a garrison do not march with the hero.',
+      steps: [ { label: 'Kingdom → Lands → Ashford Vale → station 10 soldiers', check: { garrison: 1, need: 10 } }, { label: 'Collect 100 gold of taxes', check: { taxed: 100 } } ], reward: { gold: 1000 }, focus: { tab: 'kingdom', ksub: 'lands', rtab: 'kingdom', el: 'id:lands-card' } },
+    { id: 'w04', chain: 'The Kingdom', name: 'Baron Hollin', text: 'At the end of every land waits its Ruler. Beat him and take his crown — Crowns are the power of your dynasty.',
+      steps: [ { label: 'Conquer Ashford Vale (defeat Baron Hollin, stage 50)', check: { landDone: 1 } } ], reward: { gold: 2000 }, focus: { tab: 'hero', sub: 'fight', el: 'ground:land1' } },
+    { id: 'w05', chain: 'The Kingdom', name: 'Blackwood March', text: 'Every land is harder than the last — and pays about four times more.',
+      steps: [ { label: 'Conquer Blackwood March', check: { landDone: 2 } } ], reward: { gold: 5000 }, focus: { tab: 'hero', sub: 'fight', el: 'ground:land2' } },
+    { id: 'w06', chain: 'The Kingdom', name: 'The Iron Hills', text: 'The hills hold silver — the metal of Hardened gear.',
+      steps: [ { label: 'Conquer the Iron Hills', check: { landDone: 3 } } ], reward: { gold: 20000 }, focus: { tab: 'hero', sub: 'fight', el: 'ground:land3' } },
   ],
 
   // ---------- Tech tree ----------
@@ -673,8 +691,8 @@ const CONFIG = {
     { id: 'steelgear',  tier: 3, name: 'Steel Gear',       icon: [7,7],   req: { planks: 20 },           cost: { gold: 2000, planks: 5 },       unlocks: { gearTier: 3 },           desc: 'Forge Steel gear.' },
     { id: 'steeltools', tier: 3, name: 'Steel Tools',      icon: [10,1],  req: { planks: 10 },           cost: { gold: 1500, planks: 2 },       unlocks: { toolTier: 2 },           desc: 'Forge Steel tools.' },
     // Tier 4 — Advanced
-    { id: 'hardening',  tier: 4, name: 'Hardening',        icon: [13,4],  req: { bricks: 50, bossKills: 20 }, cost: { gold: 5000, bricks: 20 },  unlocks: { gearTier: 4 },           desc: 'Forge Hardened gear.' },
-    { id: 'mythril',    tier: 4, name: 'Mythril Secrets',  icon: [12,15], req: { foundings: 5 },         cost: { gold: 20000, bricks: 20 },     unlocks: { gearTier: 5 },           desc: 'Forge Mythril gear.' },
+    { id: 'hardening',  tier: 4, name: 'Hardening',        icon: [13,4],  req: { silver: 20 }, cost: { gold: 5000, silver: 10 },  unlocks: { gearTier: 4 },           desc: 'Forge Hardened gear from the silver of conquered hills.' },
+    { id: 'mythril',    tier: 4, name: 'Mythril Secrets',  icon: [12,15], req: { silver: 100, heartwood: 50 }, cost: { gold: 20000, silver: 40 },     unlocks: { gearTier: 5 },           desc: 'Forge Mythril gear.' },
   ],
 
   buildingUpgrade: { base: { gold: 100 }, mult: 1.5, speedPerLevel: 0.08, batchEvery: 5 },
@@ -706,22 +724,70 @@ const CONFIG = {
     ],
 
     // Permanent perks bought with Crystals. cost = base × costMult^rank.
+    // 0.9: Crowns (formerly Crystals) buy perks in four trees
+    trees: [ { id: 'bloodline', name: 'Bloodline', desc: 'The hero' }, { id: 'crown', name: 'Crown', desc: 'The city' }, { id: 'war', name: 'War', desc: 'The army' }, { id: 'realm', name: 'Realm', desc: 'The conquest' } ],
     perks: [
-      { id: 'headstart', name: 'Head Start',      icon: [4,6],  max: 3, cost: 5,  costMult: 1.6, desc: 'Thralls begin each kingdom 3 levels higher per rank' },
-      { id: 'blueprints', name: 'Blueprints',     icon: [13,12], max: 4, cost: 12, costMult: 1.8, desc: 'Begin each kingdom with one more tech tier already researched' },
-      { id: 'cellar', name: 'Deep Cellar',        icon: [19,9], max: 4, cost: 8,  costMult: 1.7, desc: 'AFK cap +2h per rank' },
-      { id: 'memory', name: 'Long Memory',        icon: [13,8], max: 3, cost: 10, costMult: 1.8, desc: 'AFK efficiency +10% per rank' },
-      { id: 'cache', name: "Founder's Cache",     icon: [11,11], max: 5, cost: 6,  costMult: 1.6, desc: 'Begin with 1,000 gold and 50 wood per rank' },
-      { id: 'veteran', name: 'Veteran',           icon: [1,4],  max: 3, cost: 12, costMult: 2,   desc: '+3 Combat tree points per rank' },
-      { id: 'bloodline', name: 'Bloodline',       icon: [1,0],  max: 5, cost: 10, costMult: 1.8, desc: '+5% attack, HP, regen per rank' },
-      { id: 'oldblade', name: 'Old Blade',        icon: [5,1],  max: 1, cost: 25, costMult: 1,   desc: 'Keep your weapon through a founding' },
-      { id: 'haggler', name: 'Haggler',           icon: [12,10], max: 5, cost: 8,  costMult: 1.7, desc: 'Sell prices +10% per rank' },
-      { id: 'ledger', name: 'The Ledger',        icon: [13,11], max: 1, cost: 3,  costMult: 1,   desc: 'See your AFK forecast (gold and goods per hour while away) on the fight and harvest screens' },
-      { id: 'bestiary', name: 'Bestiary',        icon: [13,6],  max: 1, cost: 1,  costMult: 1,   desc: 'Unlock the Bestiary: kill counts, what each enemy drops and at what odds, and how well you know it' },
-      { id: 'danger', name: 'Danger Sense',      icon: [0,9],   max: 1, cost: 2,  costMult: 1,   desc: 'See how much HP each fight costs and whether the next stage is safe' },
-      { id: 'chronicler', name: 'Chronicler',    icon: [13,8],  max: 1, cost: 2,  costMult: 1,   desc: 'Unlock the Stats card: DPS, crit, kills per second, loot multiplier' },
-      { id: 'surveyor', name: 'Surveyor',        icon: [10,7],  max: 1, cost: 2,  costMult: 1,   desc: 'See swing times and yield per swing on the harvest screen' },
-      { id: 'almanac', name: 'Almanac',          icon: [13,3],  max: 1, cost: 2,  costMult: 1,   desc: 'See per-second rates next to every resource in the header' },
+      { id: 'bloodline', tree: 'bloodline', name: 'Bloodline',       icon: [1,0],  max: 10, cost: 3,  costMult: 1.5, desc: '+5% attack, HP and healing per rank' },
+      { id: 'veteran',   tree: 'bloodline', name: 'Veteran',         icon: [1,4],  max: 3,  cost: 8,  costMult: 2,   desc: '+3 Combat tree points per rank' },
+      { id: 'heirloom',  tree: 'bloodline', name: 'Heirloom Arms',   icon: [5,1],  max: 3,  cost: 10, costMult: 2.2, desc: 'A new dynasty starts with gear one tier better per rank (Wooden → Stone → Iron)' },
+      { id: 'oldblade',  tree: 'bloodline', name: 'Old Blade',       icon: [5,1],  max: 1,  cost: 20, costMult: 1,   desc: 'Keep your weapon when you pass the crown' },
+      { id: 'cache',     tree: 'crown',     name: "Founder's Cache", icon: [11,11], max: 5, cost: 4,  costMult: 1.6, desc: 'Begin each dynasty with 1,000 gold per rank' },
+      { id: 'blueprints',tree: 'crown',     name: 'Blueprints',      icon: [13,12], max: 3, cost: 6,  costMult: 1.8, desc: 'Every building starts 5 levels higher per rank' },
+      { id: 'charter',   tree: 'war',       name: 'Full Granaries',  icon: [14,14], max: 3, cost: 6,  costMult: 2,   desc: 'Begin each dynasty with 500 Food and 500 Supplies per rank' },
+      { id: 'cellar',    tree: 'crown',     name: 'Deep Cellar',     icon: [19,9], max: 4,  cost: 5,  costMult: 1.7, desc: 'AFK cap +2h per rank' },
+      { id: 'memory',    tree: 'crown',     name: 'Long Memory',     icon: [13,8], max: 3,  cost: 6,  costMult: 1.8, desc: 'AFK efficiency +10% per rank' },
+      { id: 'haggler',   tree: 'crown',     name: 'Haggler',         icon: [12,10], max: 5, cost: 4,  costMult: 1.7, desc: 'Sell prices +10% per rank' },
+      { id: 'drill',     tree: 'war',       name: 'Drill Sergeants', icon: [1,4],  max: 5,  cost: 4,  costMult: 1.7, desc: 'Barracks train 20% faster per rank' },
+      { id: 'rations',   tree: 'war',       name: 'Rations',         icon: [14,14], max: 5, cost: 5,  costMult: 1.7, desc: 'Soldiers eat 10% less per rank' },
+      { id: 'standing',  tree: 'war',       name: 'Standing Army',   icon: [7,1],  max: 3,  cost: 8,  costMult: 2,   desc: 'Begin each dynasty with 25 soldiers per rank' },
+      { id: 'warcry',    tree: 'war',       name: 'War Cry',         icon: [0,9],  max: 5,  cost: 5,  costMult: 1.8, desc: 'Rally strikes +20% per rank' },
+      { id: 'tax',       tree: 'realm',     name: 'Tax Collectors',  icon: [12,7], max: 10, cost: 3,  costMult: 1.5, desc: '+25% taxes per rank' },
+      { id: 'autocollect', tree: 'realm',   name: 'Stewards',        icon: [13,11], max: 1, cost: 15, costMult: 1,   desc: 'Taxes flow in by themselves — no need to Collect' },
+      { id: 'spoils',    tree: 'realm',     name: 'Plunder',         icon: [12,15], max: 5, cost: 5,  costMult: 1.8, desc: '+25% spoils per rank' },
+      { id: 'lap',       tree: 'realm',     name: 'Victory Lap',     icon: [5,7],  max: 3,  cost: 6,  costMult: 2,   desc: 'Lands you have conquered before: hero damage ×3 there, +×1 per rank' },
+      { id: 'ledger',    tree: 'realm',     name: 'The Ledger',      icon: [13,11], max: 1, cost: 2,  costMult: 1,   desc: 'See your AFK forecast (gold and goods per hour while away)' },
+      { id: 'bestiary',  tree: 'realm',     name: 'Bestiary',        icon: [13,6],  max: 1, cost: 1,  costMult: 1,   desc: 'Unlock the Bestiary: kill counts, what each enemy drops and your bonus against it' },
+      { id: 'danger',    tree: 'realm',     name: 'Danger Sense',    icon: [0,9],   max: 1, cost: 2,  costMult: 1,   desc: 'See how much HP each fight costs and whether the next stage is safe' },
+      { id: 'chronicler',tree: 'realm',     name: 'Chronicler',      icon: [13,8],  max: 1, cost: 2,  costMult: 1,   desc: 'Unlock the Stats card: DPS, crit, kills per second, loot' },
+      { id: 'surveyor',  tree: 'crown',     name: 'Surveyor',        icon: [10,7],  max: 1, cost: 2,  costMult: 1,   desc: 'See swing times and yield per swing on the harvest screen' },
+      { id: 'almanac',   tree: 'crown',     name: 'Almanac',         icon: [13,3],  max: 1, cost: 2,  costMult: 1,   desc: 'See per-second rates next to every resource in the header' },
     ],
   },
 };
+
+// ---------- 0.9: lands of conquest, generated ----------
+// Each land is a ground of 50 (lands 1–3) or 100 stages. Every 10th stage is a Captain; the last is the land's Ruler, who wears a crown.
+(function () {
+  const C = CONFIG, L = C.kingdom.lands;
+  const ERAS = [ // enemy ladder: [from land, types]  ·  art = existing portraits
+    [1,  [['militia', 'Militia', 'Militia', 'bandit'], ['guard', 'Border Guard', 'Border Guards', 'merc'], ['sellsword', 'Sellsword', 'Sellswords', 'raider'], ['spear', 'Spearman', 'Spearmen', 'merc'], ['raider2', 'Hill Raider', 'Hill Raiders', 'raider']]],
+    [4,  [['knight2', 'Knight', 'Knights', 'knight'], ['lancer', 'Lancer', 'Lancers', 'merc'], ['archer', 'Archer', 'Archers', 'assassin'], ['menatarms', 'Man-at-Arms', 'Men-at-Arms', 'raider'], ['crossbow', 'Crossbowman', 'Crossbowmen', 'assassin'], ['warbeast', 'War Beast', 'War Beasts', 'bear'], ['templar', 'Templar', 'Templars', 'knight'], ['hussar', 'Hussar', 'Hussars', 'merc'], ['shield', 'Shieldwall', 'Shieldwalls', 'raider'], ['champion', 'Champion', 'Champions', 'knight']]],
+    [9,  [['royal', 'Royal Guard', 'Royal Guards', 'knight'], ['siege', 'Siege Crew', 'Siege Crews', 'merc'], ['battlemage', 'Battle-Mage', 'Battle-Mages', 'shade'], ['paladin', 'Paladin', 'Paladins', 'knight'], ['duelist', 'Duelist', 'Duelists', 'assassin'], ['cataphract', 'Cataphract', 'Cataphracts', 'merc'], ['warlock', 'Warlock', 'Warlocks', 'shade'], ['sentinel', 'Sentinel', 'Sentinels', 'knight'], ['reaver', 'Reaver', 'Reavers', 'raider'], ['highguard', 'High Guard', 'High Guards', 'knight']]],
+    [16, [['sorcerer', 'Sorcerer', 'Sorcerers', 'shade'], ['necro', 'Necromancer', 'Necromancers', 'shade'], ['revenant', 'Revenant', 'Revenants', 'skeleton'], ['ghast', 'Ghast', 'Ghasts', 'ghoul'], ['wraithlord', 'Wraith', 'Wraiths', 'wraith'], ['drake', 'Drake', 'Drakes', 'saber'], ['demon', 'Demon', 'Demons', 'shade'], ['lich2', 'Lich', 'Liches', 'skeleton'], ['wyrm', 'Wyrm', 'Wyrms', 'saber'], ['horror', 'Horror', 'Horrors', 'wraith']]],
+  ];
+  const NAMES = ['Ashford Vale', 'Blackwood March', 'The Iron Hills', 'Kingdom of Varn', 'The Horse Plains', 'Stonemere', 'The Salt Coast', 'Greywater', 'The Twin Crowns', 'Empire of the Coast',
+    'The Gilded Reach', 'Highspire', 'The Sunken Throne', 'Emberfall', 'The Bronze Empire', 'The Fen Queendom', 'The Bone Marches', 'Dragon Peaks', 'The Hollow Realm', 'The Last Throne'];
+  const RULERS = ['Baron Hollin', 'the Mercenary Lord', 'Warlord Grask', 'the Iron King', 'the Horse Khan', 'Duke Aldric', 'the Salt Admiral', 'Count Morvane', 'the Twin Queens', 'the Emperor of the Coast',
+    'the Gilded Prince', 'the Spire Lord', 'the Drowned King', 'the Ember Tyrant', 'the Bronze Emperor', 'the Witch-Queen', 'the Bone King', 'the Dragon of Varn', 'the Hollow King', 'the Last King'];
+  const CROWNS = ['the Reed Circlet', 'the Sellsword Crown', 'the Iron Band', 'the Iron Crown', 'the Horse-Tail Crown', 'the Stone Diadem', 'the Salt Crown', 'the Grey Circlet', 'the Twin Crowns', 'the Crown of the Coast',
+    'the Gilded Crown', 'the Spire Crown', 'the Drowned Crown', 'the Ember Crown', 'the Bronze Crown', 'the Thorn Circlet', 'the Bone Crown', 'the Dragon Crown', 'the Hollow Crown', 'the Last Crown'];
+  const TERRAIN = [['heartwood', 'forest'], ['silver', 'hills'], ['heartwood', 'forest'], ['silver', 'hills'], ['relic', 'holy site']];
+  const ART = ['roads_a', 'roads_b', 'wilds_night', 'crypts_b', 'wilds_dusk'];
+  let offset = L.offsetStart;
+  for (let n = 1; n <= 80; n++) {
+    const stages = n <= L.shortLands ? L.shortStages : L.longStages, types = stages / 10, id = 'land' + n;
+    const era = ERAS.filter(e => n >= e[0]).pop()[1], i0 = (n * 3) % era.length;
+    const cycle = Math.floor((n - 1) / NAMES.length), sfx = cycle ? ' ' + ['II', 'III', 'IV', 'V'][Math.min(cycle - 1, 3)] : '';
+    const [spoil, terrain] = TERRAIN[(n - 1) % TERRAIN.length];
+    const line = [];
+    for (let t = 0; t < types; t++) {
+      const [tid, nm, pl, art] = era[(i0 + t) % era.length], last = t === types - 1;
+      line.push({ id: `${id}_${tid}_${t}`, art, name: nm, plural: pl, boss: last ? RULERS[(n - 1) % RULERS.length].replace(/^the /, 'The ') + sfx : nm + ' Captain',
+        pool: [{ k: spoil, base: 0.01, growth: 0.004 }] });
+    }
+    C.grounds[id] = { name: NAMES[(n - 1) % NAMES.length] + sfx, land: n, stages, terrain, spoil, crown: CROWNS[(n - 1) % CROWNS.length] + sfx, ruler: RULERS[(n - 1) % RULERS.length] + sfx,
+      icon: [5, 7], desc: `Land ${n} · ${terrain} · pays ${C.resources[spoil].name.toLowerCase()}.`, goldMult: 1.5, req: { land: n }, reqText: n === 1 ? 'Proclaim the Kingdom' : `Conquer land ${n - 1}`, line };
+    C.stages.groundOffset[id] = offset; offset += L.offsetStep;
+    C.art.grounds[id] = `assets/enemies/${ART[(n - 1) % ART.length]}.webp`;
+  }
+})();
