@@ -1,5 +1,9 @@
-// Firebase web config for cloud saves. Paste the object from
-// Firebase console → Project settings → Your apps → Web app → "Config".
-// This config is public by design; the Firestore security rules protect each player's save.
-// Leave as null to run without cloud saves (the Sign in button shows "coming soon").
-window.FIREBASE_CONFIG = null;
+// Firebase web config for cloud saves (public by design; Firestore rules protect each player's save).
+window.FIREBASE_CONFIG = {
+  apiKey: "AIzaSyAOJUp77Nc1q4wOGnUfPS6fJc5scTepFcg",
+  authDomain: "click-to-conquer.firebaseapp.com",
+  projectId: "click-to-conquer",
+  storageBucket: "click-to-conquer.firebasestorage.app",
+  messagingSenderId: "1010870501167",
+  appId: "1:1010870501167:web:b45e0d42eb01e31b542bda"
+};
