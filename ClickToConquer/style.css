@@ -750,3 +750,16 @@ html, body { max-width: 100%; overflow-x: hidden; }
 #cloud-modal { z-index: 58; }
 .cloud-user .avatar-img img, .avatar-btn .avatar-img img { width: 100% !important; height: 100% !important; max-width: none; object-fit: cover; display: block; }
 .whatsnew { display: flex; flex-direction: column; gap: 6px; padding: 6px 0; }
+
+/* Enemy / ground art behind the fight card and the bottom fight bar */
+.arena, .mini-hero { isolation: isolate; overflow: hidden; }
+.arena { position: relative; }
+.ground-art { position: absolute; inset: 0; z-index: -2; background-position: center; background-size: cover; opacity: 0; transition: opacity .4s; pointer-events: none; }
+.ground-art.on { opacity: .22; }
+.ground-art.on::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(18,14,11,.55), rgba(18,14,11,.2) 40%, rgba(18,14,11,.7)); }
+.enemy-art { position: absolute; inset: 0; z-index: -1; pointer-events: none; overflow: hidden;
+  -webkit-mask-image: linear-gradient(to right, transparent 30%, #000 60%); mask-image: linear-gradient(to right, transparent 30%, #000 60%); }
+.enemy-art img { position: absolute; opacity: 0; transition: opacity .35s; max-width: none; }
+.enemy-art img.on { opacity: .42; }
+.mini-hero .ground-art.on { opacity: .18; }
+.mini-hero .enemy-art img.on { opacity: .34; }

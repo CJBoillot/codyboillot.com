@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Alpha 0.6.2',
+  version: 'Alpha 0.6.3',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -282,6 +282,14 @@ const CONFIG = {
 
   // ---------- Hunting grounds ----------
   // Where the hero fights. Each ground has its own stage, enemies, bosses and loot. Drops need their tech (Skinning, Butchery, Grave Robbing). Beasts carry no gold.
+  // Enemy art: image + face position (fraction of the image) so the face sits under the enemy's HP bar. Boss art: '<id>_boss'.
+  art: {
+    grounds: { wilds: 'assets/enemies/wilds_dusk.webp' },
+    enemies: {
+      rat: [0.87, 0.67], rat_boss: [0.86, 0.25], boar: [0.80, 0.65], boar_boss: [0.84, 0.62], wolf: [0.80, 0.57], wolf_boss: [0.83, 0.47],
+      bear: [0.79, 0.42], bear_boss: [0.84, 0.40], saber: [0.88, 0.38], saber_boss: [0.86, 0.33],
+    },
+  },
   grounds: {
     // Each ground is a LINE of enemy types. A type has 10 stages; stage 10 is its boss. Pool: per-kill drop chance = base + growth × (stage−1), capped.
     // Loot from earlier types carries over at its stage-10 chance. `unique` drops once, on the first boss kill (+1 talent point).
@@ -406,6 +414,7 @@ const CONFIG = {
   // jobs (jobs completed by hand or thrall), sold (gold earned at market), stage, boss, founded, thrall (assigned), activity (swings).
   // Shown in Settings → What's new (newest first). Keep each line short.
   changelog: [
+    ['0.6.3', 'Art! Every beast in the Wilds and its boss now appears in the fight, over a painted Wilds backdrop.'],
     ['0.6.2', 'Orders now count toward your next settlement. Overseers and thrall stats matter much more. Iron and Steel gear use kingdom goods. Orders sometimes ask for what your hero gathers.'],
     ['0.6.1', 'Cloud saves with Google sign-in (or play as a guest). Cheaper buildings, better-paying Orders.'],
     ['0.6.0', 'Camp → Hamlet → Village → City. Buildings are built with goods; raising the settlement costs goods, never progress.'],

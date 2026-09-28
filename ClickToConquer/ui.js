@@ -758,7 +758,7 @@ const UI = (() => {
     $('hero-xpbar').style.width = (100 * h.xp / CONFIG.hero.xpToLevel(h.level)) + '%';
     const buffs = Object.keys(Game.activeBuffs());
     setText($('hero-status'), (h.resting ? 'Resting…' : 'Fighting') + (buffs.length ? ' · ' + buffs.map(b => ({ attackPct: '⚔+', crit: '🎯+', dropPct: '💰+', dr: '🛡+' }[b] || b)).join(' ') : ''));
-    setText($('enemy-name'), Game.enemyName());
+    setText($('enemy-name'), Game.enemyName()); renderArt();
     const eHp = h.enemyHp > 0 ? h.enemyHp : eMax;
     $('enemy-hpbar').style.width = (100 * eHp / eMax) + '%';
     setText($('enemy-hptext'), `${f(eHp)} / ${f(eMax)}`);
@@ -1078,6 +1078,30 @@ const UI = (() => {
     $('welcome').classList.remove('hidden');
   }
   function claimWelcome(mult) { if (welcomeData) Game.claimOffline(welcomeData, mult); welcomeData = null; $('welcome').classList.add('hidden'); Game.save(); }
+
+  // ---- Enemy art: place the image so the enemy's face sits just under its HP bar ----
+  let artLast = 0;
+  function enemyArtKey() { const S = Game.S; if (S.hero.activity !== 'fight') return null; const T = Game.enemyType ? Game.enemyType() : null; if (!T) return null; const k = Game.isBoss() ? T.id + '_boss' : T.id; return CONFIG.art.enemies[k] ? k : null; }
+  function placeArt(card, wrap, img, bar, key, size, gap) {
+    const g = card.querySelector('.ground-art'), gsrc = CONFIG.art.grounds[Game.S.hero.ground];
+    if (g.__src !== gsrc) { g.__src = gsrc; g.style.backgroundImage = gsrc ? `url(${gsrc})` : 'none'; }
+    g.classList.toggle('on', !!gsrc && Game.S.hero.activity === 'fight');
+    if (!key) { img.classList.remove('on'); return; }
+    const src = `assets/enemies/${key}.webp`; if (img.__src !== src) { img.__src = src; img.src = src; }
+    const cr = card.getBoundingClientRect(), br = bar.getBoundingClientRect(); if (!cr.width || !br.width) return;
+    const [fx, fy] = CONFIG.art.enemies[key];
+    const tx = br.left + br.width / 2 - cr.left, ty = br.bottom + gap - cr.top;
+    img.style.width = size + 'px'; img.style.height = size + 'px';
+    img.style.left = Math.round(tx - fx * size) + 'px'; img.style.top = Math.round(ty - fy * size) + 'px';
+    img.classList.add('on');
+  }
+  function renderArt(force) {
+    const now = performance.now(); if (!force && now - artLast < 250) return; artLast = now;
+    const key = enemyArtKey();
+    placeArt($('fight-card'), $('enemy-art'), $('enemy-art-img'), $('enemy-hpbar').parentElement, key, 250, 26);
+    const mh = $('mini-hero'); if (!mh.classList.contains('hidden')) placeArt(mh, $('mini-enemy-art'), $('mini-enemy-art-img'), $('mini-target'), key, 170, 22);
+  }
+  window.addEventListener('resize', () => renderArt(true));
 
   // ---- Cloud save UI ----
   function renderCloud() {

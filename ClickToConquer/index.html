@@ -12,7 +12,7 @@
   <title>Click to Conquer</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=a064">
+  <link rel="stylesheet" href="style.css?v=a065">
 </head>
 <body>
 
@@ -62,7 +62,7 @@
           <div id="harvest-afk" class="dim small afk-info"></div>
         </div>
 
-        <div id="fight-card" class="card arena">
+        <div id="fight-card" class="card arena"><div class="ground-art" id="ground-art"></div><div class="enemy-art" id="enemy-art"><img alt="" id="enemy-art-img"></div>
           <div class="arena-head">
             <div class="stage-title"><b id="stage">Rat 1/10</b> <span id="boss-tag" class="boss-tag hidden">BOSS</span></div>
             <div><span class="mode-tag">● ACTIVE</span><span class="dim">Best <b id="best-stage">1</b></span></div>
@@ -278,7 +278,7 @@
   </aside>
 </div>
 
-<div id="mini-hero" class="card mini-hero hidden">
+<div id="mini-hero" class="card mini-hero hidden"><div class="ground-art" id="mini-ground-art"></div><div class="enemy-art" id="mini-enemy-art"><img alt="" id="mini-enemy-art-img"></div>
       <div class="mini-head"><span class="mini-title" id="mini-title">Fighting · Stage 1</span><span class="dim small" id="mini-sub"></span></div>
       <div class="mini-bars">
         <div class="bar hp"><div id="mini-hero-hp"></div><span id="mini-hero-hptext"></span></div>
@@ -405,11 +405,11 @@
 </div>
 
 
-<script src="config.js?v=a064"></script>
-<script src="cloud-config.js?v=a064"></script>
-<script src="game.js?v=a064"></script>
-<script src="ui.js?v=a064"></script>
-<script src="cloud.js?v=a064"></script>
+<script src="config.js?v=a065"></script>
+<script src="cloud-config.js?v=a065"></script>
+<script src="game.js?v=a065"></script>
+<script src="ui.js?v=a065"></script>
+<script src="cloud.js?v=a065"></script>
 <script>window.addEventListener("error", e => { const d = document.getElementById("err"); if (d) { d.textContent = "Error: " + e.message; d.classList.remove("hidden"); } });</script>
 </body>
 </html>
