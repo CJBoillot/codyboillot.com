@@ -1141,3 +1141,9 @@ html, body { max-width: 100%; overflow-x: hidden; }
 .story-kicker { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--dim); }
 .story-title { font-family: var(--font-head); font-size: 24px; color: var(--bronze2); margin: 6px 0 10px; }
 .story-text { font-family: Georgia, 'Times New Roman', serif; font-size: 15px; line-height: 1.55; color: var(--text); text-align: left; margin: 0 0 14px; }
+/* 0.12.1 building levels */
+.depth-l em { font-style: normal; font-size: 10px; color: var(--dim); }
+.depth-l small { font-size: 8px; letter-spacing: 1px; text-align: center; padding: 0 2px; }
+.dig-card { border: 1px dashed var(--bronze-dim); background: #15110e; text-align: center; display: flex; flex-direction: column; gap: 6px; align-items: stretch; }
+.dig-t { font-family: var(--font-head); color: var(--bronze2); font-size: 16px; }
+.card.kin { padding: 8px 10px; }

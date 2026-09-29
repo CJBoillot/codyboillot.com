@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Alpha 0.12.0',
+  version: 'Alpha 0.12.1',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -227,12 +227,12 @@ const CONFIG = {
            ['Stone Skin', { dr: 0.05 }, 'small', 2], ['Troll Blood', { regenPct: 0.40 }, 'small', 2], ['Colossus', { hpPct: 0.30 }, 'small', 2],
            ['Unbreakable', { hpX: 1.5, dr: 0.10, speedPct: -0.05 }, 'key', 1], ['Iron Lineage', {}, 'endless', 0, 'lineage'] ],
       C: [ ['Master Builders', {}, 'small', 3, 'charter'], ['Lean Barracks', {}, 'small', 3, 'rations'], ['Plunderer', { goldPct: 0.2, dropPct: 0.2 }, 'small', 3],
-           ['Drillmasters', {}, 'small', 3, 'drill'], ['Tax Collectors', {}, 'small', 3, 'tax'], ['Plunder', {}, 'small', 3, 'spoils'],
+           ['Deep Foundations', {}, 'small', 3, 'foundations'], ['Tax Collectors', {}, 'small', 3, 'tax'], ['Plunder', {}, 'small', 3, 'spoils'],
            ['Warlord', { armyPct: 0.5 }, 'notable', 1], ['Victory Lap', {}, 'small', 2, 'lap'], ['Deep Cellar', {}, 'small', 2, 'cellar'],
            ['Long Memory', {}, 'small', 3, 'memory'], ['War Banners', {}, 'small', 3, 'warcollege'], ["Founder's Cache", {}, 'small', 2, 'cache'],
            ['Conqueror', { armyX: 1.5, attackPct: -0.05 }, 'key', 1], ['Dynastic Treasury', {}, 'endless', 0, 'treasury'] ],
     },
-    perkDesc: { charter: '+15% production in every building', rations: '−10% arms and bread per soldier', drill: '+50% training speed', tax: '+25% taxes', spoils: '+25% spoils', lap: '+1× damage in lands you know', cellar: 'AFK cap +2 h and Storehouse +25%',
+    perkDesc: { charter: '+15% production in every building', rations: '−10% arms and bread per soldier', foundations: 'Each new Age, every building starts with one more level already built', tax: '+25% taxes', spoils: '+25% spoils', lap: '+1× damage in lands you know', cellar: 'AFK cap +2 h and Storehouse +25%',
       memory: '+10% AFK efficiency', warcollege: 'Army boost to the hero +10%', cache: 'Start each dynasty with 15 min of your last taxes', bloodline: 'Attack ×1.08', lineage: 'HP and healing ×1.08', treasury: 'Taxes and production +10%' },
   },
 
@@ -398,22 +398,24 @@ const CONFIG = {
   kingdom: {
     lines: {
       forest: { name: 'People', chain: 'houses', icon: [4,6], steps: [
-        { id: 'logging',   name: 'Logging',    icon: [17,0],  make: 'wood',   base: 0.5, batch: 6,  tier: 0, build: null, art: 'logging', desc: 'Woodcutters fell trees for logs.' },
-        { id: 'sawmill',   name: 'Sawmill',    icon: [19,11], make: 'planks', from: 'wood',   ratio: 2, base: 0.3, batch: 4,  tier: 1, build: { wood: 100, ore: 40, gold: 200 }, art: 'sawmill', desc: '2 logs → 1 plank.' },
-        { id: 'carpenter', name: 'Carpenter',  icon: [10,4],  make: 'lumber', from: 'planks', ratio: 2, base: 0.15, batch: 3, tier: 2, build: { planks: 120, ingot: 30, gold: 500 }, art: 'carpenter', desc: '2 planks → 1 lumber. Lumber raises houses.' } ] },
+        { id: 'logging',   name: 'Logging',    icon: [17,0],  make: 'wood',   base: 0.5, batch: 6,  tier: 0, build: null, unit: ['Grove', 'groves'], dig: 'Clear a new grove', art: 'logging', desc: 'Woodcutters fell trees for logs.' },
+        { id: 'sawmill',   name: 'Sawmill',    icon: [19,11], make: 'planks', from: 'wood',   ratio: 2, base: 0.3, batch: 4,  tier: 1, build: { wood: 100, ore: 40, gold: 200 }, unit: ['Saw Pit', 'saw pits'], dig: 'Build a new saw pit', art: 'sawmill', desc: '2 logs → 1 plank.' },
+        { id: 'carpenter', name: 'Carpenter',  icon: [10,4],  make: 'lumber', from: 'planks', ratio: 2, base: 0.15, batch: 3, tier: 2, build: { planks: 120, ingot: 30, gold: 500 }, unit: ['Workbench', 'workbenches'], dig: 'Set up a new workbench', art: 'carpenter', desc: '2 planks → 1 lumber. Lumber raises houses.' } ] },
       farm: { name: 'Food', chain: 'bread', icon: [12,5], steps: [
-        { id: 'fields', name: 'Farm', icon: [14,13], make: 'grain', base: 0.5, batch: 6,  tier: 0, build: { wood: 40, gold: 40 }, art: 'farm', desc: 'Farmers sow and reap grain.' },
-        { id: 'mill',   name: 'Mill',   icon: [15,10], make: 'flour', from: 'grain', ratio: 2, base: 0.3, batch: 4,  tier: 1, build: { wood: 80, grain: 100, gold: 200 }, art: 'mill', desc: '2 grain → 1 flour.' },
-        { id: 'baker',  name: 'Bakery',  icon: [14,14], make: 'bread', from: 'flour', ratio: 2, base: 0.15, batch: 3, tier: 2, build: { flour: 120, planks: 60, gold: 500 }, art: 'bakery', desc: '2 flour → 1 bread.' } ] },
+        { id: 'fields', name: 'Farm', icon: [14,13], make: 'grain', base: 0.5, batch: 6,  tier: 0, build: { wood: 40, gold: 40 }, unit: ['Field', 'fields'], dig: 'Plow a new field', art: 'farm', desc: 'Farmers sow and reap grain.' },
+        { id: 'mill',   name: 'Mill',   icon: [15,10], make: 'flour', from: 'grain', ratio: 2, base: 0.3, batch: 4,  tier: 1, build: { wood: 80, grain: 100, gold: 200 }, unit: ['Millstone', 'millstones'], dig: 'Set a new millstone', art: 'mill', desc: '2 grain → 1 flour.' },
+        { id: 'baker',  name: 'Bakery',  icon: [14,14], make: 'bread', from: 'flour', ratio: 2, base: 0.15, batch: 3, tier: 2, build: { flour: 120, planks: 60, gold: 500 }, unit: ['Oven', 'ovens'], dig: 'Build a new oven', art: 'bakery', desc: '2 flour → 1 bread.' } ] },
       mine: { name: 'Arms', chain: 'arms', icon: [4,5], steps: [
-        { id: 'shaft',   name: 'Mine', icon: [17,2], make: 'ore',    base: 0.5, batch: 6,  tier: 0, build: { wood: 60, grain: 30, gold: 80 }, art: 'mine', desc: 'Miners dig iron ore.' },
-        { id: 'smelter', name: 'Forge',    icon: [17,3], make: 'ingot',  from: 'ore',   ratio: 2, base: 0.3, batch: 4,  tier: 1, build: { ore: 100, wood: 80, gold: 200 }, art: 'forge', desc: '2 ore → 1 ingot.' },
-        { id: 'forge',   name: 'Armory',     icon: [5,1],  make: 'swords', from: 'ingot', ratio: 2, base: 0.15, batch: 3, tier: 2, build: { ingot: 120, planks: 60, gold: 500 }, art: 'armory', desc: '2 ingots → 1 set of arms.' } ] },
+        { id: 'shaft',   name: 'Mine', icon: [17,2], make: 'ore',    base: 0.5, batch: 6,  tier: 0, build: { wood: 60, grain: 30, gold: 80 }, unit: ['Depth', 'depths'], dig: 'Dig deeper', art: 'mine', desc: 'Miners dig iron ore.' },
+        { id: 'smelter', name: 'Forge',    icon: [17,3], make: 'ingot',  from: 'ore',   ratio: 2, base: 0.3, batch: 4,  tier: 1, build: { ore: 100, wood: 80, gold: 200 }, unit: ['Furnace', 'furnaces'], dig: 'Build a new furnace', art: 'forge', desc: '2 ore → 1 ingot.' },
+        { id: 'forge',   name: 'Armory',     icon: [5,1],  make: 'swords', from: 'ingot', ratio: 2, base: 0.15, batch: 3, tier: 2, build: { ingot: 120, planks: 60, gold: 500 }, unit: ['Anvil', 'anvils'], dig: 'Raise a new anvil', art: 'armory', desc: '2 ingots → 1 set of arms.' } ] },
     },
     startGold: 50, foundRenown: 500, swapCooldown: 120,
     war: { thrallBonus: 10, supplyCapMult: 2, soldierCapBase: 50, soldierCapPerTier: 25, soldierGold: 2, quartermaster: { bread: 'food', swords: 'supplies', lumber: 'supplies' } },
     // ---- 0.9: buildings are one level each ----
     milestones: [10, 25, 50, 100, 200, 300, 400, 500],   // ×2 output at each
+    // 0.12.1: every building grows new levels (a grove, a field, a furnace… only the Mine digs). Level d makes yield^(d−1) × the first; digging it costs gold × digGrowth each time; its parts cost partCost^(d−1) × more.
+    depths: { yield: 12, digBase: 20000, digGrowth: 15, partCost: 12 },
     lordship: 0.01,                                      // +1% production per hero level
     minLv: 10,                                           // a complete City: every part of every building at this level, and the Barracks built
     // The army (0.9): the Barracks trains soldiers from Food + Supplies; soldiers eat every minute.
@@ -501,6 +503,7 @@ const CONFIG = {
   // jobs (jobs completed by hand or thrall), sold (gold earned at market), stage, boss, founded, thrall (assigned), activity (swings).
   // Shown in Settings → What's new (newest first). Keep each line short.
   changelog: [
+    ['0.12.1', 'Buildings grow. After you proclaim the Kingdom, every building can add new levels — Logging clears new groves, the Farm plows new fields, the Forge builds new furnaces, the Bakery new ovens, and the Mine digs deeper. Each one can grow far bigger than the last and has its own Work, Cart and Haul. The buttons on each Production card upgrade the newest one. Crowning your heir now starts a fresh town: levels, houses and people begin again, and the Age\'s gold makes the climb quick. Drillmasters became Deep Foundations: each rank starts every building with one more level built. New quest: Go Deeper.'],
     ['0.12.0', 'Kingdom Production. Your town is now three chains that feed the Barracks: People (Logging → Sawmill → Carpenter → houses), Arms (Mine → Forge → Armory) and Food (Farm → Mill → Bakery). Every building has three parts — Work, Cart and Haul — each with its own level; the slowest part glows gold. Tap Enter to go inside. Houses hold people, people pay a little tax, and the Barracks turns a person, arms and bread into a soldier; each soldier costs a little more gear than the last. There is no army limit or upkeep any more, and conquered lands send settlers — if you have houses for them. Armies are smaller and every soldier counts: old armies were rescaled at the same strength. Quartermasters and Rations became Master Builders and Lean Barracks; the Great Granary now triples all production. New art for every building, new quests for the city and the kingdom, and a few words from the Chronicle as each chapter begins.'],
     ['0.11.2', 'Loot cleanup. Drops that did nothing are gone: rat tails, tusks, pelts, claws, fangs, rope, lockboxes, bone dust, grave iron and the boss trinkets (the Rat King\'s Tooth stays: it pays the tribute). Meat, berries, the Butcher\'s Cleaver and Butchery are gone too. The Wilds drop hide, the Roads gold, the Crypts gold and ingots. Anything you were holding was sold for its old price. Trophies are kill milestones per enemy: Bronze at 1,000 kills, Silver 3,000, Gold 10,000, Platinum 30,000, Diamond 100,000 (+2% loot and XP each).'],
     ['0.11.1', 'Ages and the Crown Tree. Each Age is ten lands; beat the Emperor at land 10 and press Crown your heir in the Keep to begin the next Age — the same ten lands, far richer and far tougher, with the Age named on Where to fight. Eras and Wonders keep counting across Ages. Permanent power now comes from one place: the Crown Tree (Skills → Crown Tree), bought with Crowns — few ranks, big effects, and an endless node at the bottom of each branch. Every first boss kill gives a Crown (boss tokens are gone), Captains pay Crowns each Age, and rulers pay more in later Ages. Your old Path gold, boss tokens and Legacy perks were refunded, and saves past land 10 moved into the right Age.'],
@@ -752,6 +755,8 @@ const CONFIG = {
       steps: [ { label: 'Hero → Where to fight → Ashford Vale', check: { landPct: 1, need: 1 } }, { label: 'Conquer 10% more of Ashford Vale', check: { landPct: 1, need: 10, since: true, orDone: true } } ], reward: { gold: 1000 }, focus: { tab: 'hero', sub: 'fight', el: 'ground:land1' } },
     { id: 'w03', chain: 'The Kingdom', name: 'A Garrison', text: 'A conquered land pays taxes — but only as much as its garrison can hold. Soldiers in a garrison do not march with the hero.',
       steps: [ { label: 'Kingdom → Lands → Ashford Vale → station 2 soldiers', check: { garrison: 1, need: 2 } }, { label: 'Earn 100 gold in taxes', check: { taxed: 100 } } ], reward: { gold: 1000 }, focus: { tab: 'kingdom', ksub: 'lands', rtab: 'kingdom', el: 'id:lands-card' } },
+    { id: 'w01', chain: 'The Kingdom', name: 'Go Deeper', text: 'Taxes are flowing, and every building can grow: the Mine digs deeper, the Farm plows new fields, the Forge builds new furnaces. Each new one can grow far bigger than the last.',
+      steps: [ { label: 'Production → Mine → Enter → Dig deeper', check: { stat: 'levels:shaft', need: 2 } }, { label: 'Raise Depth 2\'s Work to Lv 5', check: { partLv: 'shaft:W:2', need: 5 } } ], reward: { gold: 5000 }, focus: { tab: 'kingdom', ksub: 'prod', rtab: 'kingdom', el: 'step:shaft' } },
     { id: 'w03b', chain: 'The Kingdom', name: 'The Fallen', text: 'Hard fights cost soldiers — the harder the hero is pushed, the more fall. Every new soldier needs a person, arms and bread, so keep the Barracks fed.',
       steps: [ { label: 'Train 25 more soldiers', check: { stat: 'trained', need: 25, since: true } } ], reward: { gold: 1500 }, focus: { tab: 'kingdom', ksub: 'prod', rtab: 'kingdom', el: 'id:barracks-card' } },
     { id: 'w04', chain: 'The Kingdom', name: 'Baron Hollin', text: 'At the end of every land waits its Ruler. Beat him and take his crown — Crowns are the power of your dynasty.',
