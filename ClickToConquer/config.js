@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Beta 0.3.0',
+  version: 'Beta 0.3.1',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -507,6 +507,7 @@ const CONFIG = {
   // jobs (jobs completed by hand or thrall), sold (gold earned at market), stage, boss, founded, thrall (assigned), activity (swings).
   // Shown in Settings → What's new (newest first). Keep each line short.
   changelog: [
+    ['Beta 0.3.1', 'The enemy army box no longer shows the enemy picture, so its count sits centred like yours.'],
     ['Beta 0.3.0', 'Army battles. Every land is now a campaign of 50 battles fought army against army with d20 dice, Risk style: the bigger side rolls more dice and keeps its best, a natural 20 is a crit that converts an enemy soldier to your side while you push forward, and a 1 is a fumble. Battles fight themselves after a 10 s muster, or tap Strike to fight at once. Defend is the default and costs you the fewest men; Charge, Rally, Flank, Volley and Medics are orders with a 1-minute cooldown. While you are away (or idle) your army replays the last battle it won for gold and loot, and pauses if it drops below 75% of its peak. Only you advance to the next battle and start the next land. Battle 50 ends with a best-of-three duel against the ruler. Old lands keep your progress (a 100-stage land is now 50 battles).'],
     ['Beta 0.2.0', 'The endless loop. People and houses are gone: a soldier is now 1 lumber + 1 arms + 1 bread, one from each chain, and lumber is the Wood chain\'s finished good like arms and bread. The Barracks trains for as long as goods keep coming, and never uses goods kept for building. Once a land falls, the hero marches on to the next one by himself as soon as the army reaches its recommended size (untick it on the hero screen to stay and farm). The Carpenter\'s steps are now Plane, Treat and Stack, and quests about houses, settlers and head tax are rewritten.'],
     ['Beta 0.1.26', 'When the Storehouse is full, a building now shows what is being sold off: "Storehouse full — 0.24 arms/s sold off cheap at 11 gold each (+2.75 gold/s)". Overflow while you are away is sold the same way instead of being lost.'],

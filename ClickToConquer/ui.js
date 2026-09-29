@@ -1592,12 +1592,12 @@ const UI = (() => {
   function renderBattle() {
     const S = Game.S, h = S.hero, B = CONFIG.kingdom.battles, f = Game.fmt, n = Game.landN(), b = Game.battleNo(), G = Game.landDef(n), bt = Game.battleState(), kind = Game.battleKind(b), box = $('battle-card');
     const key = [n, b, kind].join('|');
-    if (battleKey !== key || !box.firstChild) { battleKey = key; const art = battleArt(b), t = Game.enemyType(b);
+    if (battleKey !== key || !box.firstChild) { battleKey = key; const t = Game.enemyType(b);
       setHtml(box, `<div class="bl-head"><b>${G.name}</b><span>Battle ${b} / ${B.count}${kind === 'captain' ? ' · <em>Captain</em>' : kind === 'host' ? ' · <em>The ruler\'s host</em>' : ''}</span></div>
         <div class="bl-camp"><i data-f="camp"></i></div>
         <div class="bl-vs"><div class="bl-side me"><div class="bl-n" data-f="yn"></div><small>YOUR ARMY</small><div class="bl-pip" data-f="ypip"></div></div>
           <div class="bl-x"><span class="sw a">${ico([5, 1], 30)}</span><span class="sw b">${ico([5, 1], 30)}</span></div>
-          <div class="bl-side foe"><img class="bl-art${art.flip ? ' flip' : ''}" src="${art.src}" alt=""><div class="bl-n" data-f="en"></div><small>${kind === 'host' ? G.ruler.toUpperCase() + '\'S HOST' : (kind === 'captain' ? t.boss : t.plural).toUpperCase()}</small><div class="bl-pip" data-f="epip"></div></div></div>
+          <div class="bl-side foe"><div class="bl-n" data-f="en"></div><small>${kind === 'host' ? G.ruler.toUpperCase() + '\'S HOST' : (kind === 'captain' ? t.boss : t.plural).toUpperCase()}</small><div class="bl-pip" data-f="epip"></div></div></div>
         <div class="bl-bar"><i class="a" data-f="ba"></i><i class="b" data-f="bb"></i></div>
         <div class="bl-dice" data-f="dice"></div>
         <div class="bl-round" data-f="round"></div>
