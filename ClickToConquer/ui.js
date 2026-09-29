@@ -1586,8 +1586,12 @@ const UI = (() => {
 
   // ===== Beta 0.4.0: The Front — the siege between forts, fed by soldiers =====
   function renderFront(LN) {
-    const box = $('front-box'), S = Game.S, h = S.hero, f = Game.fmt, G = Game.ground(), show = !!LN && Game.heroFighting() && !Game.isEndless();
+    const box = $('front-box'), S = Game.S, h = S.hero, f = Game.fmt, G = Game.ground(), won = !!LN && Game.isEndless() && Game.landDone(LN), show = !!LN && Game.heroFighting() && (!Game.isEndless() || won);
     box.classList.toggle('hidden', !show); if (!show) return;
+    if (won) { const nx = Game.landDef(LN + 1), qid = nx ? Game.landQuestId(LN + 1) : null, q = qid && CONFIG.quests.find(x => x.id === qid), m = Game.marchReady();
+      setHtml(box, `<div class="row-between small"><span>🏰 ${G.name} is yours — the Front rests here</span><b>100%</b></div><div class="fr-bar"><i style="width:100%"></i></div>
+        <div class="fr-note">${!nx ? 'This was the last land of the Age.' : m ? (S.settings.autoMarch !== false ? `The army marches on to <b>${nx.name}</b> — the siege begins there.` : `<b>${nx.name}</b> is open. Choose it under Where to fight to start its siege (auto-march is off).`) : q ? `The Front moves on to <b>${nx.name}</b> once you reach the quest <b>${q.name}</b>. Until then your army rests (no one falls) and the hero farms the Endless Battle here.` : `${nx.name}: ${Game.landReqText(LN + 1)}.`}</div>
+        <div class="fr-help dim">In an unconquered land, soldiers besiege each stage: the bar fills from soldiers × their worth, and your hero duels the captain at every fort.</div>`); return; }
     const s = h.stage, boss = Game.isBoss(s), held = s < (h.bestStage || 1), mar = Game.marching(), w = Game.soldierWorth(LN, boss ? s - 1 : s), hold = Game.frontHold(), F = Game.frontState(), nx = s + 1;
     const pct = boss ? 1 : Math.min(1, h.siege || 0), fall = Game.attritionPerMin(), gp = Game.goldPerFallen(s), eta = Game.siegeEta();
     let head, note = '';

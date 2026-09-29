@@ -1421,6 +1421,7 @@ function landBest(n) { const id = landId(n); if (S.hero.ground === id) return S.
 function landPct(n) { const G = landDef(n); if (!G) return 0; if (landDone(n)) return 100; const b = landBest(n); return b > 1 ? Math.min(99, Math.floor(100 * (b - 1) / G.stages)) : 0; }
 function landsHeld() { let n = 0; while (landDone(n + 1)) n++; return n; }
 const LAND_QUEST = { 1: 'w02', 2: 'w05', 3: 'w06' }; // 0.10.4: the first dynasty marches as the quests lead — the third land waits until the crown has passed once
+function landQuestId(n) { return (S.legacy.dynasty || 1) > 1 || questReached(LAND_QUEST[Math.min(n, 3)]) ? null : LAND_QUEST[Math.min(n, 3)]; }
 function landQuestOk(n) { return (S.legacy.dynasty || 1) > 1 || questReached(LAND_QUEST[Math.min(n, 3)]); }
 function landOpen(n) { return phase() === 3 && !!landDef(n) && (n === 1 || landDone(n - 1)) && landQuestOk(n); }
 function landReqText(n) { const G = landDef(n); if (!G) return ''; if (n > 1 && !landDone(n - 1)) return G.reqText; if (!landQuestOk(n)) return n >= 3 ? 'Pass the Crown first' : 'Follow the quests'; return G.reqText; }
@@ -1712,7 +1713,7 @@ window.Game = {
   toolTierUnlocked, toolPower, toolCraftCost, toolUpgradeCost, canToolTierUp, craftTool, upgradeTool, activityDef, activityAvailable, setActivity, masteryLevel, harvestTime, harvestYield, harvestRates,
   questCurrent, questProgress, questClaim, suggestGoal, ground, setGround, groundUnlocked, dropToolMult, bestStageAll, groundDrops, toolSlotUnlocked,
   techDef, hasTech, techProgress, canResearch, research, researching, buildingUnlocked, gearTierUnlocked, dropUnlocked, counter,
-  siegeOn, siegeCost, soldierWorth, siegePerMin, siegeActive, attritionPerMin, goldPerFallen, commanderReady, frontHold, siegeEta, frontState, generalEdge, worthRef,
+  landQuestId, siegeOn, siegeCost, soldierWorth, siegePerMin, siegeActive, attritionPerMin, goldPerFallen, commanderReady, frontHold, siegeEta, frontState, generalEdge, worthRef,
   kingdomRates, chainFlow, marchReady, autoMarch, limitParts, overflowRate, kingdomNo, allSteps, stepDef, stepUnlocked, lineUnlocked, lineSteps, stepState, nextStep, stepMods, kTier, tierDef, stepAvailable, stepBuilt, canBuild, buildStep, tierGoods, tierNeed, tierPaid, tierPaidDone, tierStepsReady, contribute, canRaise, raiseTier, accountantSteps, assignAccountant, cityChecks, cityComplete, stepRate, stepPhases, stepCycle, stepBatch, stepOutput, thrallLevel, thrallCap, dismiss, stepLimit, stepUpCost, stepUpPlan, upgradeStep, stepWorkerSlots,
   assignWorker, assignOverseer, unassign, thrallPost, useAbility, refreshOffers, hire, maxStars, storeUpCost, upgradeStore, orderGoods, foundRenownNeed, canDeliver, deliver, swapOrder, swapReady, rankIndex, rankInfo, heroFighting, thrallCount, sellPrice, sell, buyPrice, buyRes, buyMax, canBuyRes,
   canAdvance, advance, stageSustainable, autoAdvanceBlock, autoKillsNeeded, killHeal, retreat, canAfford, add, simulate, applyOffline, claimOffline, offlineStages,

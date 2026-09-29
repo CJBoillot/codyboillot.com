@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Beta 0.4.0',
+  version: 'Beta 0.4.1',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -506,6 +506,7 @@ const CONFIG = {
   // jobs (jobs completed by hand or thrall), sold (gold earned at market), stage, boss, founded, thrall (assigned), activity (swings).
   // Shown in Settings → What's new (newest first). Keep each line short.
   changelog: [
+    ['Beta 0.4.1', 'In a conquered land the Front box now says the Front is resting and what opens the next land (for the first land: the quest The Iron Hills), so it is clear why no siege is running.'],
     ['Beta 0.4.0', 'The Front. Conquest is now a siege fed by soldiers. In a land, every stage between forts is besieged by your army: the siege bar fills at (soldiers × their worth) and the ground never falls back. Your hero sets that worth — the stronger he is against this land\'s soldiers, the more each soldier counts ("worth ×1.4 each"). Soldiers fall only while the siege gains ground (2% of the army a minute), and each takes foes and their gold with him. Every 10th stage is a fort: the hero duels its captain himself; if he can\'t win yet, the army holds the breached walls, no one falls, and he tries again once stronger (or tap Advance). The pace of conquest is now the pace of your Barracks — lumber, arms and bread. It all runs while you are away, and the welcome-back report says how far the front moved. No more recommended army: after a land falls the hero marches on straight away.'],
     ['Beta 0.3.4', 'Back to the old battles. The army-vs-army dice campaign (0.3.0–0.3.3) was a misfire and is shelved for now: lands are fought stage by stage again with the hero leading the army, as in 0.2.0, with the Endless Battle and auto-march back. Saves from 0.3.x get their land progress, captains and quest back.'],
     ['Beta 0.3.3', 'AFK battles are safe. Replaying a battle you have already won, in Defend, costs no soldiers — the fallen are only wounded — so the army can farm all night and still be there in the morning. Soldiers are only lost when you push forward. Your hero\'s bonus is recalibrated: a new kingdom starts near 0 ("hero −1 on every die") and it grows as the hero does; enemy armies are larger to match. A crit while pushing now takes a prisoner, who joins you only if you win. On a conquered land, Advance becomes "March to (next land)". The welcome-back report says where the army fought, what it lost and why it stopped.'],

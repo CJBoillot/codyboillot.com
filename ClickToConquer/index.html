@@ -16,7 +16,7 @@
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=b0400">
+  <link rel="stylesheet" href="style.css?v=b0401">
 </head>
 <body>
 
@@ -102,7 +102,7 @@
           <div id="demand-note" class="demand-note hidden"></div>
           <div id="retreat-note" class="retreat-note hidden"><span id="retreat-text"></span><button id="retreat-x" class="retreat-x" aria-label="Dismiss">×</button></div>
           <div class="row-between adv-row"><label class="auto-toggle small"><input type="checkbox" id="auto-adv" checked> Auto-advance every 50 kills</label><span id="danger" class="dim small"></span></div>
-          <div class="row-between adv-row hidden" id="march-row"><label class="auto-toggle small"><input type="checkbox" id="auto-march" checked> March on to the next land when the army is ready</label><span id="march-note" class="dim small"></span></div>
+          <div class="row-between adv-row hidden" id="march-row"><label class="auto-toggle small"><input type="checkbox" id="auto-march" checked> March on to the next land when it opens</label><span id="march-note" class="dim small"></span></div>
           <div id="afk-info" class="dim small afk-info"></div>
         </div>
         <div class="card" id="activity-card">
@@ -493,11 +493,11 @@
 </div>
 
 
-<script src="config.js?v=b0400"></script>
-<script src="cloud-config.js?v=b0400"></script>
-<script src="game.js?v=b0400"></script>
-<script src="ui.js?v=b0400"></script>
-<script src="cloud.js?v=b0400"></script>
+<script src="config.js?v=b0401"></script>
+<script src="cloud-config.js?v=b0401"></script>
+<script src="game.js?v=b0401"></script>
+<script src="ui.js?v=b0401"></script>
+<script src="cloud.js?v=b0401"></script>
 <script>window.addEventListener("error", e => { const d = document.getElementById("err"); if (d) { d.textContent = "Error: " + e.message; d.classList.remove("hidden"); } });</script>
 <div id="celebrate" class="celebrate hidden" role="status" aria-live="polite"><div class="cb-ico" id="cb-ico"></div><div class="cb-txt"><div class="cb-kicker" id="cb-kicker"></div><div class="cb-title" id="cb-title"></div><div class="cb-sub" id="cb-sub"></div></div></div>
 </body>
