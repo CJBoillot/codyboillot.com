@@ -16,7 +16,7 @@
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=b0304">
+  <link rel="stylesheet" href="style.css?v=b0400">
 </head>
 <body>
 
@@ -94,6 +94,7 @@
           <div id="army-flow" class="flowline hidden"></div>
           <div id="strain-card" class="strain hidden"></div>
           <div id="conquest-box" class="conquest hidden"><div class="row-between small"><b id="cq-name"></b><span id="cq-pct" class="dim"></span></div><div class="bar cq-bar"><div id="cq-bar"></div><span id="cq-text"></span></div><div id="cq-ticks" class="cq-ticks"></div></div>
+          <div id="front-box" class="front hidden"></div>
           <div class="btn-row">
             <button id="retreat-btn">◀ Retreat</button>
             <button id="advance-btn" class="primary" disabled>Advance ▶</button>
@@ -492,11 +493,11 @@
 </div>
 
 
-<script src="config.js?v=b0304"></script>
-<script src="cloud-config.js?v=b0304"></script>
-<script src="game.js?v=b0304"></script>
-<script src="ui.js?v=b0304"></script>
-<script src="cloud.js?v=b0304"></script>
+<script src="config.js?v=b0400"></script>
+<script src="cloud-config.js?v=b0400"></script>
+<script src="game.js?v=b0400"></script>
+<script src="ui.js?v=b0400"></script>
+<script src="cloud.js?v=b0400"></script>
 <script>window.addEventListener("error", e => { const d = document.getElementById("err"); if (d) { d.textContent = "Error: " + e.message; d.classList.remove("hidden"); } });</script>
 <div id="celebrate" class="celebrate hidden" role="status" aria-live="polite"><div class="cb-ico" id="cb-ico"></div><div class="cb-txt"><div class="cb-kicker" id="cb-kicker"></div><div class="cb-title" id="cb-title"></div><div class="cb-sub" id="cb-sub"></div></div></div>
 </body>

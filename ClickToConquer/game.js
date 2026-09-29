@@ -366,7 +366,7 @@ function stats(mode = 'live') {
   st.bossDmg = 1 + (m.bossDmg || 0);
   st.restSpeed = H.restMult * (1 + (m.restSpeed || 0));
   if (mode === 'sustained') { const s = sustainedSkillDps(st); st.dps += s.dps; st.regen += s.heal; }
-  { const am = S.kingdom ? 1 + (armyMult() - 1) * (1 + (m.armyPct || 0)) * pathX('armyX') : 1, lap = S.kingdom && lapActive() ? LC().victoryLap + perkRank('lap') : 1, hm = S.kingdom ? 1 + (armyHpMult() - 1) * ((landTrait(landN()) || {}).armyHp ?? 1) : 1; st.army = am; st.lap = lap; st.gearAttack = st.attack; st.attack *= am * lap; st.dps *= am * lap; st.maxHp *= hm; st.regen *= hm;
+  { const am = S.kingdom ? 1 + (armyMult() - 1) * (1 + (m.armyPct || 0)) * pathX('armyX') : 1, lap = S.kingdom && lapActive() ? LC().victoryLap + perkRank('lap') : 1, hm = S.kingdom ? 1 + (armyHpMult() - 1) * ((landTrait(landN()) || {}).armyHp ?? 1) : 1; st.army = am; st.armyHp = hm; st.lap = lap; st.gearAttack = st.attack; st.attack *= am * lap; st.dps *= am * lap; st.maxHp *= hm; st.regen *= hm;
     const bm = Math.pow(1.08, perkRank('bloodline')) * pathX('attackX'), lm = Math.pow(1.08, perkRank('lineage')) * pathX('hpX'); st.bloodline = bm; st.attack *= bm; st.dps *= bm; st.maxHp *= lm; st.regen *= lm;
     const wa = wonderMult('attack'), wh = wonderMult('hp'); st.wonder = wa; st.attack *= wa; st.dps *= wa; st.maxHp *= wh; st.regen *= wh; }
   return st;
@@ -407,9 +407,9 @@ function ground() { return CONFIG.grounds[S.hero.ground] || CONFIG.grounds.wilds
 function groundUnlocked(id) { const G = CONFIG.grounds[id]; if (!G || !G.req) return true; if (G.req.land) return landOpen(G.req.land) || landPct(G.req.land) > 0; if (G.req.tech) return hasTech(G.req.tech); if (G.req.stage) return (S.hero.ground === 'wilds' ? S.hero.bestStage : (S.hero.grounds.wilds || {}).bestStage || 1) > G.req.stage || !!S.hero.bossesKilled['wilds:' + G.req.stage]; /* Beta 0.1.15: the boss on that stage must fall, not just be reached */ return true; }
 function setGround(id) {
   if (!CONFIG.grounds[id] || id === S.hero.ground || !groundUnlocked(id)) return false;
-  const h = S.hero; h.grounds[h.ground] = { stage: h.stage, bestStage: h.bestStage, kills: h.kills };
+  const h = S.hero; h.grounds[h.ground] = { stage: h.stage, bestStage: h.bestStage, kills: h.kills, siege: h.siege || 0 };
   const g = h.grounds[id] || { stage: 1, bestStage: 1, kills: 0 };
-  h.ground = id; h.stage = g.stage; h.bestStage = g.bestStage; h.kills = g.kills; h.enemyHp = 0; h.carry = 0; h.resting = false;
+  h.ground = id; h.stage = g.stage; h.bestStage = g.bestStage; h.kills = g.kills; h.siege = g.siege || 0; h.enemyHp = 0; h.carry = 0; h.resting = false;
   log(`Now hunting ${CONFIG.grounds[id].name}`); return true;
 }
 function bestStageAll() { let b = S.hero.bestStage; for (const k in S.hero.grounds) b = Math.max(b, S.hero.grounds[k].bestStage || 1); return b; }
@@ -460,12 +460,14 @@ function autoAdvanceBlock(stage = S.hero.stage) { // why the hero won't push on 
   if (G.stages && stage >= G.stages && !(G.land && landDone(G.land))) return 'end';
   if (S.settings.autoAdvance === false) return 'off';
   if (G.land && G.stages && stage >= G.stages) return null; // the Ruler is beaten: on into the Endless Battle
+  if (phase() === 3 && G.land) return isBoss(stage) ? null : 'siege'; // Beta 0.4.0: the Front moves the hero, not his kill count
   if (isBoss(stage + 1) && !G.land) return 'boss'; // in a land he marches on through captains and the Ruler
   if (!stageSustainable(stage + 1)) return 'tough';
   return null;
 }
 function heroRetreat(st) {
   const h = S.hero, from = h.stage, boss = isBoss(from), foe = enemyName(from);
+  if (boss && landN()) h.bossWait = h.time + SG().retry; // Beta 0.4.0: the army holds at the walls; he tries again when rested
   retreat(); h.hp = st.maxHp; h.enemyHp = 0; h.carry = 0; h.atkTimer = 0; h.eTimer = 0;
   h.retreatNote = { from, to: h.stage, boss, foe, t: h.time };
   log(boss ? `The ${foe} was too strong — your hero had to retreat to stage ${h.stage}.` : `Your hero had to retreat to stage ${h.stage} — stage ${from} hits harder than he can heal.`);
@@ -1100,9 +1102,9 @@ function gainXp(x) {
     log(`Level up! Now level ${S.hero.level}`); pushEvent({ who: 'levelup', lv: S.hero.level });
   }
 }
-function canAdvance() { const G = ground(); if (isEndless()) return false; if (G.stages && S.hero.stage >= G.stages && !(G.land && landDone(G.land))) return false; return S.hero.kills >= killsNeeded(); }
-function advance() { if (!canAdvance()) return false; S.hero.stage++; S.hero.kills = 0; S.hero.enemyHp = 0; S.hero.carry = 0; S.hero.bestStage = Math.max(S.hero.bestStage, S.hero.stage); if (isEndless()) { log(`${ground().name} is yours. The Endless Battle begins — the richest fighting in this land. Move on to the next land whenever you choose.`); return true; } log(isBoss() ? `The ${enemyName()} awaits — BOSS` : stageType().k === 1 ? `Now hunting ${enemyType().plural}` : `Advanced: ${stageLabel()}`); return true; }
-function retreat() { if (S.hero.stage <= 1) return false; S.hero.stage--; S.hero.kills = 0; S.hero.enemyHp = 0; S.hero.carry = 0; log(`Retreated to stage ${S.hero.stage}`); return true; }
+function canAdvance() { const G = ground(); if (isEndless()) return false; if (siegeOn()) return (S.hero.siege || 0) >= 1 && S.hero.stage < G.stages; if (G.stages && S.hero.stage >= G.stages && !(G.land && landDone(G.land))) return false; return S.hero.kills >= killsNeeded(); }
+function advance() { if (!canAdvance()) return false; S.hero.stage++; S.hero.kills = 0; S.hero.enemyHp = 0; S.hero.carry = 0; S.hero.bestStage = Math.max(S.hero.bestStage, S.hero.stage); S.hero.siege = S.hero.stage < S.hero.bestStage ? 1 : 0; if (isEndless()) { log(`${ground().name} is yours. The Endless Battle begins — the richest fighting in this land. Move on to the next land whenever you choose.`); return true; } log(isBoss() ? `The ${enemyName()} awaits — BOSS` : stageType().k === 1 ? `Now hunting ${enemyType().plural}` : `Advanced: ${stageLabel()}`); return true; }
+function retreat() { if (S.hero.stage <= 1) return false; S.hero.stage--; S.hero.siege = 1; S.hero.kills = 0; S.hero.enemyHp = 0; S.hero.carry = 0; log(`Retreated to stage ${S.hero.stage}`); return true; }
 function log(msg) { S.log.unshift(msg); if (S.log.length > 30) S.log.length = 30; }
 
 // ---------- Live simulation ----------
@@ -1119,7 +1121,7 @@ function simulate(dt) {
   tickKingdom(dt); tickPeople(dt); tickArmy(dt); tickTaxes(dt); tickCraft(dt); tickResearch(dt);
   const h = S.hero; h.time += dt;
   if ((h._tu = (h._tu || 0) + dt) >= 1) { h._tu = 0; checkTechUnlocks(); }
-  tickHarvest(dt);
+  tickHarvest(dt); tickSiege(dt);
   if (!heroFighting()) { const st0 = stats(); h.hp = Math.min(st0.maxHp, h.hp + st0.regen * dt); return; }
   for (const id in h.cds) if (h.cds[id] > 0) h.cds[id] -= dt;
   const st = stats();
@@ -1140,8 +1142,74 @@ function simulate(dt) {
     h.hp -= dmg; pushEvent({ who: 'enemy', dmg });
   }
   inCombatTick = false;
-  if (h.hp <= 0) { if (isEndless()) { h.hp = 0; h.resting = true; h.enemyHp = 0; h.carry = 0; h.atkTimer = 0; h.eTimer = 0; { const L = farming() ? landState(landN()) : null; if (L && (L.depth || 0) > 0) { L.depth--; L.wins = 0; log(`Your hero falls back to rest — and back to depth ${L.depth}. He returns at full health.`); } else log('Your hero falls back to rest. He returns to the Endless Battle at full health.'); } pushEvent({ who: 'rest' }); return; } heroRetreat(st); return; }
+  if (h.hp <= 0) { if (isEndless() || siegeOn()) { h.hp = 0; h.resting = true; h.enemyHp = 0; h.carry = 0; h.atkTimer = 0; h.eTimer = 0; { const L = farming() ? landState(landN()) : null; if (L && (L.depth || 0) > 0) { L.depth--; L.wins = 0; log(`Your hero falls back to rest — and back to depth ${L.depth}. He returns at full health.`); } else log('Your hero falls back to rest. He returns to the Endless Battle at full health.'); } pushEvent({ who: 'rest' }); return; } heroRetreat(st); return; }
   if (h.enemyHp <= 0) { h.hp = Math.min(st.maxHp, h.hp + killHeal(st)); onKill(st); h.enemyHp = 0; h.atkTimer = Math.min(h.atkTimer, interval * 0.5); }
+}
+
+// ================= Beta 0.4.0: The Front — soldiers are the fuel of conquest =================
+// Between forts every stage of a land is a siege. The marching army fills it at soldiers × worth per minute and loses 2% of itself per minute
+// while it gains ground; a full siege opens the next stage. Every 10th stage is a fort: the hero himself duels its commander.
+// Nothing here goes backwards: the hero rests instead of retreating, a lost duel waits at the walls, idle soldiers are never spent.
+const SG = () => LC().siege;
+function frontState() { const K = S.kingdom; return K.front || (K.front = { sAcc: 0, t: 0, fell: 0, gold: 0, from: 0, last: null }); }
+function siegeOn(s = S.hero.stage) { return phase() === 3 && landN() > 0 && !isEndless(s) && !isBoss(s) && heroFighting(); }
+function siegeCost(n = landN(), s = S.hero.stage) { const G = landDef(n); if (!G) return 1; const f = Math.min(1, Math.max(0, (s - 1) / Math.max(1, G.stages - 1))); return SG().p0 * Math.pow(SG().landG, n - 1) * Math.pow(SG().span, f) * Math.pow(ageMult('hp'), SG().ageExp || 0); } // soldier-minutes of worth
+function generalEdge(n = landN(), s = S.hero.stage, st = stats('sustained')) { // the hero alone against one soldier of this stage, without the army's boost
+  const lc = landCurve(isBoss(s) ? s - 1 : s, landId(n)) || { hp: 1, hit: 1 }, dps = st.dps / (st.army || 1) / (st.lap || 1), hp = st.maxHp / (st.armyHp || 1), rg = st.regen / (st.armyHp || 1);
+  const sd = Math.max(lc.hit * 0.2, lc.hit - st.armor) * (1 - st.dr) * (1 - st.dodge) / H.enemyAttackInterval;
+  return Math.max(1e-6, (hp / Math.max(sd * 0.05, sd - rg * 0.5)) / (lc.hp / Math.max(1e-9, dps)));
+}
+function worthRef(n) { const B = SG(); return Math.pow(10, B.refLog - B.refSlope * (n - 1)) / Math.pow(ageMult('hp') * ageMult('hit'), B.refAge); }
+function soldierWorth(n = landN(), s = S.hero.stage, st) { const B = SG(); return Math.max(B.worthMin, Math.min(B.worthMax, B.worthK * Math.pow(generalEdge(n, s, st) / worthRef(n), B.worthExp))); }
+function siegePerMin(n = landN(), s = S.hero.stage) { return marching() * soldierWorth(n, s) / siegeCost(n, s); } // stages per minute
+function siegeActive() { return siegeOn() && (S.hero.siege || 0) < 1 && S.hero.stage >= (S.hero.bestStage || 1) && marching() > 0; }
+function attritionPerMin() { return siegeActive() ? marching() * SG().attrition : 0; }
+function goldPerFallen(s = S.hero.stage, st = stats('sustained')) { return killGold(s) * st.gold * SG().goldPer; } // each soldier who falls takes foes with him
+function commanderReady(s) { const f = fightNet(s); return f.taken < f.maxHp * 0.9; }
+function frontHold() { // why the army waits at a breached fort: null | 'rest' | 'weak'
+  const h = S.hero, nx = h.stage + 1; if (!siegeOn() || (h.siege || 0) < 1 || !isBoss(nx)) return null;
+  if ((h.bossWait || 0) > h.time) return 'rest'; return commanderReady(nx) ? null : 'weak';
+}
+function siegeEta() { const r = siegePerMin(); return r > 0 ? (1 - (S.hero.siege || 0)) / r * 60 : Infinity; } // seconds
+function tickSiege(dt) {
+  const h = S.hero; if (!siegeOn()) return; const n = landN(), s = h.stage, F = frontState();
+  if (s < (h.bestStage || 1)) h.siege = 1; // ground already taken
+  if (siegeActive()) {
+    h.siege = Math.min(1, (h.siege || 0) + siegePerMin(n, s) / 60 * dt);
+    F.sAcc += marching() * SG().attrition / 60 * dt;
+    if (F.sAcc >= 1) { const st = stats('sustained'), gp = goldPerFallen(s, st); while (F.sAcc >= 1 && marching() > 0) { F.sAcc -= 1; S.res.soldiers -= 1; F.fell++; S.stats.fallen = (S.stats.fallen || 0) + 1; S.stats.frontSpent = (S.stats.frontSpent || 0) + 1; add('gold', gp); F.gold += gp; } }
+  }
+  F.t += dt; if (F.t >= SG().sortie) { F.t = 0; if (F.fell > 0) { F.last = { fell: F.fell, gold: F.gold, stage: s, pct: h.siege || 0, t: h.time }; pushEvent({ who: 'sortie', fell: F.fell, gold: F.gold }); } F.fell = 0; F.gold = 0; }
+  if ((h.siege || 0) >= 1) pastWall();
+}
+function pastWall() {
+  const h = S.hero, G = ground(); if (h.stage >= G.stages || frontHold()) return;
+  h.kills = Math.max(h.kills || 0, killsNeeded());
+  if (advance()) { if (isBoss(h.stage)) log(`The walls are breached — your hero faces ${enemyName()} himself.`); else if (h.stage === h.bestStage) S.stats.frontStages = (S.stats.frontStages || 0) + 1; }
+}
+// Away: the same siege in minute steps, on a copy of the front; applyFront() writes it back when the reward is claimed.
+function frontSim() {
+  const h = S.hero; if (!(phase() === 3 && landN() > 0 && heroFighting() && !isEndless())) return null;
+  const n = landN(), G = landDef(n), st = stats('sustained'), B = SG(), wc = {}, ready = {};
+  const worth = s => wc[s] ?? (wc[s] = soldierWorth(n, s, st)), canBeat = s => ready[s] ?? (ready[s] = commanderReady(s));
+  const o = { n, from: h.stage, stage: h.stage, siege: h.stage < (h.bestStage || 1) ? 1 : (h.siege || 0), best: h.bestStage || 1, bosses: [], fell: 0, gold: 0, held: null, acc: frontState().sAcc || 0 };
+  const walk = () => { let guard = 0; while (guard++ < 200) {
+      if (isBoss(o.stage)) { if (!canBeat(o.stage)) { o.held = o.stage; o.stage--; o.siege = 1; return; } o.bosses.push(o.stage); if (o.stage >= G.stages) { o.stage = G.stages + 1; o.done = true; return; } o.stage++; o.best = Math.max(o.best, o.stage); o.siege = 0; continue; }
+      if (o.siege < 1) return; const nx = o.stage + 1; if (nx > G.stages) return;
+      if (isBoss(nx) && !canBeat(nx)) { o.held = nx; return; }
+      o.stage = nx; o.best = Math.max(o.best, nx); o.siege = nx < o.best ? 1 : 0; } };
+  walk();
+  return { step(mar, dm) { if (o.done || o.held || mar <= 0 || isBoss(o.stage) || o.stage < o.best && o.siege >= 1) { walk(); return 0; }
+      o.siege += mar * worth(o.stage) / siegeCost(n, o.stage) * dm; o.acc += mar * B.attrition * dm; const d = Math.min(mar, Math.floor(o.acc)); o.acc -= d; o.fell += d; o.gold += d * goldPerFallen(o.stage, st);
+      if (o.siege >= 1) { o.siege = 1; walk(); } return d; },
+    get gold() { return o.gold; }, result() { return { ...o }; } };
+}
+function applyFront(r) {
+  const h = S.hero; if (!r || landN() !== r.n) return;
+  for (const b of r.bosses) bossSlain(b, r.n);
+  h.stage = r.stage; h.bestStage = Math.max(h.bestStage || 1, r.best, r.done ? r.stage : 0); h.siege = Math.min(1, r.siege); h.kills = 0; h.enemyHp = 0; frontState().sAcc = r.acc % 1;
+  S.stats.frontSpent = (S.stats.frontSpent || 0) + r.fell;
+  if (r.done) log(`While you were away the army took ${landDef(r.n).name}!`);
 }
 
 // ---------- Offline ----------
@@ -1192,23 +1260,25 @@ function offlinePeople(mins, houseLumber, gainsIn) {
   const steps = Math.min(1440, Math.ceil(mins)), dm = mins / Math.max(1, steps);
   for (const k of G3) { have[k] = S.res[k] || 0; inc[k] = Math.max(0, gainsIn[k] || 0) / Math.max(1, steps); res[k] = orderReserve(k); }
   let sol = soldiers(), trained = 0, fallen = 0, tAcc = 0, lAcc = K.lossAcc || 0;
-  const train = trainPerMin(), p = heroFighting() ? battlePressure() : 0, lossR = AC().lossRate * p, c = AC().soldierCost;
+  const train = trainPerMin(), lossR = 0, c = AC().soldierCost, fr = frontSim();
   for (let i = 0; i < steps; i++) {
     for (const k of G3) have[k] += inc[k];
     if (barracksBuilt()) { tAcc = Math.min(train * dm + 1, tAcc + train * dm); while (tAcc >= 1) { const m = soldierCostMult(sol); if (G3.some(k => have[k] - c[k] * m < res[k])) break; for (const k of G3) have[k] -= c[k] * m; sol++; trained++; tAcc--; } }
+    if (fr) { const d = fr.step(sol - garrisoned(), dm); sol -= d; fallen += d; }
     if (lossR > 0 && sol > garrisoned()) { lAcc += (sol - garrisoned()) * lossR * dm; const d = Math.min(Math.floor(lAcc), sol - garrisoned()); sol -= d; fallen += d; lAcc -= d; }
   }
   for (const k of G3) g[k] = have[k] - (S.res[k] || 0);
-  return { gains: g, sol: sol - soldiers(), trained, fallen, lAcc };
+  if (fr && fr.gold > 0) g.gold = (g.gold || 0) + fr.gold;
+  return { gains: g, sol: sol - soldiers(), trained, fallen, lAcc, front: fr ? fr.result() : null };
 }
 function claimOffline(data, mult = 1) {
-  const P = data.people; if (P) { S.kingdom.lossAcc = P.lAcc; S.res.soldiers = Math.max(0, soldiers() + (P.sol || 0)); S.stats.trained = (S.stats.trained || 0) + (P.trained || 0); S.stats.fallen = (S.stats.fallen || 0) + (P.fallen || 0); }
+  const P = data.people; if (P && P.front) applyFront(P.front); if (P) { S.kingdom.lossAcc = P.lAcc; S.res.soldiers = Math.max(0, soldiers() + (P.sol || 0)); S.stats.trained = (S.stats.trained || 0) + (P.trained || 0); S.stats.fallen = (S.stats.fallen || 0) + (P.fallen || 0); }
   const kept = {}; for (const k in data.gains) kept[k] = add(k, data.gains[k] > 0 ? data.gains[k] * mult : data.gains[k]); // inputs consumed aren't doubled
   { const made = new Set(allSteps().filter(st => stepBuilt(st.id)).map(st => st.make)); for (const k in data.gains) if (made.has(k) && data.gains[k] > 0) { const over = data.gains[k] * mult - (kept[k] || 0); if (over > 0) { const g = over * CONFIG.resources[k].sell * KC().autoSell; if (g > 0) { add('gold', g); S.kingdom.autoSold = (S.kingdom.autoSold || 0) + g; data.sold = (data.sold || 0) + g; } } } } // Beta 0.1.26: overflow while away is sold too, like live play
   for (const [src, key] of [[data.harvested, 'harvested'], [data.looted, 'looted']]) for (const k in (src || {})) { const share = data.gains[k] > 0 ? Math.min(1, src[k] / data.gains[k]) : 0, n = Math.floor(Math.max(0, kept[k] || 0) * share); if (n > 0) { S.stats[key] = S.stats[key] || {}; S.stats[key][k] = (S.stats[key][k] || 0) + n; } } // quests that count gathering and loot count it while away too
   for (const k of ['food', 'supplies', 'soldiers', 'bread', 'swords', 'lumber']) if ((S.res[k] || 0) < 0) S.res[k] = 0;
   for (const n in (data.tax || {})) { const t = data.tax[n] * mult; add('gold', t - titheTo(t)); S.stats.taxed = (S.stats.taxed || 0) + t; if (false) { const L = landState(+n); L.coffer = Math.min(cofferCap(+n), (L.coffer || 0) + t); } }
-  if (heroFighting() && data.kills > 0) offlineStages(data.kills * mult);
+  if (heroFighting() && data.kills > 0 && !(landN() && !isEndless())) offlineStages(data.kills * mult);
   gainXp(data.kills * killXp(S.hero.stage) * stats('sustained').xp * mult);
   S.hero.totalKills += data.kills * mult;
   if (data.kills > 0) for (const id of S.hero.loadout) gainMastery(id, data.counted * CONFIG.offlineSkillWeight * mult, true);
@@ -1324,15 +1394,15 @@ function battlePressure() { // share of the hero's HP one fight takes before hea
   const t = S.hero.time; if (_pressAt === t && _press !== null) return _press; _pressAt = t;
   const f = fightNet(); return (_press = Math.max(0, Math.min(1, f.taken / Math.max(1, f.maxHp))));
 }
-function lossPerMin() { const p = battlePressure(); return p > 0 ? marching() * AC().lossRate * p : 0; }
+function lossPerMin() { return attritionPerMin(); } // Beta 0.4.0: soldiers fall only while a siege gains ground
 function trainOne() { if (trainBlocker()) return false; const c = nextSoldierCost(); for (const k of SOLDIER_GOODS) S.res[k] -= c[k]; S.res.soldiers = (S.res.soldiers || 0) + 1; S.stats.trained = (S.stats.trained || 0) + 1; S.lifetime.soldiers = (S.lifetime.soldiers || 0) + 1; return true; }
 // Beta 0.2.0: the endless loop — once a land is conquered, the hero marches on to the next one by himself as soon as the army reaches its recommended size
-function marchReady() { const n = landN(), nx = n + 1; if (phase() < 3 || !n || !landDone(n) || !landDef(nx) || !landOpen(nx)) return null; return { n: nx, ready: marching() >= recArmy(nx), need: recArmy(nx) }; }
+function marchReady() { const n = landN(), nx = n + 1; if (phase() < 3 || !n || !landDone(n) || !landDef(nx) || !landOpen(nx)) return null; return { n: nx, ready: marching() > 0, need: 1 }; }
 function autoMarch() { if (S.settings.autoMarch === false || !heroFighting()) return false; const m = marchReady(); if (!m || !m.ready) return false; if (!setGround(landId(m.n))) return false; log(`The army is ready — the hero marches on to ${landDef(m.n).name}.`); pushEvent({ who: 'march', n: m.n }); return true; }
 function tickArmy(dt) {
   if (kingdomNo() < 1) return; const K = S.kingdom;
   K.marchT = (K.marchT || 0) + dt; if (K.marchT >= 1) { K.marchT = 0; autoMarch(); }
-  const loss = lossPerMin() / 60 * dt; // casualties: hard fighting costs soldiers — people gone for good
+  const loss = 0; // Beta 0.4.0: tickSiege spends soldiers
   if (loss > 0) { K.lossAcc = (K.lossAcc || 0) + loss; while (K.lossAcc >= 1 && marching() > 0) { K.lossAcc -= 1; S.res.soldiers -= 1; S.stats.fallen = (S.stats.fallen || 0) + 1; } }
   const B = K.barracks;
   if (B && B.lv > 0) { B.train = Math.min(3, (B.train || 0) + trainPerMin() / 60 * dt); while (B.train >= 1 && trainOne()) B.train -= 1; if (trainBlocker()) B.train = Math.min(B.train, 1); }
@@ -1642,6 +1712,7 @@ window.Game = {
   toolTierUnlocked, toolPower, toolCraftCost, toolUpgradeCost, canToolTierUp, craftTool, upgradeTool, activityDef, activityAvailable, setActivity, masteryLevel, harvestTime, harvestYield, harvestRates,
   questCurrent, questProgress, questClaim, suggestGoal, ground, setGround, groundUnlocked, dropToolMult, bestStageAll, groundDrops, toolSlotUnlocked,
   techDef, hasTech, techProgress, canResearch, research, researching, buildingUnlocked, gearTierUnlocked, dropUnlocked, counter,
+  siegeOn, siegeCost, soldierWorth, siegePerMin, siegeActive, attritionPerMin, goldPerFallen, commanderReady, frontHold, siegeEta, frontState, generalEdge, worthRef,
   kingdomRates, chainFlow, marchReady, autoMarch, limitParts, overflowRate, kingdomNo, allSteps, stepDef, stepUnlocked, lineUnlocked, lineSteps, stepState, nextStep, stepMods, kTier, tierDef, stepAvailable, stepBuilt, canBuild, buildStep, tierGoods, tierNeed, tierPaid, tierPaidDone, tierStepsReady, contribute, canRaise, raiseTier, accountantSteps, assignAccountant, cityChecks, cityComplete, stepRate, stepPhases, stepCycle, stepBatch, stepOutput, thrallLevel, thrallCap, dismiss, stepLimit, stepUpCost, stepUpPlan, upgradeStep, stepWorkerSlots,
   assignWorker, assignOverseer, unassign, thrallPost, useAbility, refreshOffers, hire, maxStars, storeUpCost, upgradeStore, orderGoods, foundRenownNeed, canDeliver, deliver, swapOrder, swapReady, rankIndex, rankInfo, heroFighting, thrallCount, sellPrice, sell, buyPrice, buyRes, buyMax, canBuyRes,
   canAdvance, advance, stageSustainable, autoAdvanceBlock, autoKillsNeeded, killHeal, retreat, canAfford, add, simulate, applyOffline, claimOffline, offlineStages,

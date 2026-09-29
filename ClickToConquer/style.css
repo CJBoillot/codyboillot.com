@@ -1232,3 +1232,10 @@ html, body { max-width: 100%; overflow-x: hidden; }
 .step-gain { color: #e9dcc0; margin-top: 2px; } .step-gain b { color: var(--hp2); }
 .oflow { border: 1px solid #6a5433; background: #1d160f; border-radius: 8px; padding: 6px 8px; color: #e9dcc0; line-height: 1.35; } .oflow b { color: var(--bronze2); } .oflow b.good { color: var(--hp2); }
 .town-build { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 6px; } .town-build .seg button { padding: 3px 10px; font-size: 11px; }
+
+/* Beta 0.4.0: The Front */
+.front { margin-top: 8px; border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; background: #120e0b; display: flex; flex-direction: column; gap: 6px; }
+.fr-bar { height: 10px; border-radius: 6px; background: #0b0908; overflow: hidden; } .fr-bar i { display: block; height: 100%; background: linear-gradient(90deg, #8a5a22, #e8c06a); transition: width .4s; }
+.fr-chips { display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 11.5px; color: var(--dim); } .fr-chips b { color: var(--text); } .fr-chips .bad { color: #ff8a8a; } .fr-chips .gold { color: var(--bronze2); }
+.fr-note { font-size: 12px; line-height: 1.4; } .fr-note .bad { color: #ff8a8a; }
+.fr-last { font-size: 11px; color: var(--dim); } .fr-help { font-size: 10.5px; }

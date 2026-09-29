@@ -656,7 +656,7 @@ const UI = (() => {
         ${built ? `<div class="bk-row"><span>Next soldier</span><span>${costHtml({ lumber: Math.ceil(c.lumber), swords: Math.ceil(c.swords), bread: Math.ceil(c.bread) }).replace(/<span class="cost-name">[^<]*<\/span>/g, '')}</span></div>
         <div class="bk-row"><span>Training</span><span class="${bl ? 'warn' : 'good'}">${bl ? 'paused: ' + why : `+${rate.toFixed(1)} / min`}</span></div>
         <div class="tiny dim">Each soldier costs a little more than the last; losses in battle bring the price back down. Goods kept for building are never used.</div>` : ''}
-        ${p3 ? `<div class="bk-rec"><div class="row-between small"><span>Next land${Game.landDef(nx) ? ' · <b>' + Game.landDef(nx).name + '</b>' : ''}</span><span class="dim">recommended ${f(rec)}</span></div><div class="bar gold-bar"><div style="width:${Math.min(100, 100 * Game.marching() / rec)}%"></div><span>${f(Game.marching())} marching</span></div></div>` : ''}
+        ${p3 ? `<div class="bk-rec small"><b>${f(Game.marching())}</b> soldiers at the front${Game.attritionPerMin() > 0 ? ` · <span class="bad">${Game.attritionPerMin().toFixed(1)}/min fall</span> as the siege gains ground` : ''}. <span class="dim">Soldiers are the fuel of conquest: the faster you train them, the faster the front moves.</span></div>` : ''}
         <button class="buy wide" id="barracks-up"><span class="small">${built ? 'Upgrade the Barracks (faster training)' : 'Build the Barracks'}</span><br><span class="cost">${costHtml(Game.barracksCost())}</span></button>`}`);
       const b = $('barracks-up'); if (b) { b.disabled = !Game.canUpBarracks(); b.addEventListener('click', () => { if (Game.upgradeBarracks()) { card.__k = ''; render(true); } }); } }
     else { const b = $('barracks-up'); if (b) b.disabled = !Game.canUpBarracks(); }
@@ -1291,13 +1291,14 @@ const UI = (() => {
     { const p3 = Game.phase() === 3, LN = Game.landN(), G = Game.ground();
       $('army-line').classList.toggle('hidden', !p3 || !Game.heroFighting()); if (!p3) { $('army-flow').classList.add('hidden'); $('strain-card').classList.add('hidden'); }
       if (p3) { const st2 = Game.stats(), rec = LN ? Game.recArmy(LN) : 0, mar = Game.marching();
-        setHtml($('army-line'), `${ico(R.soldiers.icon, 18)} <b>${f(mar)}</b>&nbsp;soldiers march with you${rec ? ` <span class="dim">(recommended ${f(rec)})</span>` : ''} · hits <b>${f(st2.attack)}</b>&nbsp;<span class="dim">(${f(st2.gearAttack)} × army ×${st2.army.toFixed(2)}${st2.lap > 1 ? ' × victory lap ×' + st2.lap : ''})</span>`); $('army-line').classList.toggle('stall', rec > 0 && mar < rec * 0.5);
+        setHtml($('army-line'), `${ico(R.soldiers.icon, 18)} <b>${f(mar)}</b>&nbsp;soldiers march with you · hits <b>${f(st2.attack)}</b>&nbsp;<span class="dim">(${f(st2.gearAttack)} × army ×${st2.army.toFixed(2)}${st2.lap > 1 ? ' × victory lap ×' + st2.lap : ''})</span>`); $('army-line').classList.toggle('stall', !!LN && mar <= 0);
         { const loss = Game.lossPerMin(), rec2 = Game.recruitPerMin(), bl = Game.trainBlocker(), fshow = Game.heroFighting() && (loss > 0.05 || (bl && bl !== 'barracks')); $('army-flow').classList.toggle('hidden', !fshow);
-          if (fshow) setHtml($('army-flow'), `<div class="fchip loss"><b>−${loss.toFixed(1)} / min</b>fallen in battle</div><div class="fchip rec"><b>+${rec2.toFixed(1)} / min</b>${bl ? { lumber: 'short of lumber', swords: 'short of arms', bread: 'short of bread' }[bl] || 'trained' : 'trained'}</div>`);
+          if (fshow) setHtml($('army-flow'), `<div class="fchip loss"><b>−${loss.toFixed(1)} / min</b>fall at the front</div><div class="fchip rec"><b>+${rec2.toFixed(1)} / min</b>${bl ? { lumber: 'short of lumber', swords: 'short of arms', bread: 'short of bread' }[bl] || 'trained' : 'trained'}</div>`);
           $('strain-card').classList.add('hidden'); }
         { const sn = S.kingdom.settleNote, show = false && !!sn; // Beta 0.2.0: no settlers $('demand-note').classList.toggle('hidden', !show);
           if (show) { setHtml($('demand-note'), `<b class="dh">${sn.name} conquered 👑</b><br>${f(sn.moved)} settlers moved to your Capital${sn.turned ? ` — <b class="bad">${f(sn.turned)} found no home</b> and turned back. Build houses (People chain) so the next wave stays.` : '.'} Every land you hold keeps sending more.<button class="retreat-x" aria-label="Dismiss" data-dn>×</button>`); const x = $('demand-note').querySelector('[data-dn]'); if (x) x.onclick = () => { sn.seen = true; }; } } }
-      $('conquest-box').classList.toggle('hidden', !LN);
+      $('conquest-box').classList.toggle('hidden', !LN); renderFront(LN);
+      { const sg = !!LN && Game.siegeOn(); $('kills-bar').closest('.progress-row').classList.toggle('hidden', sg); $('auto-barbox').closest('.progress-row').classList.toggle('hidden', sg); if (sg) $('auto-why').classList.add('hidden'); }
       if (LN) { const pct = Game.landPct(LN); setText($('cq-name'), `Conquest of ${G.name}`); setText($('cq-pct'), pct + '%'); $('cq-bar').style.width = pct + '%'; setText($('cq-text'), Game.isEndless() ? `∞ Endless Battle · 👑 ${G.crown}` : Game.landDone(LN) ? `Conquered · 👑 ${G.crown}` : `Stage ${h.stage} / ${G.stages}`);
         const ck = LN + '|' + G.stages; if ($('cq-ticks').__k !== ck) { $('cq-ticks').__k = ck; setHtml($('cq-ticks'), `<span>Captains every 10 stages</span><span>👑 ${G.ruler} · stage ${G.stages}</span>`); } }
       }
@@ -1322,8 +1323,8 @@ const UI = (() => {
     const need = Game.killsNeeded(), kt = killsLine(), at = autoLine();
     $('kills-bar').style.width = kt.pct + '%'; setText($('kills-text'), kt.text);
     $('auto-bar').style.width = at.pct + '%'; setText($('auto-text'), at.text); $('auto-barbox').className = 'bar autoadv ' + at.cls;
-    $('auto-why').classList.toggle('hidden', !at.why); if (at.why) setText($('auto-why'), at.why);
-    $('auto-adv').checked = S.settings.autoAdvance !== false;
+    $('auto-why').classList.toggle('hidden', !at.why || (Game.phase() === 3 && Game.siegeOn())); if (at.why) setText($('auto-why'), at.why);
+    $('auto-adv').checked = S.settings.autoAdvance !== false; $('auto-adv').closest('.adv-row').classList.toggle('hidden', !!(Game.phase() === 3 && Game.landN())); // the Front moves the hero in a land
     { const p3 = Game.phase() === 3, m = p3 ? Game.marchReady() : null; $('march-row').classList.toggle('hidden', !p3); $('auto-march').checked = S.settings.autoMarch !== false;
       setText($('march-note'), m ? (m.ready ? `${Game.landDef(m.n).name}: ready` : `${Game.landDef(m.n).name}: ${Game.fmt(Game.marching())} / ${Game.fmt(m.need)} soldiers`) : ''); }
     { const rn = h.retreatNote, show = !!rn && !rn.seen && h.time - rn.t < 600; $('retreat-note').classList.toggle('hidden', !show);
@@ -1582,6 +1583,25 @@ const UI = (() => {
   // ---- Mini hero strip: mirrors the fight/harvest screen when that screen is off-tab ----
   const lootTally = {}; let lootFresh = {};
   // "visible" = the full card's bars are actually inside the viewport, not just on the current tab
+
+  // ===== Beta 0.4.0: The Front — the siege between forts, fed by soldiers =====
+  function renderFront(LN) {
+    const box = $('front-box'), S = Game.S, h = S.hero, f = Game.fmt, G = Game.ground(), show = !!LN && Game.heroFighting() && !Game.isEndless();
+    box.classList.toggle('hidden', !show); if (!show) return;
+    const s = h.stage, boss = Game.isBoss(s), held = s < (h.bestStage || 1), mar = Game.marching(), w = Game.soldierWorth(LN, boss ? s - 1 : s), hold = Game.frontHold(), F = Game.frontState(), nx = s + 1;
+    const pct = boss ? 1 : Math.min(1, h.siege || 0), fall = Game.attritionPerMin(), gp = Game.goldPerFallen(s), eta = Game.siegeEta();
+    let head, note = '';
+    if (boss) { head = `🏰 Fort — your hero duels <b>${Game.enemyName()}</b>`; note = s >= G.stages ? `Beat the ruler and ${G.name} is yours.` : `The army waits at the walls; when he falls, the siege moves on.`; }
+    else if (hold === 'weak') { head = `🏰 The walls of stage ${nx} are breached`; note = `<b class="bad">${Game.enemyName(nx)}</b> is too strong for your hero, so the army holds the walls (no one falls). Strengthen the hero — gear, levels, Crowns — or tap <b>Advance</b> to attack anyway.`; }
+    else if (hold === 'rest') { head = `🏰 The walls of stage ${nx} are breached`; note = `Your hero rests before facing ${Game.enemyName(nx)} again (${Math.ceil(h.bossWait - h.time)} s).`; }
+    else if (held) { head = `Marching back to the front — stage ${h.bestStage}`; }
+    else if (mar <= 0) { head = `⚔ Siege of stage ${s}`; note = `<b class="bad">No soldiers at the front.</b> The Barracks needs lumber, arms and bread — the siege waits, nothing is lost.`; }
+    else head = `⚔ Siege of stage ${s} → ${nx}${Game.isBoss(nx) ? ' · 🏰 fort' : ''}`;
+    const chips = boss || held || hold ? '' : `<div class="fr-chips"><span><b>${f(mar)}</b> at the front</span><span>worth <b>×${w.toFixed(w < 10 ? 2 : 1)}</b> each</span><span class="bad">−${fall.toFixed(1)}/min</span><span class="gold">+${f(fall * gp)}/min gold</span>${eta < 1e6 ? `<span>next stage ${Game.fmtTime(eta)}</span>` : ''}</div>`;
+    const last = F.last && h.time - F.last.t < 120 ? `<div class="fr-last">Last sortie: ${f(F.last.fell)} fell, +${f(F.last.gold)} gold · siege ${Math.floor(100 * F.last.pct)}%</div>` : '';
+    setHtml(box, `<div class="row-between small"><span>${head}</span><b>${Math.floor(100 * pct)}%</b></div><div class="fr-bar"><i style="width:${(100 * pct).toFixed(1)}%"></i></div>${chips}${note ? `<div class="fr-note">${note}</div>` : ''}${last}
+      <div class="fr-help dim">Your hero leads: each soldier is worth ×${w.toFixed(2)} here — a stronger hero makes every soldier count for more.</div>`);
+  }
   function heroScreenVisible() {
     const c = $('fight-card').offsetParent ? $('fight-card') : (!Game.heroFighting() && $('harvest-card').offsetParent) ? $('harvest-card') : null; if (!c) return false; // 0.10.12: on a gathering screen the fight shows in the dock
     const r = c.getBoundingClientRect(), top = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--headh')) || 0;
@@ -1700,7 +1720,10 @@ const UI = (() => {
   function showWelcomeBack(data) {
     welcomeData = data;
     $('wb-time').textContent = Game.fmtTime(data.awaySeconds) + (data.counted < data.awaySeconds ? ` (capped ${Game.fmtTime(data.counted)})` : '');
-    $('wb-kills').textContent = data.kills > 0 ? `Hero slew ${Game.fmt(data.kills)} enemies.` : 'Your hero kept working.';
+    { const fr = data.people && data.people.front, f = Game.fmt, base = data.kills > 0 ? `Hero slew ${f(data.kills)} enemies.` : 'Your hero kept working.';
+      if (!fr) $('wb-kills').textContent = base;
+      else { const G = Game.landDef(fr.n), forts = fr.bosses.length, why = fr.done ? `<b class="good">${G.name} is yours!</b>` : fr.held ? `It holds at the walls of stage ${fr.held}: <b>${Game.enemyName(fr.held)}</b> is too strong for your hero — strengthen him to break through.` : 'It kept pushing the whole time.';
+        $('wb-kills').innerHTML = `${base}<br><b>The Front:</b> the army pushed ${G.name} from stage ${fr.from} to ${fr.done ? 'its end' : fr.stage}${forts ? ` and took ${forts} fort${forts === 1 ? '' : 's'}` : ''} · ${f(fr.fell)} soldiers fell · +${f(fr.gold)} gold. ${why}`; } }
     $('wb-eff').textContent = Game.pct(Game.afkEfficiency()); $('wb-cap').textContent = Game.fmtTime(Game.afkCap());
     $('wb-gains').innerHTML = Object.entries(data.gains).filter(([, v]) => v > 0).map(([k, v]) => `<div class="costitem">${ico(R[k].icon, 24)} +${Game.fmt(v)}</div>`).join('');
     $('welcome').classList.remove('hidden');
