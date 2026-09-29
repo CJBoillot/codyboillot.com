@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Beta 0.1.22',
+  version: 'Beta 0.1.23',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -503,6 +503,7 @@ const CONFIG = {
   // jobs (jobs completed by hand or thrall), sold (gold earned at market), stage, boss, founded, thrall (assigned), activity (swings).
   // Shown in Settings → What's new (newest first). Keep each line short.
   changelog: [
+    ['Beta 0.1.23', 'Once a chain has a later building, the goods before it leave the top bar (the Mill unpins grain; the Bakery unpins flour too). It happens once — re-pin anything from Loot and it stays. Also fixes the Rat King\'s Tooth not being sold for gold on load.'],
     ['Beta 0.1.22', 'Raising your settlement now asks only for your best goods: the Camp pays in wood, grain and ore; the Hamlet in planks, flour and ingots; the Village in lumber, bread and arms. Lower-tier goods are no longer needed.'],
     ['Beta 0.1.21', 'The Rat King\'s Tooth is gone: the Empire\'s tribute is simply 100 gold. Any tooth you were holding is sold for 60 gold.'],
     ['Beta 0.1.20', 'The town bar on Production now moves: it fills toward the next person born, and once the homes are full for births it shows progress toward the next house.'],

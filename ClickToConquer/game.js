@@ -133,6 +133,9 @@ function upgradeMax(kind, slot) {
 function handDef(id) { return CONFIG.hand.find(h => h.id === id); }
 function handUnlocked(id) { const u = handDef(id).unlock; if (u.tech) return hasTech(u.tech); if (u.gear) return !!S.hero.gear[u.gear]; return true; }
 function pinned(k) { return !(S.settings.unpinned && S.settings.unpinned[k]); }
+// Beta 0.1.23: once a later building in a chain is built, the goods before it leave the header — once. Re-pin in Loot and it stays.
+function autoUnpin() { if (!S.kingdom || kingdomNo() < 1) return; const s = S.settings, done = s.autoUnpinned = s.autoUnpinned || {};
+  for (const lid in KC().lines) { const steps = lineSteps(lid).filter(st => !st.pull); for (let i = 1; i < steps.length; i++) for (let j = 0; j < i; j++) { const k = steps[j].make; if (done[k]) continue; done[k] = true; s.unpinned = s.unpinned || {}; s.unpinned[k] = true; } } }
 function togglePin(k) { S.settings.unpinned = S.settings.unpinned || {}; if (S.settings.unpinned[k]) delete S.settings.unpinned[k]; else S.settings.unpinned[k] = true; return pinned(k); }
 function grab(id) { if (!handUnlocked(id)) return false; const h = handDef(id); add(h.gives, 1); S.hero.hand[id] = (S.hero.hand[id] || 0) + 1; pushEvent({ who: 'hand', id, res: h.gives }); return true; }
 
@@ -527,7 +530,7 @@ function stepAvailable(id) { const d = stepDef(id); return !!d && kingdomNo() > 
 function stepBuilt(id) { const d = stepDef(id); return !!d && stepAvailable(id) && (!d.build || !!(S.kingdom.built || {})[id]); }
 function stepUnlocked(id) { return stepBuilt(id); }
 function canBuild(id) { const d = stepDef(id); return stepAvailable(id) && !stepBuilt(id) && canAfford(d.build); }
-function buildStep(id) { if (!canBuild(id)) return false; pay(stepDef(id).build); S.kingdom.built = S.kingdom.built || {}; S.kingdom.built[id] = true; const s = stepState(id); s.lv = 1; s.lvW = 1; s.lvC = 1; s.lvH = 1; log(`Built the ${stepDef(id).name}.`); return true; }
+function buildStep(id) { if (!canBuild(id)) return false; pay(stepDef(id).build); S.kingdom.built = S.kingdom.built || {}; S.kingdom.built[id] = true; const s = stepState(id); s.lv = 1; s.lvW = 1; s.lvC = 1; s.lvH = 1; log(`Built the ${stepDef(id).name}.`); autoUnpin(); return true; }
 function lineUnlocked(lid) { return kingdomNo() > 0 && KC().lines[lid].steps.some(s => stepAvailable(s.id)); }
 function lineSteps(lid) { return KC().lines[lid].steps.map((s, i) => ({ ...s, line: lid, index: i })).filter(s => stepBuilt(s.id)); }
 // Raising the settlement: every current-tier step built and staffed, and `cap` of every good made so far paid in.
@@ -1520,7 +1523,6 @@ function load() {
       let g = 0; for (const k in OLD) { g += Math.floor((S.res[k] || 0) * OLD[k]); delete S.res[k]; if (S.lifetime) delete S.lifetime[k]; if (S.settings.unpinned) delete S.settings.unpinned[k]; }
       if (g > 0) { S.res.gold = (S.res.gold || 0) + g; log(`Old trinkets sold for ${fmt(g)} gold.`); }
       if (S.hero.tools) delete S.hero.tools.cleaver; if (S.hero.crafting && S.hero.crafting.slot === 'cleaver') S.hero.crafting = null; if (S.tech) delete S.tech.butchery; if (S.researching && S.researching.id === 'butchery') S.researching = null;
-      if ((S.res.ratkingtooth || 0) > 0) { S.res.gold = (S.res.gold || 0) + 60 * Math.floor(S.res.ratkingtooth); } delete S.res.ratkingtooth; if (S.lifetime) delete S.lifetime.ratkingtooth; // Beta 0.1.21: the Rat King's Tooth is gone — sold for its old price
     if (S.kingdom && S.kingdom.orders) S.kingdom.orders = S.kingdom.orders.filter(o => !Object.keys(o.wants || {}).some(k => OLD[k])); }
     if (!S.legacy.v111) { S.legacy.v111 = true; const L = S.legacy, h = S.hero; // 0.11.1: the Crown Tree and Ages
       let capsLearned = 0; for (const d in CONFIG.trees) for (const node of CONFIG.trees[d]) if (node.capstone && nodeRank(d, node.id)) capsLearned++;
@@ -1541,6 +1543,9 @@ function load() {
     if (S.legacy.eraBest === undefined) { let b = 0; for (const n in (S.legacy.vault || {})) if (isEraRuler(+n)) b = Math.max(b, eraOf(+n)); S.legacy.eraBest = b; } // 0.11: Era Rulers you have already beaten unlock their Wonders
     if (S.hero.fightOn === undefined) S.hero.fightOn = S.hero.activity === 'fight' || !!(S.hero.chose || {}).fight || (S.hero.totalKills || 0) > 0 || phase() === 3; // 0.10.12
     if (S.hero.fightOn && S.hero.activity === 'idle') S.hero.activity = 'fight';
+    if ((S.res.ratkingtooth || 0) > 0) S.res.gold = (S.res.gold || 0) + 60 * Math.floor(S.res.ratkingtooth); delete S.res.ratkingtooth; if (S.lifetime) delete S.lifetime.ratkingtooth; // Beta 0.1.21: the Rat King's Tooth is gone — sold for its old price
+    for (const k in S.res) if (!CONFIG.resources[k]) delete S.res[k]; // never keep a good that no longer exists
+    autoUnpin();
     if (S.kingdom && S.kingdom.orders) S.kingdom.orders = S.kingdom.orders.filter(o => o && o.wants && Object.keys(o.wants).every(k => CONFIG.resources[k])); // never keep an Order for a good that no longer exists
     return S;
   } catch (e) { return null; }
