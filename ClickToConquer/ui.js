@@ -34,6 +34,8 @@ const UI = (() => {
   function closeAsk() { confirmCb = null; $('confirm-modal').classList.add('hidden'); }
   function init() {
     try { if (screen.orientation && screen.orientation.lock) screen.orientation.lock('portrait').catch(() => {}); } catch (e) {}
+    $('celebrate').addEventListener('click', () => cbDone());
+    document.addEventListener('click', e => { const t = e.target.closest && e.target.closest('.req-src[data-item]'); if (t) { e.stopPropagation(); openItem(t.dataset.item); } }, true);
     $('confirm-no').addEventListener('click', closeAsk); $('confirm-modal').addEventListener('click', e => { if (e.target === $('confirm-modal')) closeAsk(); });
     $('confirm-yes').addEventListener('click', () => { const cb = confirmCb; closeAsk(); if (cb) cb(); });
     $('version').textContent = CONFIG.version;
@@ -829,7 +831,7 @@ const UI = (() => {
     const S = Game.S, f = Game.fmt, nodes = Game.pathNodes(), RK = CONFIG.paths.ranks, col = {}; for (const b of CONFIG.paths.branches) col[b.id] = b.color;
     const pr = Game.discProgress('combat'), free = Game.pathPointsFree(), sf = Game.starsFree();
     setText($('path-lv'), `Combat Lv ${pr.level}`); setText($('path-free'), f(free)); setText($('path-spent'), f(Game.pathPointsSpent())); setText($('path-spent-of'), `spent of ${Game.pathPointsMax()}`);
-    setText($('path-stars'), `${sf} ★`); $('path-xpbar').style.width = (100 * pr.have / pr.need) + '%'; setText($('path-xptext'), `${f(pr.have)} / ${f(pr.need)} XP to next point`);
+    setText($('path-stars'), Game.starsSpare() > 0 ? `${sf} ★ · ${Game.starsSpare()} spare: +${(Game.starsSpare() * 0.5).toFixed(1)}% attack & HP` : `${sf} ★`); $('path-xpbar').style.width = (100 * pr.have / pr.need) + '%'; setText($('path-xptext'), `${f(pr.have)} / ${f(pr.need)} XP to next point`);
     let anyCan = false; if (!pathSel || !Game.pathNode(pathSel)) pathSel = (nodes.find(n => Game.canRankPath(n.id)) || nodes[0]).id;
     for (const n of nodes) {
       const E = pathEls[n.id]; if (!E) continue; const r = Game.pathRank(n.id), open = Game.pathOpen(n.id), can = Game.canRankPath(n.id); if (can) anyCan = true;
@@ -973,6 +975,10 @@ const UI = (() => {
     if (invItem) { setText($('item-have'), f(Math.floor(S.res[invItem] || 0))); const have = Math.floor(S.res[invItem] || 0); $('item-s1').disabled = have < 1; $('item-s10').disabled = have < 10; $('item-sall').disabled = have < 1; }
   }
   // Where does an item come from / what uses it — scanned from config so it stays true as the game changes.
+  function sourceHint(k) { // 0.10.5: one short line of where a good comes from, shown next to requirements
+    const L = Object.values(CONFIG.grounds).find(G => G.land && G.spoil === k); if (L) return `from ${L.name} (land ${L.land})`;
+    const s = itemSources(k)[0]; return s ? s.replace(/^(By hand|Activity|City): /, 'from ').replace(/ \(.*\)$/, '') : 'see where it comes from';
+  }
   function itemSources(k) {
     const out = [];
     for (const hb of CONFIG.hand) if (hb.gives === k) out.push(`By hand: ${hb.name}`);
@@ -980,8 +986,8 @@ const UI = (() => {
     const KC = CONFIG.kingdom, QM = (KC.war && KC.war.quartermaster) || {};
     for (const lid in KC.lines) for (const st of KC.lines[lid].steps) if (st.make === k) out.push(`City: ${st.name} (${KC.lines[lid].name})`);
     { const from = Object.keys(QM).filter(g => QM[g] === k); if (from.length) out.push(`Quartermaster: turns ${from.map(g => R[g].name).join(', ')} into ${R[k].name}`); }
-    if (k === 'soldiers') out.push('Barracks: trains them from Food and Supplies');
-    if (Object.values(CONFIG.grounds).some(G => G.land && G.spoil === k)) out.push('Conquered lands: enemies drop it, and garrisoned lands send it as spoils');
+    if (k === 'soldiers') out.push('Barracks: recruits them while Housing, Arms and Food income has room');
+    { const ls = Object.values(CONFIG.grounds).filter(G => G.land && G.spoil === k).slice(0, 3); if (ls.length) out.push(`Lands: ${ls.map(G => `${G.name} (land ${G.land})`).join(', ')}… — enemies there drop it, and a garrisoned land sends it every hour`); }
     for (const gid in CONFIG.grounds) { const G = CONFIG.grounds[gid], names = []; if (G.land) continue; for (const T of G.line) { if (T.pool.some(p => p.k === k)) names.push(T.plural); if (T.unique === k) names.push(T.boss + ' (first kill)'); } if (names.length) out.push(`${G.name}: ${names.join(', ')}`); }
     if (k === 'gold') out.push('Market: selling anything', 'Bandits on the Roads, the dead in the Crypts');
     const gate = CONFIG.techs.find(t => t.unlocks.drop === k); if (gate) out.push(`Needs the ${gate.name} tech`);
@@ -1054,7 +1060,8 @@ const UI = (() => {
       e.classList.toggle('hidden', !open); if (!open) continue;
       e.querySelector('.rrate').classList.toggle('hidden', !Game.infoOn('almanac'));
       { const cap = k === 'soldiers' ? Game.armyLimit() : Game.resCap(k), full = k !== 'soldiers' && (S.res[k] || 0) >= cap - 1e-9; setHtml(e.querySelector('[data-f=amt]'), `${f(Math.floor((S.res[k] || 0) + 1e-6))}${k === 'officers' ? '' : `<span class="capn">/${f(cap)}</span>`}`); e.classList.toggle('full', full); }
-      const rate = (kr[k] || 0) + (hr[k] || 0) + (hrv[k] || 0);
+      let rate = (kr[k] || 0) + (hr[k] || 0) + (hrv[k] || 0);
+      if (Game.phase() === 3) { if (k === 'gold') rate += Game.taxTotalPerHour() / 3600; else if (k === 'soldiers') rate = S.res.soldiers < Game.armyLimit() ? Game.recruitPerMin() / 60 : 0; } // 0.10.5: taxes and recruits count too
       const re = e.querySelector('[data-f=rate]'); setText(re, (rate > 0 ? '+' + f(rate) : '0') + '/s'); re.classList.toggle('zero', !(rate > 0));
     }
     { const p3 = Game.phase() === 3 && Game.barracksBuilt(); Game.WAR_KEYS.forEach((wk, i) => { const e = $('inc-' + wk); e.classList.toggle('hidden', !p3); if (!p3) return; e.style.order = String(1 + i);
@@ -1143,6 +1150,7 @@ const UI = (() => {
     const showLog = S.settings.showLog !== false; $('log-card').classList.toggle('hidden', !showLog); if ($('set-log').checked !== showLog) $('set-log').checked = showLog;
     if (showLog) setHtml($('log'), S.log.slice(0, 8).map(l => `<div>${l}</div>`).join(''));
     for (const ev of Game.drainEvents()) hitPop(ev);
+    { const bg = Game.drainBig(); if (bg.length) celebrate(bg); }
     const eff = Game.afkEfficiency(), afkHr = Object.entries(hr).filter(([, v]) => v > 0), afkKr = Object.entries(kr).filter(([, v]) => v > 0);
     setHtml($('afk-info'), !Game.infoOn('ledger') ? '' : `AFK mode: ${Game.pct(eff)} of this rate while closed (max ${Game.fmtTime(Game.afkCap())})` + (afkHr.length ? ` → ${afkHr.map(([k, v]) => `${ico(R[k].icon, 14)}${f(v * eff * 3600)}/h`).join(' ')}` : ' → XP only here') + (afkKr.length ? `, kingdom ${afkKr.map(([k, v]) => `${ico(R[k].icon, 14)}${f(v * eff * 3600)}/h`).join(' ')}` : ''));
 
@@ -1199,7 +1207,7 @@ const UI = (() => {
     for (const t of CONFIG.techs) {
       const row = rows.tech[t.id], done = Game.hasTech(t.id), pr = Game.techProgress(t);
       row.classList.toggle('done', done); row.classList.toggle('gated', !done && !pr.ok); row.classList.toggle('hidden', done && techHideKnown());
-      setHtml(row.querySelector('[data-f=req]'), done ? '' : pr.parts.map(p => `<div class="req-line"><span>${CNAME[p.k] || (R[p.k] ? R[p.k].name + ' gathered' : p.k)}</span><span>${f(Math.min(p.have, p.need))} / ${f(p.need)}</span></div><div class="bar"><div style="width:${Math.min(100, 100 * p.have / p.need)}%"></div></div>`).join(''));
+      setHtml(row.querySelector('[data-f=req]'), done ? '' : pr.parts.map(p => `<div class="req-line"><span>${CNAME[p.k] || (R[p.k] ? R[p.k].name + ' gathered' : p.k)}${!CNAME[p.k] && R[p.k] && p.have < p.need ? `<small class="req-src" data-item="${p.k}"> · ${sourceHint(p.k)} ⓘ</small>` : ''}</span><span>${f(Math.min(p.have, p.need))} / ${f(p.need)}</span></div><div class="bar"><div style="width:${Math.min(100, 100 * p.have / p.need)}%"></div></div>`).join(''));
       const btn = row.querySelector('[data-f=btn]'), rs = Game.researching(), mine = rs && rs.id === t.id;
       btn.classList.toggle('forging', !!mine); btn.classList.toggle('busy', !!rs && !mine);
       if (mine) { btn.style.setProperty('--p', (100 * rs.t / rs.total) + '%'); setHtml(btn, `<span class="small">Researching…</span><br><span class="cost">${(rs.total - rs.t).toFixed(1)}s</span>`); btn.disabled = true; }
@@ -1243,10 +1251,10 @@ const UI = (() => {
       return `<div class="qstep ${p.done ? 'done' : ''} ${current ? 'current' : ''}"><span class="qbox">${p.done ? '✓' : ''}</span><span class="qtext">${lab}</span>${single ? '' : `<span class="qcount">${f(Math.min(p.have, p.need))} / ${f(p.need)}</span>`}${single ? '' : `<div class="bar"><div style="width:${Math.min(100, 100 * p.have / p.need)}%"></div></div>`}</div>`; };
     if (q) {
       const pr = Game.questProgress(q);
-      { const chain = q.chain || (CONFIG.quests.slice(0, S.quests.index).reverse().find(x => x.chain) || {}).chain || ''; const inChain = CONFIG.quests.filter((x, i) => (x.chain || (CONFIG.quests.slice(0, i).reverse().find(y => y.chain) || {}).chain) === chain); setText($('quest-n'), `${chain} · ${inChain.indexOf(q) + 1} / ${inChain.length}`); }
+      if (q.dyn) setText($('quest-n'), `Deeds of the Dynasty · ${q.dyn}`); else { const chain = q.chain || (CONFIG.quests.slice(0, S.quests.index).reverse().find(x => x.chain) || {}).chain || ''; const inChain = CONFIG.quests.filter((x, i) => (x.chain || (CONFIG.quests.slice(0, i).reverse().find(y => y.chain) || {}).chain) === chain); setText($('quest-n'), `${chain} · ${inChain.indexOf(q) + 1} / ${inChain.length}`); }
       setText($('quest-name'), q.name); setText($('quest-text'), q.text); setText($('quest-hint'), q.hint || ''); $('quest-hint').classList.toggle('hidden', !q.hint);
       setHtml($('quest-obj'), pr.parts.map(partHtml).join(''));
-      setHtml($('quest-reward'), 'Reward: ' + Object.entries(q.reward).map(([k, v]) => k === 'crystal' ? `<span class="costitem">👑 ${v} Crown${v === 1 ? '' : 's'}</span>` : k === 'talent' ? `<span class="costitem">★ ${v} boss token</span>` : `<span class="costitem">${ico(R[k].icon, 14)}${f(v)}</span>`).join(' '));
+      setHtml($('quest-reward'), 'Reward: ' + Object.entries(q.reward).map(([k, v]) => k === 'crystal' ? `<span class="costitem">👑 ${v} Crown${v === 1 ? '' : 's'}</span>` : k === 'talent' ? `<span class="costitem">★ ${v} boss token${v === 1 ? '' : 's'}</span>` : `<span class="costitem">${ico(R[k].icon, 14)}${f(v)}</span>`).join(' '));
       $('quest-claim').classList.remove('hidden'); $('quest-claim').disabled = !pr.done; $('quest-card').classList.toggle('ready', pr.done);
     } else if (goal) {
       setText($('quest-n'), ''); setText($('quest-name'), goal.name); setText($('quest-text'), goal.text); setText($('quest-hint'), goal.hint); $('quest-hint').classList.remove('hidden');
@@ -1396,6 +1404,32 @@ const UI = (() => {
     lootFresh = {};
   }
   function tallyLoot(obj) { for (const k in obj) if (obj[k] > 0) { lootTally[k] = (lootTally[k] || 0) + obj[k]; lootFresh[k] = true; } }
+  // 0.10.5: the big moments get a banner (tap to dismiss); small ones a short one
+  const CBQ = []; let cbBusy = false, cbTimer = null;
+  function celebrate(evs) {
+    const lv = evs.filter(e => e.who === 'levelup').pop();
+    if (lv) { const a = $('mini-hero') && $('mini-hero').offsetParent ? $('mini-hero') : document.querySelector('.top'); if (a) { const r = a.getBoundingClientRect(); const p = el('div', 'pop lvl', `▲ Level ${lv.lv}`); p.style.left = (r.left + r.width / 2) + 'px'; p.style.top = (r.top + 10) + 'px'; document.body.appendChild(p); setTimeout(() => p.remove(), 900); } }
+    const ms = evs.filter(e => e.who === 'milestone');
+    if (ms.length === 1) CBQ.push({ small: 1, ico: '⚒', kicker: 'Output doubled', title: `${ms[0].name} · Lv ${ms[0].lv}`, sub: 'Every 10, 25, 50 and 100 levels it doubles.' });
+    else if (ms.length > 1) CBQ.push({ small: 1, ico: '⚒', kicker: 'Output doubled', title: `${ms.length} buildings doubled`, sub: ms.map(m => m.name).slice(0, 3).join(' · ') });
+    for (const e of evs) {
+      if (e.who === 'crown') { const G = Game.landDef(e.n); CBQ.push({ ico: '👑', kicker: 'Land conquered', title: G ? G.name : 'Conquered', sub: `You take ${G ? G.crown : 'a crown'} · +${e.v} Crown${e.v === 1 ? '' : 's'} when the crown passes${e.first ? ' · new in the Vault' : ''}` }); }
+      else if (e.who === 'crownpass') CBQ.push({ ico: '👑', kicker: 'Long live the heir', title: `Dynasty ${Game.S.legacy.dynasty}`, sub: `+${e.gain} Crowns to spend in Legacy · lands you know fall ${3 + Game.perkRank('lap')}× faster` });
+      else if (e.who === 'proclaim') CBQ.push({ ico: '🏰', kicker: 'A kingdom is born', title: 'The Kingdom is proclaimed', sub: 'Build the Barracks and march on your first land.' });
+      else if (e.who === 'tier') CBQ.push({ ico: '🏘', kicker: 'Your settlement grows', title: `A ${e.name}!`, sub: 'New buildings and a bigger Storehouse.' });
+      else if (e.who === 'trophy') { const T = CONFIG.trophies.tiers[e.tier]; CBQ.push({ small: 1, ico: '🏆', kicker: 'Trophy', title: `${T ? T.name : ''} ${e.name || ''} head`, sub: `+${Math.round(CONFIG.trophies.lootPerTrophy * 100)}% loot and XP, for good` }); }
+    }
+    while (CBQ.length > 6) CBQ.splice(CBQ.findIndex(c => c.small) >= 0 ? CBQ.findIndex(c => c.small) : 0, 1);
+    cbNext();
+  }
+  function cbNext() {
+    if (cbBusy || !CBQ.length) return; cbBusy = true;
+    const c = CBQ.shift(), b = $('celebrate');
+    setText($('cb-ico'), c.ico); setText($('cb-kicker'), c.kicker); setText($('cb-title'), c.title); setText($('cb-sub'), c.sub || '');
+    b.className = 'celebrate show' + (c.small ? ' small' : '');
+    cbTimer = setTimeout(cbDone, c.small ? 2200 : 3800);
+  }
+  function cbDone() { clearTimeout(cbTimer); const b = $('celebrate'); if (!cbBusy) return; b.classList.add('out'); setTimeout(() => { b.className = 'celebrate hidden'; cbBusy = false; cbNext(); }, 330); }
   function hitPop(ev) {
     if (ev.who === 'rest') { const a = $('hero-hpbar') && $('hero-hpbar').offsetParent ? $('hero-hpbar').parentElement : document.querySelector('.top'); const r = a.getBoundingClientRect(); const p = el('div', 'pop heal', '☾ Resting'); p.style.left = (r.left + r.width * 0.5) + 'px'; p.style.top = (r.top + 4) + 'px'; document.body.appendChild(p); setTimeout(() => p.remove(), 1600); return; }
     if (ev.who === 'retreat') { const a = $('hero-hpbar') && $('hero-hpbar').offsetParent ? $('hero-hpbar').parentElement : document.querySelector('.top'); const r = a.getBoundingClientRect(); const p = el('div', 'pop taken', `◀ Retreat to stage ${ev.to}`); p.style.left = (r.left + r.width * 0.5) + 'px'; p.style.top = (r.top + 4) + 'px'; document.body.appendChild(p); setTimeout(() => p.remove(), 1800); return; }

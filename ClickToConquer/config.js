@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Alpha 0.10.4',
+  version: 'Alpha 0.10.5',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -249,7 +249,7 @@ const CONFIG = {
   // Bestiary: the more you kill a type, the better you fight it — bonus = ×damage dealt and −damage taken vs that type.
   bestiary: { tiers: [ { kills: 10, name: 'Familiar', bonus: 0.02 }, { kills: 50, name: 'Studied', bonus: 0.05 }, { kills: 200, name: 'Known', bonus: 0.10 }, { kills: 1000, name: 'Mastered', bonus: 0.15 } ] },
   // Trophies: mounted heads for kill milestones. Each trophy owned = +lootPerTrophy loot and XP, permanently.
-  trophies: { lootPerTrophy: 0.01, tiers: [ { kills: 1000, name: 'Wood', color: '#8a6a3a' }, { kills: 2000, name: 'Stone', color: '#9a9a9a' }, { kills: 5000, name: 'Bronze', color: '#c08040' }, { kills: 10000, name: 'Silver', color: '#d8dce0' }, { kills: 25000, name: 'Gold', color: '#e8c06a' } ] },
+  trophies: { lootPerTrophy: 0.02, tiers: [ { kills: 500, name: 'Wood', color: '#8a6a3a' }, { kills: 1500, name: 'Stone', color: '#9a9a9a' }, { kills: 4000, name: 'Bronze', color: '#c08040' }, { kills: 10000, name: 'Silver', color: '#d8dce0' }, { kills: 25000, name: 'Gold', color: '#e8c06a' } ] },
 
   // ---------- Techniques (active). Unlocked by milestones, levelled by use (mastery), never reset. ----------
   // Mastery XP per cast = the technique's base cooldown (so every technique levels at about the same pace per minute of fighting).
@@ -412,7 +412,7 @@ const CONFIG = {
     // Lands (0.9): conquered from the hero screen; taxes grow ×4 per land
     lands: { taxBase: 1000, taxGrowth: 4, garrisonPer: 10, cofferHours: 8, shortStages: 50, longStages: 100, shortLands: 3, offsetStart: 6, offsetStep: 3, spoilPerHour: 30, victoryLap: 3, heroHereCap: 0.5,
       // 0.10.1 land difficulty: smooth inside a land (×span from first stage to the Ruler's), a wall between lands (next land starts ×(land/span) above the last one's end)
-      curve: { hp: 105, hit: 11.5, landHp: 2.4, landHit: 1.75, spanHp: 1.6, spanHit: 1.35, captainHp: 3, captainHit: 1.4, rulerHp: 4, rulerHit: 1.4, endless: 1.15 } },
+      curve: { hp: 105, hit: 11.5, landHp: 2.4, landHit: 1.75, spanHp: 2.0, spanHit: 1.6, captainHp: 3, captainHit: 1.4, rulerHp: 4, rulerHit: 1.4, endless: 1.15 } },
     // Settlement tiers inside one land. Raising a tier costs `cap` of every good made so far (pay in as you go) and loses nothing.
     tiers: [
       { name: 'Camp',    cap: 300, slots: 1, thralls: 6,  lvCap: 25,  threat: 'roads:20',  need: 'Build Logging, the Fields and the Mine Shaft.' },
@@ -434,7 +434,7 @@ const CONFIG = {
     starMult: [1, 1.5, 2.0, 2.5, 3.0, 3.5],  // Overseer multiplier by stars (index = stars)
     abilitySeconds: 30, abilityCooldown: 600,
     hirePrice: [0, 40, 120, 350, 900, 2200], offerRefresh: 300, refreshCost: 25,
-    ranks: [ { name: 'Reeve', renown: 0, perk: 'Start' }, { name: 'Baron', renown: 500, perk: 'Storehouse ×2' }, { name: 'Count', renown: 2000, perk: '4★ thralls in the Tavern · bigger Orders' }, { name: 'Duke', renown: 6000, perk: '5★ thralls · the biggest Orders' } ],
+    ranks: [ { name: 'Reeve', renown: 0, perk: 'Start' }, { name: 'Baron', renown: 200, perk: 'Storehouse ×2 · Orders pay 50% more' }, { name: 'Count', renown: 1000, perk: 'Orders pay double' }, { name: 'Duke', renown: 3000, perk: 'Orders pay ×2.5' } ],
     orderFrom: ['The Northern Legion', 'The Merchant Guild', 'The Village of Ashford', 'The Imperial Court', 'The Border Garrison'],
     orderBase: { wood: 40, grain: 40, ore: 30, planks: 20, flour: 20, ingot: 15, lumber: 10, bread: 10, swords: 6, hide: 25, meat: 15, stone: 40, fiber: 40, berries: 30 },
     heroOrderGoods: ['hide', 'meat', 'stone', 'fiber', 'berries'],   // when the kingdom makes fewer than 3 goods, Orders ask for what the hero gathers
@@ -473,6 +473,7 @@ const CONFIG = {
   // jobs (jobs completed by hand or thrall), sold (gold earned at market), stage, boss, founded, thrall (assigned), activity (swings).
   // Shown in Settings → What's new (newest first). Keep each line short.
   changelog: [
+    ['0.10.5', 'Big moments get a banner: conquering a land, passing the crown, proclaiming, raising your settlement, buildings doubling, new trophies — and a pop on every level. After the story quests, Deeds of the Dynasty keep you going with new goals (take the next land, temper your gear, grow the host, hunt a trophy) that pay gold and ★. Stars past what your Paths can use now give +0.5% attack and HP each. Tech requirements say where a good comes from (tap for more). Land 2 is now the Iron Hills (it pays silver) and land 3 is Blackwood March. Raising your settlement asks less of new and in-between goods; Baron needs 200 Renown. Trophies come at 500 kills and give +2%. Lands ramp up more steadily inside, with a smaller jump at the border. The kingdom paths (Benevolent, Iron Empire) now really change your buildings, and the gold rate in the header counts taxes.'],
     ['0.10.4', 'Crowns reworked. Every ruler now pays a little more than the last (1, 1, 2, 2, 3, 4, 5, 7…) and proclaiming gives 5. Passing the Crown no longer takes your gear or building levels — only the lands, taxes, army and stores go, and the hero starts at level 1. Perks: Bloodline now multiplies (×1.08 per rank); War College replaces Drill Sergeants and Standing Army; Founder\'s Cache pays out from your last taxes; Heirloom Arms, Old Blade and Blueprints are gone (nothing to keep anymore); the Ledger, Danger Sense, Chronicler, Surveyor and Almanac now open through quests. Every retired perk\'s Crowns are refunded. New quests teach the army — supply lines, casualties, the Endless Battle and growing demand — and after Blackwood March a quest leads you to Pass the Crown for the first time (+20 Crowns). In your first dynasty, the third land opens once you have passed the crown.'],
     ['0.10.3', 'In the Kingdom phase the building tabs are named for what they supply — Housing, Arms, Food, Soldiers — in the same order as the header. Taxes now flow straight into your gold (no more Collect button; if you bought Stewards, its 15 Crowns are back). Lands are listed newest first.'],
     ['0.10.2', 'Battles cost soldiers. The harder the fight, the more fall — easy fights cost nothing, new lands and captains the most. The Barracks replaces them, but every recruit needs swords, so a strong Mine decides how hard you can push. The army settles where replacements keep up and never falls below half. Push to conquer, fall back to rebuild: the hero screen shows losses, recruits and where your army will hold.'],
@@ -650,7 +651,7 @@ const CONFIG = {
       steps: [
         { label: 'Push 5 stages past your best', check: { counter: 'stage', need: 5, since: true } },
       ], reward: { gold: 200 }, focus: { tab: 'hero', sub: 'fight', el: 'act:fight', el2: 'id:advance-btn' } },
-    { id: 'q16b', name: 'The Trophy Wall', text: 'Kill 1,000 of one kind and its head goes on your wall — Wood, then Stone, Bronze, Silver and Gold. Every head is +1% loot and XP, for good.',
+    { id: 'q16b', name: 'The Trophy Wall', text: 'Kill 500 of one kind and its head goes on your wall — Wood, then Stone, Bronze, Silver and Gold. Every head is +2% loot and XP, for good.',
       steps: [ { label: 'Loot → open Trophies', check: { viewed: 'trophies' } } ], reward: { gold: 100 }, focus: { tab: 'inventory', rtab: 'inventory', el: 'id:csub-troph-btn' } },
     { id: 'q17', name: 'A New Kingdom', text: 'You have survived the wild alone. Pay tribute to the Empire — 100 gold and the Rat King\'s Tooth — and it grants you land. Your hero keeps everything he has earned — levels, skills and gear — but the goods in your pack stay behind. This is where the kingdom begins.',
       steps: [
@@ -692,8 +693,8 @@ const CONFIG = {
     { id: 'v03b', chain: 'Village', name: 'Iron Armor', text: 'The Cult Priest hits hard. Clad the hero in iron: max each Leather piece to Lv 9, then forge Iron. Ingots come from the Smelter, hide from the Wilds or the Market — the Smithy in the Halls makes it all cheaper.',
       steps: [ { label: 'Gear → Helm → forge Iron', check: { gearTier: 'helm', need: 2 } }, { label: 'Gear → Chest → forge Iron', check: { gearTier: 'chest', need: 2 } }, { label: 'Gear → Gloves → forge Iron', check: { gearTier: 'gloves', need: 2 } },
         { label: 'Gear → Boots → forge Iron', check: { gearTier: 'boots', need: 2 } }, { label: 'Gear → Trinket → forge Iron', check: { gearTier: 'trinket', need: 2 } }, { label: 'Slay 150 enemies in your new armor', check: { counter: 'kills', need: 150, since: true } } ], reward: { gold: 800, talent: 1 }, focus: { tab: 'hero', sub: 'gear', el: 'gear:chest' } },
-    { id: 'v04', chain: 'Village', name: 'Baron', text: 'Renown comes from Orders. At 500 Renown you become a Baron, and your Storehouse doubles.',
-      steps: [ { label: 'Earn 500 Renown from Orders', check: { renown: 500 } }, { label: 'Deliver 3 more Orders', check: { orders: 1, need: 3, since: true } } ], reward: { gold: 300 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:order-list' } },
+    { id: 'v04', chain: 'Village', name: 'Baron', text: 'Renown comes from Orders. At 200 Renown you become a Baron, and your Storehouse doubles.',
+      steps: [ { label: 'Earn 200 Renown from Orders', check: { renown: 200 } }, { label: 'Deliver 3 more Orders', check: { orders: 1, need: 3, since: true } } ], reward: { gold: 300 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:order-list' } },
     { id: 'v05', chain: 'Village', name: 'Healers and Horses', text: 'The Apothecary heals the hero faster; the Stables make him strike faster.',
       steps: [ { label: 'Kingdom → Halls → Apothecary → Build', check: { hall: 'apothecary' } }, { label: 'Halls → Stables → Build', check: { hall: 'stables' } }, { label: 'Upgrade any of your Halls 3 times', check: { hallSum: 1, need: 3, since: true } } ], reward: { gold: 500 }, focus: { tab: 'kingdom', ksub: 'halls', rtab: 'kingdom', el: 'hall:apothecary' } },
     { id: 'v07', chain: 'Village', name: 'Raise a City', text: 'A cult gathers in the deep Crypts — a City will not rise under the Cult Priest\'s shadow. A City costs 500 of every good you make. The last stretch.',
@@ -714,16 +715,16 @@ const CONFIG = {
       steps: [ { label: 'Forge 150 more swords', check: { made: 'swords', need: 150, since: true } } ], reward: { gold: 1500 }, focus: { tab: 'kingdom', ksub: 'war', rtab: 'kingdom', el: 'id:loss-card' } },
     { id: 'w04', chain: 'The Kingdom', name: 'Baron Hollin', text: 'At the end of every land waits its Ruler. Beat him and take his crown — Crowns are the power of your dynasty.',
       steps: [ { label: 'Conquer Ashford Vale (defeat Baron Hollin, stage 50)', check: { landDone: 1 } }, { label: 'Earn 100 more gold in taxes', check: { taxed: 1, need: 100, since: true } } ], reward: { gold: 2000 }, focus: { tab: 'hero', sub: 'fight', el: 'ground:land1' } },
-    { id: 'w04c', chain: 'The Kingdom', name: 'The Endless Battle', text: 'Past the Ruler the fighting never ends. In the Endless Battle every stage is a little harder, and it is the one place the hero rests instead of retreating. Only you can march on to the next land — and while the hero still fights in a land, it pays at most half its taxes.',
+    { id: 'w04c', chain: 'The Kingdom', name: 'The Endless Battle', text: 'Past the Ruler the fighting never ends. The Endless Battle never runs out of foes, and it is the one place the hero rests instead of retreating. Only you can march on to the next land — and while the hero still fights in a land, it pays at most half its taxes.',
       steps: [ { label: 'Win 50 fights in the Endless Battle', check: { stat: 'endlessKills', need: 50, since: true } } ], reward: { gold: 2500 }, focus: { tab: 'hero', sub: 'fight', el: 'ground:land1' } },
     { id: 'w04b', chain: 'The Kingdom', name: 'Growing Demand', text: 'Every land you hold makes each soldier need 15% more Housing, Arms and Food. When a line falls short, the army fights at less than full strength and its tab turns red. Upgrade that line first — its slowest building — until every tab is back to 100%.',
       steps: [ { label: 'Upgrade supply buildings 3 times (start with the red tab)', check: { bLvSum: 1, need: 3, since: true } } ], reward: { gold: 3000 }, focus: { tab: 'kingdom', ksub: 'war', rtab: 'kingdom', el: 'id:war-pipe' } },
-    { id: 'w05', chain: 'The Kingdom', name: 'Blackwood March', text: 'Every land is harder than the last — and pays about four times more. March on when you are ready.',
-      steps: [ { label: 'Conquer Blackwood March', check: { landDone: 2 } } ], reward: { gold: 5000 }, focus: { tab: 'hero', sub: 'fight', el: 'ground:land2' } },
+    { id: 'w05', chain: 'The Kingdom', name: 'The Iron Hills', text: 'Every land is harder than the last — and pays about four times more. The hills hold silver, the metal of Hardened gear: garrison them and it flows in every hour.',
+      steps: [ { label: 'Conquer the Iron Hills', check: { landDone: 2 } } ], reward: { gold: 5000 }, focus: { tab: 'hero', sub: 'fight', el: 'ground:land2' } },
     { id: 'w05b', chain: 'The Kingdom', name: 'Pass the Crown', text: 'Two lands are yours, and the next ones only get harder. Time to think in dynasties. When you Pass the Crown your heir takes the throne: the lands, their taxes, the army and your stores are gone, and the hero starts again at level 1. Everything else stays: his gear, Paths and Techniques, the Capital and every building level, Crowns and trophies. Lands you have conquered before fall three times faster for the heir, and the Crowns you took from their rulers become yours to spend. Spend a Crown in Legacy first — perks there last forever.',
       steps: [ { label: 'Kingdom → Legacy → buy a perk', check: { stat: 'perksBought', need: 1, since: true }, focus: { tab: 'kingdom', ksub: 'legacy', rtab: 'kingdom', el: 'perk:bloodline' } }, { label: 'Kingdom → Keep → Pass the Crown', check: { stat: 'passed', need: 1 } } ], reward: { crystal: 20 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:found-btn' } },
-    { id: 'w06', chain: 'The Kingdom', name: 'The Iron Hills', text: 'The hills hold silver — the metal of Hardened gear.',
-      steps: [ { label: 'Conquer the Iron Hills', check: { landDone: 3 } } ], reward: { gold: 20000 }, focus: { tab: 'hero', sub: 'fight', el: 'ground:land3' } },
+    { id: 'w06', chain: 'The Kingdom', name: 'Blackwood March', text: 'Past the hills lies the old forest: heartwood for Hardened gear, and the first land your heir has never seen.',
+      steps: [ { label: 'Conquer Blackwood March', check: { landDone: 3 } } ], reward: { gold: 20000 }, focus: { tab: 'hero', sub: 'fight', el: 'ground:land3' } },
   ],
 
   // ---------- Tech tree ----------
@@ -775,11 +776,11 @@ const CONFIG = {
         mods: { speedPct: 0.25, crit: 0.20, dropPct: 0.25, hpPct: -0.15 } },
     ],
     kingdomPaths: [
-      { id: 'benevolent', name: 'Benevolent Kingdom', icon: [1,0], unlock: 1, desc: 'Buildings −15% cost, jobs 20% faster. Hero drops −15%.',
+      { id: 'benevolent', name: 'Benevolent Kingdom', icon: [1,0], unlock: 1, desc: 'Building upgrades −15% cost, buildings work 20% faster. Hero drops −15%.',
         costMult: 0.85, jobSpeed: 1.2, sellMult: 1, mods: { dropPct: -0.15 } },
-      { id: 'empire', name: 'Iron Empire', icon: [3,7], unlock: 1, desc: 'Hero drops +30%, mines yield +50%. Buildings +15% cost, sell prices −10%.',
+      { id: 'empire', name: 'Iron Empire', icon: [3,7], unlock: 1, desc: 'Hero drops +30%, the Mine works 50% faster. Building upgrades +15% cost, sell prices −10%.',
         costMult: 1.15, jobSpeed: 1, sellMult: 0.9, outputMult: { mine: 1.5 }, mods: { dropPct: 0.30 } },
-      { id: 'merchant', name: 'Merchant Republic', icon: [12,10], unlock: 4, desc: 'Sell prices +40%, respec free. Hero attack −10%.',
+      { id: 'merchant', name: 'Merchant Republic', icon: [12,10], unlock: 4, desc: 'Sell prices +40%, resetting Paths is free. Hero attack −10%.',
         costMult: 1, jobSpeed: 1, sellMult: 1.4, mods: { attackPct: -0.10 }, freeRespec: true },
     ],
 
@@ -813,11 +814,11 @@ const CONFIG = {
     [9,  [['royal', 'Royal Guard', 'Royal Guards', 'knight'], ['siege', 'Siege Crew', 'Siege Crews', 'merc'], ['battlemage', 'Battle-Mage', 'Battle-Mages', 'shade'], ['paladin', 'Paladin', 'Paladins', 'knight'], ['duelist', 'Duelist', 'Duelists', 'assassin'], ['cataphract', 'Cataphract', 'Cataphracts', 'merc'], ['warlock', 'Warlock', 'Warlocks', 'shade'], ['sentinel', 'Sentinel', 'Sentinels', 'knight'], ['reaver', 'Reaver', 'Reavers', 'raider'], ['highguard', 'High Guard', 'High Guards', 'knight']]],
     [16, [['sorcerer', 'Sorcerer', 'Sorcerers', 'shade'], ['necro', 'Necromancer', 'Necromancers', 'shade'], ['revenant', 'Revenant', 'Revenants', 'skeleton'], ['ghast', 'Ghast', 'Ghasts', 'ghoul'], ['wraithlord', 'Wraith', 'Wraiths', 'wraith'], ['drake', 'Drake', 'Drakes', 'saber'], ['demon', 'Demon', 'Demons', 'shade'], ['lich2', 'Lich', 'Liches', 'skeleton'], ['wyrm', 'Wyrm', 'Wyrms', 'saber'], ['horror', 'Horror', 'Horrors', 'wraith']]],
   ];
-  const NAMES = ['Ashford Vale', 'Blackwood March', 'The Iron Hills', 'Kingdom of Varn', 'The Horse Plains', 'Stonemere', 'The Salt Coast', 'Greywater', 'The Twin Crowns', 'Empire of the Coast',
+  const NAMES = ['Ashford Vale', 'The Iron Hills', 'Blackwood March', 'Kingdom of Varn', 'The Horse Plains', 'Stonemere', 'The Salt Coast', 'Greywater', 'The Twin Crowns', 'Empire of the Coast',
     'The Gilded Reach', 'Highspire', 'The Sunken Throne', 'Emberfall', 'The Bronze Empire', 'The Fen Queendom', 'The Bone Marches', 'Dragon Peaks', 'The Hollow Realm', 'The Last Throne'];
-  const RULERS = ['Baron Hollin', 'the Mercenary Lord', 'Warlord Grask', 'the Iron King', 'the Horse Khan', 'Duke Aldric', 'the Salt Admiral', 'Count Morvane', 'the Twin Queens', 'the Emperor of the Coast',
+  const RULERS = ['Baron Hollin', 'Warlord Grask', 'the Mercenary Lord', 'the Iron King', 'the Horse Khan', 'Duke Aldric', 'the Salt Admiral', 'Count Morvane', 'the Twin Queens', 'the Emperor of the Coast',
     'the Gilded Prince', 'the Spire Lord', 'the Drowned King', 'the Ember Tyrant', 'the Bronze Emperor', 'the Witch-Queen', 'the Bone King', 'the Dragon of Varn', 'the Hollow King', 'the Last King'];
-  const CROWNS = ['the Reed Circlet', 'the Sellsword Crown', 'the Iron Band', 'the Iron Crown', 'the Horse-Tail Crown', 'the Stone Diadem', 'the Salt Crown', 'the Grey Circlet', 'the Twin Crowns', 'the Crown of the Coast',
+  const CROWNS = ['the Reed Circlet', 'the Iron Band', 'the Sellsword Crown', 'the Iron Crown', 'the Horse-Tail Crown', 'the Stone Diadem', 'the Salt Crown', 'the Grey Circlet', 'the Twin Crowns', 'the Crown of the Coast',
     'the Gilded Crown', 'the Spire Crown', 'the Drowned Crown', 'the Ember Crown', 'the Bronze Crown', 'the Thorn Circlet', 'the Bone Crown', 'the Dragon Crown', 'the Hollow Crown', 'the Last Crown'];
   const TERRAIN = [['heartwood', 'forest'], ['silver', 'hills'], ['heartwood', 'forest'], ['silver', 'hills'], ['relic', 'holy site']];
   const ART = ['roads_a', 'roads_b', 'wilds_night', 'crypts_b', 'wilds_dusk'];

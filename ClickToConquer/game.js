@@ -211,6 +211,8 @@ function pathPointsFree() { return pathPointsTotal() - pathPointsSpent(); }
 function pathPointsMax() { return pathNodes().length * CONFIG.paths.ranks; }
 function starsTotal() { return Object.keys(S.hero.stars || {}).length * H.talentPointsPerBoss + (S.hero.bonusTalent || 0); }
 function starsSpent() { let n = 0; for (const p of pathNodes()) if (p.kind !== 'small') n += pathRank(p.id); for (const d in CONFIG.trees) for (const node of CONFIG.trees[d]) if (node.capstone) n += nodeRank(d, node.id); return n; }
+function starDemand() { let n = 0; for (const p of pathNodes()) if (p.kind !== 'small') n += CONFIG.paths.ranks; for (const d in CONFIG.trees) for (const node of CONFIG.trees[d]) if (node.capstone) n += node.max || 1; return n; }
+function starsSpare() { return Math.max(0, starsTotal() - starDemand()); } // 0.10.5: stars past what the Paths can use make the hero a legend: +0.5% attack and HP each
 function starsFree() { return starsTotal() - starsSpent(); }
 function canRankPath(id) { const n = pathNode(id); if (!n || !pathOpen(id) || pathRank(id) >= CONFIG.paths.ranks || pathPointsFree() < 1) return false; return n.kind === 'small' || starsFree() >= 1; }
 function rankPath(id, times = 1) { let k = 0; S.hero.paths = S.hero.paths || {}; while (k < times && canRankPath(id)) { S.hero.paths[id] = pathRank(id) + 1; k++; } if (k && pathRank(id) >= CONFIG.paths.ranks) log(`${pathNode(id).name} mastered!`); return k; }
@@ -316,6 +318,7 @@ function rawMods() { // attributes + talents only
   if (hp) for (const e in hp.mods) add(e, hp.mods[e]);
   if (kp && kp.mods) for (const e in kp.mods) add(e, kp.mods[e]);
   if (perkRank('warcollege')) add('armyPct', 0.10 * perkRank('warcollege'));
+  { const sp = starsSpare() * 0.005; if (sp) { add('attackPct', sp); add('hpPct', sp); } }
   if (S.kingdom) { const hm = hallMods(); for (const e in hm) add(e, hm[e]); }
   const vc = vaultCount() * 0.02; if (vc) add('attackPct', vc);
   const tr = trophyCount() * CONFIG.trophies.lootPerTrophy; if (tr) { add('dropPct', tr); add('xpPct', tr); }
@@ -476,6 +479,7 @@ function pay(cost) { for (const k in cost) S.res[k] -= cost[k]; }
 const THRALL_NAMES = ['Brann', 'Ysolde', 'Kettil', 'Marra', 'Osric', 'Thyra', 'Gundar', 'Liv', 'Halvar', 'Sigrun', 'Rurik', 'Eydis', 'Torvald', 'Asta', 'Bjorn', 'Freya', 'Ulf', 'Helga', 'Ragna', 'Sten'];
 const KC = () => CONFIG.kingdom;
 function kingdomNo() { return S.legacy.foundings; } // Kingdom N = the Nth founding; 0 = still in the wild
+const _lineOf = {}; function lineOf(id) { if (!(id in _lineOf)) { const d = stepDef(id); _lineOf[id] = d ? d.line : null; } return _lineOf[id]; }
 function allSteps() { const o = []; for (const lid in KC().lines) KC().lines[lid].steps.forEach((st, i) => o.push({ ...st, line: lid, index: i })); return o; }
 function stepDef(id) { return allSteps().find(s => s.id === id); }
 // Settlement tier (Camp 0 → Hamlet 1 → Village 2 → City 3). A step is available at its tier, and runs once built.
@@ -499,7 +503,7 @@ function lineUnlocked(lid) { return kingdomNo() > 0 && KC().lines[lid].steps.som
 function lineSteps(lid) { return KC().lines[lid].steps.map((s, i) => ({ ...s, line: lid, index: i })).filter(s => stepBuilt(s.id)); }
 // Raising the settlement: every current-tier step built and staffed, and `cap` of every good made so far paid in.
 function tierGoods() { return allSteps().filter(st => st.tier <= kTier() && !st.phase).map(st => st.make); }
-function tierNeed() { const t = kTier(); if (t >= KC().tiers.length - 1) return null; const n = tierDef(t).cap, o = {}; for (const k of tierGoods()) o[k] = n; return o; }
+function tierNeed() { const t = kTier(); if (t >= KC().tiers.length - 1) return null; const n = tierDef(t).cap, o = {}; const all = allSteps(); for (const st of all) if (st.tier <= t && !st.phase) { const fed = all.some(d => d.from === st.make && d.tier <= t && !d.phase); o[st.make] = Math.round(n * (st.tier === t && t > 0 ? 0.4 : fed ? 0.5 : 1)); } return o; } // 0.10.5: new chains ask 40%, goods the next building eats ask 50%
 function tierPaid() { return S.kingdom.tierPaid || {}; }
 function tierPaidDone() { const need = tierNeed(); if (!need) return true; for (const k in need) if ((tierPaid()[k] || 0) < need[k]) return false; return true; }
 function tierStepsReady() { return allSteps().filter(st => st.tier === kTier() && !st.phase).every(st => stepBuilt(st.id)); }
@@ -507,7 +511,7 @@ function tierThreat(t = kTier()) { const k = tierDef(t).threat; if (!k) return n
 function contribute() { const need = tierNeed(); if (!need) return 0; S.kingdom.tierPaid = S.kingdom.tierPaid || {}; let n = 0; for (const k in need) { const m = Math.min(Math.floor(S.res[k] || 0), need[k] - (S.kingdom.tierPaid[k] || 0)); if (m > 0) { S.res[k] -= m; S.kingdom.tierPaid[k] = (S.kingdom.tierPaid[k] || 0) + m; n += m; } } return n; }
 const RAISE_QUEST = ['c04', 'h07', 'v07']; // raising the settlement is a quest moment
 function canRaise() { const th = tierThreat(), rq = RAISE_QUEST[kTier()]; return !!tierNeed() && tierPaidDone() && tierStepsReady() && (!th || th.done) && (!rq || questReached(rq) || S.legacy.dynasty > 1); }
-function raiseTier() { if (!canRaise()) return false; S.kingdom.tier = kTier() + 1; S.kingdom.tierPaid = {}; log(`Your settlement is now a ${tierDef().name}!`); return true; }
+function raiseTier() { if (!canRaise()) return false; S.kingdom.tier = kTier() + 1; S.kingdom.tierPaid = {}; log(`Your settlement is now a ${tierDef().name}!`); pushEvent({ who: 'tier', name: tierDef().name }); return true; }
 function accountantSteps() { return allSteps().filter(st => st.tier === 2); }
 function cityChecks() {
   const all = allSteps().filter(st => !st.phase);
@@ -527,8 +531,8 @@ function roleMult(t, role) { if (!t || t.role !== role) return 1; return (KC().s
 function stepWorkerSlots(id) { return tierDef().slots; }
 // 0.9: a building runs once built. Its speed comes from its level (all three parts of the cycle), milestones and the hero's Lordship.
 function stepMods(id) {
-  const lord = 1 + KC().lordship * (S.hero.level - 1);
-  return { rate: lord, haul: 1, cart: 1, working: stepBuilt(id) };
+  const lord = 1 + KC().lordship * (S.hero.level - 1), kp = kingdomPath(), km = kp ? (kp.jobSpeed || 1) * (((kp.outputMult || {})[lineOf(id)]) || 1) : 1; // 0.10.5: the kingdom's path really changes its buildings
+  return { rate: lord * km, haul: 1, cart: 1, working: stepBuilt(id) };
 }
 function stepLv(id) { return stepState(id).lv || 1; }
 function milestoneCount(lv) { return KC().milestones.filter(m => lv >= m).length; }
@@ -564,9 +568,9 @@ function stepLimit(id) { // what holds the step back — shown only when an Over
   if (d.from && s.phase === 0 && s.inBuf < d.ratio * 0.5) return 'starved';
   const p = stepPhases(id), mx = Math.max(...p); return ['rate', 'cart', 'haul'][p.indexOf(mx)];
 }
-function stepUpCost(id, track, level) { const l = level || stepLv(id); return { gold: Math.round(KC().costBase * Math.pow(l, KC().costExp)) }; }
+function stepUpCost(id, track, level) { const l = level || stepLv(id), kp = kingdomPath(); return { gold: Math.round(KC().costBase * Math.pow(l, KC().costExp) * ((kp && kp.costMult) || 1)) }; }
 function stepUpPlan(id, track, n) { let g = 0, k = 0; const l = stepLv(id), room = Math.max(0, levelCap() - l), lim = Math.min(room, n === 'max' ? 999 : n); while (k < lim) { const c = stepUpCost(id, null, l + k).gold; if ((S.res.gold || 0) < g + c) break; g += c; k++; } return { n: k, cost: { gold: g } }; }
-function upgradeStep(id, track, n = 1) { if (!stepUnlocked(id)) return false; const before = stepLv(id), p = stepUpPlan(id, track, n); if (!p.n) return false; pay(p.cost); stepState(id).lv += p.n; if (milestoneCount(stepLv(id)) > milestoneCount(before)) { log(`The ${stepName(id)} reached Lv ${stepLv(id)} — output doubled!`); pushEvent({ who: 'milestone', id }); } return p.n; }
+function upgradeStep(id, track, n = 1) { if (!stepUnlocked(id)) return false; const before = stepLv(id), p = stepUpPlan(id, track, n); if (!p.n) return false; pay(p.cost); stepState(id).lv += p.n; if (milestoneCount(stepLv(id)) > milestoneCount(before)) { log(`The ${stepName(id)} reached Lv ${stepLv(id)} — output doubled!`); pushEvent({ who: 'milestone', id, name: stepName(id), lv: stepLv(id) }); } return p.n; }
 function stepName(id) { const d = stepDef(id), m = milestoneCount(stepLv(id)), names = d.names || []; return m && names[m - 1] ? names[m - 1] : d.name; }
 function assignWorker(id, i) { if (!stepUnlocked(id) || !thrall(i)) return false; unassign(i); const s = stepState(id); if (s.workers.length >= stepWorkerSlots(id)) return false; s.workers.push(i); return true; }
 function assignOverseer(id, i) { if (!stepUnlocked(id) || !thrall(i)) return false; unassign(i); const s = stepState(id); if (s.overseer !== null) s.overseer = null; s.overseer = i; return true; }
@@ -620,7 +624,7 @@ function fixQuestIndex() {
   const MERGED = { c03: 'c04', h06: 'h07', v06: 'v07', p01: 'k01' }; if (id && MERGED[id]) id = MERGED[id]; // 0.9.9: boss-threat quests folded into the Raise quests
   if (Q.cur === undefined && Q.index >= QUESTS_090.length) id = null;
   if (id && at(id) >= 0) Q.index = at(id); else if (id === null) Q.index = CONFIG.quests.length; // past the end of the chain stays past the end
-  Q.cur = (CONFIG.quests[Q.index] || {}).id || null;
+  Q.cur = (CONFIG.quests[Q.index] || {}).id || null; if (Q.index >= CONFIG.quests.length && Q.dq) Q.cur = Q.dq.id; // a Deed in progress keeps its place
 }
 function ensureThralls() { const K = S.kingdom; migrate05(); migrate08(); migrate09(); fixQuestIndex(); repairPosts(); K.steps = K.steps || {}; K.thralls = K.thralls || []; if (!K.offers || !K.offers.length) refreshOffers(); K.orders = K.orders || []; while (kingdomNo() > 0 && K.orders.length < 3 && orderGoods(true).length) K.orders.push(makeOrder()); }
 // Storehouse level
@@ -749,7 +753,51 @@ function techJobSpeed() { let s = 1; for (const t of CONFIG.techs) if (hasTech(t
 function grantTechTiers(n) { for (const t of CONFIG.techs) if (t.tier < n) S.tech[t.id] = true; }
 
 // ---------- Quests ----------
-function questCurrent() { return CONFIG.quests[S.quests.index] || null; }
+function questCurrent() { return CONFIG.quests[S.quests.index] || deedCurrent(); }
+// ---- 0.10.5: Deeds — endless goals once the story quests run out (Kingdom phase) ----
+const DEED_ORDER = ['land', 'gear', 'army', 'land', 'trophy']; // passing the crown stays the player's call: the land Deed mentions it when it would pay well
+function deedOk(type) {
+  const held = landsHeld();
+  if (type === 'land') { const L = held + 1; return !!landDef(L) && landQuestOk(L) && (L === 1 || landDone(L - 1)); }
+  if (type === 'gear') return phase() === 3;
+  if (type === 'army') return barracksBuilt() && armyLimit() > 0;
+  if (type === 'trophy') { const t = trophyNear(); return !!t && t.left <= 300; } // only when a head is within reach
+  if (type === 'pass') { const best = Math.max(0, ...(S.legacy.history || []).map(h => h.crowns || 0)); return canPassCrown() && crownsIfPass() > best && crownsIfPass() >= 3; }
+  return false;
+}
+function trophyNear() { let best = null; const T = CONFIG.trophies.tiers, here = S.hero.ground + ':'; for (const key in (S.legacy.kills || {})) { if (!key.startsWith(here)) continue; /* only foes the hero is fighting now */ const k = S.legacy.kills[key], nx = T.find(t => k < t.kills); if (!nx) continue; const left = nx.kills - k; if (!best || left < best.left) best = { key, left, tier: nx.name }; } return best; }
+function deedGen() {
+  const Q = S.quests, n = Q.dn || 0;
+  for (let i = 0; i < DEED_ORDER.length; i++) { const type = DEED_ORDER[(n + i) % DEED_ORDER.length]; if (!deedOk(type)) continue;
+    const d = { id: 'deed' + n, n: n + 1, type };
+    if (type === 'land') d.a = landsHeld() + 1;
+    if (type === 'gear') d.a = Math.min(...['weapon', 'chest', 'helm'].map(k => (S.hero.gear[k] || { tier: 0 }).tier)) + 1;
+    if (type === 'army') d.a = Math.max(10, Math.ceil(armyLimit() * 0.2));
+    if (type === 'pass') d.a = crownsIfPass();
+    if (type === 'trophy') { const t = trophyNear(); if (t) { const [gid, ...rest] = t.key.split(':'); const nm = (CONFIG.grounds[gid] && (CONFIG.grounds[gid].line || []).find(x => x.id === rest.join(':'))) || null; d.hint = `${t.tier}${nm ? ' ' + nm.name : ''} head, ${t.left} kills to go`; } }
+    d.gold = Math.round(Math.max(1000, taxTotalPerHour()));
+    return d; }
+  return null;
+}
+function deedCurrent() {
+  const Q = S.quests; if (Q.index < CONFIG.quests.length || phase() !== 3) return null;
+  if (Q.dq && Q.dq.type === 'trophy' && !deedOk('trophy') && trophyCount() <= ((Q.base || {})[Q.dq.id] || {})['{"stat":"trophies","need":1,"since":true}']) { Q.dn = (Q.dn || 0) + 1; Q.dq = null; } // the hero moved on: hunt something else
+  if (!Q.dq) { Q.dq = deedGen(); if (!Q.dq) return null; Q.cur = Q.dq.id; if (Q.base) delete Q.base[Q.dq.id]; }
+  const d = Q.dq, tail = { id: d.id, dyn: d.n, chain: 'Deeds', focus: null };
+  if (d.type === 'land') { const G = landDef(d.a), rn = G.ruler.charAt(0).toUpperCase() + G.ruler.slice(1);
+    return { ...tail, name: `Take ${G.name}`, text: `${rn} holds ${G.name} — land ${d.a}, ${G.stages} stages, and harder than anything behind you. His crown is worth ${rulerCrowns(d.a)} Crown${rulerCrowns(d.a) === 1 ? '' : 's'} when the crown passes.${deedOk('pass') ? ` Or, if the wall is too high: this dynasty would pass ${crownsIfPass()} Crowns, more than any before it (Keep → Pass the Crown).` : ''}`,
+      steps: [{ label: `Conquer ${G.name}`, check: { landDone: d.a } }], reward: { gold: d.gold, talent: 2 }, focus: { tab: 'hero', sub: 'fight', el: 'ground:' + landId(d.a) } }; }
+  if (d.type === 'gear') { const nm = tierName('weapon', d.a);
+    return { ...tail, name: 'Temper the Arms', text: `Weapon, chest and helm carry the fight. Forge all three up to ${nm}${d.a >= HARD_T ? ' — every Hardened tier is far stronger than the last' : ''}.`,
+      steps: ['weapon', 'chest', 'helm'].map(k => ({ label: `${k.charAt(0).toUpperCase() + k.slice(1)}: ${tierName(k, d.a)}`, check: { gearTier: k, need: d.a } })), reward: { gold: d.gold * 2, talent: 1 }, focus: { tab: 'hero', sub: 'gear' } }; }
+  if (d.type === 'army') return { ...tail, name: 'A Greater Host', text: 'A bigger army hits harder and holds more land. Grow the army limit by a fifth — upgrade whichever line holds it back (its tab is marked).',
+      steps: [{ label: `Raise your army limit by ${d.a}`, check: { stat: 'armyLimit', need: d.a, since: true, low: true } }], reward: { gold: d.gold, talent: 1 }, focus: { tab: 'kingdom', ksub: 'war', rtab: 'kingdom', el: 'id:war-pipe' } };
+  if (d.type === 'trophy') return { ...tail, name: 'Trophy Hunter', text: 'Mount another head on your wall. The Endless Battle past each Ruler is the place to hunt — every head is loot and XP for good.',
+      steps: [{ label: d.hint ? `Earn a new trophy (closest: ${d.hint})` : 'Earn a new trophy', check: { stat: 'trophies', need: 1, since: true } }], reward: { gold: d.gold, talent: 1 }, focus: { tab: 'inventory', rtab: 'inventory', el: 'id:csub-troph-btn' } };
+  if (d.type === 'pass') return { ...tail, name: 'A Greater Legacy', text: `This dynasty has taken ${d.a} Crowns — more than any before it. Pass the Crown and spend them: the heir takes back every land you know ${3 + perkRank('lap')}× faster.`,
+      steps: [{ label: 'Kingdom → Keep → Pass the Crown', check: { stat: 'dynasty', need: 1, since: true } }], reward: { crystal: 3 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:found-btn' } };
+  return null;
+}
 function questProgress(q) { // {done, parts:[{label, done, have, need}]}
   _qid = q.id; const parts = q.steps.map(s => ({ ...questCheck(s.check), label: s.label })); _qid = null;
   return { done: parts.every(p => p.done), have: parts.filter(p => p.done).length, need: parts.length, parts };
@@ -772,6 +820,8 @@ function questStat(k) {
     case 'endlessKills': return S.stats.endlessKills || 0;
     case 'perksBought': { let n = 0; for (const id in (S.legacy.perks || {})) n += S.legacy.perks[id] || 0; return n; }
     case 'passed': return (S.legacy.dynasty || 1) > 1 ? 1 : 0;
+    case 'dynasty': return S.legacy.dynasty || 1;
+    case 'trophies': return trophyCount();
   }
   return 0;
 }
@@ -866,6 +916,7 @@ function questClaim() {
   const q = questCurrent(); if (!q || !questProgress(q).done) return false;
   for (const k in q.reward) { if (k === 'talent') S.hero.bonusTalent = (S.hero.bonusTalent || 0) + q.reward[k]; else if (k === 'crystal') {} else add(k, q.reward[k]); }
   if (q.reward && q.reward.crystal) { S.legacy.knowledge += q.reward.crystal; log(`+${q.reward.crystal} Crystal`); }
+  if (q.dyn) { const Q = S.quests; if (Q.base) delete Q.base[q.id]; Q.dn = (Q.dn || 0) + 1; Q.dq = null; Q.cur = null; log(`Deed done: ${q.name}`); return true; }
   S.quests.done[q.id] = true; if (S.quests.base) delete S.quests.base[q.id]; S.quests.index++; S.quests.cur = (CONFIG.quests[S.quests.index] || {}).id || null; log(`Quest complete: ${q.name}`); return true;
 }
 
@@ -908,7 +959,7 @@ function onKill(st) {
   gainXp(H.xpPerKill * CONFIG.stages.xpPerKill(LN ? s + 10 * (CONFIG.stages.groundOffset[S.hero.ground] || 0) : s) * (isBoss(s) ? 3 : 1) * st.xp);
   S.hero.kills++; S.hero.totalKills++; if (isEndless()) S.stats.endlessKills = (S.stats.endlessKills || 0) + 1;
   if (!S.hero.gear.weapon) { const b = fistLevel(); S.hero.fistKills = (S.hero.fistKills || 0) + 1; if (fistLevel() > b) { log(`Your fists harden: ${slotValue('weapon').toFixed(1)} damage`); pushEvent({ who: 'craft', name: 'Fists ' + slotValue('weapon').toFixed(1) }); } }
-  { const key = typeKey(s); S.legacy.kills = S.legacy.kills || {}; const before = trophyTier(key), bt = bestiaryTier(key); S.legacy.kills[key] = (S.legacy.kills[key] || 0) + 1; const after = trophyTier(key); if (after > before) { log(`Trophy earned: ${CONFIG.trophies.tiers[after].name} ${enemyType(s).name} head!`); pushEvent({ who: 'trophy', key, tier: after }); } if (bestiaryTier(key) > bt) log(`Bestiary: ${enemyType(s).plural} — ${CONFIG.bestiary.tiers[bestiaryTier(key)].name}`); }
+  { const key = typeKey(s); S.legacy.kills = S.legacy.kills || {}; const before = trophyTier(key), bt = bestiaryTier(key); S.legacy.kills[key] = (S.legacy.kills[key] || 0) + 1; const after = trophyTier(key); if (after > before) { log(`Trophy earned: ${CONFIG.trophies.tiers[after].name} ${enemyType(s).name} head!`); pushEvent({ who: 'trophy', key, tier: after, name: enemyType(s).name }); } if (bestiaryTier(key) > bt) log(`Bestiary: ${enemyType(s).plural} — ${CONFIG.bestiary.tiers[bestiaryTier(key)].name}`); }
   if (isBoss(s)) { const bk = S.hero.ground + ':' + s; if (!S.hero.bossesKilled[bk]) { S.hero.bossesKilled[bk] = true; S.hero.stars = S.hero.stars || {}; const newStar = !S.hero.stars[bk]; S.hero.stars[bk] = true; if (LN && s === ground().stages) onRulerSlain(LN); const u = enemyType(s).unique; if (u && CONFIG.resources[u]) { add(u, 1); pushEvent({ who: 'loot', loot: { [u]: 1 }, unique: true }); } log(`Defeated ${enemyName(s)}!${newStar ? ' +1 ★' : ''}${u ? ' +' + CONFIG.resources[u].name : ''}`); } else { const u = enemyType(s).unique; if (u && S.legacy.foundings === 0 && CONFIG.legacy.tribute[u] && !(S.res[u] >= 1)) { add(u, 1); pushEvent({ who: 'loot', loot: { [u]: 1 }, unique: true }); } log(`Defeated ${enemyName(s)}!`); } }
   if (S.hero.kills >= autoKillsNeeded() && canAdvance() && !autoAdvanceBlock()) { advance(); S.hero.autoAdvanced = (S.hero.autoAdvanced || 0) + 1; }
 }
@@ -916,7 +967,7 @@ function gainXp(x) {
   S.hero.xp += x; gainDiscXp('combat', x);
   while (S.hero.xp >= H.xpToLevel(S.hero.level)) {
     S.hero.xp -= H.xpToLevel(S.hero.level); S.hero.level++; S.hero.hp = stats().maxHp;
-    log(`Level up! Now level ${S.hero.level}`);
+    log(`Level up! Now level ${S.hero.level}`); pushEvent({ who: 'levelup', lv: S.hero.level });
   }
 }
 function canAdvance() { const G = ground(); if (isEndless()) return false; if (G.stages && S.hero.stage >= G.stages && !(G.land && landDone(G.land))) return false; return S.hero.kills >= killsNeeded(); }
@@ -927,7 +978,8 @@ function log(msg) { S.log.unshift(msg); if (S.log.length > 30) S.log.length = 30
 // ---------- Live simulation ----------
 // Discrete combat: hero swings every 1/speed sec (rolls crit), enemy swings every enemyAttackInterval sec.
 const EVENTS = []; // transient hit events for the UI: {who:'hero'|'enemy', dmg, crit, skill}
-function pushEvent(e) { EVENTS.push(e); if (EVENTS.length > 20) EVENTS.shift(); }
+const BIG_EV = { crown: 1, crownpass: 1, proclaim: 1, tier: 1, milestone: 1, trophy: 1, levelup: 1 }, BIGS = []; // 0.10.5: moments worth a banner, kept apart so hit numbers can't push them out
+function pushEvent(e) { if (BIG_EV[e.who]) { BIGS.push(e); if (BIGS.length > 12) BIGS.shift(); return; } EVENTS.push(e); if (EVENTS.length > 20) EVENTS.shift(); }
 function heroStrike(st) {
   const crit = Math.random() < st.crit;
   const dmg = st.attack * (crit ? st.critDmg : 1) * (isBoss() ? st.bossDmg : 1);
@@ -1183,7 +1235,7 @@ function passCrown() {
   K.lands = {}; K.crownsRun = 0; K.orders = []; K.deserting = false; K.tierPaid = {};
   for (const k in S.res) S.res[k] = 0;
   add('gold', 500 + perkRank('cache') * Math.max(1000, 0.25 * (leg.lastTaxH || 0)));
-  if (S.quests.cur !== 'w05b') { const w = CONFIG.quests.findIndex(q => q.id === 'w06'); if (w >= 0) { S.quests.index = w; S.quests.cur = 'w06'; if (S.quests.base) delete S.quests.base.w06; } } // the heir picks up at the Iron Hills
+  if (S.quests.dq && S.quests.dq.type === 'pass') { /* the Deed completes on this pass */ } else if (S.quests.cur !== 'w05b') { S.quests.dq = null; const w = CONFIG.quests.findIndex(q => q.id === 'w06'); if (w >= 0) { S.quests.index = w; S.quests.cur = 'w06'; if (S.quests.base) delete S.quests.base.w06; } } // the heir picks up at Blackwood March
   ensureThralls();
   log(`The crown passes to your heir. Dynasty ${leg.dynasty} begins with ${gain} new Crown${gain === 1 ? '' : 's'}.`); pushEvent({ who: 'crownpass', gain });
   save(); return gain;
@@ -1296,11 +1348,11 @@ window.Game = {
   hallDef, hallLv, hallAvailable, hallCost, canHall, upgradeHall,
   barracksLv, barracksBuilt, barracksCost, canUpBarracks, upgradeBarracks, trainPerMin, housing, foodPerMin, suppliesPerMin, upkeepPerMin, armyLimit, armyLimitBy, soldiers, garrisoned, marching, armyMult, armyHpMult,
   landId, landN, landDef, landState, landDone, landPct, landsHeld, landOpen, landsTouched, garrisonNeed, garrisonFill, taxFull, taxPerHour, spoilPerHour, cofferCap, cofferTotal, taxTotalPerHour, collectTaxes, setGarrison,
-  rulerCrowns, vaultCount, canPassCrown, landReqText, landQuestOk, passKeep, infoOn, questStat, crownsIfPass, passCrown, lapActive,
+  rulerCrowns, starsSpare, starDemand, vaultCount, canPassCrown, landReqText, landQuestOk, passKeep, infoOn, questStat, crownsIfPass, passCrown, lapActive,
   repairPosts,
   phase, canProclaim, proclaim,
   stockMode, setStockMode, stockTarget, stockDemand, STOCK_MODES,
-  get S() { return S; }, saveString, saveMeta, restoreString, setSaveHook: f => { saveHook = f; }, SAVE_KEY, fmt, pct, fmtTime, drainEvents: () => EVENTS.splice(0), afkEfficiency: () => afkEff(),
+  get S() { return S; }, saveString, saveMeta, restoreString, setSaveHook: f => { saveHook = f; }, SAVE_KEY, fmt, pct, fmtTime, drainEvents: () => EVENTS.splice(0), drainBig: () => BIGS.splice(0), afkEfficiency: () => afkEff(),
   markViewed, questReached, battlePressure, recruitCost, armyFloor, lossPerMin, spareArms, recruitPerMin, armyHold, swordsLeftMin, tierDefAt, landCurve, fightNet, isEndless, landShare, heroInLand, warIncome, warDemand, warCover, perSoldier, lineSupports, armyEff, demandMult, WAR_KEYS, discXp, discLevel, discProgress, pathNodes, pathNode, pathRank, pathOpen, pathNeedsStar, pathPointsTotal, pathPointsSpent, pathPointsFree, pathPointsMax, starsTotal, starsSpent, starsFree, canRankPath, rankPath, pathMods, resetPaths, techUnlocked, techUnlockMet, techUnlockLabel, techMastery, techLevelOf, techMod, techMods, chooseMod, modPending, techSlots, equipTech, unequipTech, skillDur, skillCdBase, checkTechUnlocks, treeNode, nodeRank, nodeMax, nodeOpen, treePointsTotal, treePointsSpent, treePointsFree, canRankNode, rankNode, nodeQuestLocked, treeMods,
   fistLevel, slotValue, enemyHit, crafting, maxUpgradePlan, upgradeMax, stats, gearStats, itemStatPreview, gearCraftCost, gearUpgradeCost, canTierUp, craftGear, upgradeGear,
   talentPointsFree, talentPointsTotal, talentPointsSpent, respec, respecCost,
@@ -1320,6 +1372,7 @@ window.Game = {
   // debug helpers
   debug: {
     giveAll(n) { for (const k in CONFIG.resources) add(k, n); },
+    event(e) { pushEvent(e); },
     give(k, n) { add(k, n); },
     levels(n) { for (let i = 0; i < n; i++) { const cl = discLevel('combat'); gainDiscXp('combat', CONFIG.combatXpToLevel(cl) - discProgress('combat').have); S.hero.level++; } S.hero.hp = stats().maxHp; },
     setStage(n) { S.hero.stage = Math.max(1, n | 0); S.hero.bestStage = Math.max(S.hero.bestStage, S.hero.stage); S.hero.kills = 0; S.hero.enemyHp = 0; },
