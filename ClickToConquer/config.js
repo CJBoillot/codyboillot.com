@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Alpha 0.10.6',
+  version: 'Alpha 0.10.7',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -473,6 +473,7 @@ const CONFIG = {
   // jobs (jobs completed by hand or thrall), sold (gold earned at market), stage, boss, founded, thrall (assigned), activity (swings).
   // Shown in Settings → What's new (newest first). Keep each line short.
   changelog: [
+    ['0.10.7', 'Tidier panels: the What\'s new list has proper margins, and the Where to fight buttons put each place\'s name above its progress so long names and lock reasons no longer crowd together.'],
     ['0.10.6', 'Go back and farm! Every conquered land has a Fight here button (Kingdom → Lands) that takes your hero to its Endless Battle, where the land\'s spoil (silver, heartwood, relics) drops on a share of kills. Every 50 wins it goes a depth deeper — tougher foes, better drops — and a knock-out only drops you one depth. A conquered land now pays its full taxes even while your hero fights there. The gathering and By hand panels are gone once you proclaim (By hand already at the City): the Capital gathers, the hero fights.'],
     ['0.10.5', 'Big moments get a banner: conquering a land, passing the crown, proclaiming, raising your settlement, buildings doubling, new trophies — and a pop on every level. After the story quests, Deeds of the Dynasty keep you going with new goals (take the next land, temper your gear, grow the host, hunt a trophy) that pay gold and ★. Stars past what your Paths can use now give +0.5% attack and HP each. Tech requirements say where a good comes from (tap for more). Land 2 is now the Iron Hills (it pays silver) and land 3 is Blackwood March. Raising your settlement asks less of new and in-between goods; Baron needs 200 Renown. Trophies come at 500 kills and give +2%. Lands ramp up more steadily inside, with a smaller jump at the border. The kingdom paths (Benevolent, Iron Empire) now really change your buildings, and the gold rate in the header counts taxes.'],
     ['0.10.4', 'Crowns reworked. Every ruler now pays a little more than the last (1, 1, 2, 2, 3, 4, 5, 7…) and proclaiming gives 5. Passing the Crown no longer takes your gear or building levels — only the lands, taxes, army and stores go, and the hero starts at level 1. Perks: Bloodline now multiplies (×1.08 per rank); War College replaces Drill Sergeants and Standing Army; Founder\'s Cache pays out from your last taxes; Heirloom Arms, Old Blade and Blueprints are gone (nothing to keep anymore); the Ledger, Danger Sense, Chronicler, Surveyor and Almanac now open through quests. Every retired perk\'s Crowns are refunded. New quests teach the army — supply lines, casualties, the Endless Battle and growing demand — and after Blackwood March a quest leads you to Pass the Crown for the first time (+20 Crowns). In your first dynasty, the third land opens once you have passed the crown.'],

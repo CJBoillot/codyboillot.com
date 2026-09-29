@@ -149,7 +149,7 @@ const UI = (() => {
     }
     const gb = $('ground-bar'); gb.innerHTML = ''; rows.ground = {};
     for (const id in CONFIG.grounds) {
-      const G = CONFIG.grounds[id], b = el('button', 'ground-btn', `${ico(G.icon, 18)}<span>${G.name}</span><span class="g-stage" data-f="st"></span>`);
+      const G = CONFIG.grounds[id], b = el('button', 'ground-btn', `${ico(G.icon, 18)}<span class="g-txt"><span class="g-name">${G.name}</span><span class="g-stage" data-f="st"></span></span>`);
       b.addEventListener('click', () => { Game.setGround(id); });
       rows.ground[id] = b; gb.appendChild(b);
     }

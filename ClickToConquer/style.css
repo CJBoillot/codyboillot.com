@@ -344,7 +344,9 @@ body.desktop.has-dock .panel-center { padding-bottom: 160px; }
 /* ---------- grounds ---------- */
 .ground-bar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 6px; }
 .ground-block { margin-top: 10px; border-top: 1px solid var(--line); padding-top: 10px; }
-.ground-btn { display: flex; align-items: center; gap: 6px; justify-content: center; padding: 7px 4px; font-size: 12px; font-family: var(--font-head); background: #15110e; }
+.ground-btn { display: flex; align-items: center; gap: 8px; justify-content: flex-start; padding: 8px 10px; font-size: 12px; font-family: var(--font-head); background: #15110e; text-align: left; min-width: 0; }
+.ground-btn .g-txt { display: flex; flex-direction: column; gap: 2px; min-width: 0; line-height: 1.15; }
+.ground-btn .g-name { overflow-wrap: anywhere; }
 .ground-btn.active { border-color: var(--bronze2); background: radial-gradient(circle at 50% 20%, #4a361d, #241b12); color: var(--bronze2); }
 .ground-btn .g-stage { font-family: var(--font-body); font-size: 10px; color: var(--dim); }
 .quest-obj .qpart { display: flex; flex-direction: column; gap: 2px; margin-top: 6px; }
@@ -758,7 +760,7 @@ html, body { max-width: 100%; overflow-x: hidden; }
 .cs-place { font-family: var(--font-head); font-size: 16px; color: var(--bronze2); }
 #cloud-modal { z-index: 58; }
 .cloud-user .avatar-img img, .avatar-btn .avatar-img img { width: 100% !important; height: 100% !important; max-width: none; object-fit: cover; display: block; }
-.whatsnew { display: flex; flex-direction: column; gap: 6px; padding: 6px 0; }
+.whatsnew { display: flex; flex-direction: column; gap: 10px; padding: 4px 16px 14px; }
 
 /* Enemy / ground art behind the fight card and the bottom fight bar */
 .arena, .mini-hero { isolation: isolate; overflow: hidden; }
