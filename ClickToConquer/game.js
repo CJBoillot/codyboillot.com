@@ -560,6 +560,21 @@ function unitName(id, plural) { const u = (stepDef(id) || {}).unit || ['Level', 
 function baseOut(id) { const d = stepDef(id); return d.batch / (d.batch / d.base + KC().loadBase + KC().haulBase); } // at equal levels this matches the old cycle
 function partCap(id, p, d = 1) { const L = partLv(id, p, d); return baseOut(id) * trackGrow(L) * Math.pow(2, milestoneCount(L)) * depthYield(d) * stepMods(id).rate; }
 function depthOutput(id, d) { return Math.min(...PARTS.map(p => partCap(id, p, d))); }
+// Beta 0.1.5: goods move through the parts one after another. Each part makes trips: a trip takes tripTime and carries up to tripLoad.
+// Work → pile → Cart → pile → Haul → Storehouse. A slow part leaves the pile before it growing: that's the bottleneck you can see.
+const TRIP = { W: 6, C: 5, H: 8 };
+function tripTime(id, p, d = 1) { return TRIP[p] / (1 + 0.02 * (partLv(id, p, d) - 1)); }
+function tripLoad(id, p, d = 1) { return partCap(id, p, d) * tripTime(id, p, d); }
+function pipe(id, d = 1) { const s = stepState(id); s.pipes = s.pipes || []; while (s.pipes.length < d) s.pipes.push({ a: 0, b: 0, w: 0, c: 0, h: 0, tw: 0, tc: 0, th: 0 }); return s.pipes[d - 1]; }
+function runStage(P, carry, t, T, left, take, done) { // one trip at a time: pick up (take), travel T seconds, then done(load)
+  let guard = 0; while (left > 1e-9 && guard++ < 50) { if (P[carry] <= 1e-9) { const x = take(); if (x <= 1e-9) { P[t] = 0; return; } P[carry] = x; P[t] = 0; }
+    const need = T - P[t]; if (left >= need) { left -= need; const x = P[carry]; P[carry] = 0; P[t] = 0; done(x); } else { P[t] += left; left = 0; } } }
+function tickPipe(st, s, d, nx, dt) {
+  const id = st.id, P = pipe(id, d), Lw = tripLoad(id, 'W', d), Lc = tripLoad(id, 'C', d), Lh = tripLoad(id, 'H', d);
+  runStage(P, 'w', 'tw', tripTime(id, 'W', d), dt, () => { if (P.a > Lw * 40) return 0; let x = Lw; if (st.from) { x = Math.min(x, s.inBuf / st.ratio); s.inBuf -= x * st.ratio; } return x; }, x => { P.a += x; });
+  runStage(P, 'c', 'tc', tripTime(id, 'C', d), dt, () => { const x = Math.min(P.a, Lc); P.a -= x; return x; }, x => { P.b += x; });
+  runStage(P, 'h', 'th', tripTime(id, 'H', d), dt, () => { const x = Math.min(P.b, Lh); P.b -= x; return x; }, x => routeOut(st, nx, x));
+}
 function deepOutput(id) { let o = 0; for (let d = 2; d <= depthCount(id); d++) o += depthOutput(id, d); return o; }
 function digOpen() { return phase() === 3; }
 function digCost(id) { return { gold: Math.round(DC().digBase * Math.pow(DC().digGrowth, depthCount(id) - 1) * ageMult('gold')) }; }
@@ -602,7 +617,7 @@ function stockDemand(k, noOrders) {
   return { n, why };
 }
 function stockTarget(k) { const m = stockMode(k), cap = resCap(k); if (m === 'auto') { const d = stockDemand(k); return { target: Math.min(cap, d.n), why: d.why, mode: m, share: 0.5 }; } return { target: Math.floor(cap * m), why: [], mode: m, share: 1 }; }
-function nextBufCap(nx) { return nx.ratio * (stepOutput(nx.id) * 30 + 10); }
+function nextBufCap(nx) { let l = 0; for (let d = 1; d <= depthCount(nx.id); d++) l += tripLoad(nx.id, 'W', d); return nx.ratio * (l * 3 + stepOutput(nx.id) * 20 + 10); }
 function stepBatch(id, d = 1) { return stepDef(id).batch * Math.pow(2, milestoneCount(partLv(id, 'W', d))) * depthYield(d); }
 function stepRate(id, dd = 1) { const d = stepDef(id), w = partLv(id, 'W', dd); return d.base * Math.pow(2, milestoneCount(w)) * trackGrow(w) * stepMods(id).rate * depthYield(dd); }
 function stepPhases(id, d = 1) { return PARTS.map(p => 1 / Math.max(1e-12, partCap(id, p, d))); } // seconds per unit, per part
@@ -710,7 +725,7 @@ function tickKingdom(dt) {
       if (st.pull) { const g = KC().war.soldierGold, room = Math.max(0, nextBufCap(st) - s.inBuf), take = Math.floor(Math.min(room, S.res[st.from] || 0, (S.res.gold || 0) / g));
         if (take > 0) { S.res[st.from] -= take; S.res.gold -= take * g; s.inBuf += take; } }
       const nx = nextStep(st.id); // every level produces steadily at the pace of its slowest part
-      { let amt = stepOutput(st.id) * dt; if (st.from) { amt = Math.min(amt, s.inBuf / st.ratio); s.inBuf -= amt * st.ratio; } if (amt > 1e-12) routeOut(st, nx, amt); }
+      for (let d = 1; d <= depthCount(st.id); d++) tickPipe(st, s, d, nx, dt);
       s.t = (s.t || 0) + dt;
     }
   }
@@ -1361,7 +1376,7 @@ function crownsIfPass() { return S.kingdom.crownsRun || 0; }
 // 0.12.1: a new Age begins with a fresh town — building levels, parts, houses and people start again; Deep Foundations gives a head start
 function newAgeTown() {
   const K = S.kingdom, f = perkRank('foundations');
-  for (const id in (K.steps || {})) { const st = K.steps[id]; st.lv = st.lvW = st.lvC = st.lvH = 1; st.deep = []; for (let i = 0; i < f; i++) st.deep.push({ W: 1, C: 1, H: 1 }); st.inBuf = 0; st.phase = 0; st.t = 0; }
+  for (const id in (K.steps || {})) { const st = K.steps[id]; st.lv = st.lvW = st.lvC = st.lvH = 1; st.deep = []; for (let i = 0; i < f; i++) st.deep.push({ W: 1, C: 1, H: 1 }); st.pipes = []; st.inBuf = 0; st.phase = 0; st.t = 0; }
   K.houses = 0; K.houseProg = 0; K.houseFree = 0; K.solFree = 0; K.birthAcc = 0; K.settleAcc = 0; S.res.people = 0; if (K.barracks) { K.barracks.lv = 1; K.barracks.train = 0; }
 }
 function crownHeir() { // 0.11.1: after the Emperor falls — the heir begins the next Age
@@ -1382,7 +1397,7 @@ function passCrown() {
   // The Capital stands: settlement, buildings, halls and Barracks are kept — their levels start over. Lands, taxes, the army and stores reset.
   const K = S.kingdom;
   const keep = passKeep(); // 0.10.4: the Capital keeps half its levels (Blueprints: more)
-  for (const id in (K.steps || {})) { const st = K.steps[id]; for (const pt of ['lvW', 'lvC', 'lvH']) st[pt] = Math.max(1, Math.floor((st[pt] || st.lv) * keep)); st.lv = Math.min(st.lvW, st.lvC, st.lvH); st.inBuf = 0; st.phase = 0; st.t = 0; }
+  for (const id in (K.steps || {})) { const st = K.steps[id]; for (const pt of ['lvW', 'lvC', 'lvH']) st[pt] = Math.max(1, Math.floor((st[pt] || st.lv) * keep)); st.lv = Math.min(st.lvW, st.lvC, st.lvH); st.pipes = []; st.inBuf = 0; st.phase = 0; st.t = 0; }
   for (const id in (K.halls || {})) if (K.halls[id] > 0) K.halls[id] = Math.max(1, Math.floor(K.halls[id] * keep));
   if (K.barracks) { K.barracks.lv = Math.max(1, Math.floor(K.barracks.lv * keep)); K.barracks.train = 0; }
   K.lands = {}; K.crownsRun = 0; K.ageDone = false; K.orders = []; K.deserting = false; K.tierPaid = {};
@@ -1532,7 +1547,7 @@ function boot() {
 window.Game = {
   stepLv, stepName, milestoneCount, nextMilestone, levelCap, cityComplete, minBuildingLv, tierThreat,
   hallDef, hallLv, hallAvailable, hallCost, canHall, upgradeHall,
-  PARTS, PART_NAME, partLv, limitPart, partCap, depthCount, depthYield, depthOutput, deepOutput, unitName, digOpen, digCost, canDig, dig, newAgeTown, slowestInLine, housesOn, houses, houseCap, people, townsfolk, houseRoom, birthRoom, houseCost, birthsPerMin, headTaxPerHour, settlersPerHour, settlerWave, turnedRecent, setHousesOn, barracksAvailable, nextSoldierCost, trainBlocker, recArmy, soldierCostMult, garrisonNeed,
+  PARTS, PART_NAME, partLv, limitPart, partCap, tripTime, tripLoad, pipe, depthCount, depthYield, depthOutput, deepOutput, unitName, digOpen, digCost, canDig, dig, newAgeTown, slowestInLine, housesOn, houses, houseCap, people, townsfolk, houseRoom, birthRoom, houseCost, birthsPerMin, headTaxPerHour, settlersPerHour, settlerWave, turnedRecent, setHousesOn, barracksAvailable, nextSoldierCost, trainBlocker, recArmy, soldierCostMult, garrisonNeed,
   barracksLv, barracksBuilt, barracksCost, canUpBarracks, upgradeBarracks, trainPerMin, housing, foodPerMin, suppliesPerMin, upkeepPerMin, armyLimit, armyLimitBy, soldiers, garrisoned, marching, armyMult, armyHpMult,
   landId, landN, landDef, landState, landDone, landPct, landsHeld, landOpen, landsTouched, garrisonNeed, garrisonFill, taxFull, taxPerHour, spoilPerHour, cofferCap, cofferTotal, taxTotalPerHour, collectTaxes, setGarrison,
   rulerCrowns, ageNo, ageName, gEra, crowns, pathMaxed, crownHeir, titheShare, eraOf, isEraRuler, landTrait, wonderFor, wonderState, wonderUnlocked, wonderBuilt, wonderCost, wonderProgress, contributeWonder, wonderMult, nextWonderEra, gatherOn, bgFactor, pathCost, rowOpen, rowProgress, pathRow, combatLevelBonus, endlessDepth, farming, farmLand, starsSpare, starDemand, vaultCount, canPassCrown, landReqText, landQuestOk, passKeep, infoOn, questStat, crownsIfPass, passCrown, lapActive,

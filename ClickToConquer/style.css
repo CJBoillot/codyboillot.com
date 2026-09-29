@@ -1153,3 +1153,9 @@ html, body { max-width: 100%; overflow-x: hidden; }
 .part-bar.waiting > div { opacity: .55; }
 .pload { height: 4px; background: #0b0908; border-radius: 3px; overflow: hidden; }
 .pload i { display: block; height: 100%; background: linear-gradient(90deg, #b8862f, #e8c06a); }
+/* Beta 0.1.5: trips and piles */
+.part-bar { height: 16px; position: relative; }
+.part-bar > span { position: absolute; left: 6px; top: 0; font-size: 10px; line-height: 16px; color: var(--text); text-shadow: 0 1px 2px #000; }
+.pile { font-size: 11px; color: var(--dim); padding: 0 2px; margin: -3px 0; }
+.pile b { color: var(--text); }
+.pile.jam { color: var(--bronze2); }

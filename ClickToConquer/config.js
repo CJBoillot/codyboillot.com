@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Beta 0.1.4',
+  version: 'Beta 0.1.5',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -504,6 +504,7 @@ const CONFIG = {
   // jobs (jobs completed by hand or thrall), sold (gold earned at market), stage, boss, founded, thrall (assigned), activity (swings).
   // Shown in Settings → What's new (newest first). Keep each line short.
   changelog: [
+    ['Beta 0.1.5', 'Goods now move through a building one step at a time. Work makes a load, the Cart carries it, and Haul brings it to the Storehouse — each part has a capacity (how much per trip) and a speed (how long a trip takes). If a part can\'t keep up, goods pile up in front of it, so you can see the bottleneck: upgrade that part.'],
     ['Beta 0.1.4', 'Progress bars move again. Inside a building, each part fills once per load: faster parts finish early and wait (dimmed) for the slowest one. Every Production card has a small bar that fills with each load.'],
     ['Beta 0.1.3', 'Buildings now work like a real production line: Work, Cart and Haul run side by side, each with its own capacity per second, and the building makes as much as its slowest part. Upgrading the part with the gold bar raises output; the others wait until it catches up. Each part doubles its capacity at Lv 10, 25, 50, 100…'],
     ['Beta 0.1.2', 'The "your kingdom begins" guide is up to date: Production, Work / Cart / Haul and the Keep. It now appears after the Charter story instead of on top of it.'],
