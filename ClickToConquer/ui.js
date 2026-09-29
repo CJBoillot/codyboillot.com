@@ -921,7 +921,7 @@ const UI = (() => {
       let lh = '';
       if (nx) {
         const th = Game.tierThreat();
-        setText($('settle-need'), `To become a ${nx.name}: ${td.need}${th ? ` The hero must defeat the ${th.name}.` : ''} Then pay in ${td.cap} of every good you make — a little at a time; goods delivered in Orders count too. Nothing is lost.`);
+        setText($('settle-need'), `To become a ${nx.name}: ${td.need}${th ? ` The hero must defeat the ${th.name}.` : ''} Then pay in ${(() => { const nd = Game.tierNeed() || {}, ks = Object.keys(nd); return ks.length ? ks.map(k => `${Game.fmt(nd[k])} ${R[k].name.toLowerCase()}`).join(', ').replace(/, ([^,]*)$/, ' and $1') : 'your goods'; })()} — a little at a time; goods delivered in Orders count too. Nothing is lost.`);
         const stepsHere = Game.allSteps().filter(st => st.tier === t && !st.phase);
         lh += stepsHere.map(st => { const ok = Game.stepBuilt(st.id); return `<div class="row-between small"><span>${ok ? '✓' : '○'} ${st.name}</span><span class="${ok ? 'good' : 'dim'}">${ok ? 'built' : 'not built'}</span></div>`; }).join('');
         if (th) lh += `<div class="row-between small threat ${th.done ? '' : 'todo'}"><span>${th.done ? '✓' : '⚔'} Threat: <b>${th.name}</b></span><span class="${th.done ? 'good' : 'warn'}">${th.done ? 'defeated' : `Hero → ${th.where}, stage ${th.stage}`}</span></div>`;

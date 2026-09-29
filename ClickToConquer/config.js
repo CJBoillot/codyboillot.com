@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Beta 0.1.21',
+  version: 'Beta 0.1.22',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -503,6 +503,7 @@ const CONFIG = {
   // jobs (jobs completed by hand or thrall), sold (gold earned at market), stage, boss, founded, thrall (assigned), activity (swings).
   // Shown in Settings → What's new (newest first). Keep each line short.
   changelog: [
+    ['Beta 0.1.22', 'Raising your settlement now asks only for your best goods: the Camp pays in wood, grain and ore; the Hamlet in planks, flour and ingots; the Village in lumber, bread and arms. Lower-tier goods are no longer needed.'],
     ['Beta 0.1.21', 'The Rat King\'s Tooth is gone: the Empire\'s tribute is simply 100 gold. Any tooth you were holding is sold for 60 gold.'],
     ['Beta 0.1.20', 'The town bar on Production now moves: it fills toward the next person born, and once the homes are full for births it shows progress toward the next house.'],
     ['Beta 0.1.19', 'A building that is short of input no longer flags its own bottleneck: when another building up the chain is the limit, the view says which one it is waiting on and nothing inside glows.'],
@@ -733,7 +734,7 @@ const CONFIG = {
       steps: [ { label: 'Production → Farm → Build', check: { built: 'fields' } }, { label: 'Farm → upgrade its slowest part (the gold bar) 2 times', check: { stat: 'limitUps:fields', need: 2, since: true } } ], reward: { gold: 80 }, focus: { tab: 'kingdom', ksub: 'prod', rtab: 'kingdom', el: 'step:fields' } },
     { id: 'c02', chain: 'A Kingdom', name: 'Into the Hills', text: 'The hills hold iron. Build the Mine.',
       steps: [ { label: 'Production → Mine → Build', check: { built: 'shaft' } }, { label: 'Mine → upgrade its slowest part (the gold bar) 2 times', check: { stat: 'limitUps:shaft', need: 2, since: true } } ], reward: { gold: 100 }, focus: { tab: 'kingdom', ksub: 'prod', rtab: 'kingdom', el: 'step:shaft' } },
-    { id: 'c04', chain: 'A Kingdom', name: 'Raise a Hamlet', text: 'The Toll Baron taxes the road to your camp — only the hero can clear it. And a Hamlet costs a share of every good you make — the Keep shows exactly how much. Pay it in bit by bit; nothing is lost. It opens the refineries and the hero\'s halls.',
+    { id: 'c04', chain: 'A Kingdom', name: 'Raise a Hamlet', text: 'The Toll Baron taxes the road to your camp — only the hero can clear it. And a Hamlet costs a payment in wood, grain and iron ore — the Keep shows exactly how much. Pay it in bit by bit; nothing is lost. It opens the refineries and the hero\'s halls.',
       steps: [ { label: 'Hero → The Roads → slay the Toll Baron (stage 20)', check: { bossKey: 'roads:20' }, focus: { tab: 'hero', sub: 'fight', el: 'ground:roads' } }, { label: 'Kingdom → Keep → Settlement → Contribute everything asked', check: { tierPaid: 1 } }, { label: 'Keep → Raise to Hamlet', check: { tier: 1 } } ], reward: { gold: 200 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:settle-card' } },
     { id: 'h01', chain: 'Hamlet', name: 'The Sawmill', text: 'Logging now feeds the Sawmill: 2 logs become 1 plank. Planks are the start of every house.',
       steps: [ { label: 'Production → Sawmill → Build', check: { built: 'sawmill' } }, { label: 'Make 30 planks', check: { made: 'planks', need: 30, since: true } } ], reward: { gold: 200 }, focus: { tab: 'kingdom', ksub: 'prod', rtab: 'kingdom', el: 'step:sawmill' } },
@@ -751,7 +752,7 @@ const CONFIG = {
       steps: [ { label: 'Kingdom → Keep → Storehouse → Expand it once', check: { storeLv: 1, need: 1, since: true } } ], reward: { gold: 200 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:store-up' } },
     { id: 'h06', chain: 'Hamlet', name: 'The Slowest Link', text: 'Production shows your three chains side by side. In every chain one building is the slowest — it glows gold and holds back everything after it. Fix it.',
       steps: [ { label: 'Production → upgrade any part of a building marked "slowest"', check: { stat: 'slowUps', need: 1, since: true } } ], reward: { gold: 250 }, focus: { tab: 'kingdom', ksub: 'prod', rtab: 'kingdom', el: 'id:prod-grid' } },
-    { id: 'h07', chain: 'Hamlet', name: 'Raise a Village', text: 'The Bone Lord stirs in the Crypts beside your fields — no Village will rise until the hero puts him down. A Village costs a bigger share of every good you make (the Keep shows how much). It opens the workshops and two more halls.',
+    { id: 'h07', chain: 'Hamlet', name: 'Raise a Village', text: 'The Bone Lord stirs in the Crypts beside your fields — no Village will rise until the hero puts him down. A Village is paid in your best goods: planks, flour and ingots (the Keep shows how much). It opens the workshops and two more halls.',
       steps: [ { label: 'Hero → The Crypts → slay the Bone Lord (stage 10)', check: { bossKey: 'crypts:10' }, focus: { tab: 'hero', sub: 'fight', el: 'ground:crypts' } }, { label: 'Kingdom → Keep → Settlement → Contribute everything asked', check: { tierPaid: 2 } }, { label: 'Keep → Raise to Village', check: { tier: 2 } } ], reward: { gold: 400 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:settle-card' } },
     { id: 'v01', chain: 'Village', name: 'The First Houses', text: 'Planks feed the Carpenter, and the Carpenter raises houses. Every house holds five people — your town begins.',
       steps: [ { label: 'Production → Carpenter → Build', check: { built: 'carpenter' } }, { label: 'Have 5 houses', check: { stat: 'houses', need: 5 } } ], reward: { gold: 400 }, focus: { tab: 'kingdom', ksub: 'prod', rtab: 'kingdom', el: 'step:carpenter' } },
@@ -768,7 +769,7 @@ const CONFIG = {
       steps: [ { label: 'Earn 200 Renown from Orders', check: { renown: 200 } }, { label: 'Deliver 3 more Orders', check: { orders: 1, need: 3, since: true } } ], reward: { gold: 300 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:order-list' } },
     { id: 'v05', chain: 'Village', name: 'Healers and Horses', text: 'The Apothecary heals the hero faster; the Stables make him strike faster.',
       steps: [ { label: 'Kingdom → Halls → Apothecary → Build', check: { hall: 'apothecary' } }, { label: 'Halls → Stables → Build', check: { hall: 'stables' } }, { label: 'Upgrade any of your Halls 3 times', check: { hallSum: 1, need: 3, since: true } } ], reward: { gold: 500 }, focus: { tab: 'kingdom', ksub: 'halls', rtab: 'kingdom', el: 'hall:apothecary' } },
-    { id: 'v07', chain: 'Village', name: 'Raise a City', text: 'A cult gathers in the deep Crypts — a City will not rise under the Cult Priest\'s shadow. A City costs the biggest share yet of every good you make (the Keep shows how much). The last stretch.',
+    { id: 'v07', chain: 'Village', name: 'Raise a City', text: 'A cult gathers in the deep Crypts — a City will not rise under the Cult Priest\'s shadow. A City is paid in your finest goods: lumber, bread and arms (the Keep shows how much). The last stretch.',
       steps: [ { label: 'Hero → The Crypts → slay the Cult Priest (stage 20)', check: { bossKey: 'crypts:20' }, focus: { tab: 'hero', sub: 'fight', el: 'ground:crypts' } }, { label: 'Kingdom → Keep → Settlement → Contribute everything asked', check: { tierPaid: 3 } }, { label: 'Keep → Raise to City', check: { tier: 3 } } ], reward: { gold: 600 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:settle-card' } },
     { id: 'y00', chain: 'City', name: 'The Barracks', text: 'A soldier is a person with arms and bread. Build the Barracks — the tenth building — and your army begins before the kingdom does.',
       steps: [ { label: 'Production → Barracks → Build', check: { barracks: 1 } }, { label: 'Train 10 soldiers', check: { stat: 'trained', need: 10, since: true } } ], reward: { gold: 800 }, focus: { tab: 'kingdom', ksub: 'prod', rtab: 'kingdom', el: 'id:barracks-card' } },

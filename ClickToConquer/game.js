@@ -532,7 +532,7 @@ function lineUnlocked(lid) { return kingdomNo() > 0 && KC().lines[lid].steps.som
 function lineSteps(lid) { return KC().lines[lid].steps.map((s, i) => ({ ...s, line: lid, index: i })).filter(s => stepBuilt(s.id)); }
 // Raising the settlement: every current-tier step built and staffed, and `cap` of every good made so far paid in.
 function tierGoods() { return allSteps().filter(st => st.tier <= kTier() && !st.phase).map(st => st.make); }
-function tierNeed() { const t = kTier(); if (t >= KC().tiers.length - 1) return null; const n = tierDef(t).cap, o = {}; const all = allSteps(); for (const st of all) if (st.tier <= t && !st.phase) { const fed = all.some(d => d.from === st.make && d.tier <= t && !d.phase); o[st.make] = Math.round(n * (st.tier === t && t > 0 ? 0.4 : fed ? 0.5 : 1)); } return o; } // 0.10.5: new chains ask 40%, goods the next building eats ask 50%
+function tierNeed() { const t = kTier(); if (t >= KC().tiers.length - 1) return null; const n = tierDef(t).cap, o = {}; for (const st of allSteps()) if (st.tier === t && !st.phase) o[st.make] = Math.round(n * (t > 0 ? 0.4 : 1)); return o; } // Beta 0.1.22: only the highest-tier good of each chain — earlier goods are no longer asked for
 function tierPaid() { return S.kingdom.tierPaid || {}; }
 function tierPaidDone() { const need = tierNeed(); if (!need) return true; for (const k in need) if ((tierPaid()[k] || 0) < need[k]) return false; return true; }
 function tierStepsReady() { return allSteps().filter(st => st.tier === kTier() && !st.phase).every(st => stepBuilt(st.id)); }
