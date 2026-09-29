@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Beta 0.3.1',
+  version: 'Beta 0.3.2',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -441,7 +441,7 @@ const CONFIG = {
     // Lands (0.9): conquered from the hero screen; taxes grow ×4 per land
     // Beta 0.3.0: army battles — every land is a campaign of 50 battles, fought Risk-style with a d20 per soldier
     battles: { count: 50, base: 12, landGrowth: 1.35, span: 4, captain: 1.25, host: 1.5, captainPip: 1, hostPip: 1, duelBonus: 3, rulerPip: 2,
-      prep: 10, roundT: 0.7, showMax: 9, resultT: 2.5, maxRounds: 30, orderCd: 60,
+      prep: 10, roundT: 1.6, showMax: 9.6, resultT: 4, maxRounds: 30, orderCd: 60,
       refLog: 2.0, refSlope: 0.64, refAge: 0.3, pipPerDecade: 3, pipCap: 12, convCap: 0.05,   // hero as general: pips = 3 × log10(edge ÷ the expected edge for this land), capped ±8
       goldKills: 3, xpKills: 3, dropKills: 3, captainGold: 2, hostGold: 3, rally: 3, volleyAt: 18, flankAt: 16, medics: 0.9, orderWound: 0.5, defendWound: 0.75, replayPip: 2, replayArmy: 0.3, holdAt: 0.75 },
     lands: { taxBase: 1000, taxGrowth: 2.6, garrisonPer: 10, cofferHours: 8, shortStages: 50, longStages: 50, shortLands: 3, offsetStart: 6, offsetStep: 3, spoilPerHour: 30, victoryLap: 3, heroHereCap: 0.5, endlessDepth: { winsPer: 50, hp: 1.12, hit: 1.10, drop: 1.05, dropCap: 4, spoilBase: 0.03, perLand: 0.2 },
@@ -507,6 +507,7 @@ const CONFIG = {
   // jobs (jobs completed by hand or thrall), sold (gold earned at market), stage, boss, founded, thrall (assigned), activity (swings).
   // Shown in Settings → What's new (newest first). Keep each line short.
   changelog: [
+    ['Beta 0.3.2', 'Calmer battles. Each round now shows one duel with big, readable dice and the sum with bonuses ("16 + 3 = 19"), plus how many other duels were fought. Rounds last 1.6 s instead of 0.7 s; a long battle shows six of its rounds, always the first and last. The result stays up for 4 s.'],
     ['Beta 0.3.1', 'The enemy army box no longer shows the enemy picture, so its count sits centred like yours.'],
     ['Beta 0.3.0', 'Army battles. Every land is now a campaign of 50 battles fought army against army with d20 dice, Risk style: the bigger side rolls more dice and keeps its best, a natural 20 is a crit that converts an enemy soldier to your side while you push forward, and a 1 is a fumble. Battles fight themselves after a 10 s muster, or tap Strike to fight at once. Defend is the default and costs you the fewest men; Charge, Rally, Flank, Volley and Medics are orders with a 1-minute cooldown. While you are away (or idle) your army replays the last battle it won for gold and loot, and pauses if it drops below 75% of its peak. Only you advance to the next battle and start the next land. Battle 50 ends with a best-of-three duel against the ruler. Old lands keep your progress (a 100-stage land is now 50 battles).'],
     ['Beta 0.2.0', 'The endless loop. People and houses are gone: a soldier is now 1 lumber + 1 arms + 1 bread, one from each chain, and lumber is the Wood chain\'s finished good like arms and bread. The Barracks trains for as long as goods keep coming, and never uses goods kept for building. Once a land falls, the hero marches on to the next one by himself as soon as the army reaches its recommended size (untick it on the hero screen to stay and farm). The Carpenter\'s steps are now Plane, Treat and Stack, and quests about houses, settlers and head tax are rewritten.'],

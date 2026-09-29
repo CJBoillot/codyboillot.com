@@ -1193,17 +1193,17 @@ function rollBattle(Y, E, o) {
     // Risk-style: a quarter of the smaller army clashes this round in one-on-one duels. The side that outnumbers rolls up to 3 dice and keeps the best.
     const P0 = Math.max(1, Math.ceil(Math.min(Y, E) / 4), Math.min(Y, E, 5)), P = P0 + (order === 'flank' ? Math.ceil(Math.min(Y, E) / 8) : 0); // Flank: extra fights that can only land blows
     const ya = Math.max(1, Math.min(3, Math.floor(Y / E))) + (order === 'charge' ? 1 : 0), ea = Math.max(1, Math.min(3, Math.floor(E / Y)));
-    let k = 0, l = 0, c = 0; const show = [];
+    let k = 0, l = 0, c = 0, dn = 0; const show = [];
     for (let i = 0; i < P && E - k - c > 0 && Y - l > 0; i++) {
       let yn = 0, en = 0; for (let a = 0; a < ya; a++) yn = Math.max(yn, d20()); for (let a = 0; a < ea; a++) en = Math.max(en, d20());
       const yv = yn + pip, ev = en + epip, need = def ? 2 : 1; let res = 0;
       if (yv - ev >= need) { res = 1; if (yn === 20 && pushing && conv + c < convCap) c++; else if (yn === 20) k += 2; else k++; }
       else if (i < P0 && ev - yv >= (def ? 2 : 0)) { res = -1; l++; if (en === 20) l++; if (yn === 1) l++; }
-      if (show.length < 5) show.push([yn, en, res]);
+      dn++; if (show.length < 5) show.push([yn, en, res]);
     }
     c = Math.min(c, E); k = Math.min(k, E - c); l = Math.min(l, Y);
     E -= k + c; Y = Y - l + c; kills += k; lost += l; conv += c;
-    rounds.push({ show, k, l, c, y: Y, e: E, ya, ea });
+    rounds.push({ show, k, l, c, y: Y, e: E, ya, ea, dn });
   }
   const back = lost > 0 ? Math.round(lost * (order === 'medics' ? B.medics : def ? B.defendWound : B.orderWound)) : 0; Y += back; // many of the fallen were only wounded — most in Defend, nearly all with Medics
   return { rounds, won: E <= 0, fled, y0, e0, y: Y, e: E, kills, lost, conv, back, order, pushing };
@@ -1218,7 +1218,7 @@ function battleReward(n, b, won) {
 }
 // Live: a 10-second preparation bar, then the battle (Strike fights at once). Only the player advances.
 function battleState() { const h = S.hero; if (!h.bt || h.bt.n !== landN() || h.bt.b !== battleNo()) h.bt = { ph: 'prep', t: 0, n: landN(), b: battleNo(), res: h.bt && h.bt.n === landN() ? h.bt.res : null }; return h.bt; }
-function battleShowTime(res) { const B = BC(); return Math.min(B.showMax, (res ? res.rounds.length : 1) * B.roundT) + B.resultT; }
+function battleShowTime(res) { const B = BC(); return Math.min(Math.max(1, Math.round(B.showMax / B.roundT)), res ? res.rounds.length : 1) * B.roundT + B.resultT; }
 function tickBattle(dt) {
   const h = S.hero, B = BC(); h.ocd = h.ocd || {}; for (const k in h.ocd) if (h.ocd[k] > 0) h.ocd[k] -= dt;
   const bt = battleState(); bt.t += dt;
@@ -1262,7 +1262,7 @@ function battleRetreat() { const h = S.hero; if (!inBattle() || battleNo() <= 1)
 function canBattleAdvance() { return inBattle() && battleNo() < Math.min(BC().count, S.hero.bestStage || 1); }
 // Away: the army replays the current battle every 10 s in Defend. A sample of real battles is fought and the rest extrapolated.
 function offlineBattles(secs) {
-  const n = landN(), b = battleNo(), N = Math.floor(secs / BC().prep); if (!inBattle() || N < 1) return null;
+  const n = landN(), b = battleNo(), N = Math.floor(secs / (BC().prep + BC().resultT + BC().showMax / 2)); if (!inBattle() || N < 1) return null;
   let Y = marching(), gold = 0, xp = 0, drops = {}, wins = 0, lost = 0, conv = 0, kills = 0, fought = 0, pushing = !battleWon(n, b), unlocked = false;
   const K = Math.min(N, 120), floor = marching() * BC().holdAt; let held = false;
   for (let i = 0; i < K && Y > 0; i++) {

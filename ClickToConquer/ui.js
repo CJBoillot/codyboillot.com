@@ -1588,6 +1588,7 @@ const UI = (() => {
   const DIE = n => `<img class="die20" src="assets/dice/d20_${n}.webp" alt="${n}">`;
   const FACES_LEFT = { knight_boss: 1, skeleton_boss: 1, ghoul_boss: 1 }; // art already facing the player's army
   let battleKey = '';
+  function battleSeq(len, max) { if (len <= max) return Array.from({ length: len }, (_, i) => i); const s = []; for (let i = 0; i < max; i++) { const v = Math.round(i * (len - 1) / (max - 1)); if (s[s.length - 1] !== v) s.push(v); } return s; } // long battles: show a handful of rounds, always the first and the last
   function battleArt(b) { const t = Game.enemyType(b), base = (t && t.art) || 'merc', key = Game.battleKind(b) === 'line' ? base : base + '_boss'; return { src: `assets/enemies/${key}.webp`, flip: !FACES_LEFT[key] }; }
   function renderBattle() {
     const S = Game.S, h = S.hero, B = CONFIG.kingdom.battles, f = Game.fmt, n = Game.landN(), b = Game.battleNo(), G = Game.landDef(n), bt = Game.battleState(), kind = Game.battleKind(b), box = $('battle-card');
@@ -1616,19 +1617,23 @@ const UI = (() => {
     q('[data-f=camp]').style.width = (100 * Math.min(B.count, (Game.landDone(n) ? B.count : (h.bestStage || 1) - 1)) / B.count) + '%';
     // counts: during a battle they follow the round being shown; otherwise your marching army vs the force waiting for you
     let yN = Game.marching(), eN = Game.enemyArmy(n, b, Game.battleWon(n, b)), ri = -1, e0 = eN;
-    const showDur = res ? Math.min(B.showMax, res.rounds.length * B.roundT) : 0;
-    if (showing) { ri = Math.min(res.rounds.length - 1, Math.floor(bt.t / Math.max(0.01, showDur) * res.rounds.length)); const r = res.rounds[ri] || {}; e0 = res.e0; yN = r.y !== undefined ? r.y : res.y0; eN = r.e !== undefined ? r.e : res.e0 - (r.volley || 0); if (bt.t >= showDur) { yN = res.y; eN = res.e; } }
+    const seq = res ? battleSeq(res.rounds.length, Math.max(1, Math.round(B.showMax / B.roundT))) : [], showDur = seq.length * B.roundT;
+    let si = seq.length - 1;
+    if (showing) { si = Math.min(seq.length - 1, Math.floor(bt.t / B.roundT)); ri = seq[si]; const r = res.rounds[ri] || {}; e0 = res.e0; yN = r.y !== undefined ? r.y : res.y0; eN = r.e !== undefined ? r.e : res.e0 - (r.volley || 0); if (bt.t >= showDur) { yN = res.y; eN = res.e; } }
     setText(q('[data-f=yn]'), f(yN)); setText(q('[data-f=en]'), f(Math.max(0, eN)));
     const yp = Game.yourPip(n, b), ep = Game.enemyPip(b);
     setText(q('[data-f=ypip]'), `general ${yp >= 0 ? '+' : ''}${yp} on every die`); setText(q('[data-f=epip]'), ep ? `+${ep} ${kind === 'host' ? 'veterans' : 'captain'}` : Game.battleWon(n, b) ? 'demoralized −2' : '');
     const tot = Math.max(1, yN + Math.max(0, eN)); q('[data-f=ba]').style.width = (100 * yN / tot) + '%'; q('[data-f=bb]').style.width = (100 * Math.max(0, eN) / tot) + '%';
     // the decisive duels of the round on screen
     const r = showing && ri >= 0 ? res.rounds[ri] : res && !showing ? res.rounds[res.rounds.length - 1] : null;
-    if (r && r.show) setHtml(q('[data-f=dice]'), r.show.map(([y, e, w]) => `<span class="bl-duel ${w > 0 ? 'win' : w < 0 ? 'loss' : 'even'}"><span class="me">${DIE(y)}</span><span class="foe">${DIE(e)}</span></span>`).join(''));
+    if (r && r.show && r.show.length) { // one duel, big enough to read: a crit if there was one, otherwise the first clash
+      const [y, e, w] = r.show.find(d => d[0] === 20 && d[2] > 0) || r.show[0], mp = yp + (res.order === 'rally' ? B.rally : 0), fp = ep - (res.pushing ? 0 : B.replayPip), more = (r.dn || r.show.length) - 1;
+      const tot = (v, p) => p ? `<small>${v} ${p > 0 ? '+' : '−'} ${Math.abs(p)} = <b>${v + p}</b></small>` : `<small>&nbsp;</small>`;
+      setHtml(q('[data-f=dice]'), `<div class="bl-feat ${w > 0 ? 'win' : w < 0 ? 'loss' : 'even'}"><div class="bl-fd me">${DIE(y)}${tot(y, mp)}</div><div class="bl-fvs">${w > 0 ? (y === 20 ? '<b class="crit">CRIT!</b>' : '<b class="good">You win</b>') : w < 0 ? '<b class="bad">They win</b>' : '<span class="dim">Held</span>'}</div><div class="bl-fd foe">${DIE(e)}${tot(e, fp)}</div></div>${more > 0 ? `<div class="bl-more">+ ${f(more)} more duel${more === 1 ? '' : 's'} this round</div>` : ''}`); }
     else setHtml(q('[data-f=dice]'), `<span class="dim small">${bt.ph === 'prep' ? 'The lines form…' : ''}</span>`);
     setHtml(q('[data-f=round]'), r && r.show ? `Round ${ri + 1 || res.rounds.length} · <b class="good">${f(r.k)} slain</b> · <b class="bad">${f(r.l)} fell</b>${r.c ? ` · <b class="crit">CRIT — ${f(r.c)} join you</b>` : ''}` : r && r.volley !== undefined ? `Volley! <b class="good">${f(r.volley)} fall before the lines meet</b>` : '');
     // ticker: the last rounds shown so far
-    if (res) { const upto = showing ? ri : res.rounds.length - 1, lines = []; for (let i = Math.max(0, upto - 2); i <= upto; i++) { const x = res.rounds[i]; if (!x) continue; lines.push(x.volley !== undefined ? `<span>Volley · ${f(x.volley)} slain</span>` : `<span>Round ${i + 1} · ${f(x.k)} slain · ${f(x.l)} fell${x.c ? ` · <b class="crit">${f(x.c)} converted</b>` : ''}</span>`); } setHtml(q('[data-f=tick]'), lines.reverse().join('')); } else setHtml(q('[data-f=tick]'), '');
+    if (res) { const lines = []; for (let j = Math.max(0, si - 2); j <= si; j++) { const i = seq[j], x = res.rounds[i]; if (!x) continue; lines.push(x.volley !== undefined ? `<span>Volley · ${f(x.volley)} slain</span>` : `<span>Round ${i + 1} · ${f(x.k)} slain · ${f(x.l)} fell${x.c ? ` · <b class="crit">${f(x.c)} converted</b>` : ''}</span>`); } setHtml(q('[data-f=tick]'), lines.reverse().join('')); } else setHtml(q('[data-f=tick]'), '');
     // prep: countdown, orders, strike
     const prep = bt.ph === 'prep'; q('[data-f=prep]').classList.toggle('hidden', !prep);
     if (prep) { setHtml(q('[data-f=preptxt]'), bt.hold ? `<b class="bad">The army holds its ground</b> to rebuild (${f(Game.marching())} of ${f(Math.ceil(h.bPeak * B.holdAt))}) — Strike to fight on` : `Battle in <b>${Math.ceil(B.prep - bt.t)}s</b>`); q('[data-f=pbar]').style.width = (100 * bt.t / B.prep) + '%';
