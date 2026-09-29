@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Alpha 0.10.11',
+  version: 'Alpha 0.10.12',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -175,6 +175,7 @@ const CONFIG = {
     mine:   { name: 'Mine',      icon: [4,5],  tool: 'pick',   time: 6, outputs: { stone: 1, ore: 1 },     desc: 'Work a rockface for stone. Needs a pickaxe. Iron ore once you know Prospecting.' },
     forage: { name: 'Forage',    icon: [11,15], tool: 'sickle', time: 4, outputs: { fiber: 1, berries: 1 }, desc: 'Gather fiber and berries. Needs a sickle.' },
   },
+  gather: { bgBase: 0.35, bgExp: 0.5 }, // 0.10.12: owned tools gather in the background at bgBase × power^bgExp of the old full-attention rate — slow with a new tool, far faster once it is levelled
   harvestStrPct: 0.01, // +1% harvest speed per Strength point
 
   tiers: [
@@ -473,6 +474,7 @@ const CONFIG = {
   // jobs (jobs completed by hand or thrall), sold (gold earned at market), stage, boss, founded, thrall (assigned), activity (swings).
   // Shown in Settings → What's new (newest first). Keep each line short.
   changelog: [
+    ['0.10.12', 'Tools now work for you. Once you own an axe, pickaxe or sickle, it gathers on its own — all the time, even while your hero fights and while you are away. A new tool is slow; every level makes it much faster, so upgrading tools matters more than ever. The Chop Wood, Mine and Forage boxes now just open that tool\'s screen (swing speed, yield, what you have in store); the fight carries on in the bar at the bottom.'],
     ['0.10.11', 'In Paths, the box for buying ranks now sits above the tree, so you can tap a node and buy without scrolling.'],
     ['0.10.10', 'The game has its own icon in the browser tab and on your home screen — the Click to Conquer crest.'],
     ['0.10.9', 'The Paths are rebuilt. Combat levels no longer give points — each one now makes your hero 3% stronger (attack and HP) on its own. Path ranks are bought with gold instead: tiny, permanent steps (+0.1% at the top), with no rank cap. The tree now grows downward; level a row evenly (every node 5+, average 10) and the next, deeper row opens — stronger, and 6× the price. The ★ nodes cost gold plus a boss token per rank, so every star has a use. Your ranks so far are kept. Veteran now adds +1% per Combat level per rank; the Merchant Republic makes Path ranks 15% cheaper.'],
@@ -565,10 +567,11 @@ const CONFIG = {
       steps: [
         { label: 'Click the Axe slot on your Equipment → Make (Wooden)', check: { tool: 'axe' } },
       ], reward: { wood: 10 }, focus: { tab: 'hero', sub: 'gear', el: 'tool:axe' } },
-    { id: 'q04', name: 'Timber', text: 'A hero does one thing at a time — fight, or work. He keeps working even when the game is closed — the hero screen now shows what he earns while you are away.',
+    { id: 'q04', name: 'Timber', text: 'Tools work for you. Once you own an axe it chops on its own — while you fight, and even while the game is closed. It starts slow; every level of the axe makes it much faster. The hero screen now shows what you earn while away.',
       steps: [
         { label: 'Activity → Chop Wood', check: { activity: 'wood' } },
-        { label: 'Chop 50 wood with the axe', check: { harvested: 'wood', need: 50, since: true } },
+        { label: 'Upgrade the axe to Lv 2 (Gear → Tools)', check: { toolLevel: 'axe', need: 2 } },
+        { label: 'Chop 30 wood with the axe', check: { harvested: 'wood', need: 30, since: true } },
         { label: 'Click the Axe slot → Upgrade once (faster swings, more wood)', check: { toolLevel: 'axe', need: 1 } },
       ], reward: { stone: 10 }, focus: { tab: 'hero', sub: 'fight', el: 'act:wood', el2: 'tool:axe' } },
     { id: 'q05', name: 'Skinner', text: 'Beasts have hides, if you know how to take them.',
@@ -620,12 +623,13 @@ const CONFIG = {
       steps: [
         { label: 'Click the Pickaxe slot → Make (10 wood)', check: { tool: 'pick' } },
         { label: 'Activity → Mine', check: { activity: 'mine' } },
-        { label: 'Quarry 60 stone with the pick', check: { harvested: 'stone', need: 60, since: true } },
+        { label: 'Upgrade the pick to Lv 2 (Gear → Tools)', check: { toolLevel: 'pick', need: 2 } },
+        { label: 'Quarry 30 stone with the pick', check: { harvested: 'stone', need: 30, since: true } },
       ], reward: { stone: 40 }, focus: { tab: 'hero', sub: 'gear', el: 'tool:pick', el2: 'act:mine' } },
     { id: 'q12b', name: 'Prospecting', text: 'Some of that rock glitters. Learn to tell ore from stone and every swing of the pick — and every Mine — starts turning up iron too.',
       steps: [
         { label: 'Kingdom → Tech → Research Prospecting', check: { tech: 'prospecting' }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:prospecting' } },
-        { label: 'Activity → Mine: dig 30 iron ore', check: { harvested: 'ore', need: 30, since: true }, focus: { tab: 'hero', sub: 'fight', el: 'act:mine' } },
+        { label: 'Activity → Mine: dig 15 iron ore', check: { harvested: 'ore', need: 15, since: true }, focus: { tab: 'hero', sub: 'fight', el: 'act:mine' } },
       ], reward: { ore: 20 } },
     { id: 'q13c', name: 'A Second Blow', text: 'Paths grow with your gold: level a whole row and the next one opens — deeper rows are costlier and stronger. Techniques are your active moves — Power Strike is unlocked. Equip it and it fires by itself; tap it in a fight for a harder hit.',
       steps: [

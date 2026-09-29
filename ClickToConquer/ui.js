@@ -1061,7 +1061,7 @@ const UI = (() => {
     const now = performance.now(); if (!force && now - lastRender < 100) return; lastRender = now;
     const S = Game.S, f = Game.fmt, h = S.hero, st = Game.stats();
 
-    const kr = Game.kingdomRates(true), hr = Game.heroFighting() ? Game.heroRates() : {}, hrv = Game.heroFighting() ? {} : Game.harvestRates();
+    const kr = Game.kingdomRates(true), hr = Game.heroFighting() ? Game.heroRates() : {}, hrv = Game.harvestRates();
     for (const k in R) {
       const e = $('res-' + k), wi = WAR_CHIPS.indexOf(k), p3 = Game.phase() === 3;
       const open = p3 ? wi >= 0 : R[k].kind !== 'loot' && R[k].kind !== 'war' && S.lifetime[k] > 0 && Game.pinned(k);
@@ -1279,10 +1279,10 @@ const UI = (() => {
     const act = h.activity;
     for (const id in CONFIG.activities) {
       const b = rows.act[id], a = CONFIG.activities[id], ok = Game.activityAvailable(id);
-      b.classList.toggle('active', act === id); b.disabled = !ok;
+      b.classList.toggle('active', act === id); b.disabled = !ok; if (id === 'idle') b.classList.toggle('hidden', !!S.hero.fightOn);
       setText(b.querySelector('[data-f=sub]'), id === 'idle' ? 'heals' : id === 'fight' ? (ok ? (Object.entries(hr).filter(([, v]) => v > 0).slice(0, 2).map(([k, v]) => `${f(v)} ${R[k].name}/s`).join(', ') || 'XP & loot') : 'needs a weapon') : ok ? Object.entries(Game.harvestRates(id)).map(([k, v]) => `${f(v)} ${R[k].name}/s`).join(', ') : `needs ${CONFIG.toolSlots[a.tool].name.toLowerCase()}`);
     }
-    setText($('activity-hint'), act === 'fight' || act === 'idle' ? CONFIG.activities[act].desc : CONFIG.activities[act].desc + ' Better tools, more Strength, and practice all speed this up.');
+    setText($('activity-hint'), act === 'fight' || act === 'idle' ? CONFIG.activities[act].desc + (Object.keys(Game.harvestRates()).length ? ' Your tools keep gathering in the background.' : '') : `Your ${CONFIG.toolSlots[CONFIG.activities[act].tool].name.toLowerCase()} works on its own — while you fight, and while you're away. Every level of it makes it much faster.`);
     const fighting = act === 'fight', idle = act === 'idle';
     $('fight-card').classList.toggle('hidden', !fighting); $('harvest-card').classList.toggle('hidden', fighting || idle);
     $('ground-card').classList.toggle('hidden', !S.hero.gear.weapon);
@@ -1291,10 +1291,10 @@ const UI = (() => {
       setText($('harvest-title'), a.name);
       setHtml($('harvest-icon'), ico(a.icon, 48));
       setHtml($('harvest-yield'), 'Each swing: ' + Object.entries(y).map(([k, v]) => `<span class="costitem">${ico(R[k].icon, 16)}${f(v)}</span>`).join(' '));
-      $('harvest-bar').style.width = Math.min(100, 100 * h.harvestTimer / t) + '%';
+      $('harvest-bar').style.width = Math.min(100, 100 * ((h.gTimers || {})[act] || 0) / t) + '%';
       setText($('harvest-time'), Game.infoOn('surveyor') ? t.toFixed(1) + 's per swing' : '');
       $('harvest-yield').classList.toggle('hidden', !Game.infoOn('surveyor'));
-      setText($('harvest-tool'), `${CONFIG.toolTiers[tool.tier].name} ${CONFIG.toolSlots[a.tool].name} Lv${tool.level} · power ×${Game.toolPower(a.tool).toFixed(2)}`);
+      setText($('harvest-tool'), `${CONFIG.toolTiers[tool.tier].name} ${CONFIG.toolSlots[a.tool].name} Lv${tool.level} · gathering ${Math.round(Game.bgFactor(act) * 100)}% speed · in store: ${Object.keys(y).map(k => `${R[k].name} ${f(Math.floor(S.res[k] || 0))} / ${f(Game.resCap(k))}`).join(', ')}`);
       setText($('harvest-mastery'), `Mastery ${Game.masteryLevel(act)} (${h.mastery[act] || 0} swings)`);
       { const outs = Object.keys(y), full = outs.filter(k => Game.atCap(k)), open = outs.filter(k => !Game.atCap(k));
         $('harvest-full').classList.toggle('hidden', !full.length);
@@ -1302,7 +1302,7 @@ const UI = (() => {
       const hrv = Game.harvestRates(act);
       setHtml($('harvest-afk'), !Game.infoOn('ledger') ? '' : `AFK: ${Game.pct(Game.afkEff())} of this while closed (max ${Game.fmtTime(Game.afkCap())}) → ` + Object.entries(hrv).map(([k, v]) => `<span class="costitem">${ico(R[k].icon, 14)}${f(v * Game.afkEff() * 3600)}/h</span>`).join(' '));
     }
-    renderMini(fighting, idle, act, st, eMax);
+    renderMini(Game.heroFighting(), idle && !Game.heroFighting(), act, st, eMax);
     // Tools
     for (const slot in CONFIG.toolSlots) {
       const row = rows.tool[slot], def = CONFIG.toolSlots[slot], it = h.tools[slot];
@@ -1384,7 +1384,7 @@ const UI = (() => {
   const lootTally = {}; let lootFresh = {};
   // "visible" = the full card's bars are actually inside the viewport, not just on the current tab
   function heroScreenVisible() {
-    const c = $('fight-card').offsetParent ? $('fight-card') : $('harvest-card').offsetParent ? $('harvest-card') : null; if (!c) return false;
+    const c = $('fight-card').offsetParent ? $('fight-card') : (!Game.heroFighting() && $('harvest-card').offsetParent) ? $('harvest-card') : null; if (!c) return false; // 0.10.12: on a gathering screen the fight shows in the dock
     const r = c.getBoundingClientRect(), top = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--headh')) || 0;
     return r.bottom - 40 > top && r.top + 120 < window.innerHeight;
   }

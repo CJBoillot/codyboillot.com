@@ -146,20 +146,23 @@ function craftTool(slot) { if (crafting() || !canToolTierUp(slot)) return false;
 function upgradeTool(slot) { if (crafting()) return false; const c = toolUpgradeCost(slot); if (!c || !canAfford(c)) return false; pay(c); const it = S.hero.tools[slot]; S.hero.crafting = { kind: 'toolUp', slot, t: 0, total: CONFIG.upgradeSeconds, name: `${CONFIG.toolTiers[it.tier].name} ${CONFIG.toolSlots[slot].name} Lv${it.level + 1}` }; return true; }
 function activityDef(id) { return CONFIG.activities[id]; }
 function activityAvailable(id) { const a = activityDef(id); if (phase() === 3 && id !== 'fight') return false; /* 0.10.6: a King's hero only fights — the Capital gathers */ return !!a && (!a.tool || !!S.hero.tools[a.tool]) && (!a.gear || !!S.hero.gear[a.gear]); }
-function setActivity(id) { if (!activityAvailable(id)) return false; S.hero.activity = id; S.hero.harvestTimer = 0; S.hero.chose = S.hero.chose || {}; S.hero.chose[id] = true; if (id !== 'fight') { S.hero.resting = false; S.hero.enemyHp = 0; } return true; }
-function heroFighting() { return S.hero.activity === 'fight' && activityAvailable('fight'); }
+function setActivity(id) { if (!activityAvailable(id)) return false; S.hero.activity = id; S.hero.chose = S.hero.chose || {}; S.hero.chose[id] = true; if (id === 'fight') S.hero.fightOn = true; return true; } // 0.10.12: this only picks what the hero screen shows — fighting and gathering both run all the time
+function heroFighting() { return !!S.hero.fightOn && activityAvailable('fight'); }
+const GATHER = ['wood', 'mine', 'forage'];
+function gatherOn(id) { const a = activityDef(id); return !!a && !!a.tool && !!S.hero.tools[a.tool] && (phase() < 3 || true); }
+function bgFactor(id) { const G = CONFIG.gather, a = activityDef(id); return G.bgBase * Math.pow(Math.max(1e-9, toolPower(a.tool)), G.bgExp); }
 function masteryLevel(id) { return Math.floor(Math.sqrt((S.hero.mastery[id] || 0) / 10)); } // swings → level; +2% speed each
-function harvestTime(id) { const a = activityDef(id), p = toolPower(a.tool), tm = treeMods(id); return a.time / (Math.pow(p, 0.5)) / (1 + (tm.harvestSpeed || 0)) / (1 + 0.02 * masteryLevel(id)); }
+function harvestTime(id) { const a = activityDef(id), p = toolPower(a.tool), tm = treeMods(id); return a.time / (Math.pow(p, 0.5)) / (1 + (tm.harvestSpeed || 0)) / (1 + 0.02 * masteryLevel(id)) / bgFactor(id); }
 function outputGated(k) { const g = CONFIG.harvestGate && CONFIG.harvestGate[k]; return !!g && !hasTech(g); }
 function harvestYield(id) { const a = activityDef(id), p = toolPower(a.tool), tm = treeMods(id), o = {}; for (const k in a.outputs) { if (outputGated(k)) continue; o[k] = a.outputs[k] * Math.pow(p, 0.5) * (1 + (tm.harvestYield || 0)) * (1 + (tm.harvestDouble || 0)); } const side = treeSide(id); for (const k in side) o[k] = (o[k] || 0) + side[k]; return o; }
-function harvestRates(id = S.hero.activity) { if (id === 'fight' || id === 'idle' || !activityAvailable(id)) return {}; const y = harvestYield(id), t = harvestTime(id), r = {}; for (const k in y) r[k] = y[k] / t; return r; }
+function harvestRates(id = null) { if (id === null) { const o = {}; for (const g of GATHER) if (gatherOn(g)) { const r = harvestRates(g); for (const k in r) o[k] = (o[k] || 0) + r[k]; } return o; } if (id === 'fight' || id === 'idle' || !gatherOn(id)) return {}; const y = harvestYield(id), t = harvestTime(id), r = {}; for (const k in y) r[k] = y[k] / t; return r; }
 function questWantsHarvest(k) { const q = questCurrent(); if (!q) return false; return q.steps.some(st => st.check.harvested === k && ((S.stats.harvested || {})[k] || 0) < st.check.need); }
-function tickHarvest(dt) {
-  const id = S.hero.activity; if (id === 'fight' || id === 'idle') return;
-  if (!activityAvailable(id)) { S.hero.activity = 'idle'; return; }
-  { const outs = Object.keys(harvestYield(id)); if (outs.length && outs.every(atCap) && !outs.some(questWantsHarvest)) { S.hero.activity = 'idle'; S.hero.harvestTimer = 0; log(`Pack full: ${outs.map(k => CONFIG.resources[k].name.toLowerCase()).join(', ')}. Resting.`); pushEvent({ who: 'packfull' }); return; } }
-  S.hero.harvestTimer += dt; const t = harvestTime(id);
-  while (S.hero.harvestTimer >= t) { S.hero.harvestTimer -= t; const y = harvestYield(id), got = {}; for (const k in y) { const n = Math.floor(y[k]) + (Math.random() < y[k] - Math.floor(y[k]) ? 1 : 0); if (n > 0) { const kept = add(k, n); if (kept > 0) got[k] = kept; S.stats.harvested = S.stats.harvested || {}; S.stats.harvested[k] = (S.stats.harvested[k] || 0) + n; } } S.hero.mastery[id] = (S.hero.mastery[id] || 0) + 1; gainDiscXp(id, CONFIG.discXpPerSwing); pushEvent({ who: 'harvest', yield: got }); }
+function tickHarvest(dt) { // 0.10.12: every owned tool works in the background, all the time
+  S.hero.gTimers = S.hero.gTimers || {};
+  for (const id of GATHER) { if (!gatherOn(id)) continue;
+    const outs = Object.keys(harvestYield(id)); if (outs.length && outs.every(atCap) && !outs.some(questWantsHarvest)) continue; // storage full: the tool rests (unless a quest is counting)
+    const T = S.hero.gTimers; T[id] = (T[id] || 0) + dt; const t = harvestTime(id);
+    while (T[id] >= t) { T[id] -= t; const y = harvestYield(id), got = {}; for (const k in y) { const n = Math.floor(y[k]) + (Math.random() < y[k] - Math.floor(y[k]) ? 1 : 0); if (n > 0) { const kept = add(k, n); if (kept > 0) got[k] = kept; S.stats.harvested = S.stats.harvested || {}; S.stats.harvested[k] = (S.stats.harvested[k] || 0) + n; } } S.hero.mastery[id] = (S.hero.mastery[id] || 0) + 1; gainDiscXp(id, CONFIG.discXpPerSwing); if (S.hero.activity === id) pushEvent({ who: 'harvest', yield: got }); } }
 }
 
 // ---------- Disciplines & skill trees ----------
@@ -1004,7 +1007,8 @@ function simulate(dt) {
   tickKingdom(dt); tickArmy(dt); tickTaxes(dt); tickCraft(dt); tickResearch(dt);
   const h = S.hero; h.time += dt;
   if ((h._tu = (h._tu || 0) + dt) >= 1) { h._tu = 0; checkTechUnlocks(); }
-  if (!heroFighting()) { const st0 = stats(); h.hp = Math.min(st0.maxHp, h.hp + st0.regen * dt); tickHarvest(dt); return; }
+  tickHarvest(dt);
+  if (!heroFighting()) { const st0 = stats(); h.hp = Math.min(st0.maxHp, h.hp + st0.regen * dt); return; }
   for (const id in h.cds) if (h.cds[id] > 0) h.cds[id] -= dt;
   const st = stats();
   if (h.resting) { h.hp = Math.min(st.maxHp, h.hp + st.regen * st.restSpeed * dt); if (h.hp >= st.maxHp) { h.resting = false; h.atkTimer = 0; h.eTimer = 0; } else return; }
@@ -1052,7 +1056,7 @@ function applyOffline(awaySeconds) {
   }
   let kills = 0;
   if (heroFighting()) { const hr = heroRates(); for (const k in hr) gains[k] = (gains[k] || 0) + hr[k] * counted * eff; kills = farmRate() * counted * eff; }
-  else { const hr = harvestRates(); for (const k in hr) gains[k] = (gains[k] || 0) + hr[k] * counted * eff; }
+  { const hr = harvestRates(); for (const k in hr) gains[k] = (gains[k] || 0) + hr[k] * counted * eff; } // tools gather while away too
   return { awaySeconds, counted, gains, kills, tax, startStage: S.hero.stage, endStage: S.hero.stage };
 }
 function claimOffline(data, mult = 1) {
@@ -1085,7 +1089,7 @@ function found(heroPathId, kingdomPathId) {
   const keep = { hero: S.hero, tech: S.tech, quests: S.quests, settings: S.settings, stats: S.stats, lifetime: S.lifetime, log: S.log };
   const band = (S.kingdom && S.kingdom.thralls) || [];
   const fresh = freshState(); Object.assign(fresh, keep); fresh.legacy = leg; fresh.kingdom.thralls = band;
-  S = fresh; S.hero.activity = 'fight'; S.kingdom.built = {}; S.kingdom.tier = 0; S.kingdom.tierPaid = {}; S.kingdom.v09 = true;
+  S = fresh; S.hero.activity = 'fight'; S.hero.fightOn = true; S.kingdom.built = {}; S.kingdom.tier = 0; S.kingdom.tierPaid = {}; S.kingdom.v09 = true;
   if (leg.foundings > 1) add('gold', KC().startGold || 50);
   const ca = perkRank('cache'); if (ca) { add('gold', 1000 * ca); }
   ensureThralls();
@@ -1313,6 +1317,8 @@ function load() {
       for (const id in OLD) if (P[id]) { let c = 0; for (let i = 0; i < P[id]; i++) c += Math.ceil(OLD[id][0] * Math.pow(OLD[id][1], i)); S.legacy.knowledge = (S.legacy.knowledge || 0) + c; delete P[id]; } }
     if (S.kingdom && !S.kingdom.cr104) { S.kingdom.cr104 = true; if (phase() === 3) { let c = 0; for (let n = 1; landDef(n) && landDone(n); n++) c += rulerCrowns(n); S.kingdom.crownsRun = c; } } // 0.10.4: the new Crown curve counts for this dynasty too
     if (phase() === 3 && S.hero.activity !== 'fight') { S.hero.activity = 'fight'; S.hero.harvestTimer = 0; } // 0.10.6: no gathering in the Kingdom phase
+    if (S.hero.fightOn === undefined) S.hero.fightOn = S.hero.activity === 'fight' || !!(S.hero.chose || {}).fight || (S.hero.totalKills || 0) > 0 || phase() === 3; // 0.10.12
+    if (S.hero.fightOn && S.hero.activity === 'idle') S.hero.activity = 'fight';
     return S;
   } catch (e) { return null; }
 }
@@ -1364,7 +1370,7 @@ window.Game = {
   hallDef, hallLv, hallAvailable, hallCost, canHall, upgradeHall,
   barracksLv, barracksBuilt, barracksCost, canUpBarracks, upgradeBarracks, trainPerMin, housing, foodPerMin, suppliesPerMin, upkeepPerMin, armyLimit, armyLimitBy, soldiers, garrisoned, marching, armyMult, armyHpMult,
   landId, landN, landDef, landState, landDone, landPct, landsHeld, landOpen, landsTouched, garrisonNeed, garrisonFill, taxFull, taxPerHour, spoilPerHour, cofferCap, cofferTotal, taxTotalPerHour, collectTaxes, setGarrison,
-  rulerCrowns, pathCost, rowOpen, rowProgress, pathRow, combatLevelBonus, endlessDepth, farming, farmLand, starsSpare, starDemand, vaultCount, canPassCrown, landReqText, landQuestOk, passKeep, infoOn, questStat, crownsIfPass, passCrown, lapActive,
+  rulerCrowns, gatherOn, bgFactor, pathCost, rowOpen, rowProgress, pathRow, combatLevelBonus, endlessDepth, farming, farmLand, starsSpare, starDemand, vaultCount, canPassCrown, landReqText, landQuestOk, passKeep, infoOn, questStat, crownsIfPass, passCrown, lapActive,
   repairPosts,
   phase, canProclaim, proclaim,
   stockMode, setStockMode, stockTarget, stockDemand, STOCK_MODES,
