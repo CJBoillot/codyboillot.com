@@ -752,6 +752,21 @@ function kingdomRates(display = false) {
   }
   return r;
 }
+// Beta 0.1.13: steady-state flow of a whole chain, for the building view's supply card.
+// Each entry: cap = what the building can make, supply = input it gets per second, use = input it could take, out = what it really makes, spare = output the next building can't take (to the Storehouse).
+function chainFlow(lid) {
+  const res = []; let supply = 0;
+  const steps = lineSteps(lid);
+  for (let i = 0; i < steps.length; i++) {
+    const st = steps[i]; if (!stepMods(st.id).working || st.pull) break;
+    const cap = stepOutput(st.id), use = st.from ? cap * st.ratio : 0, out = i === 0 ? cap : Math.min(cap, supply / st.ratio);
+    const nx = steps[i + 1] && stepMods(steps[i + 1].id).working && !steps[i + 1].pull ? steps[i + 1] : null;
+    const used = nx ? Math.min(out, stepOutput(nx.id) * nx.ratio) : 0;
+    res.push({ id: st.id, name: st.name, make: st.make, from: st.from || null, cap, supply: i === 0 ? 0 : supply, use, out, spare: nx ? out - used : out });
+    supply = used;
+  }
+  return res;
+}
 // Orders
 // Goods an Order may ask for: what the kingdom delivers to the Storehouse, best goods first; then goods the hero gathers.
 function orderGoods(all = false) {
@@ -1565,7 +1580,7 @@ window.Game = {
   toolTierUnlocked, toolPower, toolCraftCost, toolUpgradeCost, canToolTierUp, craftTool, upgradeTool, activityDef, activityAvailable, setActivity, masteryLevel, harvestTime, harvestYield, harvestRates,
   questCurrent, questProgress, questClaim, suggestGoal, ground, setGround, groundUnlocked, dropToolMult, bestStageAll, groundDrops, toolSlotUnlocked,
   techDef, hasTech, techProgress, canResearch, research, researching, buildingUnlocked, gearTierUnlocked, dropUnlocked, counter,
-  kingdomRates, kingdomNo, allSteps, stepDef, stepUnlocked, lineUnlocked, lineSteps, stepState, nextStep, stepMods, kTier, tierDef, stepAvailable, stepBuilt, canBuild, buildStep, tierGoods, tierNeed, tierPaid, tierPaidDone, tierStepsReady, contribute, canRaise, raiseTier, accountantSteps, assignAccountant, cityChecks, cityComplete, stepRate, stepPhases, stepCycle, stepBatch, stepOutput, thrallLevel, thrallCap, dismiss, stepLimit, stepUpCost, stepUpPlan, upgradeStep, stepWorkerSlots,
+  kingdomRates, chainFlow, kingdomNo, allSteps, stepDef, stepUnlocked, lineUnlocked, lineSteps, stepState, nextStep, stepMods, kTier, tierDef, stepAvailable, stepBuilt, canBuild, buildStep, tierGoods, tierNeed, tierPaid, tierPaidDone, tierStepsReady, contribute, canRaise, raiseTier, accountantSteps, assignAccountant, cityChecks, cityComplete, stepRate, stepPhases, stepCycle, stepBatch, stepOutput, thrallLevel, thrallCap, dismiss, stepLimit, stepUpCost, stepUpPlan, upgradeStep, stepWorkerSlots,
   assignWorker, assignOverseer, unassign, thrallPost, useAbility, refreshOffers, hire, maxStars, storeUpCost, upgradeStore, orderGoods, foundRenownNeed, canDeliver, deliver, swapOrder, swapReady, rankIndex, rankInfo, heroFighting, thrallCount, sellPrice, sell, buyPrice, buyRes, buyMax, canBuyRes,
   canAdvance, advance, stageSustainable, autoAdvanceBlock, autoKillsNeeded, killHeal, retreat, canAfford, add, simulate, applyOffline, claimOffline,
   save, load, exportSave, importSave, hardReset,

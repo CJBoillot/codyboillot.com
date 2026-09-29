@@ -718,8 +718,8 @@ const UI = (() => {
       setHtml(box, `<button class="back-btn" data-back>‹ Production</button>
         <div class="bld-hero"><img src="${artOf(st)}" srcset="${artOf(st)} 1x, assets/buildings/${st.art || st.id}@2x.webp 2x" alt=""><div class="bld-title">${st.name}<small>${st.desc || ''}</small></div><div class="bld-out" data-f="out"></div></div>
         <div class="kbar" id="bld-kbar"></div>
+        <div class="card supply-card"><div class="chain-strip" data-f="chain"></div>${st.from ? `<div class="sup-row"><div><span class="tiny dim">${R[st.from].name} in</span><b data-f="supin"></b></div><div class="sup-r"><span class="tiny dim">${st.name} can use</span><b data-f="supuse"></b></div></div><div class="bar sup-bar"><div data-f="supbar"></div><span data-f="suplab"></span></div><div class="tiny sup-why" data-f="supwhy"></div>` : ''}</div>
         ${Array.from({ length: Game.depthCount(id) }, (_, i) => i + 1).map(d => levelHtml(st, d)).join('')}
-        ${st.from ? `<div class="card kin"><span class="small dim">${R[st.from].name} in</span><div class="bar green-bar"><div data-f="inbar"></div><span data-f="inlab"></span></div></div>` : ''}
         <div class="card dig-card"><div class="dig-t">${st.dig} · ${Game.unitName(id)} ${Game.depthCount(id) + 1}</div><div class="tiny dim" data-f="digwhy"></div><button class="buy wide" data-dig><span class="small">${st.dig}</span><br><span class="cost" data-f="digcost"></span></button></div>
         ${houseBox}${stock}`);
       box.querySelector('[data-back]').addEventListener('click', closeBld);
@@ -728,14 +728,21 @@ const UI = (() => {
       box.querySelectorAll('[data-houses]').forEach(b => b.addEventListener('click', () => { Game.setHousesOn(b.dataset.houses === '1'); bldKey = ''; render(true); }));
       $('bld-kbar').innerHTML = kbarHtml(); $('bld-kbar').querySelectorAll('[data-kbuy]').forEach(b => b.addEventListener('click', () => { kBuy = b.dataset.kbuy === 'max' ? 'max' : +b.dataset.kbuy; prodKey = ''; bldKey = ''; render(true); }));
       glowKey = ''; }
-    const s = Game.stepState(id), out = Game.stepOutput(id), fo = v => v < 10 ? v.toFixed(2) : f(v);
+    const s = Game.stepState(id), cfMe = Game.chainFlow(st.line).find(c => c.id === id), out = cfMe ? cfMe.out : Game.stepOutput(id), fo = v => v < 10 ? v.toFixed(2) : f(v);
     const dest = id === 'carpenter' && Game.housesOn() ? 'To houses' : nx ? `To the ${nx.name}` : 'To the Storehouse', use = nx ? Game.stepOutput(nx.id) * nx.ratio : 0;
     setHtml(box.querySelector('[data-f=out]'), `${dest}<b>${fo(out)}/s</b>${nx ? `${nx.name} uses ${fo(use)}/s` : ''}`);
 
     for (let d = 1; d <= Game.depthCount(id); d++) { const dc = box.querySelector(`[data-depth="${d}"]`); if (dc) renderLevel(dc, st, d, dest); }
     { const db = box.querySelector('[data-dig]'), open = Game.digOpen(), nd = Game.depthCount(id) + 1; db.disabled = !Game.canDig(id); setHtml(box.querySelector('[data-f=digcost]'), open ? costHtml(Game.digCost(id)) + (Game.digCost(id).gold > Game.resCap('gold') ? '<br><span class="tiny warn">more than your Storehouse holds — expand it in the Keep</span>' : '') : '<span class="dim">after Proclaim</span>');
       setText(box.querySelector('[data-f=digwhy]'), open ? `Starts at Lv 1 but makes ×${f(Game.depthYield(nd))} what the first ${Game.unitName(id).toLowerCase()} makes at the same level. Its own Work, Cart and Haul.` : 'Your town grows new levels once the Kingdom is proclaimed.'); }
-    if (st.from) { box.querySelector('[data-f=inbar]').style.width = Math.min(100, 100 * s.inBuf / Math.max(1, st.ratio * (Game.stepOutput(id) * 30 + 10))) + '%'; setText(box.querySelector('[data-f=inlab]'), `${Math.floor(s.inBuf)} waiting`); }
+    { const CF = Game.chainFlow(st.line), me = CF.findIndex(c => c.id === id), rn = k => R[k].name.toLowerCase();
+      setHtml(box.querySelector('[data-f=chain]'), CF.map((c, i) => `${i ? '<span class="cs-ar">→</span>' : ''}<div class="cs-b${i === me ? ' me' : ''}"><span class="tiny dim">${c.name}</span><b>${fo(c.out)}</b><span class="tiny dim">${rn(c.make)}/s</span></div>`).join(''));
+      if (st.from && me > 0) { let root = me - 1; while (root > 0 && CF[root].out < CF[root].cap - 1e-6) root--; const c = CF[me], p = CF[me - 1], pct = c.use > 0 ? Math.min(1, c.supply / c.use) : 0, pn = Game.stepDef(p.id).name, stP = Game.stockTarget(st.from), filling = stP.target > (S.res[st.from] || 0) && stP.share < 1;
+        setText(box.querySelector('[data-f=supin]'), `${fo(c.supply)}/s`); setText(box.querySelector('[data-f=supuse]'), `${fo(c.use)}/s`);
+        const sb = box.querySelector('[data-f=supbar]'); sb.style.width = (100 * pct) + '%'; sb.parentElement.classList.toggle('short', pct < 0.999);
+        setText(box.querySelector('[data-f=suplab]'), `running at ${Math.round(100 * pct)}% · ${f(Math.floor(s.inBuf))} ${rn(st.from)} waiting`);
+        setHtml(box.querySelector('[data-f=supwhy]'), (pct < 0.999 ? `<b>The ${pn} is the limit.</b> It sends ${fo(c.supply)} ${rn(st.from)}/s; the ${st.name} could use ${fo(c.use)}/s. ${root === me - 1 ? `Upgrade the ${pn} to feed it.` : `But the ${pn} is starved too — upgrade the <b>${CF[root].name}</b> first.`}` : `<b>The ${st.name} is the limit.</b> The ${pn} makes more than it can use${p.spare > 1e-6 ? ` — ${fo(p.spare)} ${rn(st.from)}/s spare goes to the Storehouse` : ''}.`) + (filling ? `<br><span class="dim">Right now half the ${rn(st.from)} goes to the Storehouse until it holds ${f(stP.target)}, so less reaches the ${st.name}.</span>` : '')); }
+      else if (st.from) { ['supin', 'supuse'].forEach(k => setText(box.querySelector(`[data-f=${k}]`), '—')); setText(box.querySelector('[data-f=supwhy]'), `Build the ${R[st.from].name.toLowerCase()} building first.`); } }
     { const hb = box.querySelector('[data-f=houses]'); if (hb) setHtml(hb, `${f(Game.houses())} houses · room for ${f(Game.houseCap())} · next house needs ${Game.houseCost().toFixed(1)} lumber (${Math.round(100 * (S.kingdom.houseProg || 0) / Game.houseCost())}%). ${Game.housesOn() ? 'All new lumber goes to houses (after what the Storehouse needs).' : 'Lumber goes to the Storehouse; no houses are being built.'}`); }
     if (box.querySelector('[data-f=stn]')) { const k = st.make, T = Game.stockTarget(k), have = Math.floor(S.res[k] || 0), nxn = nx ? nx.name : 'next building';
       box.querySelectorAll('[data-stock]').forEach(b => b.classList.toggle('active', String(T.mode) === b.dataset.stock));
