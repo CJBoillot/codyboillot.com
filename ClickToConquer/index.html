@@ -12,7 +12,7 @@
   <title>Click to Conquer</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=a0108">
+  <link rel="stylesheet" href="style.css?v=a0109">
 </head>
 <body>
 
@@ -161,12 +161,12 @@
           <div class="card">
             <div class="row-between"><span class="card-title" style="margin:0">The Paths of War</span><span class="small dim" id="path-lv">Combat Lv 1</span></div>
             <div class="path-pts">
-              <div><b id="path-free">0</b><span>points to spend</span></div>
+              <div><b id="path-free">+0%</b><span id="path-free-lab">attack & HP from Combat levels</span></div>
               <div><b id="path-spent">0</b><span id="path-spent-of">spent of 390</span></div>
               <button id="path-stars-box" class="pts-btn" type="button"><b id="path-stars">0 ★</b><span>boss tokens · where to spend ⓘ</span></button>
             </div>
             <div class="bar xp disc-xp"><div id="path-xpbar"></div><span id="path-xptext"></span></div>
-            <p class="small dim" style="margin:4px 0 0">+1 point every Combat level · +1 ★ the first time you beat each boss. Paths are never reset.</p>
+            <p class="small dim" style="margin:4px 0 0">Every Combat level: +3% attack and HP. Buy Path ranks with gold — tiny, permanent, and they never reset. Level a row evenly to open the next, deeper one. The big ★ nodes also cost a boss token per rank.</p>
           </div>
           <div class="path-heads" id="path-heads"></div>
           <div class="path-web-wrap"><svg id="path-web" viewBox="0 0 368 548" preserveAspectRatio="xMidYMid meet"></svg></div>
@@ -499,11 +499,11 @@
 </div>
 
 
-<script src="config.js?v=a0108"></script>
-<script src="cloud-config.js?v=a0108"></script>
-<script src="game.js?v=a0108"></script>
-<script src="ui.js?v=a0108"></script>
-<script src="cloud.js?v=a0108"></script>
+<script src="config.js?v=a0109"></script>
+<script src="cloud-config.js?v=a0109"></script>
+<script src="game.js?v=a0109"></script>
+<script src="ui.js?v=a0109"></script>
+<script src="cloud.js?v=a0109"></script>
 <script>window.addEventListener("error", e => { const d = document.getElementById("err"); if (d) { d.textContent = "Error: " + e.message; d.classList.remove("hidden"); } });</script>
 <div id="celebrate" class="celebrate hidden" role="status" aria-live="polite"><div class="cb-ico" id="cb-ico"></div><div class="cb-txt"><div class="cb-kicker" id="cb-kicker"></div><div class="cb-title" id="cb-title"></div><div class="cb-sub" id="cb-sub"></div></div></div>
 </body>

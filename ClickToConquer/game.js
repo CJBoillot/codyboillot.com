@@ -197,25 +197,30 @@ function respec() {
 let _pathNodes = null;
 function pathNodes() {
   if (_pathNodes) return _pathNodes; const P = CONFIG.paths, out = [];
-  for (const b of P.branches) { let k = 0; P.plan.forEach((cols, t) => cols.forEach(c => { const d = P.nodes[b.id][k]; out.push({ id: b.id + k, b: b.id, t, c, name: d[0], per: d[1], kind: d[2] || 'small' }); k++; })); }
+  for (const b of P.branches) { let k = 0; P.plan.forEach((cols, t) => cols.forEach(c => { const d = P.nodes[b.id][k], per = {}; for (const x in d[1]) per[x] = d[1][x] * P.valueScale * Math.pow(P.valueTier, t); out.push({ id: b.id + k, b: b.id, t, c, name: d[0], per, kind: d[2] || 'small' }); k++; })); }
   for (const n of out) n.parents = n.t === 0 ? [] : out.filter(p => p.b === n.b && p.t === n.t - 1 && Math.abs(p.c - n.c) <= 1).map(p => p.id);
   return (_pathNodes = out);
 }
 function pathNode(id) { return pathNodes().find(n => n.id === id) || null; }
 function pathRank(id) { return (S.hero.paths && S.hero.paths[id]) || 0; }
-function pathOpen(id) { const n = pathNode(id); if (!n) return false; return !n.parents.length || n.parents.some(p => pathRank(p) >= CONFIG.paths.ranks); }
+function pathRow(t) { return pathNodes().filter(n => n.t === t); }
+function rowOpen(t) { if (t <= 0) return true; const P = CONFIG.paths, row = pathRow(t - 1); let sum = 0; for (const n of row) { const r = pathRank(n.id); if (r < P.openMin) return false; sum += r; } return sum >= P.openAvg * row.length; }
+function rowProgress(t) { const P = CONFIG.paths, row = pathRow(t - 1); let sum = 0, low = 0; for (const n of row) { const r = pathRank(n.id); sum += Math.min(r, P.openAvg); if (r < P.openMin) low++; } return { have: sum, need: P.openAvg * row.length, low }; }
+function pathOpen(id) { const n = pathNode(id); return !!n && rowOpen(n.t); }
+function pathCost(id, r = pathRank(id)) { const C = CONFIG.paths.cost, n = pathNode(id), kp = kingdomPath(); return Math.ceil(C.base * Math.pow(C.tier, n.t) * Math.pow(C.rank, r) * (kp && kp.id === 'merchant' ? 0.85 : 1)); }
+function combatLevelBonus() { return (discLevel('combat') - 1) * (CONFIG.paths.levelBonus + 0.01 * perkRank('veteran')); } // 0.10.9: Combat levels make the hero stronger directly
 function pathNeedsStar(id) { const n = pathNode(id); return !!n && n.kind !== 'small'; }
-function pathPointsTotal() { return discLevel('combat') - 1 + perkRank('veteran') * 3; }
+function pathPointsTotal() { return Infinity; } // 0.10.9: Paths are bought with gold
 function pathPointsSpent() { let s = 0; for (const k in (S.hero.paths || {})) s += S.hero.paths[k]; return s; }
 function pathPointsFree() { return pathPointsTotal() - pathPointsSpent(); }
 function pathPointsMax() { return pathNodes().length * CONFIG.paths.ranks; }
 function starsTotal() { return Object.keys(S.hero.stars || {}).length * H.talentPointsPerBoss + (S.hero.bonusTalent || 0); }
 function starsSpent() { let n = 0; for (const p of pathNodes()) if (p.kind !== 'small') n += pathRank(p.id); for (const d in CONFIG.trees) for (const node of CONFIG.trees[d]) if (node.capstone) n += nodeRank(d, node.id); return n; }
-function starDemand() { let n = 0; for (const p of pathNodes()) if (p.kind !== 'small') n += CONFIG.paths.ranks; for (const d in CONFIG.trees) for (const node of CONFIG.trees[d]) if (node.capstone) n += node.max || 1; return n; }
-function starsSpare() { return Math.max(0, starsTotal() - starDemand()); } // 0.10.5: stars past what the Paths can use make the hero a legend: +0.5% attack and HP each
+function starDemand() { return Infinity; } // 0.10.9: ★ nodes have no rank cap, so every star has a use
+function starsSpare() { return 0; }
 function starsFree() { return starsTotal() - starsSpent(); }
-function canRankPath(id) { const n = pathNode(id); if (!n || !pathOpen(id) || pathRank(id) >= CONFIG.paths.ranks || pathPointsFree() < 1) return false; return n.kind === 'small' || starsFree() >= 1; }
-function rankPath(id, times = 1) { let k = 0; S.hero.paths = S.hero.paths || {}; while (k < times && canRankPath(id)) { S.hero.paths[id] = pathRank(id) + 1; k++; } if (k && pathRank(id) >= CONFIG.paths.ranks) log(`${pathNode(id).name} mastered!`); return k; }
+function canRankPath(id) { const n = pathNode(id); if (!n || !pathOpen(id) || (S.res.gold || 0) < pathCost(id)) return false; return n.kind === 'small' || starsFree() >= 1; }
+function rankPath(id, times = 1) { let k = 0; S.hero.paths = S.hero.paths || {}; const t0 = pathNode(id) && pathNode(id).t; const was = rowOpen((t0 || 0) + 1); while (k < times && canRankPath(id)) { const c = pathCost(id); S.res.gold -= c; S.hero.pathGold = (S.hero.pathGold || 0) + c; S.hero.paths[id] = pathRank(id) + 1; k++; } if (k && !was && rowOpen(t0 + 1) && pathRow(t0 + 1).length) { log('A new row of your Paths opens!'); pushEvent({ who: 'pathrow', t: t0 + 1 }); } return k; }
 function pathMods() { const m = {}; for (const n of pathNodes()) { const r = pathRank(n.id); if (!r) continue; for (const k in n.per) m[k] = (m[k] || 0) + n.per[k] * r; } return m; }
 function resetPaths() { const c = respecCost(); if (S.res.gold < c || !pathPointsSpent()) return false; S.res.gold -= c; S.hero.paths = {}; log('Your Paths are cleared — every point is back to spend.'); return true; }
 
@@ -252,7 +257,6 @@ function migrateSkills() { // 0.9.5: the old Combat tree → Paths (points refun
     for (const nid in map) { const r = old[nid] || 0; if (r >= 1) { const st = techState(map[nid]); st.open = true; let x = 0; for (let l = 1; l < r; l++) x += masteryNeed(l); st.xp = Math.max(st.xp || 0, x); } }
     delete h.tree.combat;
   }
-  if (pathPointsSpent() > pathPointsTotal()) { h.paths = {}; log('Combat levels come slower now — your Paths were reset so you can spend your points again.'); } // 0.9.9 curve change
   const slots = techSlots(); h.loadout = (h.loadout || []).filter((id, i, a) => skillDef(id) && techUnlocked(id) && a.indexOf(id) === i).slice(0, slots);
   checkTechUnlocks();
 }
@@ -315,10 +319,10 @@ function rawMods() { // attributes + talents only
   const m = {}; const add = (k, v) => m[k] = (m[k] || 0) + v;
   const hp = heroPath(), kp = kingdomPath();
   const tm = pathMods(); for (const e in tm) add(e, tm[e]);
+  { const lb = combatLevelBonus(); if (lb) { add('attackPct', lb); add('hpPct', lb); } }
   if (hp) for (const e in hp.mods) add(e, hp.mods[e]);
   if (kp && kp.mods) for (const e in kp.mods) add(e, kp.mods[e]);
   if (perkRank('warcollege')) add('armyPct', 0.10 * perkRank('warcollege'));
-  { const sp = starsSpare() * 0.005; if (sp) { add('attackPct', sp); add('hpPct', sp); } }
   if (S.kingdom) { const hm = hallMods(); for (const e in hm) add(e, hm[e]); }
   const vc = vaultCount() * 0.02; if (vc) add('attackPct', vc);
   const tr = trophyCount() * CONFIG.trophies.lootPerTrophy; if (tr) { add('dropPct', tr); add('xpPct', tr); }
@@ -989,7 +993,7 @@ function log(msg) { S.log.unshift(msg); if (S.log.length > 30) S.log.length = 30
 // ---------- Live simulation ----------
 // Discrete combat: hero swings every 1/speed sec (rolls crit), enemy swings every enemyAttackInterval sec.
 const EVENTS = []; // transient hit events for the UI: {who:'hero'|'enemy', dmg, crit, skill}
-const BIG_EV = { depth: 1, crown: 1, crownpass: 1, proclaim: 1, tier: 1, milestone: 1, trophy: 1, levelup: 1 }, BIGS = []; // 0.10.5: moments worth a banner, kept apart so hit numbers can't push them out
+const BIG_EV = { pathrow: 1, depth: 1, crown: 1, crownpass: 1, proclaim: 1, tier: 1, milestone: 1, trophy: 1, levelup: 1 }, BIGS = []; // 0.10.5: moments worth a banner, kept apart so hit numbers can't push them out
 function pushEvent(e) { if (BIG_EV[e.who]) { BIGS.push(e); if (BIGS.length > 12) BIGS.shift(); return; } EVENTS.push(e); if (EVENTS.length > 20) EVENTS.shift(); }
 function heroStrike(st) {
   const crit = Math.random() < st.crit;
@@ -1360,7 +1364,7 @@ window.Game = {
   hallDef, hallLv, hallAvailable, hallCost, canHall, upgradeHall,
   barracksLv, barracksBuilt, barracksCost, canUpBarracks, upgradeBarracks, trainPerMin, housing, foodPerMin, suppliesPerMin, upkeepPerMin, armyLimit, armyLimitBy, soldiers, garrisoned, marching, armyMult, armyHpMult,
   landId, landN, landDef, landState, landDone, landPct, landsHeld, landOpen, landsTouched, garrisonNeed, garrisonFill, taxFull, taxPerHour, spoilPerHour, cofferCap, cofferTotal, taxTotalPerHour, collectTaxes, setGarrison,
-  rulerCrowns, endlessDepth, farming, farmLand, starsSpare, starDemand, vaultCount, canPassCrown, landReqText, landQuestOk, passKeep, infoOn, questStat, crownsIfPass, passCrown, lapActive,
+  rulerCrowns, pathCost, rowOpen, rowProgress, pathRow, combatLevelBonus, endlessDepth, farming, farmLand, starsSpare, starDemand, vaultCount, canPassCrown, landReqText, landQuestOk, passKeep, infoOn, questStat, crownsIfPass, passCrown, lapActive,
   repairPosts,
   phase, canProclaim, proclaim,
   stockMode, setStockMode, stockTarget, stockDemand, STOCK_MODES,

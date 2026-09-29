@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Alpha 0.10.8',
+  version: 'Alpha 0.10.9',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -228,8 +228,8 @@ const CONFIG = {
   // ---------- Paths of War (passive). 3 branches × 13 nodes, every node has 10 ranks. Never reset (kept through Pass the Crown). ----------
   // Points: 1 per Combat level. ★ tokens: 1 per boss ever slain (first kill of each boss stage) + quest rewards.
   // A node opens when a connected node one tier closer to the centre is maxed (10/10). Notables and keystones cost 1 point + 1 ★ per rank.
-  paths: {
-    ranks: 10,
+  paths: { // 0.10.9: ranks are bought with gold, a sliver at a time; each row opens once the row above is levelled evenly
+    ranks: 10, openAvg: 10, openMin: 5, cost: { base: 10, tier: 6, rank: 1.12 }, valueScale: 1 / 60, valueTier: 2, levelBonus: 0.03,
     branches: [ { id: 'M', name: 'Might', desc: 'attack · crit · bosses', color: '#d9604c' }, { id: 'G', name: 'Guard', desc: 'HP · armor · healing', color: '#6fa3d9' }, { id: 'C', name: 'Command', desc: 'army · gold · loot', color: '#7fd28f' } ],
     plan: [[1],[0,2],[0,1,2],[1],[0,2],[0,1,2],[1]], // tier → column positions (0..2) in each branch
     nodes: {
@@ -473,6 +473,7 @@ const CONFIG = {
   // jobs (jobs completed by hand or thrall), sold (gold earned at market), stage, boss, founded, thrall (assigned), activity (swings).
   // Shown in Settings → What's new (newest first). Keep each line short.
   changelog: [
+    ['0.10.9', 'The Paths are rebuilt. Combat levels no longer give points — each one now makes your hero 3% stronger (attack and HP) on its own. Path ranks are bought with gold instead: tiny, permanent steps (+0.1% at the top), with no rank cap. The tree now grows downward; level a row evenly (every node 5+, average 10) and the next, deeper row opens — stronger, and 6× the price. The ★ nodes cost gold plus a boss token per rank, so every star has a use. Your ranks so far are kept. Veteran now adds +1% per Combat level per rank; the Merchant Republic makes Path ranks 15% cheaper.'],
     ['0.10.8', 'Logging, Mining and Foraging use the same icons as everywhere else. Tap the boss-token box in Paths to see every ★ node, whether it is open yet, and what it takes to open it.'],
     ['0.10.7', 'Tidier panels: the What\'s new list has proper margins, and the Where to fight buttons put each place\'s name above its progress so long names and lock reasons no longer crowd together.'],
     ['0.10.6', 'Go back and farm! Every conquered land has a Fight here button (Kingdom → Lands) that takes your hero to its Endless Battle, where the land\'s spoil (silver, heartwood, relics) drops on a share of kills. Every 50 wins it goes a depth deeper — tougher foes, better drops — and a knock-out only drops you one depth. A conquered land now pays its full taxes even while your hero fights there. The gathering and By hand panels are gone once you proclaim (By hand already at the City): the Capital gathers, the hero fights.'],
@@ -552,11 +553,11 @@ const CONFIG = {
         { label: 'Slay 50 enemies', check: { counter: 'kills', need: 50, since: true } },
         { label: 'Have 25 wood (Trees box)', check: { have: 'wood', need: 25 } },
         { label: 'Kingdom → Tech → Research Woodcraft', check: { tech: 'stonetools' } },
-      ], reward: { wood: 40 }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:stonetools' } },
-    { id: 'q02b', name: 'Growing Stronger', text: 'Kills give Combat XP. Every Combat level grants a point for your Paths — the passive web on the Skills tab. Start at the centre; a node opens when the one before it is maxed. Paths are never reset, so every point is forever.',
+      ], reward: { wood: 40, gold: 25 }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:stonetools' } },
+    { id: 'q02b', name: 'Growing Stronger', text: 'Kills give Combat XP, and every Combat level makes your hero 3% stronger. The Paths on the Skills tab are for gold: each rank is a small, permanent edge, and each row opens once the row above it is levelled. Paths are never reset.',
       steps: [
         { label: 'Reach Combat level 2', check: { disc: 'combat', need: 2 } },
-        { label: 'Skills → Paths → put a point in Sharpened Edge', check: { path: 'M0', need: 1 } },
+        { label: 'Skills → Paths → buy a rank of Sharpened Edge', check: { path: 'M0', need: 1 } },
       ], reward: { fiber: 15 }, focus: { tab: 'hero', sub: 'skills', rtab: 'skills', el: 'path:M0' } },
     { id: 'q03', name: 'An Axe of Your Own', text: 'You have wood enough for an axe, and the axe will cut the rest. Tools are the row under your armor on the Equipment panel — click a slot to make or upgrade it.',
       steps: [
@@ -624,9 +625,9 @@ const CONFIG = {
         { label: 'Kingdom → Tech → Research Prospecting', check: { tech: 'prospecting' }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:prospecting' } },
         { label: 'Activity → Mine: dig 30 iron ore', check: { harvested: 'ore', need: 30, since: true }, focus: { tab: 'hero', sub: 'fight', el: 'act:mine' } },
       ], reward: { ore: 20 } },
-    { id: 'q13c', name: 'A Second Blow', text: 'Paths are slow and permanent: max a node and the ones past it open. Techniques are your active moves — Power Strike is unlocked. Equip it and it fires by itself; tap it in a fight for a harder hit.',
+    { id: 'q13c', name: 'A Second Blow', text: 'Paths grow with your gold: level a whole row and the next one opens — deeper rows are costlier and stronger. Techniques are your active moves — Power Strike is unlocked. Equip it and it fires by itself; tap it in a fight for a harder hit.',
       steps: [
-        { label: 'Paths → Sharpened Edge 3/10', check: { path: 'M0', need: 3 }, focus: { tab: 'hero', sub: 'skills', rtab: 'skills', el: 'path:M0' } },
+        { label: 'Paths → Sharpened Edge rank 3', check: { path: 'M0', need: 3 }, focus: { tab: 'hero', sub: 'skills', rtab: 'skills', el: 'path:M0' } },
         { label: 'Techniques → equip Power Strike', check: { skillEquipped: 'strike' }, focus: { tab: 'hero', sub: 'skills', rtab: 'skills', el: 'technique:strike' } },
         { label: 'Use Power Strike 5 times', check: { casts: 'strike', need: 5, since: true } },
       ], reward: { gold: 80 }, focus: { tab: 'hero', sub: 'skills', rtab: 'skills', el: 'technique:strike' } },
@@ -783,7 +784,7 @@ const CONFIG = {
         costMult: 0.85, jobSpeed: 1.2, sellMult: 1, mods: { dropPct: -0.15 } },
       { id: 'empire', name: 'Iron Empire', icon: [3,7], unlock: 1, desc: 'Hero drops +30%, the Mine works 50% faster. Building upgrades +15% cost, sell prices −10%.',
         costMult: 1.15, jobSpeed: 1, sellMult: 0.9, outputMult: { mine: 1.5 }, mods: { dropPct: 0.30 } },
-      { id: 'merchant', name: 'Merchant Republic', icon: [12,10], unlock: 4, desc: 'Sell prices +40%, resetting Paths is free. Hero attack −10%.',
+      { id: 'merchant', name: 'Merchant Republic', icon: [12,10], unlock: 4, desc: 'Sell prices +40%, Path ranks cost 15% less gold. Hero attack −10%.',
         costMult: 1, jobSpeed: 1, sellMult: 1.4, mods: { attackPct: -0.10 }, freeRespec: true },
     ],
 
@@ -792,7 +793,7 @@ const CONFIG = {
     trees: [ { id: 'bloodline', name: 'Bloodline', desc: 'The hero' }, { id: 'crown', name: 'Crown', desc: 'The city' }, { id: 'war', name: 'War', desc: 'The army' }, { id: 'realm', name: 'Realm', desc: 'The conquest' } ],
     perks: [
       { id: 'bloodline', tree: 'bloodline', name: 'Bloodline',       icon: [1,0],  max: 10, cost: 3,  costMult: 1.5, desc: 'Attack, HP and healing ×1.08 per rank — it multiplies, so every rank is worth more' },
-      { id: 'veteran',   tree: 'bloodline', name: 'Veteran',         icon: [1,4],  max: 3,  cost: 8,  costMult: 2,   desc: '+3 Path points per rank' },
+      { id: 'veteran',   tree: 'bloodline', name: 'Veteran',         icon: [1,4],  max: 3,  cost: 8,  costMult: 2,   desc: 'Each Combat level gives +1% more attack and HP per rank' },
       { id: 'cache',     tree: 'crown',     name: "Founder's Cache", icon: [11,11], max: 5, cost: 4,  costMult: 1.6, desc: 'Begin each dynasty with 15 minutes of your last dynasty\'s taxes per rank (at least 1,000 gold)' },
       { id: 'charter',   tree: 'war',       name: 'Quartermasters',  icon: [14,14], max: 3, cost: 6,  costMult: 2,   desc: '+10% Housing, Arms and Food income per rank' },
       { id: 'cellar',    tree: 'crown',     name: 'Deep Cellar',     icon: [19,9], max: 4,  cost: 5,  costMult: 1.7, desc: 'AFK cap +2h and Storehouse +25% per rank' },

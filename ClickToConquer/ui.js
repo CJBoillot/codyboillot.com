@@ -799,9 +799,9 @@ const UI = (() => {
   function setSkillView(v) { skView = v; document.querySelectorAll('#skill-seg [data-sk]').forEach(b => b.classList.toggle('active', b.dataset.sk === v)); for (const k of ['tech', 'paths', 'gather']) $('sk-' + k).classList.toggle('hidden', k !== v); try { glowKey = ''; } catch (e) {} if (typeof render === 'function') try { render(true); } catch (e) {} }
   const MOD_LABEL = { attackPct: 'attack', speedPct: 'attack speed', crit: 'crit chance', critDmg: 'crit damage', bossDmg: 'damage to bosses', hpPct: 'max HP', regenPct: 'HP regen', dr: 'damage taken', restSpeed: 'resting speed', goldPct: 'gold', dropPct: 'loot', skillPct: 'technique power', armyPct: 'army bonus', xpPct: 'XP', cdr: 'cooldowns' };
   const LESS_IS_GOOD = { dr: 1, cdr: 1 };
-  function fmtMod(k, v) { const n = Math.round(Math.abs(v) * 1000) / 10, good = v >= 0; const sign = LESS_IS_GOOD[k] ? (good ? '−' : '+') : (good ? '+' : '−'); return `${sign}${n}% ${MOD_LABEL[k] || k}`; }
+  function fmtMod(k, v) { const a = Math.abs(v) * 100, n = a >= 10 ? Math.round(a * 10) / 10 : a >= 1 ? Math.round(a * 100) / 100 : Math.round(a * 1000) / 1000, good = v >= 0; const sign = LESS_IS_GOOD[k] ? (good ? '−' : '+') : (good ? '+' : '−'); return `${sign}${n}% ${MOD_LABEL[k] || k}`; }
   function fmtMods(m) { return Object.entries(m).filter(([, v]) => v).map(([k, v]) => fmtMod(k, v)).join(' · '); }
-  const PCOL = { M: [20, 61, 102], G: [143, 184, 225], C: [266, 307, 348] }, PY = t => 486 - t * 72, ROOT = { x: 184, y: 530 }, NS = 'http://www.w3.org/2000/svg';
+  const PCOL = { M: [20, 61, 102], G: [143, 184, 225], C: [266, 307, 348] }, PY = t => 50 + t * 72, ROOT = { x: 184, y: 16 }, NS = 'http://www.w3.org/2000/svg';
   const svgEl = (tag, attrs, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
   function buildPaths() {
     const svg = $('path-web'); svg.innerHTML = ''; const nodes = Game.pathNodes(), col = {}; for (const b of CONFIG.paths.branches) col[b.id] = b.color;
@@ -829,36 +829,39 @@ const UI = (() => {
       <div class="small" data-f="now"></div><div class="small dim" data-f="each"></div>
       <div class="bar pp-bar"><div data-f="bar"></div><span data-f="rank"></span></div>
       <div class="small dim" data-f="cost"></div>
-      <div class="pp-btns"><button class="buy" data-f="one">+1 rank</button><button class="buy maxbtn" data-f="max">+Max</button></div>`;
+      <div class="pp-btns"><button class="buy" data-f="one">+1 rank</button><button class="buy maxbtn" data-f="max">+10 ranks</button></div>`;
     pop.querySelector('[data-f=one]').addEventListener('click', () => { if (pathSel && Game.rankPath(pathSel, 1)) { flash(pop); render(true); } });
-    pop.querySelector('[data-f=max]').addEventListener('click', () => { if (pathSel && Game.rankPath(pathSel, CONFIG.paths.ranks)) { flash(pop); render(true); } });
+    pop.querySelector('[data-f=max]').addEventListener('click', () => { if (pathSel && Game.rankPath(pathSel, 10)) { flash(pop); render(true); } });
   }
   function renderPaths() {
     const S = Game.S, f = Game.fmt, nodes = Game.pathNodes(), RK = CONFIG.paths.ranks, col = {}; for (const b of CONFIG.paths.branches) col[b.id] = b.color;
-    const pr = Game.discProgress('combat'), free = Game.pathPointsFree(), sf = Game.starsFree();
-    setText($('path-lv'), `Combat Lv ${pr.level}`); setText($('path-free'), f(free)); setText($('path-spent'), f(Game.pathPointsSpent())); setText($('path-spent-of'), `spent of ${Game.pathPointsMax()}`);
-    setText($('path-stars'), Game.starsSpare() > 0 ? `${sf} ★ · ${Game.starsSpare()} spare: +${(Game.starsSpare() * 0.5).toFixed(1)}% attack & HP` : `${sf} ★`); $('path-xpbar').style.width = (100 * pr.have / pr.need) + '%'; setText($('path-xptext'), `${f(pr.have)} / ${f(pr.need)} XP to next point`);
-    let anyCan = false; if (!pathSel || !Game.pathNode(pathSel)) pathSel = (nodes.find(n => Game.canRankPath(n.id)) || nodes[0]).id;
+    const pr = Game.discProgress('combat'), sf = Game.starsFree(), OA = CONFIG.paths.openAvg, gold = S.res.gold || 0;
+    setText($('path-lv'), `Combat Lv ${pr.level}`); setText($('path-free'), `+${Math.round(Game.combatLevelBonus() * 100)}%`); setText($('path-free-lab'), 'attack & HP from Combat levels');
+    setText($('path-spent'), f(S.hero.pathGold || 0)); setText($('path-spent-of'), 'gold spent on Paths');
+    setText($('path-stars'), `${sf} ★`); $('path-xpbar').style.width = (100 * pr.have / pr.need) + '%'; setText($('path-xptext'), `${f(pr.have)} / ${f(pr.need)} XP to Combat Lv ${pr.level + 1}`);
+    let anyCan = false; if (!pathSel || !Game.pathNode(pathSel)) pathSel = nodes[0].id;
     for (const n of nodes) {
-      const E = pathEls[n.id]; if (!E) continue; const r = Game.pathRank(n.id), open = Game.pathOpen(n.id), can = Game.canRankPath(n.id); if (can) anyCan = true;
-      E.shape.setAttribute('fill', r >= RK ? col[n.b] : r > 0 ? '#2a1f16' : '#15110e');
-      E.shape.setAttribute('stroke', r >= RK ? '#e8c06a' : can ? '#e8c06a' : open ? '#8a6a33' : '#4a3a2a'); E.shape.setAttribute('stroke-width', n.kind === 'small' ? 2 : 3);
-      E.arc.setAttribute('stroke-dasharray', `${E.circ * Math.min(1, r / RK)} ${E.circ}`); E.arc.style.display = r > 0 && r < RK ? '' : 'none';
-      E.txt.textContent = r > 0 ? (r >= RK ? '✓' : r) : n.kind === 'small' ? '' : '★'; E.txt.setAttribute('fill', r >= RK ? '#120e0b' : r > 0 ? col[n.b] : open ? '#e8c06a' : '#5d5245');
-      E.glow.style.display = can ? '' : 'none'; E.sel.style.display = pathSel === n.id ? '' : 'none'; E.g.classList.toggle('locked', !open);
-      for (const ed of E.edges) { const on = r > 0 && (!ed.from || Game.pathRank(ed.from) >= RK); ed.line.setAttribute('stroke', on ? '#c9973f' : '#3a2e24'); ed.line.setAttribute('stroke-width', on ? 3 : 2); }
+      const E = pathEls[n.id]; if (!E) continue; const r = Game.pathRank(n.id), open = Game.pathOpen(n.id), can = Game.canRankPath(n.id); if (can && r === 0) anyCan = true;
+      const full = r >= OA;
+      E.shape.setAttribute('fill', full ? col[n.b] : r > 0 ? '#2a1f16' : '#15110e');
+      E.shape.setAttribute('stroke', can ? '#e8c06a' : open ? '#8a6a33' : '#4a3a2a'); E.shape.setAttribute('stroke-width', n.kind === 'small' ? 2 : 3);
+      E.arc.setAttribute('stroke-dasharray', `${E.circ * Math.min(1, r / OA)} ${E.circ}`); E.arc.style.display = r > 0 && !full ? '' : 'none';
+      E.txt.textContent = r > 0 ? (r > 999 ? f(r) : r) : n.kind === 'small' ? '' : '★'; E.txt.setAttribute('fill', full ? '#120e0b' : r > 0 ? col[n.b] : open ? '#e8c06a' : '#5d5245');
+      E.glow.style.display = can && r === 0 ? '' : 'none'; E.sel.style.display = pathSel === n.id ? '' : 'none'; E.g.classList.toggle('locked', !open);
+      for (const ed of E.edges) { const on = r > 0; ed.line.setAttribute('stroke', on ? '#c9973f' : '#3a2e24'); ed.line.setAttribute('stroke-width', on ? 3 : 2); }
     }
     const n = Game.pathNode(pathSel), pop = $('path-pop'), r = Game.pathRank(n.id), open = Game.pathOpen(n.id), br = CONFIG.paths.branches.find(b => b.id === n.b);
     setText(pop.querySelector('[data-f=name]'), n.name); pop.querySelector('[data-f=name]').style.color = br.color;
-    setText(pop.querySelector('[data-f=tag]'), `${n.kind === 'key' ? 'Keystone' : n.kind === 'notable' ? 'Notable' : 'Path'} · ${br.name}`);
+    setText(pop.querySelector('[data-f=tag]'), `${n.kind === 'key' ? 'Keystone' : n.kind === 'notable' ? 'Notable' : 'Path'} · ${br.name} · row ${n.t + 1}`);
     const now = {}; for (const k in n.per) now[k] = n.per[k] * r;
     setText(pop.querySelector('[data-f=now]'), r ? 'Now: ' + fmtMods(now) : 'Not taken yet'); setText(pop.querySelector('[data-f=each]'), 'Each rank: ' + fmtMods(n.per));
-    pop.querySelector('[data-f=bar]').style.width = (100 * r / RK) + '%'; setText(pop.querySelector('[data-f=rank]'), `Rank ${r} / ${RK}`);
-    const par = n.parents.map(id => Game.pathNode(id).name);
-    setText(pop.querySelector('[data-f=cost]'), r >= RK ? 'Mastered.' : !open ? `Opens when ${par.join(' or ')} is ${RK}/${RK}.` : `Costs 1 point${n.kind !== 'small' ? ' + 1 ★' : ''} per rank · you have ${free} point${free === 1 ? '' : 's'}${n.kind !== 'small' ? ` and ${sf} ★` : ''}.`);
-    const can = Game.canRankPath(n.id); pop.querySelector('[data-f=one]').disabled = !can; pop.querySelector('[data-f=max]').disabled = !can; pop.querySelector('[data-f=one]').classList.toggle('hidden', r >= RK); pop.querySelector('[data-f=max]').classList.toggle('hidden', r >= RK);
-    { const m = Game.pathMods(), t = fmtMods(m); setText($('path-sum'), t || 'Nothing yet — spend a point on Sharpened Edge to start.'); }
-    setText($('path-reset-cost'), f(Game.respecCost())); $('path-reset').disabled = S.res.gold < Game.respecCost() || !Game.pathPointsSpent();
+    pop.querySelector('[data-f=bar]').style.width = (100 * Math.min(1, r / OA)) + '%'; setText(pop.querySelector('[data-f=rank]'), `Rank ${r}`);
+    const c = Game.pathCost(n.id), rp = Game.rowProgress(n.t);
+    setHtml(pop.querySelector('[data-f=cost]'), !open ? `🔒 Row ${n.t + 1} opens when every node in row ${n.t} has ${CONFIG.paths.openMin}+ ranks and they average ${OA} — <b>${rp.have} / ${rp.need}</b>${rp.low ? ` · ${rp.low} still under ${CONFIG.paths.openMin}` : ''}.`
+      : `Next rank: <b class="${gold >= c ? 'good' : 'warn'}">${f(c)} gold</b>${n.kind !== 'small' ? ` + 1 ★ <span class="${sf ? 'good' : 'warn'}">(you have ${sf})</span>` : ''} · each rank costs 12% more · deeper rows cost ×${CONFIG.paths.cost.tier}`);
+    const can = Game.canRankPath(n.id); pop.querySelector('[data-f=one]').disabled = !can; pop.querySelector('[data-f=max]').disabled = !can;
+    { const m = Game.pathMods(), t = fmtMods(m); setText($('path-sum'), t || 'Nothing yet — buy a rank of Sharpened Edge to start.'); }
+    $('path-reset').classList.add('hidden');
     $('dot-sk-paths').classList.toggle('hidden', !anyCan); return anyCan;
   }
   function techDesc(id) { const d = Game.skillDef(id), p = Game.skillPower(id), dur = Game.skillDur(id); return d.desc.replace('{p%}', Math.round(p * 100) + '%').replace('{p}', p.toFixed(1)).replace('{d}', dur.toFixed(dur % 1 ? 1 : 0)) + ` · every ${Game.skillCdBase(id).toFixed(1)}s`; }
@@ -1423,6 +1426,7 @@ const UI = (() => {
       if (e.who === 'crown') { const G = Game.landDef(e.n); CBQ.push({ ico: '👑', kicker: 'Land conquered', title: G ? G.name : 'Conquered', sub: `You take ${G ? G.crown : 'a crown'} · +${e.v} Crown${e.v === 1 ? '' : 's'} when the crown passes${e.first ? ' · new in the Vault' : ''}` }); }
       else if (e.who === 'crownpass') CBQ.push({ ico: '👑', kicker: 'Long live the heir', title: `Dynasty ${Game.S.legacy.dynasty}`, sub: `+${e.gain} Crowns to spend in Legacy · lands you know fall ${3 + Game.perkRank('lap')}× faster` });
       else if (e.who === 'depth' && e.first && e.depth % 5 === 0) { const G = Game.landDef(e.n); CBQ.push({ small: 1, ico: '∞', kicker: 'Deeper than ever', title: `${G ? G.name : ''} · depth ${e.depth}`, sub: `Tougher foes, +10% ${G && R[G.spoil] ? R[G.spoil].name.toLowerCase() : 'spoils'}` }); }
+      else if (e.who === 'pathrow') CBQ.push({ small: 1, ico: '✦', kicker: 'Paths', title: `Row ${e.t + 1} opens`, sub: 'Deeper ranks: stronger, and costlier.' });
       else if (e.who === 'proclaim') CBQ.push({ ico: '🏰', kicker: 'A kingdom is born', title: 'The Kingdom is proclaimed', sub: 'Build the Barracks and march on your first land.' });
       else if (e.who === 'tier') CBQ.push({ ico: '🏘', kicker: 'Your settlement grows', title: `A ${e.name}!`, sub: 'New buildings and a bigger Storehouse.' });
       else if (e.who === 'trophy') { const T = CONFIG.trophies.tiers[e.tier]; CBQ.push({ small: 1, ico: '🏆', kicker: 'Trophy', title: `${T ? T.name : ''} ${e.name || ''} head`, sub: `+${Math.round(CONFIG.trophies.lootPerTrophy * 100)}% loot and XP, for good` }); }
@@ -1442,14 +1446,14 @@ const UI = (() => {
     const f = Game.fmt, free = Game.starsFree(), RK = CONFIG.paths.ranks, rows = [];
     for (const n of Game.pathNodes()) { if (n.kind === 'small') continue; const r = Game.pathRank(n.id), open = Game.pathOpen(n.id), br = CONFIG.paths.branches.find(b => b.id === n.b);
       const par = n.parents.map(id => Game.pathNode(id).name);
-      rows.push(`<div class="star-row"><div><b>${n.name}</b> <span class="dim small">· ${n.kind === 'key' ? 'Keystone' : 'Notable'} · ${br ? br.name : ''}</span></div><div class="small ${r >= RK ? 'good' : open ? 'warn' : 'dim'}">${r >= RK ? 'Mastered' : open ? `Open now · ${r} / ${RK} · 1 point + 1 ★ per rank` : `Locked · max ${par.join(' or ')} (${RK}/${RK}) to open it`}</div></div>`); }
+      rows.push(`<div class="star-row"><div><b>${n.name}</b> <span class="dim small">· ${n.kind === 'key' ? 'Keystone' : 'Notable'} · ${br ? br.name : ''}</span></div><div class="small ${open ? 'warn' : 'dim'}">${open ? `Open · rank ${r} · next: ${f(Game.pathCost(n.id))} gold + 1 ★` : `Opens with row ${n.t + 1} — level row ${n.t} evenly (${Game.rowProgress(n.t).have} / ${Game.rowProgress(n.t).need})`}</div></div>`); }
     let caps = '';
     for (const d in CONFIG.trees) for (const node of CONFIG.trees[d]) if (node.capstone) { const r = Game.nodeRank(d, node.id); caps += `<div class="star-row"><div><b>${node.name}</b> <span class="dim small">· ${CONFIG.disciplines[d] ? CONFIG.disciplines[d].name : d} capstone</span></div><div class="small ${r ? 'good' : 'warn'}">${r ? 'Learned' : 'Open now · 1 ★ · ' + (node.desc || '').replace(/^Capstone:\s*/, '')}</div></div>`; }
     const sp = Game.starsSpare();
-    showInfo('Boss tokens', `You have ${free} ★ to spend`, `<p class="small">Every boss you beat for the first time gives 1 ★. You spend them on the big nodes: each rank of a ★ node in the Paths costs 1 point + 1 ★, and each Gathering capstone costs 1 ★.</p>
+    showInfo('Boss tokens', `You have ${free} ★ to spend`, `<p class="small">Every boss you beat for the first time gives 1 ★. You spend them on the big nodes: each rank of a ★ node in the Paths costs gold + 1 ★ (they have no rank cap, so every star finds a use), and each Gathering capstone costs 1 ★.</p>
       <div class="star-head">Paths of War — the ★ nodes</div>${rows.join('')}
       ${caps ? `<div class="star-head">Gathering capstones (Skills → Gathering)</div>${caps}` : ''}
-      <p class="small dim" style="margin-top:8px">The ★ nodes sit deep in each branch — max the nodes above them first. Stars you can never use there are not wasted: each spare ★ gives +0.5% attack and HP${sp ? ` (you have ${sp} spare: +${(sp * 0.5).toFixed(1)}%)` : ''}.</p>`);
+      <p class="small dim" style="margin-top:8px">Notables open with row 4 and Keystones with row 7. Rows open as you level the row above evenly with gold.</p>`);
   }
   function hitPop(ev) {
     if (ev.who === 'rest') { const a = $('hero-hpbar') && $('hero-hpbar').offsetParent ? $('hero-hpbar').parentElement : document.querySelector('.top'); const r = a.getBoundingClientRect(); const p = el('div', 'pop heal', '☾ Resting'); p.style.left = (r.left + r.width * 0.5) + 'px'; p.style.top = (r.top + 4) + 'px'; document.body.appendChild(p); setTimeout(() => p.remove(), 1600); return; }
