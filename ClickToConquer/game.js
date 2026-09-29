@@ -1185,7 +1185,7 @@ const d20 = () => 1 + Math.floor(Math.random() * 20);
 // One battle, fully resolved. Returns the round-by-round log (top five dice per side) and the totals.
 function rollBattle(Y, E, o) {
   const B = BC(), order = o.order || 'defend', pushing = !!o.pushing, pip = (o.pip || 0) + (order === 'rally' ? B.rally : 0), epip = (o.epip || 0) - (pushing ? 0 : B.replayPip), def = order === 'defend'; // a battle you have already won: its enemy is demoralized
-  const y0 = Y, e0 = E, rounds = [], convCap = Math.max(1, Math.floor(e0 * B.convCap)); let kills = 0, lost = 0, conv = 0; // conversions are capped per battle, or they snowball
+  const y0 = Y, e0 = E, rounds = [], convCap = Math.max(1, Math.floor(e0 * B.convCap)); let kills = 0, lost = 0, conv = 0; // Beta 0.3.3: a crit while pushing takes a prisoner (capped per battle); prisoners join you only if the battle is won
   if (order === 'volley') { let h = 0; for (let i = 0; i < Y; i++) if (d20() >= B.volleyAt) h++; const k = Math.min(E, Math.floor(h / 2)); E -= k; kills += k; rounds.push({ volley: k }); }
   let fled = false;
   for (let r = 0; r < B.maxRounds && Y > 0 && E > 0; r++) {
@@ -1202,10 +1202,11 @@ function rollBattle(Y, E, o) {
       dn++; if (show.length < 5) show.push([yn, en, res]);
     }
     c = Math.min(c, E); k = Math.min(k, E - c); l = Math.min(l, Y);
-    E -= k + c; Y = Y - l + c; kills += k; lost += l; conv += c;
+    E -= k + c; Y = Y - l; kills += k; lost += l; conv += c;
     rounds.push({ show, k, l, c, y: Y, e: E, ya, ea, dn });
   }
-  const back = lost > 0 ? Math.round(lost * (order === 'medics' ? B.medics : def ? B.defendWound : B.orderWound)) : 0; Y += back; // many of the fallen were only wounded — most in Defend, nearly all with Medics
+  const back = lost > 0 ? Math.round(lost * (def && !pushing ? B.replayWound : order === 'medics' ? B.medics : def ? B.defendWound : B.orderWound)) : 0; /* Beta 0.3.3: holding a won field in Defend costs no one */ Y += back; // many of the fallen were only wounded — most in Defend, nearly all with Medics
+  if (E <= 0) Y += conv; else { kills += conv; conv = 0; } // no victory: the prisoners are simply out of the fight
   return { rounds, won: E <= 0, fled, y0, e0, y: Y, e: E, kills, lost, conv, back, order, pushing };
 }
 function battleReward(n, b, won) {
@@ -1264,18 +1265,18 @@ function canBattleAdvance() { return inBattle() && battleNo() < Math.min(BC().co
 function offlineBattles(secs) {
   const n = landN(), b = battleNo(), N = Math.floor(secs / (BC().prep + BC().resultT + BC().showMax / 2)); if (!inBattle() || N < 1) return null;
   let Y = marching(), gold = 0, xp = 0, drops = {}, wins = 0, lost = 0, conv = 0, kills = 0, fought = 0, pushing = !battleWon(n, b), unlocked = false;
-  const K = Math.min(N, 120), floor = marching() * BC().holdAt; let held = false;
+  const K = Math.min(N, 120), floor = marching() * BC().holdAt; let held = false, why = 'time';
   for (let i = 0; i < K && Y > 0; i++) {
-    if (Y < floor) { held = true; break; } // the army holds its ground once it is down a quarter
+    if (Y < floor) { held = true; why = 'hold'; break; } // the army holds its ground once it is down a quarter
     const r = rollBattle(Y, enemyArmy(n, b, !pushing), { order: 'defend', pushing, pip: yourPip(n, b), epip: enemyPip(b) }); fought++;
     Y = r.y; lost += r.lost - r.back; conv += r.conv; kills += r.kills;
-    if (!r.won) { if (fought === 1) return { battles: 0, wins: 0, gold: 0, xp: 0, drops: {}, lost: 0, conv: 0, kills: 0, unlocked: false, b, n, stalled: true }; break; } // an unwinnable battle is not fought while you are away
+    if (!r.won) { if (fought === 1) return { battles: 0, wins: 0, gold: 0, xp: 0, drops: {}, lost: 0, conv: 0, kills: 0, unlocked: false, b, n, stalled: true, why: 'stalled' }; why = 'lost'; break; } // an unwinnable battle is not fought while you are away
     wins++; const rw = battleReward(n, b, true); gold += rw.gold; xp += rw.xp; for (const k in rw.drops) drops[k] = (drops[k] || 0) + rw.drops[k];
     if (pushing) { unlocked = true; pushing = false; }
   }
   const scale = !held && fought === K && wins === K && N > K ? Math.min(N / K, lost > 0 ? Math.max(1, (marching() - floor) / Math.max(1, lost)) : N / K) : 1; // extrapolate, never past the quarter-army floor // a clean sample repeats for the rest of the time away
   return { battles: Math.round(fought * scale), wins: Math.round(wins * scale), gold: gold * scale, xp: xp * scale, drops: Object.fromEntries(Object.entries(drops).map(([k, v]) => [k, Math.round(v * scale)])),
-    lost: Math.min(marching() + Math.round(conv * scale), Math.round(lost * scale)), conv: Math.round(conv * Math.min(scale, 1)), kills: Math.round(kills * scale), unlocked, b, n };
+    lost: Math.min(marching() + Math.round(conv * scale), Math.round(lost * scale)), conv: Math.round(conv * Math.min(scale, 1)), kills: Math.round(kills * scale), unlocked, b, n, why, secs: Math.round(fought * scale) * (BC().prep + BC().resultT + BC().showMax / 2) };
 }
 
 // ---------- Offline ----------

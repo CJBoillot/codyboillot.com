@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Beta 0.3.2',
+  version: 'Beta 0.3.3',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -440,10 +440,10 @@ const CONFIG = {
     hallCost: { base: 100, exp: 1.7 },
     // Lands (0.9): conquered from the hero screen; taxes grow ×4 per land
     // Beta 0.3.0: army battles — every land is a campaign of 50 battles, fought Risk-style with a d20 per soldier
-    battles: { count: 50, base: 12, landGrowth: 1.35, span: 4, captain: 1.25, host: 1.5, captainPip: 1, hostPip: 1, duelBonus: 3, rulerPip: 2,
+    battles: { count: 50, base: 22, landGrowth: 1.35, span: 4, captain: 1.25, host: 1.5, captainPip: 1, hostPip: 1, duelBonus: 3, rulerPip: 2,
       prep: 10, roundT: 1.6, showMax: 9.6, resultT: 4, maxRounds: 30, orderCd: 60,
-      refLog: 2.0, refSlope: 0.64, refAge: 0.3, pipPerDecade: 3, pipCap: 12, convCap: 0.05,   // hero as general: pips = 3 × log10(edge ÷ the expected edge for this land), capped ±8
-      goldKills: 3, xpKills: 3, dropKills: 3, captainGold: 2, hostGold: 3, rally: 3, volleyAt: 18, flankAt: 16, medics: 0.9, orderWound: 0.5, defendWound: 0.75, replayPip: 2, replayArmy: 0.3, holdAt: 0.75 },
+      refLog: 0.3, refSlope: 0.64, refAge: 0.3, pipPerDecade: 3, pipCap: 12, convCap: 0.05,   // hero as general: pips = 3 × log10(edge ÷ the expected edge for this land), capped ±8
+      goldKills: 3, xpKills: 3, dropKills: 3, captainGold: 2, hostGold: 3, rally: 3, volleyAt: 18, flankAt: 16, medics: 0.9, replayWound: 1, orderWound: 0.5, defendWound: 0.75, replayPip: 2, replayArmy: 0.3, holdAt: 0.75 },
     lands: { taxBase: 1000, taxGrowth: 2.6, garrisonPer: 10, cofferHours: 8, shortStages: 50, longStages: 50, shortLands: 3, offsetStart: 6, offsetStep: 3, spoilPerHour: 30, victoryLap: 3, heroHereCap: 0.5, endlessDepth: { winsPer: 50, hp: 1.12, hit: 1.10, drop: 1.05, dropCap: 4, spoilBase: 0.03, perLand: 0.2 },
       // 0.10.1 land difficulty: smooth inside a land (×span from first stage to the Ruler's), a wall between lands (next land starts ×(land/span) above the last one's end)
       curve: { hp: 105, hit: 11.5, landHp: 2.8, landHit: 1.9, spanHp: 2.0, spanHit: 1.6, captainHp: 9, captainHit: 0.47, rulerHp: 12, rulerHit: 0.47, /* Beta 0.1.16: bosses take ~3× longer and hit ~3× softer — same total danger, a real fight */ endless: 1.15 } },
@@ -507,6 +507,7 @@ const CONFIG = {
   // jobs (jobs completed by hand or thrall), sold (gold earned at market), stage, boss, founded, thrall (assigned), activity (swings).
   // Shown in Settings → What's new (newest first). Keep each line short.
   changelog: [
+    ['Beta 0.3.3', 'AFK battles are safe. Replaying a battle you have already won, in Defend, costs no soldiers — the fallen are only wounded — so the army can farm all night and still be there in the morning. Soldiers are only lost when you push forward. Your hero\'s bonus is recalibrated: a new kingdom starts near 0 ("hero −1 on every die") and it grows as the hero does; enemy armies are larger to match. A crit while pushing now takes a prisoner, who joins you only if you win. On a conquered land, Advance becomes "March to (next land)". The welcome-back report says where the army fought, what it lost and why it stopped.'],
     ['Beta 0.3.2', 'Calmer battles. Each round now shows one duel with big, readable dice and the sum with bonuses ("16 + 3 = 19"), plus how many other duels were fought. Rounds last 1.6 s instead of 0.7 s; a long battle shows six of its rounds, always the first and last. The result stays up for 4 s.'],
     ['Beta 0.3.1', 'The enemy army box no longer shows the enemy picture, so its count sits centred like yours.'],
     ['Beta 0.3.0', 'Army battles. Every land is now a campaign of 50 battles fought army against army with d20 dice, Risk style: the bigger side rolls more dice and keeps its best, a natural 20 is a crit that converts an enemy soldier to your side while you push forward, and a 1 is a fumble. Battles fight themselves after a 10 s muster, or tap Strike to fight at once. Defend is the default and costs you the fewest men; Charge, Rally, Flank, Volley and Medics are orders with a 1-minute cooldown. While you are away (or idle) your army replays the last battle it won for gold and loot, and pauses if it drops below 75% of its peak. Only you advance to the next battle and start the next land. Battle 50 ends with a best-of-three duel against the ruler. Old lands keep your progress (a 100-stage land is now 50 battles).'],
