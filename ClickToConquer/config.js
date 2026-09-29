@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Beta 0.1.17',
+  version: 'Beta 0.1.18',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -504,6 +504,7 @@ const CONFIG = {
   // jobs (jobs completed by hand or thrall), sold (gold earned at market), stage, boss, founded, thrall (assigned), activity (swings).
   // Shown in Settings → What's new (newest first). Keep each line short.
   changelog: [
+    ['Beta 0.1.18', 'The big Production button always takes you back to all the buildings, from anywhere — the small ‹ Production button inside a building is gone.'],
     ['Beta 0.1.17', 'The collapsed quest card no longer stretches and scatters on wide screens: title, current step and Claim stay together in one compact card.'],
     ['Beta 0.1.16', 'Time away now counts in full: 100% of your normal progress for up to 12 hours (Deep Cellar and Long Memory each add 2 hours per rank). Bosses are real fights — about three times the HP, hitting a third as hard per swing. Beating the Rat King is now its own quest, before you spend your first Crown. The little fight window on other screens is hidden by default once you found your Camp (Settings → Show fight preview on other screens brings it back). Ranger Lord and Merchant Republic are gone.'],
     ['Beta 0.1.15', 'Reliability fixes. Reloading a new save no longer re-runs old Alpha updates (which could reset building parts and refund Crown Tree ranks). Offline rewards are banked the moment you come back, so closing the game before tapping the button loses nothing. While away: gathering and loot count toward quests, captains you march past are recorded, the Barracks trains at full speed, production chains no longer count the same goods twice, and land gold and XP match live play. Two attack skills landing in the same instant no longer bring a slain enemy back. The cloud never uploads while you are choosing between saves or when the cloud save is from a newer version. Importing a bad save is refused and your save is kept. Crowning your heir saves once, after the town reset, and keeps its Deed reward. The Settlers quest counts the settlers your conquest brought. The City stores as much as the Village. The Roads open after the Rat King falls. Quest texts corrected (sword Lv 9, trophies at 1,000 kills, plank recipe, taxes per land, settlement costs).'],

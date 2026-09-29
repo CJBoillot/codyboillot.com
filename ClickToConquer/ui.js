@@ -103,6 +103,7 @@ const UI = (() => {
     document.querySelectorAll('[data-ksub]').forEach(b => b.addEventListener('click', () => {
       document.querySelectorAll('[data-ksub]').forEach(x => x.classList.toggle('active', x === b));
       document.querySelectorAll('.ksub').forEach(t => t.classList.toggle('hidden', t.id !== 'ksub-' + b.dataset.ksub));
+      if (b.dataset.ksub === 'prod' && bldOpen) { closeBld(); window.scrollTo(0, 0); } // Beta 0.1.18: the Production button always leads back to all the buildings
     }));
     document.querySelectorAll('[data-msub]').forEach(b => b.addEventListener('click', () => {
       document.querySelectorAll('[data-msub]').forEach(x => x.classList.toggle('active', x === b));
@@ -716,14 +717,12 @@ const UI = (() => {
     if (bldKey !== key) { bldKey = key;
       const stock = nx ? `<div class="kstock"><div class="kstock-head"><span>Keep ${R[st.make].name.toLowerCase()} in stock</span><span class="kstock-n" data-f="stn"></span></div><div class="seg kstock-seg">${Game.STOCK_MODES.map(m => `<button data-stock="${m}">${m === 'auto' ? 'Auto' : m === 0 ? '0' : m === 1 ? 'Full' : m === 0.5 ? '½' : '¼'}</button>`).join('')}</div><div class="tiny kstock-why" data-f="stwhy"></div></div>` : '';
       const houseBox = id === 'carpenter' ? `<div class="card"><div class="row-between"><b>Houses</b><span class="seg"><button data-houses="1" class="${Game.housesOn() ? 'active' : ''}">Build houses</button><button data-houses="0" class="${Game.housesOn() ? '' : 'active'}">Store lumber</button></span></div><div data-f="houses" class="small" style="margin-top:6px"></div></div>` : '';
-      setHtml(box, `<button class="back-btn" data-back>‹ Production</button>
-        <div class="bld-hero"><img src="${artOf(st)}" srcset="${artOf(st)} 1x, assets/buildings/${st.art || st.id}@2x.webp 2x" alt=""><div class="bld-title">${st.name}<small>${st.desc || ''}</small></div><div class="bld-out" data-f="out"></div></div>
+      setHtml(box, `        <div class="bld-hero"><img src="${artOf(st)}" srcset="${artOf(st)} 1x, assets/buildings/${st.art || st.id}@2x.webp 2x" alt=""><div class="bld-title">${st.name}<small>${st.desc || ''}</small></div><div class="bld-out" data-f="out"></div></div>
         <div class="kbar" id="bld-kbar"></div>
         <div class="card supply-card"><div class="chain-strip" data-f="chain"></div>${st.from ? `<div class="sup-row"><div><span class="tiny dim">${R[st.from].name} in</span><b data-f="supin"></b></div><div class="sup-r"><span class="tiny dim">${st.name} can use</span><b data-f="supuse"></b></div></div><div class="bar sup-bar"><div data-f="supbar"></div><span data-f="suplab"></span></div><div class="tiny sup-why" data-f="supwhy"></div>` : ''}</div>
         ${Array.from({ length: Game.depthCount(id) }, (_, i) => i + 1).map(d => levelHtml(st, d)).join('')}
         <div class="card dig-card"><div class="dig-t">${st.dig} · ${Game.unitName(id)} ${Game.depthCount(id) + 1}</div><div class="tiny dim" data-f="digwhy"></div><button class="buy wide" data-dig><span class="small">${st.dig}</span><br><span class="cost" data-f="digcost"></span></button></div>
         ${houseBox}${stock}`);
-      box.querySelector('[data-back]').addEventListener('click', closeBld);
       { const ch = box.querySelector('[data-f=chain]'); ch.addEventListener('click', e => { const g = e.target.closest('[data-go]'); if (g) openBld(g.dataset.go); });
         ch.addEventListener('keydown', e => { if (e.key !== 'Enter' && e.key !== ' ') return; const g = e.target.closest('[data-go]'); if (g) { e.preventDefault(); openBld(g.dataset.go); } }); }
       wirePartBtns(box); box.querySelector('[data-dig]').addEventListener('click', () => { if (Game.dig(id)) { bldKey = ''; prodKey = ''; render(true); } });
