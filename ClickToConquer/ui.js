@@ -685,7 +685,7 @@ const UI = (() => {
     const id = st.id, key = st.art || id, P = Game.PARTS, nm = p => Game.partName(id, p);
     const stepCard = (p, i) => `<div class="step-card" data-step="${p}"><div class="step-art">${artSlot(`assets/steps/${key}_${p.toLowerCase()}.webp`, 'step-img', `${key}_${p.toLowerCase()}.webp`)}</div>
       <div class="step-body"><div class="step-h"><b>${nm(p)}</b> <span class="dim small" data-f="lv"></span><span class="bn-tag hidden" data-f="bn">⚠ Bottleneck</span></div><div class="tiny dim">${(st.stepDesc || [])[i] || ''}</div>
-      <div class="bar step-bar"><div data-f="bar"></div><span data-f="rate"></span></div><div class="tiny dim" data-f="sub"></div></div>${partBtn(id, p, false, d)}</div>`;
+      <div class="bar step-bar"><div data-f="bar"></div><span data-f="rate"></span></div><div class="tiny dim" data-f="sub"></div><div class="tiny step-gain hidden" data-f="gain"></div></div>${partBtn(id, p, false, d)}</div>`;
     const pileCard = n => `<div class="flow-arrow">↓</div><div class="pile-card" data-pile="${n}">${artSlot(`assets/piles/${key}_${n}.webp`, 'pile-img', `${key}_${n}.webp`)}<div class="pile-main"><b data-f="amt"></b><span class="tiny dim" data-f="lab"></span></div><div class="pile-gauge" data-f="gauge">${'<i></i>'.repeat(10)}</div><div class="pile-net"><b data-f="net"></b><span class="tiny dim" data-f="why"></span></div></div><div class="flow-arrow">↓</div>`;
     return `<div class="card level-card" data-depth="${d}">
       <div class="flow-head"><div class="fh-l"><small>${Game.unitName(id).toUpperCase()}</small><b>${d}</b><img src="${artOf(st)}" alt=""><em>×${Game.depthYield(d) < 10 ? Game.depthYield(d).toFixed(1) : Game.fmt(Game.depthYield(d))}</em></div>
@@ -707,6 +707,9 @@ const UI = (() => {
       const bar = sc.querySelector('[data-f=bar]'); bar.style.width = (carry > 1e-9 ? 100 * Math.min(1, t / T) : 0) + '%'; bar.parentElement.classList.toggle('lim', isLim);
       setText(sc.querySelector('[data-f=rate]'), carry > 1e-9 ? `${fo(carry)} ${gd} · ${fo(caps[i])} ${gd} / s` : (p === 'W' && st.from ? `waiting for ${R[st.from].name.toLowerCase()}` : 'waiting'));
       setText(sc.querySelector('[data-f=sub]'), `${fo(L)} per trip · ${T.toFixed(1)}s${isLim ? (tied.length > 1 ? ' — tied for slowest' : ' — slowest') : nm ? ' · ×2 at Lv ' + nm : ''}`);
+      { const gEl = sc.querySelector('[data-f=gain]'), solo = isLim && tied.length === 1; gEl.classList.toggle('hidden', !solo);
+        if (solo) { const n = Math.max(1, Game.stepUpPlan(id, p, kBuy, d).n || 1), others = Game.PARTS.filter(x => x !== p), next = Math.min(...others.map(x => Game.partCap(id, x, d))), after = Math.min(Game.partCap(id, p, d, lv + n), next), gain = after - caps[i], nx = others.find(x => Game.partCap(id, x, d) === next);
+          setHtml(gEl, `Upgrade${n > 1 ? ' ×' + n : ''} → <b>+${fo(gain)} ${gd}/s</b>${(ca => ca > next * 1.005 ? `, then ${Game.partName(id, nx)} is the limit` : ca >= next * 0.995 ? `, then tied with ${Game.partName(id, nx)}` : '')(Game.partCap(id, p, d, lv + n))}`); } }
       fillPartBtn(sc, id, p, false, d); });
     [1, 2].forEach(n => { const pc = dc.querySelector(`[data-pile="${n}"]`), up = n === 1 ? 'W' : 'C', down = n === 1 ? 'C' : 'H', amt = n === 1 ? P.a : P.b;
       const inflow = Math.min(...Game.PARTS.slice(0, n).map(p => Game.partCap(id, p, d))), outCap = Game.partCap(id, down, d), net = inflow - outCap, trip = Game.tripLoad(id, down, d), fill = Math.min(10, Math.round(10 * amt / Math.max(1e-9, trip * 3)));

@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Beta 0.1.24',
+  version: 'Beta 0.1.25',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -503,6 +503,7 @@ const CONFIG = {
   // jobs (jobs completed by hand or thrall), sold (gold earned at market), stage, boss, founded, thrall (assigned), activity (swings).
   // Shown in Settings → What's new (newest first). Keep each line short.
   changelog: [
+    ['Beta 0.1.25', 'The bottleneck step now shows what its next upgrade buys — "Upgrade → +0.12 wood/s, then Haul is the limit" — so you can see a big gain from a tiny one.'],
     ['Beta 0.1.24', 'Ties are shown as ties: when two or three steps run at the same speed they are all marked ("Tied", or "Balanced — raise all three"), since raising just one gains nothing. Piles between even steps say the next step keeps pace instead of blaming the first one.'],
     ['Beta 0.1.23', 'Once a chain has a later building, the goods before it leave the top bar (the Mill unpins grain; the Bakery unpins flour too). It happens once — re-pin anything from Loot and it stays. Also fixes the Rat King\'s Tooth not being sold for gold on load.'],
     ['Beta 0.1.22', 'Raising your settlement now asks only for your best goods: the Camp pays in wood, grain and ore; the Hamlet in planks, flour and ingots; the Village in lumber, bread and arms. Lower-tier goods are no longer needed.'],

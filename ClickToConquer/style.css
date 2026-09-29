@@ -1229,3 +1229,4 @@ html, body { max-width: 100%; overflow-x: hidden; }
 .quest.collapsed .quest-foot { grid-row: 1 / 3; }
 .quest.collapsed .quest-obj { grid-column: 1 / -1; }
 .fh-warn.calm { color: var(--dim); } .fh-warn.calm b { color: var(--text); }
+.step-gain { color: #e9dcc0; margin-top: 2px; } .step-gain b { color: var(--hp2); }

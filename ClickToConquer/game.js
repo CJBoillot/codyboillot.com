@@ -564,7 +564,7 @@ function depthYield(d) { return Math.pow(DC().yield, d - 1); }
 function unitName(id, plural) { const u = (stepDef(id) || {}).unit || ['Level', 'levels']; return plural ? u[1] : u[0]; }
 // Beta 0.1.3: Work, Cart and Haul run side by side like a conveyor — each has a capacity per second, and the slowest one sets the output (Idle Miner rules).
 function baseOut(id) { const d = stepDef(id); return d.batch / (d.batch / d.base + KC().loadBase + KC().haulBase); } // at equal levels this matches the old cycle
-function partCap(id, p, d = 1) { const L = partLv(id, p, d); return baseOut(id) * trackGrow(L) * Math.pow(2, milestoneCount(L)) * depthYield(d) * stepMods(id).rate; }
+function partCap(id, p, d = 1, lvAt) { const L = lvAt || partLv(id, p, d); /* lvAt: the cap this part would have at another level */ return baseOut(id) * trackGrow(L) * Math.pow(2, milestoneCount(L)) * depthYield(d) * stepMods(id).rate; }
 function depthOutput(id, d) { return Math.min(...PARTS.map(p => partCap(id, p, d))); }
 // Beta 0.1.5: goods move through the parts one after another. Each part makes trips: a trip takes tripTime and carries up to tripLoad.
 // Work → pile → Cart → pile → Haul → Storehouse. A slow part leaves the pile before it growing: that's the bottleneck you can see.
