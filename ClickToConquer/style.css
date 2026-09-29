@@ -1147,3 +1147,9 @@ html, body { max-width: 100%; overflow-x: hidden; }
 .dig-card { border: 1px dashed var(--bronze-dim); background: #15110e; text-align: center; display: flex; flex-direction: column; gap: 6px; align-items: stretch; }
 .dig-t { font-family: var(--font-head); color: var(--bronze2); font-size: 16px; }
 .card.kin { padding: 8px 10px; }
+
+/* Beta 0.1.4: moving progress bars */
+.part-bar > div { transition: none; }
+.part-bar.waiting > div { opacity: .55; }
+.pload { height: 4px; background: #0b0908; border-radius: 3px; overflow: hidden; }
+.pload i { display: block; height: 100%; background: linear-gradient(90deg, #b8862f, #e8c06a); }

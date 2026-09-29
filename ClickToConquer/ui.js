@@ -609,7 +609,7 @@ const UI = (() => {
       if (r) h += `<div class="prod-arrows">${PROD_COLS.map(() => '<span>▼</span>').join('')}</div>`;
       h += '<div class="prod-row">';
       for (const lid of PROD_COLS) { const st = CONFIG.kingdom.lines[lid].steps[r], built = Game.stepBuilt(st.id), avail = Game.stepAvailable(st.id);
-        if (built) h += `<div class="pcard" data-card="${st.id}" data-glow="step:${st.id}"><img class="part-art" src="${artOf(st)}" alt=""><span class="ptag" data-f="lv"></span><span class="pslow hidden" data-f="slow">slowest</span><div class="pname">${st.name}</div><div class="prate" data-f="rate"></div><div class="pparts">${Game.PARTS.map(p => partBtn(st.id, p, true, Game.depthCount(st.id))).join('')}</div><button class="penter" data-enter="${st.id}">Enter ›</button></div>`;
+        if (built) h += `<div class="pcard" data-card="${st.id}" data-glow="step:${st.id}"><img class="part-art" src="${artOf(st)}" alt=""><span class="ptag" data-f="lv"></span><span class="pslow hidden" data-f="slow">slowest</span><div class="pname">${st.name}</div><div class="prate" data-f="rate"></div><div class="pload"><i data-f="load"></i></div><div class="pparts">${Game.PARTS.map(p => partBtn(st.id, p, true, Game.depthCount(st.id))).join('')}</div><button class="penter" data-enter="${st.id}">Enter ›</button></div>`;
         else if (avail) h += `<div class="pcard pbuild" data-card="${st.id}" data-glow="step:${st.id}"><img class="part-art dimart" src="${artOf(st)}" alt=""><div class="pname">${st.name}</div><div class="pdesc">${st.from ? `${R[st.from].name} → ${R[st.make].name}` : 'Makes ' + R[st.make].name.toLowerCase()}</div><button class="buy wide" data-build="${st.id}"><span class="small">Build</span><br><span class="cost" data-f="bcost"></span></button></div>`;
         else h += `<div class="pcard plock"><img class="part-art lockart" src="${artOf(st)}" alt=""><div class="pname">${st.name}</div><div class="pdesc">🔒 ${T[st.tier].name}</div></div>`; }
       h += '</div>';
@@ -630,6 +630,7 @@ const UI = (() => {
     let any = false; const slow = {}; for (const lid of PROD_COLS) slow[Game.slowestInLine(lid)] = true;
     for (const lid of PROD_COLS) for (const st of CONFIG.kingdom.lines[lid].steps) { const card = $('prod-grid').querySelector(`[data-card="${st.id}"]`); if (!card) continue;
       if (card.classList.contains('pbuild')) { setHtml(card.querySelector('[data-f=bcost]'), costHtml(st.build)); const cb = Game.canBuild(st.id); card.querySelector('[data-build]').disabled = !cb; if (cb) any = true; continue; }
+      { const o = Game.depthOutput(st.id, 1), ld = Game.stepBatch(st.id, 1), per = ld / Math.max(1e-9, o); card.querySelector('[data-f=load]').style.width = (100 * (Game.S.hero.time % per) / per) + '%'; }
       { const dc = Game.depthCount(st.id); setText(card.querySelector('[data-f=lv]'), dc > 1 ? `${dc} ${Game.unitName(st.id, true)}` : 'Lv ' + Game.stepLv(st.id)); } setHtml(card.querySelector('[data-f=rate]'), rateTxt(st));
       const sl = !!slow[st.id]; card.classList.toggle('slowest', sl); card.querySelector('[data-f=slow]').classList.toggle('hidden', !sl);
       for (const p of Game.PARTS) if (fillPartBtn(card, st.id, p, true, Game.depthCount(st.id))) any = true; }
@@ -700,10 +701,11 @@ const UI = (() => {
     const PDESC = { W: st.from ? 'crafts' : 'makes', C: 'loads the carts', H: 'hauls it home' };
     for (let d = 1; d <= Game.depthCount(id); d++) { const dc = box.querySelector(`[data-depth="${d}"]`); if (!dc) continue; const caps = Game.PARTS.map(p => Game.partCap(id, p, d)), mx = Math.max(...caps), lim = Game.limitPart(id, d), dout = Game.depthOutput(id, d);
       setHtml(dc.querySelector('[data-f=drate]'), `<b>${fo(dout)}</b> <span class="dim">/s</span>`);
-      Game.PARTS.forEach((p, i) => { const lv = Game.partLv(id, p, d), nm = Game.nextMilestone(lv);
+      const load = Game.stepBatch(id, d), per = load / Math.max(1e-9, dout), ph = (Game.S.hero.time % per); // one load: fast parts finish early and wait for the slowest
+      Game.PARTS.forEach((p, i) => { const lv = Game.partLv(id, p, d), nm = Game.nextMilestone(lv), fill = Math.min(1, ph * caps[i] / load);
         setText(dc.querySelector(`[data-f=lv${p}]`), 'Lv ' + lv);
-        const bar = dc.querySelector(`[data-f=bar${p}]`); bar.style.width = (100 * caps[i] / mx) + '%'; bar.parentElement.classList.toggle('lim', p === lim);
-        setText(dc.querySelector(`[data-f=d${p}]`), p === lim ? `${PDESC[p]} ${fo(caps[i])}/s — the slowest part: it sets the pace` : `${PDESC[p]} up to ${fo(caps[i])}/s${nm ? ' · ×2 at Lv ' + nm : ''} · waits on the ${Game.PART_NAME[lim]}`);
+        const bar = dc.querySelector(`[data-f=bar${p}]`); bar.style.width = (100 * fill) + '%'; bar.parentElement.classList.toggle('lim', p === lim); bar.parentElement.classList.toggle('waiting', fill >= 1);
+        setText(dc.querySelector(`[data-f=d${p}]`), p === lim ? `${PDESC[p]} ${fo(caps[i])}/s — the slowest part: it sets the pace` : `${PDESC[p]} up to ${fo(caps[i])}/s${nm ? ' · ×2 at Lv ' + nm : ''} · ${fill >= 1 ? 'waiting on the ' + Game.PART_NAME[lim] : 'working'}`);
         fillPartBtn(dc, id, p, false, d); }); }
     { const db = box.querySelector('[data-dig]'), open = Game.digOpen(), nd = Game.depthCount(id) + 1; db.disabled = !Game.canDig(id); setHtml(box.querySelector('[data-f=digcost]'), open ? costHtml(Game.digCost(id)) + (Game.digCost(id).gold > Game.resCap('gold') ? '<br><span class="tiny warn">more than your Storehouse holds — expand it in the Keep</span>' : '') : '<span class="dim">after Proclaim</span>');
       setText(box.querySelector('[data-f=digwhy]'), open ? `Starts at Lv 1 but makes ×${f(Game.depthYield(nd))} what the first ${Game.unitName(id).toLowerCase()} makes at the same level. Its own Work, Cart and Haul.` : 'Your town grows new levels once the Kingdom is proclaimed.'); }
