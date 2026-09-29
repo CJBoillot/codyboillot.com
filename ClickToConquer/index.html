@@ -16,7 +16,7 @@
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=a0110">
+  <link rel="stylesheet" href="style.css?v=a0111">
 </head>
 <body>
 
@@ -172,10 +172,10 @@
             <div class="bar xp disc-xp"><div id="path-xpbar"></div><span id="path-xptext"></span></div>
             <p class="small dim" style="margin:4px 0 0">Every Combat level: +3% attack and HP. Buy Path ranks with gold — tiny, permanent, and they never reset. Level a row evenly to open the next, deeper one. The big ★ nodes also cost a boss token per rank.</p>
           </div>
+          <div class="card path-pop" id="path-pop"></div>
           <div class="path-heads" id="path-heads"></div>
           <div class="path-web-wrap"><svg id="path-web" viewBox="0 0 368 548" preserveAspectRatio="xMidYMid meet"></svg></div>
           <div class="path-legend"><span><i class="lg taken"></i>taken</span><span><i class="lg can"></i>can take</span><span><i class="lg lock"></i>locked</span><span><i class="lg notable"></i>notable ★</span><span><i class="lg key"></i>keystone ★</span></div>
-          <div class="card path-pop" id="path-pop"></div>
           <div class="card" id="path-sum-card"><div class="card-title" style="margin:0 0 4px">Your Paths give</div><div id="path-sum" class="small"></div></div>
           <button id="path-reset" class="wide" style="margin-top:4px">Reset Paths (<span id="path-reset-cost"></span> 🪙)</button>
         </div>
@@ -503,11 +503,11 @@
 </div>
 
 
-<script src="config.js?v=a0110"></script>
-<script src="cloud-config.js?v=a0110"></script>
-<script src="game.js?v=a0110"></script>
-<script src="ui.js?v=a0110"></script>
-<script src="cloud.js?v=a0110"></script>
+<script src="config.js?v=a0111"></script>
+<script src="cloud-config.js?v=a0111"></script>
+<script src="game.js?v=a0111"></script>
+<script src="ui.js?v=a0111"></script>
+<script src="cloud.js?v=a0111"></script>
 <script>window.addEventListener("error", e => { const d = document.getElementById("err"); if (d) { d.textContent = "Error: " + e.message; d.classList.remove("hidden"); } });</script>
 <div id="celebrate" class="celebrate hidden" role="status" aria-live="polite"><div class="cb-ico" id="cb-ico"></div><div class="cb-txt"><div class="cb-kicker" id="cb-kicker"></div><div class="cb-title" id="cb-title"></div><div class="cb-sub" id="cb-sub"></div></div></div>
 </body>

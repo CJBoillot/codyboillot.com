@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Alpha 0.10.10',
+  version: 'Alpha 0.10.11',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -473,6 +473,7 @@ const CONFIG = {
   // jobs (jobs completed by hand or thrall), sold (gold earned at market), stage, boss, founded, thrall (assigned), activity (swings).
   // Shown in Settings → What's new (newest first). Keep each line short.
   changelog: [
+    ['0.10.11', 'In Paths, the box for buying ranks now sits above the tree, so you can tap a node and buy without scrolling.'],
     ['0.10.10', 'The game has its own icon in the browser tab and on your home screen — the Click to Conquer crest.'],
     ['0.10.9', 'The Paths are rebuilt. Combat levels no longer give points — each one now makes your hero 3% stronger (attack and HP) on its own. Path ranks are bought with gold instead: tiny, permanent steps (+0.1% at the top), with no rank cap. The tree now grows downward; level a row evenly (every node 5+, average 10) and the next, deeper row opens — stronger, and 6× the price. The ★ nodes cost gold plus a boss token per rank, so every star has a use. Your ranks so far are kept. Veteran now adds +1% per Combat level per rank; the Merchant Republic makes Path ranks 15% cheaper.'],
     ['0.10.8', 'Logging, Mining and Foraging use the same icons as everywhere else. Tap the boss-token box in Paths to see every ★ node, whether it is open yet, and what it takes to open it.'],
