@@ -1520,7 +1520,8 @@ function load() {
       let g = 0; for (const k in OLD) { g += Math.floor((S.res[k] || 0) * OLD[k]); delete S.res[k]; if (S.lifetime) delete S.lifetime[k]; if (S.settings.unpinned) delete S.settings.unpinned[k]; }
       if (g > 0) { S.res.gold = (S.res.gold || 0) + g; log(`Old trinkets sold for ${fmt(g)} gold.`); }
       if (S.hero.tools) delete S.hero.tools.cleaver; if (S.hero.crafting && S.hero.crafting.slot === 'cleaver') S.hero.crafting = null; if (S.tech) delete S.tech.butchery; if (S.researching && S.researching.id === 'butchery') S.researching = null;
-      if (S.kingdom && S.kingdom.orders) S.kingdom.orders = S.kingdom.orders.filter(o => !Object.keys(o.wants || {}).some(k => OLD[k])); }
+      if ((S.res.ratkingtooth || 0) > 0) { S.res.gold = (S.res.gold || 0) + 60 * Math.floor(S.res.ratkingtooth); } delete S.res.ratkingtooth; if (S.lifetime) delete S.lifetime.ratkingtooth; // Beta 0.1.21: the Rat King's Tooth is gone — sold for its old price
+    if (S.kingdom && S.kingdom.orders) S.kingdom.orders = S.kingdom.orders.filter(o => !Object.keys(o.wants || {}).some(k => OLD[k])); }
     if (!S.legacy.v111) { S.legacy.v111 = true; const L = S.legacy, h = S.hero; // 0.11.1: the Crown Tree and Ages
       let capsLearned = 0; for (const d in CONFIG.trees) for (const node of CONFIG.trees[d]) if (node.capstone && nodeRank(d, node.id)) capsLearned++;
       const starsOld = Object.keys(h.stars || {}).length + (h.bonusTalent || 0), starBack = Math.max(0, starsOld - capsLearned); h.bonusTalent = 0;

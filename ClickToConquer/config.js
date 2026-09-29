@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Beta 0.1.20',
+  version: 'Beta 0.1.21',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -61,7 +61,6 @@ const CONFIG = {
     people:    { name: 'People',    icon: 'assets/buildings/carpenter.webp', kind: 'war', tier: 4, sell: 0, desc: 'Your townsfolk. They live in houses, pay a little tax, and become soldiers at the Barracks.' },
     bricks:  { name: 'Bricks',   icon: [13,4],  tier: 3, sell: 12, buy: 40, desc: 'Kiln turns 5 stone into a brick. Hardened gear, grand buildings.' },
     // ---- Loot (kind: 'loot'): dropped by enemies, shown in the Inventory, not in the header bar ----
-    ratkingtooth: { name: "Rat King's Tooth", icon: [17,9], kind: 'loot', rarity: 'rare', sell: 60,  desc: 'Trophy from the Rat King. A crafting material for fine trinkets.' },
   },
   rarities: { common: { name: 'Common', color: '#b9b0a3' }, uncommon: { name: 'Uncommon', color: '#5fbf7a' }, rare: { name: 'Rare', color: '#e8c06a' } },
 
@@ -264,7 +263,7 @@ const CONFIG = {
   story: {
     beta: { kicker: 'A fresh start', title: 'Welcome to the Beta', go: 'Start fresh', text: "Click to Conquer has grown up. Your town now runs on three production chains, your army is made of real people, and every building grows new levels. Old saves don't fit this new world, so everyone starts again in the Beta — your Alpha save is left untouched on this device, but it can't be carried over. Thank you for playing the Alpha. The wilds are waiting." },
     wild: { title: 'The Wilds', go: 'Begin', text: 'You wake in the wet grass with nothing: no blade, no coin, no name anyone remembers. Rats rustle in the reeds, wolves call beyond the ridge, and somewhere past the forest lies an Empire that grants land to anyone who can pay its tribute. Take what the wild gives you. Twist grass into cloth and sharpen a branch into a sword. Every legend in the Chronicle began exactly here: small, cold and stubborn.' },
-    charter: { title: 'A Charter in Red Wax', go: 'Raise the camp', text: "The Emperor's envoy turns the Rat King's tooth over in a gloved hand, and nods. You receive a charter, sealed in red wax: a stretch of river forest, yours to hold. It isn't much. There's a clearing, a handful of families who followed you out of the wild, and trees waiting for an axe. But land remembers who works it. Build a camp, then a hamlet, then a village. Your sword got you here; your town will carry you further." },
+    charter: { title: 'A Charter in Red Wax', go: 'Raise the camp', text: "The Emperor's envoy weighs your purse, then looks longer at the scars you earned in the wild, and nods. You receive a charter, sealed in red wax: a stretch of river forest, yours to hold. It isn't much. There's a clearing, a handful of families who followed you out of the wild, and trees waiting for an axe. But land remembers who works it. Build a camp, then a hamlet, then a village. Your sword got you here; your town will carry you further." },
     capital: { title: 'The Bells of the Capital', go: 'To war', text: "Bells ring from the new stone towers. Your city no longer holds a charter from someone else's Empire. It's a Capital, and you are its sovereign. Beyond the hills lie lands held by barons and warlords who've never heard your name. They will. The houses fill with soldiers' families, the Armory rings day and night, and the bakers are up before dawn. You still ride at the front, but now an army rides behind you." },
     fallow: { title: 'Fallow Fields', go: 'I understand', text: "Every farmer knows a field can't grow wheat forever. Work it too long and the soil tires; rotate the crop, let it rest, and it comes back richer. The old foresters burn tired woods so the young trees grow straighter. Your realm is tired, Sire. Pass the crown to your heir. The lands will be lost and the fields left fallow, but nothing you've learned is forgotten. Your Crowns stay with the bloodline, the gear stays in the armoury, and every generation rises faster than the last." },
   },
@@ -350,10 +349,10 @@ const CONFIG = {
   },
   grounds: {
     // Each ground is a LINE of enemy types. A type has 10 stages; stage 10 is its boss. Pool: per-kill drop chance = base + growth × (stage−1), capped.
-    // Loot from earlier types carries over at its stage-10 chance. `unique` drops once, on the first boss kill (only the Rat King's Tooth, for the tribute).
+    // Loot from earlier types carries over at its stage-10 chance. `unique` drops once, on the first boss kill (none since Beta 0.1.21).
     // dropTool: the drop needs that tool and scales with it. Tech gating (Skinning → hide, Grave Robbing → ingot) applies by resource.
     wilds:  { name: 'The Wilds',  icon: [17,8],  desc: 'Beasts. Hide — no gold.',              goldMult: 0, dropTool: { hide: 'knife' }, line: [
-      { id: 'rat',   name: 'Rat',      plural: 'Rats',      boss: 'Rat King',    unique: 'ratkingtooth', pool: [{ k: 'hide', base: 0.10, growth: 0.05 }] },
+      { id: 'rat',   name: 'Rat',      plural: 'Rats',      boss: 'Rat King',    pool: [{ k: 'hide', base: 0.10, growth: 0.05 }] },
       { id: 'boar',  name: 'Boar',     plural: 'Boars',     boss: 'Great Boar',   pool: [{ k: 'hide', base: 0.35, growth: 0.04 }] },
       { id: 'wolf',  name: 'Wolf',     plural: 'Wolves',    boss: 'Alpha Wolf',      pool: [{ k: 'hide', base: 0.45, growth: 0.04 }] },
       { id: 'bear',  name: 'Bear',     plural: 'Bears',     boss: 'Cave Bear',    pool: [{ k: 'hide', base: 0.55, growth: 0.05 }] },
@@ -504,6 +503,7 @@ const CONFIG = {
   // jobs (jobs completed by hand or thrall), sold (gold earned at market), stage, boss, founded, thrall (assigned), activity (swings).
   // Shown in Settings → What's new (newest first). Keep each line short.
   changelog: [
+    ['Beta 0.1.21', 'The Rat King\'s Tooth is gone: the Empire\'s tribute is simply 100 gold. Any tooth you were holding is sold for 60 gold.'],
     ['Beta 0.1.20', 'The town bar on Production now moves: it fills toward the next person born, and once the homes are full for births it shows progress toward the next house.'],
     ['Beta 0.1.19', 'A building that is short of input no longer flags its own bottleneck: when another building up the chain is the limit, the view says which one it is waiting on and nothing inside glows.'],
     ['Beta 0.1.18', 'The big Production button always takes you back to all the buildings, from anywhere — the small ‹ Production button inside a building is gone.'],
@@ -718,9 +718,9 @@ const CONFIG = {
       ], reward: { gold: 200 }, focus: { tab: 'hero', sub: 'fight', el: 'act:fight', el2: 'id:advance-btn' } },
     { id: 'q16b', name: 'The Trophy Wall', text: 'Kill 1,000 of one kind and its head goes on your wall — Bronze first, then Silver, Gold, Platinum and Diamond. Every head is +2% loot and XP, for good.',
       steps: [ { label: 'Loot → open Trophies', check: { viewed: 'trophies' } } ], reward: { gold: 100 }, focus: { tab: 'inventory', rtab: 'inventory', el: 'id:csub-troph-btn' } },
-    { id: 'q17', name: 'A New Kingdom', text: 'You have survived the wild alone. Pay tribute to the Empire — 100 gold and the Rat King\'s Tooth — and it grants you land. Your hero keeps everything he has earned — levels, skills and gear — but the goods in your pack stay behind. This is where the kingdom begins.',
+    { id: 'q17', name: 'A New Kingdom', text: 'You have survived the wild alone. Pay the Empire its tribute of 100 gold and it grants you land. Your hero keeps everything he has earned — levels, skills and gear — but the goods in your pack stay behind. This is where the kingdom begins.',
       steps: [
-        { label: 'Kingdom → Keep → Pay tribute (100 gold + Rat King\'s Tooth)', check: { founded: 1 } },
+        { label: 'Kingdom → Keep → Pay tribute (100 gold)', check: { founded: 1 } },
       ], reward: { gold: 100 }, focus: { tab: 'kingdom', ksub: 'throne', rtab: 'kingdom', el: 'id:found-btn' } },
     // ===== A Kingdom: after the first founding =====
     { id: 'k01', chain: 'A Kingdom', name: 'The First Camp', text: 'Kingdom → Production is your town: every building feeds the next, and they all work on their own. Open one to see how it runs.',
@@ -834,7 +834,7 @@ const CONFIG = {
   // ---------- Legacy: founding (prestige), paths, knowledge, thralls ----------
   legacy: {
     foundRequiresStage: 20,
-    tribute: { gold: 100, ratkingtooth: 1 },
+    tribute: { gold: 100 },
     proclaimCrowns: 5,
     passKeep: 1,                               // 0.10.4: share of building, hall and Barracks levels kept when the crown passes (all of them)                         // 0.10.4: a flat gift when the Kingdom is proclaimed
     infoUnlock: { ledger: 'q04', surveyor: 'q06c', danger: 'q13', chronicler: 'q13x', almanac: 'k01' }, // 0.10.4: info that used to be Crown perks opens with these quests   // the first founding: pay tribute to the Empire
