@@ -648,8 +648,8 @@ const UI = (() => {
     box.classList.toggle('hidden', !built && hs < 1); if (!built && hs < 1) return;
     const cap = Game.houseCap(), pop = Game.people(), sol = Game.soldiers(), room = Game.houseRoom(), prog = (S.kingdom.houseProg || 0) / Game.houseCost(), tr = Game.turnedRecent(), sph = Game.settlersPerHour();
     setHtml(box, `<div class="town-row"><img src="assets/buildings/carpenter.webp" alt=""><div class="town-main"><div class="town-n"><b>${f(pop)}</b> people${sol ? ` · <b>${f(sol)}</b> soldiers` : ''} <span class="dim">/ ${f(cap)} room in ${f(hs)} house${hs === 1 ? '' : 's'}</span></div>
-      <div class="bar town-bar"><div style="width:${cap ? Math.min(100, 100 * (pop + sol) / cap) : 0}%"></div><span>${Game.birthRoom() > 0 ? `+1 person every ${Math.round(60 / Math.max(0.01, Game.birthsPerMin()))}s` : room > 0 ? `${f(room)} homes kept for settlers` : 'Full — build houses'}</span></div>
-      <div class="tiny dim">Next house ${Math.round(prog * 100)}% · head tax ${f(Game.headTaxPerHour())} gold/h${sph > 0 ? ` · settlers ${sph.toFixed(1)}/h from your lands` : ''}</div>
+      <div class="bar town-bar"><div style="width:${Game.birthRoom() > 0 ? Math.min(100, 100 * ((S.kingdom.birthAcc || 0) % 1)) : Math.min(100, 100 * prog)}%"></div><span>${Game.birthRoom() > 0 ? `next person · one every ${Math.round(60 / Math.max(0.01, Game.birthsPerMin()))}s` : `next house ${Math.round(prog * 100)}%`}</span></div>
+      <div class="tiny dim">${Game.birthRoom() > 0 ? `Next house ${Math.round(prog * 100)}% · ` : room > 0 ? `${f(room)} homes kept for settlers · ` : 'Full — build houses · '}head tax ${f(Game.headTaxPerHour())} gold/h${sph > 0 ? ` · settlers ${sph.toFixed(1)}/h from your lands` : ''}</div>
       ${tr > 0 ? `<div class="tiny warn">${f(tr)} settlers found no home in the last hour — build houses.</div>` : ''}</div></div>`);
   }
   function renderBarracks() {

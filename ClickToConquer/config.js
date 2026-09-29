@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Beta 0.1.19',
+  version: 'Beta 0.1.20',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -504,6 +504,7 @@ const CONFIG = {
   // jobs (jobs completed by hand or thrall), sold (gold earned at market), stage, boss, founded, thrall (assigned), activity (swings).
   // Shown in Settings → What's new (newest first). Keep each line short.
   changelog: [
+    ['Beta 0.1.20', 'The town bar on Production now moves: it fills toward the next person born, and once the homes are full for births it shows progress toward the next house.'],
     ['Beta 0.1.19', 'A building that is short of input no longer flags its own bottleneck: when another building up the chain is the limit, the view says which one it is waiting on and nothing inside glows.'],
     ['Beta 0.1.18', 'The big Production button always takes you back to all the buildings, from anywhere — the small ‹ Production button inside a building is gone.'],
     ['Beta 0.1.17', 'The collapsed quest card no longer stretches and scatters on wide screens: title, current step and Claim stay together in one compact card.'],
