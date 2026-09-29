@@ -684,7 +684,6 @@ const UI = (() => {
         ${Array.from({ length: Game.depthCount(id) }, (_, i) => i + 1).map(d => `<div class="card depth-card" data-depth="${d}"><div class="depth-l"><small>${Game.unitName(id).toUpperCase()}</small><b>${d}</b><em>×${Game.depthYield(d) < 10 ? Game.depthYield(d).toFixed(1) : Game.fmt(Game.depthYield(d))}</em></div><div class="depth-r">
           <div class="row-between small"><b>${R[st.make].name}</b><span data-f="drate"></span></div>
           ${Game.PARTS.map(p => `<div class="part-row" data-prow="${p}"><div class="pr-name"><b>${Game.PART_NAME[p]}</b> <span class="dim small" data-f="lv${p}"></span><div class="bar part-bar"><div data-f="bar${p}"></div></div><span class="tiny dim" data-f="d${p}"></span></div>${partBtn(id, p, false, d)}</div>`).join('')}
-          ${d === 1 ? `<div class="kcycle">${[0, 1, 2].map(i => `<div class="kseg kseg${i}" data-seg="${i}"><div class="kfill"></div><span>${i === 0 && st.from ? 'Craft' : PH[i]}</span></div>`).join('')}</div><div class="tiny dim" data-f="cyc"></div>` : ''}
         </div></div>`).join('')}
         ${st.from ? `<div class="card kin"><span class="small dim">${R[st.from].name} in</span><div class="bar green-bar"><div data-f="inbar"></div><span data-f="inlab"></span></div></div>` : ''}
         <div class="card dig-card"><div class="dig-t">${st.dig} · ${Game.unitName(id)} ${Game.depthCount(id) + 1}</div><div class="tiny dim" data-f="digwhy"></div><button class="buy wide" data-dig><span class="small">${st.dig}</span><br><span class="cost" data-f="digcost"></span></button></div>
@@ -695,21 +694,20 @@ const UI = (() => {
       box.querySelectorAll('[data-houses]').forEach(b => b.addEventListener('click', () => { Game.setHousesOn(b.dataset.houses === '1'); bldKey = ''; render(true); }));
       $('bld-kbar').innerHTML = kbarHtml(); $('bld-kbar').querySelectorAll('[data-kbuy]').forEach(b => b.addEventListener('click', () => { kBuy = b.dataset.kbuy === 'max' ? 'max' : +b.dataset.kbuy; prodKey = ''; bldKey = ''; render(true); }));
       glowKey = ''; }
-    const s = Game.stepState(id), P = Game.stepPhases(id), cyc = P[0] + P[1] + P[2], out = Game.stepOutput(id), fo = v => v < 10 ? v.toFixed(2) : f(v);
+    const s = Game.stepState(id), out = Game.stepOutput(id), fo = v => v < 10 ? v.toFixed(2) : f(v);
     const dest = id === 'carpenter' && Game.housesOn() ? 'To houses' : nx ? `To the ${nx.name}` : 'To the Storehouse', use = nx ? Game.stepOutput(nx.id) * nx.ratio : 0;
     setHtml(box.querySelector('[data-f=out]'), `${dest}<b>${fo(out)}/s</b>${nx ? `${nx.name} uses ${fo(use)}/s` : ''}`);
-    for (let d = 1; d <= Game.depthCount(id); d++) { const dc = box.querySelector(`[data-depth="${d}"]`); if (!dc) continue; const Pd = Game.stepPhases(id, d), cd = Pd[0] + Pd[1] + Pd[2], mx = Math.max(...Pd), lim = Game.limitPart(id, d);
-      setHtml(dc.querySelector('[data-f=drate]'), `<b>${fo(Game.depthOutput(id, d))}</b> <span class="dim">/s</span>`);
-      Game.PARTS.forEach((p, i) => { const lv = Game.partLv(id, p, d), nm = p === 'W' ? Game.nextMilestone(lv) : null;
+    const PDESC = { W: st.from ? 'crafts' : 'makes', C: 'loads the carts', H: 'hauls it home' };
+    for (let d = 1; d <= Game.depthCount(id); d++) { const dc = box.querySelector(`[data-depth="${d}"]`); if (!dc) continue; const caps = Game.PARTS.map(p => Game.partCap(id, p, d)), mx = Math.max(...caps), lim = Game.limitPart(id, d), dout = Game.depthOutput(id, d);
+      setHtml(dc.querySelector('[data-f=drate]'), `<b>${fo(dout)}</b> <span class="dim">/s</span>`);
+      Game.PARTS.forEach((p, i) => { const lv = Game.partLv(id, p, d), nm = Game.nextMilestone(lv);
         setText(dc.querySelector(`[data-f=lv${p}]`), 'Lv ' + lv);
-        const bar = dc.querySelector(`[data-f=bar${p}]`); bar.style.width = (100 * Pd[i] / mx) + '%'; bar.parentElement.classList.toggle('lim', p === lim);
-        setText(dc.querySelector(`[data-f=d${p}]`), p === lim ? `slowest part · ${Pd[i].toFixed(1)}s of the ${cd.toFixed(1)}s cycle` : p === 'W' ? `${f(Game.stepBatch(id, d))} per load${nm ? ' · ×2 at Lv ' + nm : ''} · ${Pd[i].toFixed(1)}s` : `${Pd[i].toFixed(1)}s`);
+        const bar = dc.querySelector(`[data-f=bar${p}]`); bar.style.width = (100 * caps[i] / mx) + '%'; bar.parentElement.classList.toggle('lim', p === lim);
+        setText(dc.querySelector(`[data-f=d${p}]`), p === lim ? `${PDESC[p]} ${fo(caps[i])}/s — the slowest part: it sets the pace` : `${PDESC[p]} up to ${fo(caps[i])}/s${nm ? ' · ×2 at Lv ' + nm : ''} · waits on the ${Game.PART_NAME[lim]}`);
         fillPartBtn(dc, id, p, false, d); }); }
     { const db = box.querySelector('[data-dig]'), open = Game.digOpen(), nd = Game.depthCount(id) + 1; db.disabled = !Game.canDig(id); setHtml(box.querySelector('[data-f=digcost]'), open ? costHtml(Game.digCost(id)) + (Game.digCost(id).gold > Game.resCap('gold') ? '<br><span class="tiny warn">more than your Storehouse holds — expand it in the Keep</span>' : '') : '<span class="dim">after Proclaim</span>');
       setText(box.querySelector('[data-f=digwhy]'), open ? `Starts at Lv 1 but makes ×${f(Game.depthYield(nd))} what the first ${Game.unitName(id).toLowerCase()} makes at the same level. Its own Work, Cart and Haul.` : 'Your town grows new levels once the Kingdom is proclaimed.'); }
-    box.querySelectorAll('[data-seg]').forEach(seg => { const i = +seg.dataset.seg; seg.style.flexGrow = (P[i] / cyc).toFixed(4); seg.firstChild.style.width = (i < s.phase ? 100 : i > s.phase ? 0 : 100 * Math.min(1, s.t / P[i])) + '%'; seg.classList.toggle('on', i === s.phase); });
-    setText(box.querySelector('[data-f=cyc]'), `${Game.stepBatch(id)} ${R[st.make].name.toLowerCase()} every ${cyc.toFixed(1)}s · now ${[st.from ? 'crafting' : 'working', 'loading the cart', 'hauling'][s.phase]}`);
-    if (st.from) { box.querySelector('[data-f=inbar]').style.width = Math.min(100, 100 * s.inBuf / (st.ratio * Game.stepBatch(id) * 2)) + '%'; setText(box.querySelector('[data-f=inlab]'), `${Math.floor(s.inBuf)} waiting`); }
+    if (st.from) { box.querySelector('[data-f=inbar]').style.width = Math.min(100, 100 * s.inBuf / Math.max(1, st.ratio * (Game.stepOutput(id) * 30 + 10))) + '%'; setText(box.querySelector('[data-f=inlab]'), `${Math.floor(s.inBuf)} waiting`); }
     { const hb = box.querySelector('[data-f=houses]'); if (hb) setHtml(hb, `${f(Game.houses())} houses · room for ${f(Game.houseCap())} · next house needs ${Game.houseCost().toFixed(1)} lumber (${Math.round(100 * (S.kingdom.houseProg || 0) / Game.houseCost())}%). ${Game.housesOn() ? 'All new lumber goes to houses (after what the Storehouse needs).' : 'Lumber goes to the Storehouse; no houses are being built.'}`); }
     if (box.querySelector('[data-f=stn]')) { const k = st.make, T = Game.stockTarget(k), have = Math.floor(S.res[k] || 0), nxn = nx ? nx.name : 'next building';
       box.querySelectorAll('[data-stock]').forEach(b => b.classList.toggle('active', String(T.mode) === b.dataset.stock));

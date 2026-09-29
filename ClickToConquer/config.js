@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Beta 0.1.2',
+  version: 'Beta 0.1.3',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -504,6 +504,7 @@ const CONFIG = {
   // jobs (jobs completed by hand or thrall), sold (gold earned at market), stage, boss, founded, thrall (assigned), activity (swings).
   // Shown in Settings → What's new (newest first). Keep each line short.
   changelog: [
+    ['Beta 0.1.3', 'Buildings now work like a real production line: Work, Cart and Haul run side by side, each with its own capacity per second, and the building makes as much as its slowest part. Upgrading the part with the gold bar raises output; the others wait until it catches up. Each part doubles its capacity at Lv 10, 25, 50, 100…'],
     ['Beta 0.1.2', 'The "your kingdom begins" guide is up to date: Production, Work / Cart / Haul and the Keep. It now appears after the Charter story instead of on top of it.'],
     ['Beta 0.1.1', 'The founding quest now points to the right place: Kingdom → Keep → Pay tribute.'],
     ['Beta 0.1.0', 'The Beta begins — everyone starts fresh. Old Alpha saves no longer load (yours stays on this device, untouched). Everything from the 0.12 updates is in: three production chains feed the Barracks, your army is made of people housed in your town, and every building grows new levels (groves, fields, furnaces… only the Mine digs). Balance: building a new level now costs ×12 more each time, matching its ×12 output, and the "grow your slowest building" Deed only asks for a level you can afford. If a level costs more than your Storehouse holds, the building tells you to expand it.'],
