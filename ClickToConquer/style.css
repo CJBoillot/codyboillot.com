@@ -1205,3 +1205,4 @@ html, body { max-width: 100%; overflow-x: hidden; }
 .fh-b .tiny { font-size: 10.5px; }
 .fh-b span.tiny:first-child { font-family: var(--font-head); font-size: 11px; }
 .fh-warn b { font-size: 12px; }
+.art-slot:has(img) { border-color: transparent; }
