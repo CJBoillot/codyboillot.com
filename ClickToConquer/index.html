@@ -16,7 +16,7 @@
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=a0110b">
+  <link rel="stylesheet" href="style.css?v=a0111">
 </head>
 <body>
 
@@ -115,7 +115,7 @@
           <div class="dim small hand-hint">One per click, instantly. Tools let your hero gather these on his own.</div>
         </div>
         <div class="card" id="ground-card">
-          <div class="card-title">Where to fight</div>
+          <div class="card-title">Where to fight <span class="small dim" id="age-tag"></span></div>
           <div id="ground-bar" class="ground-bar"></div>
           <div id="ground-desc" class="dim small"></div>
         </div>
@@ -146,7 +146,7 @@
 
       <div id="sub-skills" class="sub hidden">
         <div class="skill-seg" id="skill-seg">
-          <button data-sk="paths">Paths<span class="dot hidden" id="dot-sk-paths"></span></button>
+          <button data-sk="paths">Crown Tree<span class="dot hidden" id="dot-sk-paths"></span></button>
           <button data-sk="gather">Gathering<span class="dot hidden" id="dot-sk-gather"></span></button>
           <button data-sk="tech">Techniques<span class="dot hidden" id="dot-sk-tech"></span></button>
         </div>
@@ -163,19 +163,19 @@
 
         <div id="sk-paths" class="hidden">
           <div class="card">
-            <div class="row-between"><span class="card-title" style="margin:0">The Paths of War</span><span class="small dim" id="path-lv">Combat Lv 1</span></div>
+            <div class="row-between"><span class="card-title" style="margin:0">The Crown Tree</span><span class="small dim" id="path-lv">Combat Lv 1</span></div>
             <div class="path-pts">
               <div><b id="path-free">+0%</b><span id="path-free-lab">attack & HP from Combat levels</span></div>
-              <div><b id="path-spent">0</b><span id="path-spent-of">spent of 390</span></div>
-              <button id="path-stars-box" class="pts-btn" type="button"><b id="path-stars">0 ★</b><span>boss tokens · where to spend ⓘ</span></button>
+              <div><b id="path-spent">0</b><span id="path-spent-of">ranks bought</span></div>
+              <button id="path-stars-box" class="pts-btn" type="button"><b id="path-stars">0 👑</b><span>Crowns · where they come from ⓘ</span></button>
             </div>
             <div class="bar xp disc-xp"><div id="path-xpbar"></div><span id="path-xptext"></span></div>
-            <p class="small dim" style="margin:4px 0 0">Every Combat level: +3% attack and HP. Buy Path ranks with gold — tiny, permanent, and they never reset. Level a row evenly to open the next, deeper one. The big ★ nodes also cost a boss token per rank.</p>
+            <p class="small dim" style="margin:4px 0 0">Every Combat level: +3% attack and HP. The Crown Tree is bought with Crowns and never resets: few ranks, big effects. A node opens once a node above it has a rank; the endless node at the bottom of each branch never runs out.</p>
           </div>
           <div class="card path-pop" id="path-pop"></div>
           <div class="path-heads" id="path-heads"></div>
-          <div class="path-web-wrap"><svg id="path-web" viewBox="0 0 368 548" preserveAspectRatio="xMidYMid meet"></svg></div>
-          <div class="path-legend"><span><i class="lg taken"></i>taken</span><span><i class="lg can"></i>can take</span><span><i class="lg lock"></i>locked</span><span><i class="lg notable"></i>notable ★</span><span><i class="lg key"></i>keystone ★</span></div>
+          <div class="path-web-wrap"><svg id="path-web" viewBox="0 0 368 610" preserveAspectRatio="xMidYMid meet"></svg></div>
+          <div class="path-legend"><span><i class="lg taken"></i>taken</span><span><i class="lg can"></i>can take</span><span><i class="lg lock"></i>locked</span><span><i class="lg notable"></i>notable</span><span><i class="lg key"></i>keystone</span><span>∞ endless</span></div>
           <div class="card" id="path-sum-card"><div class="card-title" style="margin:0 0 4px">Your Paths give</div><div id="path-sum" class="small"></div></div>
           <button id="path-reset" class="wide" style="margin-top:4px">Reset Paths (<span id="path-reset-cost"></span> 🪙)</button>
         </div>
@@ -210,7 +210,7 @@
         <button data-ksub="keep">Keep <span id="badge-throne" class="dot hidden"></span></button>
         <button data-ksub="halls">Halls <span id="badge-halls" class="dot hidden"></span></button>
         <button data-ksub="lands">Lands <span id="badge-lands" class="dot hidden"></span></button>
-        <button data-ksub="legacy">Legacy <span id="badge-legacy" class="dot hidden"></span></button>
+        <button data-ksub="legacy" class="hidden" aria-hidden="true">Legacy <span id="badge-legacy" class="dot hidden"></span></button>
         </div>
       </nav>
       <div id="ksub-forest" class="ksub hidden"><div class="feed-banner hidden" id="feed-forest"></div><div class="kbar" data-kbar></div><div id="line-forest" class="kline-body"></div></div>
@@ -303,14 +303,14 @@
           <button id="found-btn" class="big" disabled>Found a New Kingdom</button>
         </div>
         <div class="card hidden" id="wonder-card"><div class="row-between"><div class="card-title" style="margin:0">Wonders</div><span class="small dim" id="wonder-n"></span></div><p class="small dim" style="margin:4px 0 8px">Every fifth land ends in an Era Ruler. Beat one and its Wonder can be built here — a huge, permanent boost that survives every Pass the Crown.</p><div class="row-between small" style="margin-bottom:8px;flex-wrap:wrap;gap:6px"><span>Share of taxes sent to the Wonder</span><span class="seg" id="tithe-seg"><button data-tithe="0">0%</button><button data-tithe="0.25">25%</button><button data-tithe="0.5">50%</button><button data-tithe="0.75">75%</button></span></div><div id="wonder-list" class="list"></div></div>
+        <div class="card" id="vault-card"><div class="row-between"><div class="card-title" style="margin:0">Crown Vault</div><span class="small dim" id="vault-n"></span></div><p class="small dim" style="margin:4px 0 6px">Every ruler's crown, kept forever. Each one: +2% hero attack and +2% taxes.</p><div id="vault-list" class="vault"></div></div>
+        <div class="card-title" style="margin-top:14px">History</div>
+        <div id="history" class="log card"></div>
 
       </div>
       <div id="ksub-legacy" class="ksub hidden">
         <div class="card row-between"><div><b>👑 Crowns</b> <span class="dim">taken from the rulers you defeat. Spend them here — perks are forever, through every dynasty.</span></div><b id="knowledge2" class="accent-text">0</b></div>
-        <div class="card" id="vault-card"><div class="row-between"><div class="card-title" style="margin:0">Crown Vault</div><span class="small dim" id="vault-n"></span></div><p class="small dim" style="margin:4px 0 6px">Every ruler's crown, kept forever. Each one: +2% hero attack and +2% taxes.</p><div id="vault-list" class="vault"></div></div>
         <div id="perk-list" class="list"></div>
-        <div class="card-title" style="margin-top:14px">History</div>
-        <div id="history" class="log card"></div>
       </div>
     </div>
 
@@ -504,11 +504,11 @@
 </div>
 
 
-<script src="config.js?v=a0110b"></script>
-<script src="cloud-config.js?v=a0110b"></script>
-<script src="game.js?v=a0110b"></script>
-<script src="ui.js?v=a0110b"></script>
-<script src="cloud.js?v=a0110b"></script>
+<script src="config.js?v=a0111"></script>
+<script src="cloud-config.js?v=a0111"></script>
+<script src="game.js?v=a0111"></script>
+<script src="ui.js?v=a0111"></script>
+<script src="cloud.js?v=a0111"></script>
 <script>window.addEventListener("error", e => { const d = document.getElementById("err"); if (d) { d.textContent = "Error: " + e.message; d.classList.remove("hidden"); } });</script>
 <div id="celebrate" class="celebrate hidden" role="status" aria-live="polite"><div class="cb-ico" id="cb-ico"></div><div class="cb-txt"><div class="cb-kicker" id="cb-kicker"></div><div class="cb-title" id="cb-title"></div><div class="cb-sub" id="cb-sub"></div></div></div>
 </body>

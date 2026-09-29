@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Alpha 0.11.0',
+  version: 'Alpha 0.11.1',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -229,22 +229,35 @@ const CONFIG = {
   // ---------- Paths of War (passive). 3 branches × 13 nodes, every node has 10 ranks. Never reset (kept through Pass the Crown). ----------
   // Points: 1 per Combat level. ★ tokens: 1 per boss ever slain (first kill of each boss stage) + quest rewards.
   // A node opens when a connected node one tier closer to the centre is maxed (10/10). Notables and keystones cost 1 point + 1 ★ per rank.
-  paths: { // 0.10.9: ranks are bought with gold, a sliver at a time; each row opens once the row above is levelled evenly
-    ranks: 10, openAvg: 10, openMin: 5, cost: { base: 10, tier: 6, rank: 1.2 }, valueScale: 1 / 60, valueTier: 2, levelBonus: 0.03,
-    branches: [ { id: 'M', name: 'Might', desc: 'attack · crit · bosses', color: '#d9604c' }, { id: 'G', name: 'Guard', desc: 'HP · armor · healing', color: '#6fa3d9' }, { id: 'C', name: 'Command', desc: 'army · gold · loot', color: '#7fd28f' } ],
-    plan: [[1],[0,2],[0,1,2],[1],[0,2],[0,1,2],[1]], // tier → column positions (0..2) in each branch
+  paths: { // 0.11.1: the Crown Tree — permanent, bought with Crowns; few ranks, big effects; an endless node at the bottom of each branch
+    rowCost: [1, 3, 8, 30, 40, 80, 300], endlessBase: 40, endlessGrowth: 1.15, levelBonus: 0.03, ranks: 3,
+    branches: [ { id: 'M', name: 'Might', desc: 'attack · crit · bosses', color: '#d9604c' }, { id: 'G', name: 'Guard', desc: 'HP · armor · healing', color: '#6fa3d9' }, { id: 'C', name: 'Command', desc: 'army · taxes · realm', color: '#7fd28f' } ],
+    plan: [[1],[0,2],[0,1,2],[1],[0,2],[0,1,2],[1],[1]], // row → column positions; the last row is the endless node
+    // [name, per-rank mods, kind, max ranks, perk id (effect handled by the engine)]
     nodes: {
-      M: [ ['Sharpened Edge', { attackPct: 0.06 }], ['Quick Hands', { speedPct: 0.0225 }], ['Keen Eye', { crit: 0.006 }], ['Heavy Blows', { attackPct: 0.06 }], ['Brutality', { critDmg: 0.06 }], ['Giant Slayer', { bossDmg: 0.06 }],
-           ['Headhunter', { bossDmg: 0.075, attackPct: 0.015 }, 'notable'], ['Fury', { speedPct: 0.0225 }], ['Deadly Aim', { crit: 0.006 }], ['Weapon Master', { attackPct: 0.06 }], ['Savagery', { critDmg: 0.06 }], ["Tyrant's Bane", { bossDmg: 0.06 }],
-           ['Berserker', { attackPct: 0.075, hpPct: -0.03 }, 'key'] ],
-      G: [ ['Thick Skin', { hpPct: 0.075 }], ['Second Breath', { regenPct: 0.075 }], ['Iron Hide', { dr: 0.0075 }], ['Stout Heart', { hpPct: 0.06 }], ['Field Rations', { restSpeed: 0.075 }], ['Hardened', { dr: 0.0075 }],
-           ['Bulwark', { hpPct: 0.075, dr: 0.0075 }, 'notable'], ['Vigor', { regenPct: 0.075 }], ['Endurance', { hpPct: 0.06 }], ['Stone Skin', { dr: 0.0075 }], ['Troll Blood', { regenPct: 0.075 }], ['Colossus', { hpPct: 0.06 }],
-           ['Unbreakable', { hpPct: 0.09, dr: 0.015, speedPct: -0.015 }, 'key'] ],
-      C: [ ['Plunderer', { goldPct: 0.045 }], ['Scavenger', { dropPct: 0.045 }], ['Tactics', { skillPct: 0.045 }], ['Drillmaster', { armyPct: 0.045 }], ["Veteran's Lessons", { xpPct: 0.03 }], ['Quick Study', { cdr: 0.006 }],
-           ['Warlord', { armyPct: 0.075 }, 'notable'], ['Tax Man', { goldPct: 0.045 }], ['Battle Rhythm', { skillPct: 0.045 }], ['Banners', { armyPct: 0.045 }], ['Treasure Hunter', { dropPct: 0.045 }], ['Tactician', { cdr: 0.006 }],
-           ['Conqueror', { armyPct: 0.12, attackPct: -0.015 }, 'key'] ],
+      M: [ ['Sharpened Edge', { attackPct: 0.10 }, 'small', 3], ['Quick Hands', { speedPct: 0.05 }, 'small', 3], ['Keen Eye', { crit: 0.03 }, 'small', 3],
+           ['Heavy Blows', { attackPct: 0.15 }, 'small', 3], ['Brutality', { critDmg: 0.25 }, 'small', 3], ['Giant Slayer', { bossDmg: 0.20 }, 'small', 3],
+           ['Headhunter', { bossDmg: 0.5, attackPct: 0.1 }, 'notable', 1], ['Fury', { speedPct: 0.08 }, 'small', 2], ['Deadly Aim', { crit: 0.05 }, 'small', 2],
+           ['Weapon Master', { attackPct: 0.25 }, 'small', 2], ['Savagery', { critDmg: 0.5 }, 'small', 2], ["Tyrant's Bane", { bossDmg: 0.4 }, 'small', 2],
+           ['Berserker', { attackX: 1.5, hpPct: -0.1 }, 'key', 1], ['Bloodline of Kings', {}, 'endless', 0, 'bloodline'] ],
+      G: [ ['Thick Skin', { hpPct: 0.10 }, 'small', 3], ['Second Breath', { regenPct: 0.15 }, 'small', 3], ['Iron Hide', { dr: 0.02 }, 'small', 3],
+           ['Stout Heart', { hpPct: 0.15 }, 'small', 3], ['Field Rations', { restSpeed: 0.25 }, 'small', 3], ['Hardened', { dr: 0.03 }, 'small', 3],
+           ['Bulwark', { hpPct: 0.30, dr: 0.05 }, 'notable', 1], ['Vigor', { regenPct: 0.25 }, 'small', 2], ['Endurance', { hpPct: 0.20 }, 'small', 2],
+           ['Stone Skin', { dr: 0.05 }, 'small', 2], ['Troll Blood', { regenPct: 0.40 }, 'small', 2], ['Colossus', { hpPct: 0.30 }, 'small', 2],
+           ['Unbreakable', { hpX: 1.5, dr: 0.10, speedPct: -0.05 }, 'key', 1], ['Iron Lineage', {}, 'endless', 0, 'lineage'] ],
+      C: [ ['Quartermasters', {}, 'small', 3, 'charter'], ['Rations', {}, 'small', 3, 'rations'], ['Plunderer', { goldPct: 0.2, dropPct: 0.2 }, 'small', 3],
+           ['Drillmasters', {}, 'small', 3, 'drill'], ['Tax Collectors', {}, 'small', 3, 'tax'], ['Plunder', {}, 'small', 3, 'spoils'],
+           ['Warlord', { armyPct: 0.5 }, 'notable', 1], ['Victory Lap', {}, 'small', 2, 'lap'], ['Deep Cellar', {}, 'small', 2, 'cellar'],
+           ['Long Memory', {}, 'small', 3, 'memory'], ['War Banners', {}, 'small', 3, 'warcollege'], ["Founder's Cache", {}, 'small', 2, 'cache'],
+           ['Conqueror', { armyX: 1.5, attackPct: -0.05 }, 'key', 1], ['Dynastic Treasury', {}, 'endless', 0, 'treasury'] ],
     },
+    perkDesc: { charter: '+15% Housing, Arms and Food income', rations: '−10% army upkeep', drill: '+50% recruiting speed', tax: '+25% taxes', spoils: '+25% spoils', lap: '+1× damage in lands you know', cellar: 'AFK cap +2 h and Storehouse +25%',
+      memory: '+10% AFK efficiency', warcollege: 'Army boost to the hero +10%', cache: 'Start each dynasty with 15 min of your last taxes', bloodline: 'Attack ×1.08', lineage: 'HP and healing ×1.08', treasury: 'Taxes and supply income +10%' },
   },
+
+  // ---------- 0.11.1: Ages — ten lands per Age; beating the Emperor (land 10) lets you crown your heir into the next Age ----------
+  ages: { lands: 10, hp: 150, hit: 15, gold: 12, spoil: 2.5, names: ['Age of Iron', 'Age of Kings', 'Age of Storms', 'Age of Ash', 'Age of Crowns', 'Age of Dragons', 'Age of Legends'],
+    crowns: { boss: 1, captain: 1, eraRuler: 10, emperor: 25 } },
 
   // ---------- 0.11: Eras — every 5 lands end in an Era Ruler; beating one unlocks a Wonder (kept forever) ----------
   eras: {
@@ -496,6 +509,7 @@ const CONFIG = {
   // jobs (jobs completed by hand or thrall), sold (gold earned at market), stage, boss, founded, thrall (assigned), activity (swings).
   // Shown in Settings → What's new (newest first). Keep each line short.
   changelog: [
+    ['0.11.1', 'Ages and the Crown Tree. Each Age is ten lands; beat the Emperor at land 10 and press Crown your heir in the Keep to begin the next Age — the same ten lands, far richer and far tougher, with the Age named on Where to fight. Eras and Wonders keep counting across Ages. Permanent power now comes from one place: the Crown Tree (Skills → Crown Tree), bought with Crowns — few ranks, big effects, and an endless node at the bottom of each branch. Every first boss kill gives a Crown (boss tokens are gone), Captains pay Crowns each Age, and rulers pay more in later Ages. Your old Path gold, boss tokens and Legacy perks were refunded, and saves past land 10 moved into the right Age.'],
     ['0.11.0', 'Eras and Wonders. Every fifth land now ends in an Era Ruler — far tougher than a normal ruler. Beat one and its Wonder opens in the Keep: Great Granary, Royal Armoury, Colosseum, War College, Harbour of Kings, then stronger versions of each. Wonders are huge, permanent boosts that survive every Pass the Crown; by default half your taxes flow into the one being built (change it in the Keep). From land 6 each era\'s enemies have a trait — Armoured, Swarm, Casters, Beasts, Undead. The economy is rebalanced so late lands no longer fall like dominoes: taxes grow ×2.6 per land, Path ranks get 20% dearer each, Crowns grow steadily with each land (and Bloodline has no rank cap, so every Crown has a use), recruits scale with your army, and there are now 200 lands.'],
     ['0.10.12', 'Tools now work for you. Once you own an axe, pickaxe or sickle, it gathers on its own — all the time, even while your hero fights and while you are away. A new tool is slow; every level makes it much faster, so upgrading tools matters more than ever. The Chop Wood, Mine and Forage boxes now just open that tool\'s screen (swing speed, yield, what you have in store); the fight carries on in the bar at the bottom.'],
     ['0.10.11', 'In Paths, the box for buying ranks now sits above the tree, so you can tap a node and buy without scrolling.'],
@@ -581,10 +595,10 @@ const CONFIG = {
         { label: 'Have 25 wood (Trees box)', check: { have: 'wood', need: 25 } },
         { label: 'Kingdom → Tech → Research Woodcraft', check: { tech: 'stonetools' } },
       ], reward: { wood: 40, gold: 25 }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:stonetools' } },
-    { id: 'q02b', name: 'Growing Stronger', text: 'Kills give Combat XP, and every Combat level makes your hero 3% stronger. The Paths on the Skills tab are for gold: each rank is a small, permanent edge, and each row opens once the row above it is levelled. Paths are never reset.',
+    { id: 'q02b', name: 'Growing Stronger', text: 'Kills give Combat XP, and every Combat level makes your hero 3% stronger. The first time you beat a boss — like the Rat King — you win a Crown 👑. Crowns buy the Crown Tree on the Skills tab: permanent, and never reset.',
       steps: [
         { label: 'Reach Combat level 2', check: { disc: 'combat', need: 2 } },
-        { label: 'Skills → Paths → buy a rank of Sharpened Edge', check: { path: 'M0', need: 1 } },
+        { label: 'Skills → Crown Tree → buy Sharpened Edge (1 👑)', check: { path: 'M0', need: 1 } },
       ], reward: { fiber: 15 }, focus: { tab: 'hero', sub: 'skills', rtab: 'skills', el: 'path:M0' } },
     { id: 'q03', name: 'An Axe of Your Own', text: 'You have wood enough for an axe, and the axe will cut the rest. Tools are the row under your armor on the Equipment panel — click a slot to make or upgrade it.',
       steps: [
@@ -626,7 +640,7 @@ const CONFIG = {
         { label: 'Kingdom → Tech → Research Stone Weapons', check: { tech: 'stoneweapons' }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:stoneweapons' } },
         { label: 'Click the Weapon slot → Forge Stone', check: { gearTier: 'weapon', need: 1 }, focus: { tab: 'hero', sub: 'gear', el: 'gear:weapon' } },
       ], reward: { stone: 30 }, focus: { tab: 'hero', sub: 'gear', el: 'gear:weapon' } },
-    { id: 'q13', name: 'Boss Hunter', text: 'Every tenth stage is a boss. The first time you beat one you get a ★ boss token — the big notables and keystones in your Paths cost them — plus a trophy. The Rat King guarded the Roads; now the Bandit Chief waits at Roads stage 10. From now on the hero screen warns you how much HP each fight costs.',
+    { id: 'q13', name: 'Boss Hunter', text: 'Every tenth stage is a boss. The first time you beat one you get a Crown 👑 — Crowns buy the Crown Tree on the Skills tab, and they are forever. The Rat King guarded the Roads; now the Bandit Chief waits at Roads stage 10. From now on the hero screen warns you how much HP each fight costs.',
       steps: [
         { label: 'Where to fight → The Roads', check: { activity: 'fight', ground: 'roads' } },
         { label: 'Slay a boss you have never beaten', check: { counter: 'bossKills', need: 1, since: true } },
@@ -654,9 +668,9 @@ const CONFIG = {
         { label: 'Kingdom → Tech → Research Prospecting', check: { tech: 'prospecting' }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:prospecting' } },
         { label: 'Activity → Mine: dig 15 iron ore', check: { harvested: 'ore', need: 15, since: true }, focus: { tab: 'hero', sub: 'fight', el: 'act:mine' } },
       ], reward: { ore: 20 } },
-    { id: 'q13c', name: 'A Second Blow', text: 'Paths grow with your gold: level a whole row and the next one opens — deeper rows are costlier and stronger. Techniques are your active moves — Power Strike is unlocked. Equip it and it fires by itself; tap it in a fight for a harder hit.',
+    { id: 'q13c', name: 'A Second Blow', text: 'Every boss gives a Crown, and every rank in the Crown Tree opens the nodes below it — deeper nodes cost more and hit harder. Techniques are your active moves — Power Strike is unlocked. Equip it and it fires by itself; tap it in a fight for a harder hit.',
       steps: [
-        { label: 'Paths → Sharpened Edge rank 3', check: { path: 'M0', need: 3 }, focus: { tab: 'hero', sub: 'skills', rtab: 'skills', el: 'path:M0' } },
+        { label: 'Crown Tree → Sharpened Edge 3/3', check: { path: 'M0', need: 3 }, focus: { tab: 'hero', sub: 'skills', rtab: 'skills', el: 'path:M0' } },
         { label: 'Techniques → equip Power Strike', check: { skillEquipped: 'strike' }, focus: { tab: 'hero', sub: 'skills', rtab: 'skills', el: 'technique:strike' } },
         { label: 'Use Power Strike 5 times', check: { casts: 'strike', need: 5, since: true } },
       ], reward: { gold: 80 }, focus: { tab: 'hero', sub: 'skills', rtab: 'skills', el: 'technique:strike' } },
@@ -754,8 +768,8 @@ const CONFIG = {
       steps: [ { label: 'Upgrade supply buildings 3 times (start with the red tab)', check: { bLvSum: 1, need: 3, since: true } } ], reward: { gold: 3000 }, focus: { tab: 'kingdom', ksub: 'war', rtab: 'kingdom', el: 'id:war-pipe' } },
     { id: 'w05', chain: 'The Kingdom', name: 'The Iron Hills', text: 'Every land is harder than the last — and pays about four times more. The hills hold silver, the metal of Hardened gear: garrison them and it flows in every hour.',
       steps: [ { label: 'Conquer the Iron Hills', check: { landDone: 2 } } ], reward: { gold: 5000 }, focus: { tab: 'hero', sub: 'fight', el: 'ground:land2' } },
-    { id: 'w05b', chain: 'The Kingdom', name: 'Pass the Crown', text: 'Two lands are yours, and the next ones only get harder. Time to think in dynasties. When you Pass the Crown your heir takes the throne: the lands, their taxes, the army and your stores are gone, and the hero starts again at level 1. Everything else stays: his gear, Paths and Techniques, the Capital and every building level, Crowns and trophies. Lands you have conquered before fall three times faster for the heir, and the Crowns you took from their rulers become yours to spend. Spend a Crown in Legacy first — perks there last forever.',
-      steps: [ { label: 'Kingdom → Legacy → buy a perk', check: { stat: 'perksBought', need: 1, since: true }, focus: { tab: 'kingdom', ksub: 'legacy', rtab: 'kingdom', el: 'perk:bloodline' } }, { label: 'Kingdom → Keep → Pass the Crown', check: { stat: 'passed', need: 1 } } ], reward: { crystal: 20 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:found-btn' } },
+    { id: 'w05b', chain: 'The Kingdom', name: 'Pass the Crown', text: 'Two lands are yours, and the next ones only get harder. Time to think in dynasties. When you Pass the Crown your heir takes the throne: the lands, their taxes, the army and your stores are gone, and the hero starts again at level 1. Everything else stays: his gear, Paths and Techniques, the Capital and every building level, Wonders, the Crown Tree and trophies. Lands you have conquered before fall three times faster for the heir, and the Crowns you took from their rulers become yours to spend. Then spend your new Crowns in the Crown Tree (Skills → Crown Tree) — it lasts forever. After this, each Age runs to land 10, where the Emperor waits.',
+      steps: [ { label: 'Kingdom → Keep → Pass the Crown', check: { stat: 'passed', need: 1 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:found-btn' } }, { label: 'Skills → Crown Tree → spend your new Crowns', check: { stat: 'perksBought', need: 1, since: true }, focus: { tab: 'hero', sub: 'skills', rtab: 'skills', el: 'path:M0' } } ], reward: { crystal: 20 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:found-btn' } },
     { id: 'w06', chain: 'The Kingdom', name: 'Blackwood March', text: 'Past the hills lies the old forest: heartwood for Hardened gear, and the first land your heir has never seen.',
       steps: [ { label: 'Conquer Blackwood March', check: { landDone: 3 } } ], reward: { gold: 20000 }, focus: { tab: 'hero', sub: 'fight', el: 'ground:land3' } },
   ],
@@ -820,20 +834,7 @@ const CONFIG = {
     // Permanent perks bought with Crystals. cost = base × costMult^rank.
     // 0.9: Crowns (formerly Crystals) buy perks in four trees
     trees: [ { id: 'bloodline', name: 'Bloodline', desc: 'The hero' }, { id: 'crown', name: 'Crown', desc: 'The city' }, { id: 'war', name: 'War', desc: 'The army' }, { id: 'realm', name: 'Realm', desc: 'The conquest' } ],
-    perks: [
-      { id: 'bloodline', tree: 'bloodline', name: 'Bloodline',       icon: [1,0],  max: 999, cost: 3,  costMult: 1.12, desc: 'Attack, HP and healing ×1.08 per rank — no limit; it multiplies, so every rank is worth more' },
-      { id: 'veteran',   tree: 'bloodline', name: 'Veteran',         icon: [1,4],  max: 3,  cost: 8,  costMult: 2,   desc: 'Each Combat level gives +1% more attack and HP per rank' },
-      { id: 'cache',     tree: 'crown',     name: "Founder's Cache", icon: [11,11], max: 5, cost: 4,  costMult: 1.6, desc: 'Begin each dynasty with 15 minutes of your last dynasty\'s taxes per rank (at least 1,000 gold)' },
-      { id: 'charter',   tree: 'war',       name: 'Quartermasters',  icon: [14,14], max: 3, cost: 6,  costMult: 2,   desc: '+10% Housing, Arms and Food income per rank' },
-      { id: 'cellar',    tree: 'crown',     name: 'Deep Cellar',     icon: [19,9], max: 4,  cost: 5,  costMult: 1.7, desc: 'AFK cap +2h and Storehouse +25% per rank' },
-      { id: 'memory',    tree: 'crown',     name: 'Long Memory',     icon: [13,8], max: 3,  cost: 6,  costMult: 1.8, desc: 'AFK efficiency +10% per rank' },
-      { id: 'haggler',   tree: 'crown',     name: 'Haggler',         icon: [12,10], max: 5, cost: 4,  costMult: 1.7, desc: 'Sell prices +10% per rank' },
-      { id: 'rations',   tree: 'war',       name: 'Rations',         icon: [14,14], max: 5, cost: 5,  costMult: 1.7, desc: 'Soldiers need 10% less Housing, Arms and Food per rank' },
-      { id: 'warcollege',tree: 'war',       name: 'War College',     icon: [7,1],  max: 5,  cost: 5,  costMult: 1.8, desc: 'The army\'s boost to the hero is 10% bigger per rank' },
-      { id: 'tax',       tree: 'realm',     name: 'Tax Collectors',  icon: [12,7], max: 10, cost: 3,  costMult: 1.5, desc: '+25% taxes per rank' },
-      { id: 'spoils',    tree: 'realm',     name: 'Plunder',         icon: [12,15], max: 5, cost: 5,  costMult: 1.8, desc: '+25% spoils per rank' },
-      { id: 'lap',       tree: 'realm',     name: 'Victory Lap',     icon: [5,7],  max: 3,  cost: 6,  costMult: 2,   desc: 'Lands you have conquered before: hero damage ×3 there, +×1 per rank' },
-    ],
+    perks: [], // 0.11.1: the Legacy perks now live in the Crown Tree (Skills → Crowns)
   },
 };
 
@@ -856,7 +857,7 @@ const CONFIG = {
   const TERRAIN = [['heartwood', 'forest'], ['silver', 'hills'], ['heartwood', 'forest'], ['silver', 'hills'], ['relic', 'holy site']];
   const ART = ['roads_a', 'roads_b', 'wilds_night', 'crypts_b', 'wilds_dusk'];
   let offset = L.offsetStart;
-  for (let n = 1; n <= 200; n++) {
+  for (let n = 1; n <= 10; n++) { // 0.11.1: ten lands per Age
     const stages = n <= L.shortLands ? L.shortStages : L.longStages, types = stages / 10, id = 'land' + n;
     const era = ERAS.filter(e => n >= e[0]).pop()[1], i0 = (n * 3) % era.length;
     const cycle = Math.floor((n - 1) / NAMES.length), sfx = cycle ? ' ' + (['II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'][cycle - 1] || (cycle + 1)) : '';

@@ -47,7 +47,7 @@ function freshKingdom() { return { steps: {}, thralls: [], offers: [], offerTime
 function freshLegacy() {
   return { kingdomLevel: 1, knowledge: 0, perks: {}, heroPath: null, kingdomPath: null, foundings: 0, history: [], kills: {} }; // kills: bestiary counts per enemy type (persist — trophies)
 }
-function perkRank(id) { return (S.legacy.perks || {})[id] || 0; }
+function perkRank(id) { let r = (S.legacy.perks || {})[id] || 0; if (S.hero && S.hero.paths) for (const n of pathNodes()) if (n.perk === id) r += pathRank(n.id); return r; } // 0.11.1: Legacy effects are Crown Tree nodes now
 function heroPath() { return CONFIG.legacy.heroPaths.find(p => p.id === S.legacy.heroPath) || null; }
 function kingdomPath() { return CONFIG.legacy.kingdomPaths.find(p => p.id === S.legacy.kingdomPath) || null; }
 
@@ -181,10 +181,11 @@ function treePointsSpent(d) { let n = 0; for (const node of CONFIG.trees[d] || [
 function treePointsFree(d) { return treePointsTotal(d) - treePointsSpent(d); }
 function talentPointsTotal() { return starsTotal(); }
 function talentPointsSpent() { return starsSpent(); }
-function talentPointsFree() { return talentPointsTotal() - talentPointsSpent(); }
-function canRankNode(d, id) { const n = treeNode(d, id); if (!n || !nodeOpen(d, id) || nodeRank(d, id) >= nodeMax(n)) return false; return n.capstone ? talentPointsFree() > 0 : treePointsFree(d) > 0; }
+function talentPointsFree() { return crowns(); }
+function canRankNode(d, id) { const n = treeNode(d, id); if (!n || !nodeOpen(d, id) || nodeRank(d, id) >= nodeMax(n)) return false; return n.capstone ? crowns() >= 1 : treePointsFree(d) > 0; }
 function rankNode(d, id) {
   if (!canRankNode(d, id)) return false;
+  if (treeNode(d, id).capstone) S.legacy.knowledge -= 1; // capstones cost a Crown
   S.hero.tree = S.hero.tree || {}; S.hero.tree[d] = S.hero.tree[d] || {}; S.hero.tree[d][id] = nodeRank(d, id) + 1;
   return true;
 }
@@ -196,36 +197,39 @@ function respec() {
   S.res.gold -= c; for (const d in CONFIG.trees) for (const n of CONFIG.trees[d]) if (!n.capstone && S.hero.tree && S.hero.tree[d]) delete S.hero.tree[d][n.id];
   log('Respecced the gathering trees (capstones kept).'); return true;
 }
-// ---------- Paths of War (passive, permanent) ----------
+// ---------- 0.11.1: the Crown Tree (Paths of War, bought with Crowns; permanent) ----------
 let _pathNodes = null;
 function pathNodes() {
   if (_pathNodes) return _pathNodes; const P = CONFIG.paths, out = [];
-  for (const b of P.branches) { let k = 0; P.plan.forEach((cols, t) => cols.forEach(c => { const d = P.nodes[b.id][k], per = {}; for (const x in d[1]) per[x] = d[1][x] * P.valueScale * Math.pow(P.valueTier, t); out.push({ id: b.id + k, b: b.id, t, c, name: d[0], per, kind: d[2] || 'small' }); k++; })); }
+  for (const b of P.branches) { let k = 0; P.plan.forEach((cols, t) => cols.forEach(c => { const d = P.nodes[b.id][k]; out.push({ id: b.id + k, b: b.id, t, c, name: d[0], per: d[1] || {}, kind: d[2] || 'small', max: d[3] || 0, perk: d[4] || null }); k++; })); }
   for (const n of out) n.parents = n.t === 0 ? [] : out.filter(p => p.b === n.b && p.t === n.t - 1 && Math.abs(p.c - n.c) <= 1).map(p => p.id);
   return (_pathNodes = out);
 }
 function pathNode(id) { return pathNodes().find(n => n.id === id) || null; }
 function pathRank(id) { return (S.hero.paths && S.hero.paths[id]) || 0; }
 function pathRow(t) { return pathNodes().filter(n => n.t === t); }
-function rowOpen(t) { if (t <= 0) return true; const P = CONFIG.paths, row = pathRow(t - 1); let sum = 0; for (const n of row) { const r = pathRank(n.id); if (r < P.openMin) return false; sum += r; } return sum >= P.openAvg * row.length; }
-function rowProgress(t) { const P = CONFIG.paths, row = pathRow(t - 1); let sum = 0, low = 0; for (const n of row) { const r = pathRank(n.id); sum += Math.min(r, P.openAvg); if (r < P.openMin) low++; } return { have: sum, need: P.openAvg * row.length, low }; }
-function pathOpen(id) { const n = pathNode(id); return !!n && rowOpen(n.t); }
-function pathCost(id, r = pathRank(id)) { const C = CONFIG.paths.cost, n = pathNode(id), kp = kingdomPath(); return Math.ceil(C.base * Math.pow(C.tier, n.t) * Math.pow(C.rank, r) * (kp && kp.id === 'merchant' ? 0.85 : 1)); }
-function combatLevelBonus() { return (discLevel('combat') - 1) * (CONFIG.paths.levelBonus + 0.01 * perkRank('veteran')); } // 0.10.9: Combat levels make the hero stronger directly
-function pathNeedsStar(id) { const n = pathNode(id); return !!n && n.kind !== 'small'; }
-function pathPointsTotal() { return Infinity; } // 0.10.9: Paths are bought with gold
+function rowOpen(t) { return true; }
+function rowProgress(t) { return { have: 0, need: 0, low: 0 }; }
+function pathOpen(id) { const n = pathNode(id); return !!n && (!n.parents.length || n.parents.some(p => pathRank(p) >= 1)); } // a node opens once a node above it has a rank
+function pathMaxed(id) { const n = pathNode(id); return !!n && n.kind !== 'endless' && pathRank(id) >= n.max; }
+function pathCost(id, r = pathRank(id)) { const P = CONFIG.paths, n = pathNode(id); if (n.kind === 'endless') return Math.ceil(P.endlessBase * Math.pow(P.endlessGrowth, r)); return P.rowCost[Math.min(n.t, P.rowCost.length - 1)]; }
+function combatLevelBonus() { return (discLevel('combat') - 1) * CONFIG.paths.levelBonus; }
+function pathNeedsStar(id) { return false; }
+function pathPointsTotal() { return Infinity; }
 function pathPointsSpent() { let s = 0; for (const k in (S.hero.paths || {})) s += S.hero.paths[k]; return s; }
-function pathPointsFree() { return pathPointsTotal() - pathPointsSpent(); }
-function pathPointsMax() { return pathNodes().length * CONFIG.paths.ranks; }
-function starsTotal() { return Object.keys(S.hero.stars || {}).length * H.talentPointsPerBoss + (S.hero.bonusTalent || 0); }
-function starsSpent() { let n = 0; for (const p of pathNodes()) if (p.kind !== 'small') n += pathRank(p.id); for (const d in CONFIG.trees) for (const node of CONFIG.trees[d]) if (node.capstone) n += nodeRank(d, node.id); return n; }
-function starDemand() { return Infinity; } // 0.10.9: ★ nodes have no rank cap, so every star has a use
+function pathPointsFree() { return Infinity; }
+function pathPointsMax() { return Infinity; }
+function starsTotal() { return 0; } // 0.11.1: boss ★ became Crowns
+function starsSpent() { return 0; }
+function starDemand() { return Infinity; }
 function starsSpare() { return 0; }
-function starsFree() { return starsTotal() - starsSpent(); }
-function canRankPath(id) { const n = pathNode(id); if (!n || !pathOpen(id) || (S.res.gold || 0) < pathCost(id)) return false; return n.kind === 'small' || starsFree() >= 1; }
-function rankPath(id, times = 1) { let k = 0; S.hero.paths = S.hero.paths || {}; const t0 = pathNode(id) && pathNode(id).t; const was = rowOpen((t0 || 0) + 1); while (k < times && canRankPath(id)) { const c = pathCost(id); S.res.gold -= c; S.hero.pathGold = (S.hero.pathGold || 0) + c; S.hero.paths[id] = pathRank(id) + 1; k++; } if (k && !was && rowOpen(t0 + 1) && pathRow(t0 + 1).length) { log('A new row of your Paths opens!'); pushEvent({ who: 'pathrow', t: t0 + 1 }); } return k; }
-function pathMods() { const m = {}; for (const n of pathNodes()) { const r = pathRank(n.id); if (!r) continue; for (const k in n.per) m[k] = (m[k] || 0) + n.per[k] * r; } return m; }
-function resetPaths() { const c = respecCost(); if (S.res.gold < c || !pathPointsSpent()) return false; S.res.gold -= c; S.hero.paths = {}; log('Your Paths are cleared — every point is back to spend.'); return true; }
+function starsFree() { return 0; }
+function crowns() { return S.legacy.knowledge || 0; }
+function canRankPath(id) { const n = pathNode(id); return !!n && pathOpen(id) && !pathMaxed(id) && crowns() >= pathCost(id); }
+function rankPath(id, times = 1) { let k = 0; S.hero.paths = S.hero.paths || {}; while (k < times && canRankPath(id)) { S.legacy.knowledge -= pathCost(id); S.hero.paths[id] = pathRank(id) + 1; S.stats.crownSpent = (S.stats.crownSpent || 0) + 1; k++; } return k; }
+function pathMods() { const m = {}; for (const n of pathNodes()) { const r = pathRank(n.id); if (!r) continue; for (const k in n.per) { if (k.endsWith('X')) continue; m[k] = (m[k] || 0) + n.per[k] * r; } } return m; }
+function pathX(key) { let x = 1; for (const n of pathNodes()) { const r = pathRank(n.id); if (r && n.per[key]) x *= Math.pow(n.per[key], r); } return x; }
+function resetPaths() { return false; }
 
 // ---------- Techniques (active, permanent: unlocked by milestones, levelled by use) ----------
 function techState(id) { S.hero.techs = S.hero.techs || {}; return S.hero.techs[id] || (S.hero.techs[id] = { xp: 0, mods: [] }); }
@@ -356,8 +360,8 @@ function stats(mode = 'live') {
   st.bossDmg = 1 + (m.bossDmg || 0);
   st.restSpeed = H.restMult * (1 + (m.restSpeed || 0));
   if (mode === 'sustained') { const s = sustainedSkillDps(st); st.dps += s.dps; st.regen += s.heal; }
-  { const am = S.kingdom ? 1 + (armyMult() - 1) * (1 + (m.armyPct || 0)) : 1, lap = S.kingdom && lapActive() ? LC().victoryLap + perkRank('lap') : 1, hm = S.kingdom ? 1 + (armyHpMult() - 1) * ((landTrait(landN()) || {}).armyHp ?? 1) : 1; st.army = am; st.lap = lap; st.gearAttack = st.attack; st.attack *= am * lap; st.dps *= am * lap; st.maxHp *= hm; st.regen *= hm;
-    const bm = Math.pow(1.08, perkRank('bloodline')); st.bloodline = bm; st.attack *= bm; st.dps *= bm; st.maxHp *= bm; st.regen *= bm;
+  { const am = S.kingdom ? 1 + (armyMult() - 1) * (1 + (m.armyPct || 0)) * pathX('armyX') : 1, lap = S.kingdom && lapActive() ? LC().victoryLap + perkRank('lap') : 1, hm = S.kingdom ? 1 + (armyHpMult() - 1) * ((landTrait(landN()) || {}).armyHp ?? 1) : 1; st.army = am; st.lap = lap; st.gearAttack = st.attack; st.attack *= am * lap; st.dps *= am * lap; st.maxHp *= hm; st.regen *= hm;
+    const bm = Math.pow(1.08, perkRank('bloodline')) * pathX('attackX'), lm = Math.pow(1.08, perkRank('lineage')) * pathX('hpX'); st.bloodline = bm; st.attack *= bm; st.dps *= bm; st.maxHp *= lm; st.regen *= lm;
     const wa = wonderMult('attack'), wh = wonderMult('hp'); st.wonder = wa; st.attack *= wa; st.dps *= wa; st.maxHp *= wh; st.regen *= wh; }
   return st;
 }
@@ -385,7 +389,7 @@ function landCurve(stage, gid) { // 0.10.1: {hp, hit} for a land stage, or null 
   const G = CONFIG.grounds[gid]; if (!G || !G.land) return null; const C = LC().curve, n = G.land, S_ = G.stages, end = stage > S_;
   const f = Math.min(1, Math.max(0, (stage - 1) / Math.max(1, S_ - 1))), boss = !end && isBoss(stage), ruler = stage === S_;
   let hp = C.hp * Math.pow(C.landHp, n - 1) * Math.pow(C.spanHp, f), hit = C.hit * Math.pow(C.landHit, n - 1) * Math.pow(C.spanHit, f);
-  { const tr = landTrait(n); if (tr) { hp *= tr.hp || 1; hit *= tr.hit || 1; } }
+  { const tr = landTrait(n); if (tr) { hp *= tr.hp || 1; hit *= tr.hit || 1; } hp *= ageMult('hp'); hit *= ageMult('hit'); }
   if (ruler && isEraRuler(n)) { hp *= CONFIG.eras.rulerHp; hit *= CONFIG.eras.rulerHit; }
   if (ruler) { hp *= C.rulerHp; hit *= C.rulerHit; } else if (boss) { hp *= C.captainHp; hit *= C.captainHit; } else if (end) { const ED = LC().endlessDepth, dp = endlessDepth(n); hp *= C.endless * Math.pow(ED.hp, dp); hit *= C.endless * Math.pow(ED.hit, dp); }
   return { hp: Math.max(1, Math.round(hp)), hit: Math.round(hit * 10) / 10 };
@@ -424,7 +428,7 @@ function dropToolMult(slot) { const p = toolPower(slot); return p > 0 ? 1 + 0.6 
 function groundDrops(stage = S.hero.stage) { // per kill, gated by tech, boosted by tool
   const G = ground(), pool = stagePool(stage), o = {};
   for (const k in pool) { if (!dropUnlocked(k)) continue; let v = pool[k]; const t = G.dropTool && G.dropTool[k]; if (t) { if (!S.hero.tools[t]) continue; v *= dropToolMult(t); } o[k] = v; }
-  if (G.land && G.spoil && farming(S.hero.ground, stage)) { const ED = LC().endlessDepth; o[G.spoil] = Math.max(o[G.spoil] || 0, ED.spoilBase * (1 + ED.perLand * (G.land - 1)) * Math.min(ED.dropCap, Math.pow(ED.drop, endlessDepth(G.land))) * (1 + 0.25 * perkRank('spoils')) * wonderMult('tax') * ((landTrait(G.land) || {}).spoil || 1)); } // farming a conquered land pays its spoil
+  if (G.land && G.spoil && farming(S.hero.ground, stage)) { const ED = LC().endlessDepth; o[G.spoil] = Math.max(o[G.spoil] || 0, ED.spoilBase * (1 + ED.perLand * (G.land - 1)) * Math.min(ED.dropCap, Math.pow(ED.drop, endlessDepth(G.land))) * (1 + 0.25 * perkRank('spoils')) * wonderMult('tax') * ageMult('spoil') * ((landTrait(G.land) || {}).spoil || 1)); } // farming a conquered land pays its spoil
   return o;
 }
 function lootRarity(k) { return (CONFIG.resources[k] && CONFIG.resources[k].rarity) || 'common'; }
@@ -781,6 +785,7 @@ const DEED_ORDER = ['land', 'gear', 'army', 'land', 'trophy']; // passing the cr
 function deedOk(type) {
   const held = landsHeld();
   if (type === 'land') { const L = held + 1; return !!landDef(L) && landQuestOk(L) && (L === 1 || landDone(L - 1)); }
+  if (type === 'heir') return !!(S.kingdom && S.kingdom.ageDone);
   if (type === 'wonder') { const e = nextWonderEra(); return wonderUnlocked(e) && !wonderBuilt(e); }
   if (type === 'gear') return phase() === 3;
   if (type === 'army') return barracksBuilt() && armyLimit() > 0;
@@ -790,7 +795,7 @@ function deedOk(type) {
 }
 function trophyNear() { let best = null; const T = CONFIG.trophies.tiers, here = S.hero.ground + ':'; for (const key in (S.legacy.kills || {})) { if (!key.startsWith(here)) continue; /* only foes the hero is fighting now */ const k = S.legacy.kills[key], nx = T.find(t => k < t.kills); if (!nx) continue; const left = nx.kills - k; if (!best || left < best.left) best = { key, left, tier: nx.name }; } return best; }
 function deedGen() {
-  const Q = S.quests, n = Q.dn || 0, order = deedOk('wonder') ? ['wonder'] : [];
+  const Q = S.quests, n = Q.dn || 0, order = S.kingdom && S.kingdom.ageDone ? ['heir'] : deedOk('wonder') ? ['wonder'] : [];
   for (let i = 0; i < DEED_ORDER.length; i++) order.push(DEED_ORDER[(n + i) % DEED_ORDER.length]);
   for (const type of order) { if (!deedOk(type)) continue;
     const d = { id: 'deed' + n, n: n + 1, type };
@@ -799,6 +804,7 @@ function deedGen() {
     if (type === 'army') d.a = Math.max(10, Math.ceil(armyLimit() * 0.2));
     if (type === 'pass') d.a = crownsIfPass();
     if (type === 'wonder') d.a = nextWonderEra();
+    if (type === 'heir') d.a = ageNo();
     if (type === 'trophy') { const t = trophyNear(); if (t) { const [gid, ...rest] = t.key.split(':'); const nm = (CONFIG.grounds[gid] && (CONFIG.grounds[gid].line || []).find(x => x.id === rest.join(':'))) || null; d.hint = `${t.tier}${nm ? ' ' + nm.name : ''} head, ${t.left} kills to go`; } }
     d.gold = Math.round(Math.max(1000, taxTotalPerHour()));
     return d; }
@@ -807,11 +813,13 @@ function deedGen() {
 function deedCurrent() {
   const Q = S.quests; if (Q.index < CONFIG.quests.length || phase() !== 3) return null;
   if (Q.dq && Q.dq.type === 'trophy' && !deedOk('trophy') && trophyCount() <= ((Q.base || {})[Q.dq.id] || {})['{"stat":"trophies","need":1,"since":true}']) { Q.dn = (Q.dn || 0) + 1; Q.dq = null; } // the hero moved on: hunt something else
+  if (Q.dq && Q.dq.type === 'land' && !landDef(Q.dq.a)) Q.dq = null; // 0.11.1: lands past 10 are gone
   if (!Q.dq) { Q.dq = deedGen(); if (!Q.dq) return null; Q.cur = Q.dq.id; if (Q.base) delete Q.base[Q.dq.id]; }
   const d = Q.dq, tail = { id: d.id, dyn: d.n, chain: 'Deeds', focus: null };
   if (d.type === 'land') { const G = landDef(d.a), rn = G.ruler.charAt(0).toUpperCase() + G.ruler.slice(1);
-    return { ...tail, name: `Take ${G.name}`, text: `${G.name} is held by ${G.ruler}${isEraRuler(d.a) ? ', an Era Ruler — twice as tough, and his fall unlocks the ' + wonderFor(eraOf(d.a)).name : ''} — land ${d.a}, ${G.stages} stages, and harder than anything behind you. Its crown is worth ${rulerCrowns(d.a)} Crown${rulerCrowns(d.a) === 1 ? '' : 's'} when the crown passes.${deedOk('pass') ? ` Or, if the wall is too high: this dynasty would pass ${crownsIfPass()} Crowns, more than any before it (Keep → Pass the Crown).` : ''}`,
+    return { ...tail, name: `Take ${G.name}`, text: `${G.name} is held by ${G.ruler}${d.a === CONFIG.ages.lands ? ', the Emperor — the last and hardest ruler of the Age; his fall lets you crown your heir into the ' + ageName(ageNo() + 1) + ' and unlocks the ' + wonderFor(gEra(d.a)).name : isEraRuler(d.a) ? ', an Era Ruler — far tougher, and his fall unlocks the ' + wonderFor(gEra(d.a)).name : ''} — land ${d.a}, ${G.stages} stages, and harder than anything behind you. Its crown is worth ${rulerCrowns(d.a)} Crown${rulerCrowns(d.a) === 1 ? '' : 's'} when the crown passes.${deedOk('pass') ? ` Or, if the wall is too high: this dynasty would pass ${crownsIfPass()} Crowns, more than any before it (Keep → Pass the Crown).` : ''}`,
       steps: [{ label: `Conquer ${G.name}`, check: { landDone: d.a } }], reward: { gold: d.gold, talent: 2 }, focus: { tab: 'hero', sub: 'fight', el: 'ground:' + landId(d.a) } }; }
+  if (d.type === 'heir') return { ...tail, name: 'Crown Your Heir', text: `The Emperor has fallen and the ${ageName()} is won. In the Keep, crown your heir: the ${ageName(ageNo() + 1)} begins with the same ten lands — far richer and far tougher — and every Crown you took this Age.`, steps: [{ label: 'Kingdom → Keep → Crown your heir', check: { stat: 'age', need: 1, since: true } }], reward: { talent: 5 * ageNo() }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:found-btn' } };
   if (d.type === 'wonder') { const W = wonderFor(d.a);
     return { ...tail, name: `Raise the ${W.name}`, text: `The Era Ruler has fallen. Pour gold and ${CONFIG.resources[W.def.spoil].name.toLowerCase()} into the ${W.name} in the Keep — farm an old land's Endless Battle if you run short. When it stands: ${W.def.desc}.`,
       steps: [{ label: `Kingdom → Keep → build the ${W.name}`, check: { stat: 'wondersBuilt', need: 1, since: true } }], reward: { talent: 3 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:wonder-card' } }; }
@@ -846,7 +854,8 @@ function questStat(k) {
     case 'armyEffPct': return phase() === 3 && soldiers() > 0 ? Math.min(100, Math.floor(armyEff() * 100 + 1e-6)) : 0;
     case 'trained': return S.stats.trained || 0;
     case 'endlessKills': return S.stats.endlessKills || 0;
-    case 'perksBought': { let n = 0; for (const id in (S.legacy.perks || {})) n += S.legacy.perks[id] || 0; return n; }
+    case 'perksBought': return S.stats.crownSpent || 0;
+    case 'age': return ageNo();
     case 'passed': return (S.legacy.dynasty || 1) > 1 ? 1 : 0;
     case 'dynasty': return S.legacy.dynasty || 1;
     case 'trophies': return trophyCount();
@@ -943,7 +952,7 @@ function suggestGoal() {
 }
 function questClaim() {
   const q = questCurrent(); if (!q || !questProgress(q).done) return false;
-  for (const k in q.reward) { if (k === 'talent') S.hero.bonusTalent = (S.hero.bonusTalent || 0) + q.reward[k]; else if (k === 'crystal') {} else add(k, q.reward[k]); }
+  for (const k in q.reward) { if (k === 'talent') S.legacy.knowledge = (S.legacy.knowledge || 0) + q.reward[k]; /* 0.11.1: ★ rewards pay Crowns */ else if (k === 'crystal') {} else add(k, q.reward[k]); }
   if (q.reward && q.reward.crystal) { S.legacy.knowledge += q.reward.crystal; log(`+${q.reward.crystal} Crystal`); }
   if (q.dyn) { const Q = S.quests; if (Q.base) delete Q.base[q.id]; Q.dn = (Q.dn || 0) + 1; Q.dq = null; Q.cur = null; log(`Deed done: ${q.name}`); return true; }
   S.quests.done[q.id] = true; if (S.quests.base) delete S.quests.base[q.id]; S.quests.index++; S.quests.cur = (CONFIG.quests[S.quests.index] || {}).id || null; log(`Quest complete: ${q.name}`); return true;
@@ -981,7 +990,7 @@ function onKill(st) {
   const s = S.hero.stage;
   // Whole-unit loot: expected value v → floor(v) plus a (v − floor) chance of one more. Averages match the AFK rate model.
   const roll = v => Math.floor(v) + (Math.random() < v - Math.floor(v) ? 1 : 0);
-  const LN = landN(), TR = landTrait(LN), exp = { gold: (LN ? 6 * Math.pow(2, LN - 1) * (1 + s / 25) * (TR && TR.gold !== undefined ? TR.gold : 1) : CONFIG.stages.goldPerKill(s) * ground().goldMult) * st.gold };
+  const LN = landN(), TR = landTrait(LN), exp = { gold: (LN ? 6 * Math.pow(2, LN - 1) * (1 + s / 25) * ageMult('gold') * (TR && TR.gold !== undefined ? TR.gold : 1) : CONFIG.stages.goldPerKill(s) * ground().goldMult) * st.gold };
   const d = groundDrops(s); for (const k in d) exp[k] = d[k] * st.drop;
   const loot = {}; for (const k in exp) { const n = roll(exp[k]); if (n > 0) { add(k, n); loot[k] = n; S.stats.looted = S.stats.looted || {}; S.stats.looted[k] = (S.stats.looted[k] || 0) + n; } }
   if (Object.keys(loot).length) pushEvent({ who: 'loot', loot });
@@ -989,7 +998,7 @@ function onKill(st) {
   S.hero.kills++; S.hero.totalKills++; if (isEndless()) { S.stats.endlessKills = (S.stats.endlessKills || 0) + 1; if (farming()) endlessWin(1); }
   if (!S.hero.gear.weapon) { const b = fistLevel(); S.hero.fistKills = (S.hero.fistKills || 0) + 1; if (fistLevel() > b) { log(`Your fists harden: ${slotValue('weapon').toFixed(1)} damage`); pushEvent({ who: 'craft', name: 'Fists ' + slotValue('weapon').toFixed(1) }); } }
   { const key = typeKey(s); S.legacy.kills = S.legacy.kills || {}; const before = trophyTier(key), bt = bestiaryTier(key); S.legacy.kills[key] = (S.legacy.kills[key] || 0) + 1; const after = trophyTier(key); if (after > before) { log(`Trophy earned: ${CONFIG.trophies.tiers[after].name} ${enemyType(s).name} head!`); pushEvent({ who: 'trophy', key, tier: after, name: enemyType(s).name }); } if (bestiaryTier(key) > bt) log(`Bestiary: ${enemyType(s).plural} — ${CONFIG.bestiary.tiers[bestiaryTier(key)].name}`); }
-  if (isBoss(s)) { const bk = S.hero.ground + ':' + s; if (!S.hero.bossesKilled[bk]) { S.hero.bossesKilled[bk] = true; S.hero.stars = S.hero.stars || {}; const newStar = !S.hero.stars[bk]; S.hero.stars[bk] = true; if (LN && s === ground().stages) onRulerSlain(LN); const u = enemyType(s).unique; if (u && CONFIG.resources[u]) { add(u, 1); pushEvent({ who: 'loot', loot: { [u]: 1 }, unique: true }); } log(`Defeated ${enemyName(s)}!${newStar ? ' +1 ★' : ''}${u ? ' +' + CONFIG.resources[u].name : ''}`); } else { const u = enemyType(s).unique; if (u && S.legacy.foundings === 0 && CONFIG.legacy.tribute[u] && !(S.res[u] >= 1)) { add(u, 1); pushEvent({ who: 'loot', loot: { [u]: 1 }, unique: true }); } log(`Defeated ${enemyName(s)}!`); } }
+  if (isBoss(s)) { const bk = S.hero.ground + ':' + s; if (!S.hero.bossesKilled[bk]) { S.hero.bossesKilled[bk] = true; S.hero.stars = S.hero.stars || {}; const newStar = !S.hero.stars[bk]; S.hero.stars[bk] = true; let gotC = 0; if (!LN && newStar) { gotC = CONFIG.ages.crowns.boss; S.legacy.knowledge = (S.legacy.knowledge || 0) + gotC; } if (LN && s !== ground().stages) { S.legacy.capAge = S.legacy.capAge || {}; if ((S.legacy.capAge[bk] || 0) < ageNo()) { S.legacy.capAge[bk] = ageNo(); gotC = CONFIG.ages.crowns.captain * ageNo(); S.legacy.knowledge = (S.legacy.knowledge || 0) + gotC; } } if (LN && s === ground().stages) onRulerSlain(LN); const u = enemyType(s).unique; if (u && CONFIG.resources[u]) { add(u, 1); pushEvent({ who: 'loot', loot: { [u]: 1 }, unique: true }); } log(`Defeated ${enemyName(s)}!${gotC ? ` +${gotC} 👑` : ''}${u ? ' +' + CONFIG.resources[u].name : ''}`); } else { const u = enemyType(s).unique; if (u && S.legacy.foundings === 0 && CONFIG.legacy.tribute[u] && !(S.res[u] >= 1)) { add(u, 1); pushEvent({ who: 'loot', loot: { [u]: 1 }, unique: true }); } log(`Defeated ${enemyName(s)}!`); } }
   if (S.hero.kills >= autoKillsNeeded() && canAdvance() && !autoAdvanceBlock()) { advance(); S.hero.autoAdvanced = (S.hero.autoAdvanced || 0) + 1; }
 }
 function gainXp(x) {
@@ -1007,7 +1016,7 @@ function log(msg) { S.log.unshift(msg); if (S.log.length > 30) S.log.length = 30
 // ---------- Live simulation ----------
 // Discrete combat: hero swings every 1/speed sec (rolls crit), enemy swings every enemyAttackInterval sec.
 const EVENTS = []; // transient hit events for the UI: {who:'hero'|'enemy', dmg, crit, skill}
-const BIG_EV = { era: 1, wonder: 1, pathrow: 1, depth: 1, crown: 1, crownpass: 1, proclaim: 1, tier: 1, milestone: 1, trophy: 1, levelup: 1 }, BIGS = []; // 0.10.5: moments worth a banner, kept apart so hit numbers can't push them out
+const BIG_EV = { newage: 1, emperor: 1, era: 1, wonder: 1, pathrow: 1, depth: 1, crown: 1, crownpass: 1, proclaim: 1, tier: 1, milestone: 1, trophy: 1, levelup: 1 }, BIGS = []; // 0.10.5: moments worth a banner, kept apart so hit numbers can't push them out
 function pushEvent(e) { if (BIG_EV[e.who]) { BIGS.push(e); if (BIGS.length > 12) BIGS.shift(); return; } EVENTS.push(e); if (EVENTS.length > 20) EVENTS.shift(); }
 function heroStrike(st) {
   const crit = Math.random() < st.crit;
@@ -1135,13 +1144,13 @@ function barracksBuilt() { return barracksLv() > 0; }
 function barracksCost() { const l = barracksLv(); if (!l) return { ...AC().build }; return { gold: Math.round(AC().costBase * Math.pow(l, AC().costExp)) }; }
 function canUpBarracks() { return phase() === 3 && barracksLv() < levelCap() && canAfford(barracksCost()); }
 function upgradeBarracks() { if (!canUpBarracks()) return false; pay(barracksCost()); S.kingdom.barracks = S.kingdom.barracks || { lv: 0, train: 0 }; S.kingdom.barracks.lv++; if (S.kingdom.barracks.lv === 1) log('Built the Barracks.'); return true; }
-function trainPerMin() { return barracksBuilt() ? (AC().trainPerMin * barracksLv() + armyLimit() * 0.004) * wonderMult('recruit') : 0; } // 0.10.13: a bigger realm musters faster — a full army refills in about 4 hours
+function trainPerMin() { return barracksBuilt() ? (AC().trainPerMin * barracksLv() + armyLimit() * 0.004) * wonderMult('recruit') * (1 + 0.5 * perkRank('drill')) : 0; } // 0.10.13: a bigger realm musters faster — a full army refills in about 4 hours
 function upkeepMult() { return Math.max(0.5, 1 - 0.1 * perkRank('rations')); }
 // ---- 0.10 war economy: three incomes (per minute) against the army's demand ----
 const WAR_KEYS = ['housing', 'arms', 'food'];
 let _warRates = null, _warAt = -1;
 function warRates() { const t = S.hero.time; if (_warRates && _warAt === t) return _warRates; _warAt = t; return (_warRates = kingdomRates()); }
-function warIncome(k) { const r = warRates(), g = AC().lines[k].good; return (r[g] || 0) * 60 * (1 + 0.1 * perkRank('charter')) * wonderMult('supply'); }
+function warIncome(k) { const r = warRates(), g = AC().lines[k].good; return (r[g] || 0) * 60 * (1 + 0.15 * perkRank('charter')) * (1 + 0.1 * perkRank('treasury')) * wonderMult('supply'); }
 function demandMult() { return (1 + AC().demandPerLand * landsHeld()) * upkeepMult(); }
 function perSoldier(k) { return AC().upkeep[k] * demandMult(); }
 function warDemand(k, n = soldiers()) { return n * perSoldier(k); }
@@ -1214,11 +1223,11 @@ function garrisonNeed(n) { return LC().garrisonPer * n; }
 function garrisonFill(n) { return Math.min(1, (landState(n).garrison || 0) / garrisonNeed(n)); }
 function vaultCount() { return Object.keys(S.legacy.vault || {}).length; }
 function taxGrowthTo(n) { const L = LC(), k = L.taxSlowAfter || 10; return Math.pow(L.taxGrowth, Math.min(n, k) - 1) * Math.pow(L.taxGrowthLate || L.taxGrowth, Math.max(0, n - k)); } // 0.10.13: taxes climb fast to land 10, then more slowly than the lands get harder
-function taxFull(n) { return LC().taxBase * taxGrowthTo(n) * wonderMult('tax') * (1 + 0.25 * perkRank('tax')) * (1 + 0.02 * vaultCount()); }
+function taxFull(n) { return LC().taxBase * taxGrowthTo(n) * ageMult('gold') * wonderMult('tax') * (1 + 0.1 * perkRank('treasury')) * (1 + 0.25 * perkRank('tax')) * (1 + 0.02 * vaultCount()); }
 function landShare(n) { const pct = landPct(n) / 100; return heroInLand(n) ? Math.min(pct, LC().heroHereCap) : pct; } // while the hero still fights in a land, it pays at most half
 function heroInLand(n) { return phase() === 3 && landN() === n && !landDone(n); } // 0.10.6: a conquered land pays in full even while the hero farms its Endless Battle
 function taxPerHour(n) { const pct = landShare(n); return pct > 0 ? taxFull(n) * pct * garrisonFill(n) : 0; }
-function spoilPerHour(n) { return LC().spoilPerHour * landShare(n) * garrisonFill(n) * (1 + 0.25 * perkRank('spoils')) * wonderMult('tax'); }
+function spoilPerHour(n) { return LC().spoilPerHour * ageMult('spoil') * landShare(n) * garrisonFill(n) * (1 + 0.25 * perkRank('spoils')) * wonderMult('tax'); }
 function cofferCap(n) { return taxFull(n) * LC().cofferHours; }
 function cofferTotal() { let g = 0; for (const k in (S.kingdom.lands || {})) g += S.kingdom.lands[k].coffer || 0; return g; }
 function taxTotalPerHour() { let g = 0; for (const n of landsTouched()) g += taxPerHour(n); return g; }
@@ -1238,12 +1247,16 @@ function rulerCrowns(n) { return Math.max(1, Math.round(1 + 0.8 * n)); } // 0.10
 // ======================= 0.11: Eras, Era Rulers, traits, Wonders =======================
 function eraOf(n) { return Math.ceil(n / CONFIG.eras.size); }
 function isEraRuler(n) { return n > 0 && n % CONFIG.eras.size === 0; }
-function landTrait(n) { if (!n) return null; const e = eraOf(n), T = CONFIG.eras.traits; return e <= 1 ? null : T[1 + (e - 2) % (T.length - 1)]; }
+function ageNo() { return (S.legacy && S.legacy.age) || 1; }
+function ageName(a = ageNo()) { const N = CONFIG.ages.names; return N[a - 1] || `Age ${roman(a)}`; }
+function gEra(n) { return (ageNo() - 1) * (CONFIG.ages.lands / CONFIG.eras.size) + eraOf(n); } // eras keep counting across Ages
+function ageMult(k) { return Math.pow(CONFIG.ages[k], ageNo() - 1); }
+function landTrait(n) { if (!n) return null; const e = gEra(n), T = CONFIG.eras.traits; return e <= 1 ? null : T[1 + (e - 2) % (T.length - 1)]; }
 function wonderFor(e) { const W = CONFIG.wonders, def = W[(e - 1) % W.length], lv = Math.floor((e - 1) / W.length) + 1; return { e, def, lv, name: def.name + (lv > 1 ? ' ' + roman(lv) : '') }; }
 function wonderState(e) { S.legacy.wonders = S.legacy.wonders || {}; return S.legacy.wonders[e] || (S.legacy.wonders[e] = { paid: {}, built: false }); }
 function wonderUnlocked(e) { return (S.legacy.eraBest || 0) >= e; }
 function wonderBuilt(e) { return !!(S.legacy.wonders && S.legacy.wonders[e] && S.legacy.wonders[e].built); }
-function wonderCost(e) { const W = wonderFor(e), C = CONFIG.wonderCost, L = LC(); return { gold: Math.round(L.taxBase * taxGrowthTo(e * CONFIG.eras.size) * C.taxHours), [W.def.spoil]: Math.round(C.spoilBase * Math.pow(C.spoilGrowth, e - 1)) }; }
+function wonderCost(e) { const W = wonderFor(e), C = CONFIG.wonderCost, L = LC(), per = CONFIG.ages.lands / CONFIG.eras.size, a = Math.ceil(e / per), land = ((e - 1) % per + 1) * CONFIG.eras.size; return { gold: Math.round(L.taxBase * taxGrowthTo(land) * Math.pow(CONFIG.ages.gold, a - 1) * C.taxHours), [W.def.spoil]: Math.round(C.spoilBase * Math.pow(C.spoilGrowth, e - 1)) }; }
 function wonderProgress(e) { const c = wonderCost(e), p = wonderState(e).paid; let have = 0, need = 0; for (const k in c) { need += 1; have += Math.min(1, (p[k] || 0) / c[k]); } return have / need; }
 function contributeWonder(e) {
   if (!wonderUnlocked(e) || wonderBuilt(e)) return false; const c = wonderCost(e), st = wonderState(e); let any = false;
@@ -1263,8 +1276,10 @@ function wonderMult(key) { let m = 1; for (const e in (S.legacy.wonders || {})) 
 function wonderAdd(key) { let a = 0; for (const e in (S.legacy.wonders || {})) { if (!S.legacy.wonders[e].built) continue; const d = wonderFor(+e).def; if (d[key]) a += d[key]; } return a; }
 function nextWonderEra() { const b = S.legacy.eraBest || 0; for (let e = 1; e <= b; e++) if (!wonderBuilt(e)) return e; return b + 1; }
 function onRulerSlain(n) {
-  if (isEraRuler(n)) { const e = eraOf(n); if (e > (S.legacy.eraBest || 0)) { S.legacy.eraBest = e; const W = wonderFor(e); log(`An Era Ruler falls! The ${W.name} can now be built in the Keep.`); pushEvent({ who: 'era', e }); } }
-  const G = landDef(n), v = rulerCrowns(n); S.kingdom.crownsRun = (S.kingdom.crownsRun || 0) + v;
+  if (isEraRuler(n)) { const e = gEra(n); if (e > (S.legacy.eraBest || 0)) { S.legacy.eraBest = e; const W = wonderFor(e); log(`An Era Ruler falls! The ${W.name} can now be built in the Keep.`); pushEvent({ who: 'era', e }); } }
+  const A = ageNo(), CR = CONFIG.ages.crowns; S.legacy.rulerAge = S.legacy.rulerAge || {}; const firstThisAge = (S.legacy.rulerAge[n] || 0) < A; if (firstThisAge) S.legacy.rulerAge[n] = A;
+  const G = landDef(n), v = firstThisAge ? (rulerCrowns(n) + (isEraRuler(n) ? CR.eraRuler : 0) + (n === CONFIG.ages.lands ? CR.emperor : 0)) * A : 0; S.kingdom.crownsRun = (S.kingdom.crownsRun || 0) + v;
+  if (n === CONFIG.ages.lands) { S.kingdom.ageDone = true; log(`The Emperor has fallen — the ${ageName()} is won. Crown your heir in the Keep to begin the ${ageName(A + 1)}.`); pushEvent({ who: 'emperor', a: A }); }
   S.legacy.vault = S.legacy.vault || {}; const first = !S.legacy.vault[n]; if (first) S.legacy.vault[n] = G.crown;
   log(`${G.name} is conquered! You take ${G.crown} (+${v} 👑)${first ? ' — a new crown for the Vault' : ''}.`); pushEvent({ who: 'crown', n, v, first });
   S.kingdom.demandNote = { land: n, name: G.name, t: S.hero.time, pct: Math.round(AC().demandPerLand * 100 * (landsHeld())) };
@@ -1273,11 +1288,14 @@ function canPassCrown() { return phase() === 3 && landsHeld() >= 1 && (questReac
 function infoOn(id) { const q = CONFIG.legacy.infoUnlock[id]; return !q || questReached(q) || S.legacy.foundings > 0; }
 function passKeep() { return CONFIG.legacy.passKeep; }
 function crownsIfPass() { return S.kingdom.crownsRun || 0; }
+function crownHeir() { // 0.11.1: after the Emperor falls — the heir begins the next Age
+  if (!S.kingdom.ageDone || !canPassCrown()) return false; const from = ageNo(); S.legacy.age = from + 1; const g = passCrown(); log(`The ${ageName()} begins.`); pushEvent({ who: 'newage', a: ageNo(), gain: g }); return g;
+}
 function passCrown() {
   if (!canPassCrown()) return false;
   const leg = S.legacy, gain = crownsIfPass(), held = landsHeld(); leg.lastTaxH = taxTotalPerHour();
   leg.knowledge += gain; leg.crownsEarned = (leg.crownsEarned || 0) + gain; leg.lapLand = Math.max(leg.lapLand || 0, held); leg.dynasty = (leg.dynasty || 1) + 1;
-  leg.history.push({ dynasty: leg.dynasty - 1, lands: held, crowns: gain, heroLevel: S.hero.level });
+  leg.history.push({ dynasty: leg.dynasty - 1, lands: held, crowns: gain, heroLevel: S.hero.level, age: ageNo() });
   const h = S.hero;
   // 0.10.4: the heir inherits the hero's gear and the Capital as they stand — passing the crown is a victory lap, not a loss
   h.level = 1; h.xp = 0; h.crafting = null;
@@ -1291,7 +1309,7 @@ function passCrown() {
   for (const id in (K.steps || {})) { const st = K.steps[id]; st.lv = Math.max(1, Math.floor(st.lv * keep)); st.inBuf = 0; st.phase = 0; st.t = 0; }
   for (const id in (K.halls || {})) if (K.halls[id] > 0) K.halls[id] = Math.max(1, Math.floor(K.halls[id] * keep));
   if (K.barracks) { K.barracks.lv = Math.max(1, Math.floor(K.barracks.lv * keep)); K.barracks.train = 0; }
-  K.lands = {}; K.crownsRun = 0; K.orders = []; K.deserting = false; K.tierPaid = {};
+  K.lands = {}; K.crownsRun = 0; K.ageDone = false; K.orders = []; K.deserting = false; K.tierPaid = {};
   for (const k in S.res) S.res[k] = 0;
   add('gold', 500 + perkRank('cache') * Math.max(1000, 0.25 * (leg.lastTaxH || 0)));
   if (S.quests.dq && S.quests.dq.type === 'pass') { /* the Deed completes on this pass */ } else if (S.quests.cur !== 'w05b') { S.quests.dq = null; const w = CONFIG.quests.findIndex(q => q.id === 'w06'); if (w >= 0) { S.quests.index = w; S.quests.cur = 'w06'; if (S.quests.base) delete S.quests.base.w06; } } // the heir picks up at Blackwood March
@@ -1357,6 +1375,22 @@ function load() {
       for (const id in OLD) if (P[id]) { let c = 0; for (let i = 0; i < P[id]; i++) c += Math.ceil(OLD[id][0] * Math.pow(OLD[id][1], i)); S.legacy.knowledge = (S.legacy.knowledge || 0) + c; delete P[id]; } }
     if (S.kingdom && !S.kingdom.cr104) { S.kingdom.cr104 = true; if (phase() === 3) { let c = 0; for (let n = 1; landDef(n) && landDone(n); n++) c += rulerCrowns(n); S.kingdom.crownsRun = c; } } // 0.10.4: the new Crown curve counts for this dynasty too
     if (phase() === 3 && S.hero.activity !== 'fight') { S.hero.activity = 'fight'; S.hero.harvestTimer = 0; } // 0.10.6: no gathering in the Kingdom phase
+    if (!S.legacy.v111) { S.legacy.v111 = true; const L = S.legacy, h = S.hero; // 0.11.1: the Crown Tree and Ages
+      let capsLearned = 0; for (const d in CONFIG.trees) for (const node of CONFIG.trees[d]) if (node.capstone && nodeRank(d, node.id)) capsLearned++;
+      const starsOld = Object.keys(h.stars || {}).length + (h.bonusTalent || 0), starBack = Math.max(0, starsOld - capsLearned); h.bonusTalent = 0;
+      const goldBack = h.pathGold || 0; if (goldBack > 0) S.res.gold = (S.res.gold || 0) + goldBack; h.pathGold = 0; h.paths = {};
+      const OLD = { bloodline: [3, 1.12], veteran: [8, 2], charter: [6, 2], cellar: [5, 1.7], memory: [6, 1.8], haggler: [4, 1.7], rations: [5, 1.7], warcollege: [5, 1.8], tax: [3, 1.5], spoils: [5, 1.8], lap: [6, 2], cache: [4, 1.6], heirloom: [10, 2.2], oldblade: [20, 1], blueprints: [6, 1.8], drill: [4, 1.7], standing: [8, 2] };
+      let perkBack = 0; for (const id in (L.perks || {})) { const o = OLD[id] || [5, 1.6]; for (let i = 0; i < L.perks[id]; i++) perkBack += Math.ceil(o[0] * Math.pow(o[1], i)); } L.perks = {};
+      L.knowledge = (L.knowledge || 0) + starBack + perkBack;
+      let maxLand = 0; for (const k in (h.bossesKilled || {})) { const m = /^land(\d+):/.exec(k); if (m) maxLand = Math.max(maxLand, +m[1]); } for (const n in (L.vault || {})) maxLand = Math.max(maxLand, +n);
+      L.age = maxLand > CONFIG.ages.lands ? Math.floor(maxLand / CONFIG.ages.lands) + 1 : 1; L.lapLand = Math.min(L.lapLand || 0, CONFIG.ages.lands);
+      if (!CONFIG.grounds[h.ground]) { h.ground = 'land1'; h.stage = 1; h.bestStage = 1; h.kills = 0; h.enemyHp = 0; }
+      for (const id in (h.grounds || {})) if (!CONFIG.grounds[id]) delete h.grounds[id];
+      if (maxLand > CONFIG.ages.lands && phase() === 3) { const run = S.kingdom.crownsRun || 0; L.knowledge += run; S.kingdom.crownsRun = 0; for (const k in h.bossesKilled) if (/^land\d+:/.test(k)) delete h.bossesKilled[k]; S.kingdom.lands = {}; L.lapLand = CONFIG.ages.lands; L.dynasty = (L.dynasty || 1) + 1; h.ground = 'land1'; h.stage = 1; h.bestStage = 1; }
+      else if (phase() === 3 && landDone(CONFIG.ages.lands)) S.kingdom.ageDone = true;
+      S.legacy.migrate111 = { starBack, goldBack, perkBack, age: L.age };
+      log(`The Crown Tree replaces Paths and Legacy perks: +${starBack + perkBack} Crowns refunded${goldBack ? `, +${fmt(goldBack)} gold back from Paths` : ''}. You are in the ${ageName()}.`);
+    }
     if (S.legacy.eraBest === undefined) { let b = 0; for (const n in (S.legacy.vault || {})) if (isEraRuler(+n)) b = Math.max(b, eraOf(+n)); S.legacy.eraBest = b; } // 0.11: Era Rulers you have already beaten unlock their Wonders
     if (S.hero.fightOn === undefined) S.hero.fightOn = S.hero.activity === 'fight' || !!(S.hero.chose || {}).fight || (S.hero.totalKills || 0) > 0 || phase() === 3; // 0.10.12
     if (S.hero.fightOn && S.hero.activity === 'idle') S.hero.activity = 'fight';
@@ -1411,7 +1445,7 @@ window.Game = {
   hallDef, hallLv, hallAvailable, hallCost, canHall, upgradeHall,
   barracksLv, barracksBuilt, barracksCost, canUpBarracks, upgradeBarracks, trainPerMin, housing, foodPerMin, suppliesPerMin, upkeepPerMin, armyLimit, armyLimitBy, soldiers, garrisoned, marching, armyMult, armyHpMult,
   landId, landN, landDef, landState, landDone, landPct, landsHeld, landOpen, landsTouched, garrisonNeed, garrisonFill, taxFull, taxPerHour, spoilPerHour, cofferCap, cofferTotal, taxTotalPerHour, collectTaxes, setGarrison,
-  rulerCrowns, titheShare, eraOf, isEraRuler, landTrait, wonderFor, wonderState, wonderUnlocked, wonderBuilt, wonderCost, wonderProgress, contributeWonder, wonderMult, nextWonderEra, gatherOn, bgFactor, pathCost, rowOpen, rowProgress, pathRow, combatLevelBonus, endlessDepth, farming, farmLand, starsSpare, starDemand, vaultCount, canPassCrown, landReqText, landQuestOk, passKeep, infoOn, questStat, crownsIfPass, passCrown, lapActive,
+  rulerCrowns, ageNo, ageName, gEra, crowns, pathMaxed, crownHeir, titheShare, eraOf, isEraRuler, landTrait, wonderFor, wonderState, wonderUnlocked, wonderBuilt, wonderCost, wonderProgress, contributeWonder, wonderMult, nextWonderEra, gatherOn, bgFactor, pathCost, rowOpen, rowProgress, pathRow, combatLevelBonus, endlessDepth, farming, farmLand, starsSpare, starDemand, vaultCount, canPassCrown, landReqText, landQuestOk, passKeep, infoOn, questStat, crownsIfPass, passCrown, lapActive,
   repairPosts,
   phase, canProclaim, proclaim,
   stockMode, setStockMode, stockTarget, stockDemand, STOCK_MODES,

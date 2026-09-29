@@ -290,7 +290,7 @@ const UI = (() => {
       case 'halls': return reached('h04') || (Game.kingdomNo() > 0 && Game.kTier() >= 2);
       case 'tavern': return false;
       case 'keep': return reached('q17') || S.legacy.foundings > 0;
-      case 'legacy': return reached('w05b') || (S.legacy.dynasty || 1) > 1 || Game.questStat('perksBought') > 0;
+      case 'legacy': return false; // 0.11.1: Legacy lives in the Crown Tree now
       case 'gear': return reached('f03');
       case 'skills': return reached('q02b');
       case 'market': return reached('q14') || S.legacy.foundings > 0;
@@ -853,36 +853,35 @@ const UI = (() => {
       <div class="small dim" data-f="cost"></div>
       <div class="pp-btns"><button class="buy" data-f="one">+1 rank</button><button class="buy maxbtn" data-f="max">+10 ranks</button></div>`;
     pop.querySelector('[data-f=one]').addEventListener('click', () => { if (pathSel && Game.rankPath(pathSel, 1)) { flash(pop); render(true); } });
-    pop.querySelector('[data-f=max]').addEventListener('click', () => { if (pathSel && Game.rankPath(pathSel, 10)) { flash(pop); render(true); } });
+    pop.querySelector('[data-f=max]').addEventListener('click', () => { if (pathSel && Game.rankPath(pathSel, 999)) { flash(pop); render(true); } });
   }
   function renderPaths() {
     const S = Game.S, f = Game.fmt, nodes = Game.pathNodes(), RK = CONFIG.paths.ranks, col = {}; for (const b of CONFIG.paths.branches) col[b.id] = b.color;
-    const pr = Game.discProgress('combat'), sf = Game.starsFree(), OA = CONFIG.paths.openAvg, gold = S.res.gold || 0;
+    const pr = Game.discProgress('combat'), cr = Game.crowns(), PD = CONFIG.paths.perkDesc;
     setText($('path-lv'), `Combat Lv ${pr.level}`); setText($('path-free'), `+${Math.round(Game.combatLevelBonus() * 100)}%`); setText($('path-free-lab'), 'attack & HP from Combat levels');
-    setText($('path-spent'), f(S.hero.pathGold || 0)); setText($('path-spent-of'), 'gold spent on Paths');
-    setText($('path-stars'), `${sf} ★`); $('path-xpbar').style.width = (100 * pr.have / pr.need) + '%'; setText($('path-xptext'), `${f(pr.have)} / ${f(pr.need)} XP to Combat Lv ${pr.level + 1}`);
+    setText($('path-spent'), f(Game.pathPointsSpent())); setText($('path-spent-of'), 'ranks bought');
+    setText($('path-stars'), `${f(cr)} 👑`); $('path-xpbar').style.width = (100 * pr.have / pr.need) + '%'; setText($('path-xptext'), `${f(pr.have)} / ${f(pr.need)} XP to Combat Lv ${pr.level + 1}`);
     let anyCan = false; if (!pathSel || !Game.pathNode(pathSel)) pathSel = nodes[0].id;
+    const nodeDesc = n => n.perk ? PD[n.perk] : fmtMods(Object.fromEntries(Object.entries(n.per).filter(([k]) => !k.endsWith('X')))) + Object.entries(n.per).filter(([k]) => k.endsWith('X')).map(([k, v]) => ` ${k === 'attackX' ? 'attack' : k === 'hpX' ? 'HP' : 'army boost'} ×${v}`).join('');
     for (const n of nodes) {
-      const E = pathEls[n.id]; if (!E) continue; const r = Game.pathRank(n.id), open = Game.pathOpen(n.id), can = Game.canRankPath(n.id); if (can && r === 0) anyCan = true;
-      const full = r >= OA;
+      const E = pathEls[n.id]; if (!E) continue; const r = Game.pathRank(n.id), open = Game.pathOpen(n.id), can = Game.canRankPath(n.id), maxed = Game.pathMaxed(n.id); if (can && r === 0) anyCan = true;
+      const full = n.kind === 'endless' ? r > 0 : maxed;
       E.shape.setAttribute('fill', full ? col[n.b] : r > 0 ? '#2a1f16' : '#15110e');
       E.shape.setAttribute('stroke', can ? '#e8c06a' : open ? '#8a6a33' : '#4a3a2a'); E.shape.setAttribute('stroke-width', n.kind === 'small' ? 2 : 3);
-      E.arc.setAttribute('stroke-dasharray', `${E.circ * Math.min(1, r / OA)} ${E.circ}`); E.arc.style.display = r > 0 && !full ? '' : 'none';
-      E.txt.textContent = r > 0 ? (r > 999 ? f(r) : r) : n.kind === 'small' ? '' : '★'; E.txt.setAttribute('fill', full ? '#120e0b' : r > 0 ? col[n.b] : open ? '#e8c06a' : '#5d5245');
+      E.arc.setAttribute('stroke-dasharray', `${E.circ * (n.max ? Math.min(1, r / n.max) : 0)} ${E.circ}`); E.arc.style.display = r > 0 && !full ? '' : 'none';
+      E.txt.textContent = n.kind === 'endless' ? (r ? r : '∞') : r > 0 ? `${r}/${n.max}` : n.kind === 'small' ? '' : '★'; E.txt.setAttribute('fill', full ? '#120e0b' : r > 0 ? col[n.b] : open ? '#e8c06a' : '#5d5245');
       E.glow.style.display = can && r === 0 ? '' : 'none'; E.sel.style.display = pathSel === n.id ? '' : 'none'; E.g.classList.toggle('locked', !open);
       for (const ed of E.edges) { const on = r > 0; ed.line.setAttribute('stroke', on ? '#c9973f' : '#3a2e24'); ed.line.setAttribute('stroke-width', on ? 3 : 2); }
     }
-    const n = Game.pathNode(pathSel), pop = $('path-pop'), r = Game.pathRank(n.id), open = Game.pathOpen(n.id), br = CONFIG.paths.branches.find(b => b.id === n.b);
+    const n = Game.pathNode(pathSel), pop = $('path-pop'), r = Game.pathRank(n.id), open = Game.pathOpen(n.id), br = CONFIG.paths.branches.find(b => b.id === n.b), maxed = Game.pathMaxed(n.id);
     setText(pop.querySelector('[data-f=name]'), n.name); pop.querySelector('[data-f=name]').style.color = br.color;
-    setText(pop.querySelector('[data-f=tag]'), `${n.kind === 'key' ? 'Keystone' : n.kind === 'notable' ? 'Notable' : 'Path'} · ${br.name} · row ${n.t + 1}`);
-    const now = {}; for (const k in n.per) now[k] = n.per[k] * r;
-    setText(pop.querySelector('[data-f=now]'), r ? 'Now: ' + fmtMods(now) : 'Not taken yet'); setText(pop.querySelector('[data-f=each]'), 'Each rank: ' + fmtMods(n.per));
-    pop.querySelector('[data-f=bar]').style.width = (100 * Math.min(1, r / OA)) + '%'; setText(pop.querySelector('[data-f=rank]'), `Rank ${r}`);
-    const c = Game.pathCost(n.id), rp = Game.rowProgress(n.t);
-    setHtml(pop.querySelector('[data-f=cost]'), !open ? `🔒 Row ${n.t + 1} opens when every node in row ${n.t} has ${CONFIG.paths.openMin}+ ranks and they average ${OA} — <b>${rp.have} / ${rp.need}</b>${rp.low ? ` · ${rp.low} still under ${CONFIG.paths.openMin}` : ''}.`
-      : `Next rank: <b class="${gold >= c ? 'good' : 'warn'}">${f(c)} gold</b>${n.kind !== 'small' ? ` + 1 ★ <span class="${sf ? 'good' : 'warn'}">(you have ${sf})</span>` : ''} · each rank costs 12% more · deeper rows cost ×${CONFIG.paths.cost.tier}`);
-    const can = Game.canRankPath(n.id); pop.querySelector('[data-f=one]').disabled = !can; pop.querySelector('[data-f=max]').disabled = !can;
-    { const m = Game.pathMods(), t = fmtMods(m); setText($('path-sum'), t || 'Nothing yet — buy a rank of Sharpened Edge to start.'); }
+    setText(pop.querySelector('[data-f=tag]'), `${n.kind === 'key' ? 'Keystone' : n.kind === 'notable' ? 'Notable' : n.kind === 'endless' ? 'Endless' : 'Node'} · ${br.name}`);
+    setText(pop.querySelector('[data-f=now]'), r ? `Rank ${r}${n.max ? ' / ' + n.max : ''}` : 'Not taken yet'); setText(pop.querySelector('[data-f=each]'), 'Each rank: ' + nodeDesc(n));
+    pop.querySelector('[data-f=bar]').style.width = (n.max ? 100 * Math.min(1, r / n.max) : (r ? 100 : 0)) + '%'; setText(pop.querySelector('[data-f=rank]'), n.max ? `Rank ${r} / ${n.max}` : `Rank ${r}`);
+    const c = Game.pathCost(n.id), par = n.parents.map(id => Game.pathNode(id).name);
+    setHtml(pop.querySelector('[data-f=cost]'), maxed ? 'Maxed.' : !open ? `🔒 Opens once ${par.join(' or ')} has a rank.` : `Next rank: <b class="${cr >= c ? 'good' : 'warn'}">${f(c)} 👑</b> · you have ${f(cr)}${n.kind === 'endless' ? ' · each rank costs 15% more' : ''}`);
+    const can = Game.canRankPath(n.id); pop.querySelector('[data-f=one]').disabled = !can; pop.querySelector('[data-f=max]').disabled = !can; pop.querySelector('[data-f=max]').textContent = 'Buy max';
+    { const m = Game.pathMods(), t = fmtMods(m); setText($('path-sum'), t || 'Nothing yet — beat a boss for a Crown and spend it on Sharpened Edge.'); }
     $('path-reset').classList.add('hidden');
     $('dot-sk-paths').classList.toggle('hidden', !anyCan); return anyCan;
   }
@@ -1104,6 +1103,7 @@ const UI = (() => {
     // Fight
     const eMax = Game.enemyMaxHp();
     setText($('stage'), Game.stageLabel()); setText($('best-stage'), Game.stageLabel(h.bestStage));
+    setText($('age-tag'), Game.phase() === 3 ? `· ${Game.ageName()}` : '');
     for (const id in CONFIG.grounds) { const b = rows.ground[id], G = CONFIG.grounds[id], un = Game.groundUnlocked(id), gs = id === h.ground ? { stage: h.stage } : (h.grounds[id] || { stage: 1 });
       if (G.land) { const show = Game.phase() === 3 && G.land <= Game.landsHeld() + 2; b.classList.toggle('hidden', !show); if (!show) continue; b.classList.toggle('land-done', Game.landDone(G.land)); }
       b.classList.toggle('active', id === h.ground); b.disabled = !un; b.classList.toggle('locked', !un);
@@ -1285,7 +1285,7 @@ const UI = (() => {
       if (q.dyn) setText($('quest-n'), `Deeds of the Dynasty · ${q.dyn}`); else { const chain = q.chain || (CONFIG.quests.slice(0, S.quests.index).reverse().find(x => x.chain) || {}).chain || ''; const inChain = CONFIG.quests.filter((x, i) => (x.chain || (CONFIG.quests.slice(0, i).reverse().find(y => y.chain) || {}).chain) === chain); setText($('quest-n'), `${chain} · ${inChain.indexOf(q) + 1} / ${inChain.length}`); }
       setText($('quest-name'), q.name); setText($('quest-text'), q.text); setText($('quest-hint'), q.hint || ''); $('quest-hint').classList.toggle('hidden', !q.hint);
       setHtml($('quest-obj'), pr.parts.map(partHtml).join(''));
-      setHtml($('quest-reward'), 'Reward: ' + Object.entries(q.reward).map(([k, v]) => k === 'crystal' ? `<span class="costitem">👑 ${v} Crown${v === 1 ? '' : 's'}</span>` : k === 'talent' ? `<span class="costitem">★ ${v} boss token${v === 1 ? '' : 's'}</span>` : `<span class="costitem">${ico(R[k].icon, 14)}${f(v)}</span>`).join(' '));
+      setHtml($('quest-reward'), 'Reward: ' + Object.entries(q.reward).map(([k, v]) => k === 'crystal' ? `<span class="costitem">👑 ${v} Crown${v === 1 ? '' : 's'}</span>` : k === 'talent' ? `<span class="costitem">👑 ${v} Crown${v === 1 ? '' : 's'}</span>` : `<span class="costitem">${ico(R[k].icon, 14)}${f(v)}</span>`).join(' '));
       $('quest-claim').classList.remove('hidden'); $('quest-claim').disabled = !pr.done; $('quest-card').classList.toggle('ready', pr.done);
     } else if (goal) {
       setText($('quest-n'), ''); setText($('quest-name'), goal.name); setText($('quest-text'), goal.text); setText($('quest-hint'), goal.hint); $('quest-hint').classList.remove('hidden');
@@ -1347,10 +1347,11 @@ const UI = (() => {
 
   const fmPick = { hero: null, kingdom: null };
   function openFound() {
-    if (Game.phase() === 3) { if (!Game.canPassCrown()) return; const g = Game.crownsIfPass();
-      ask('Pass the Crown?', `Your heir takes the throne with ${g} new Crown${g === 1 ? '' : 's'}. Lands, taxes, the army and your stores start over; the Capital stands but its building levels go back to 1; the hero starts at level 1 in basic gear. Crowns, Legacy, the Crown Vault, trophies and tech stay.`, 'Pass the Crown', () => { if (Game.passCrown() !== false) { rebuild(); } }); return; }
+    if (Game.phase() === 3) { if (!Game.canPassCrown()) return; const g = Game.crownsIfPass(), S = Game.S;
+      if (S.kingdom.ageDone) { ask('Crown your heir?', `The Emperor has fallen. Your heir begins the ${Game.ageName(Game.ageNo() + 1)} with ${g} new Crown${g === 1 ? '' : 's'}: the same ten lands, far richer and far tougher. Lands, taxes, the army and your stores start over and the hero starts at level 1; his gear, Paths, Techniques, the Capital, Wonders and every Crown stay. Lands you know fall ${3 + Game.perkRank('lap')}× faster.`, 'Crown your heir', () => { if (Game.crownHeir()) { rebuild(); render(true); } }); return; }
+      ask('Pass the Crown early?', `Your heir takes the throne with ${g} new Crown${g === 1 ? '' : 's'} and starts the ${Game.ageName()} again from land 1. Lands, taxes, the army and your stores start over and the hero starts at level 1; his gear, Paths, Techniques, the Capital, Wonders and Crowns stay. Lands you know fall ${3 + Game.perkRank('lap')}× faster. (Beat the Emperor at land ${CONFIG.ages.lands} to move on to the next Age instead.)`, 'Pass the Crown', () => { if (Game.passCrown()) { rebuild(); render(true); } }); return; }
     if (Game.S.legacy.foundings > 0) { if (!Game.canProclaim()) return;
-      ask('Proclaim the Kingdom', `Your City becomes the Capital. Nothing is lost. You gain ${Game.knowledgeGain()} Crown${Game.knowledgeGain() === 1 ? '' : 's'}, the Barracks opens, and the header becomes your war chest.`, 'Proclaim', () => { if (Game.proclaim()) { rebuild(); flash($('found-btn')); } }); return; }
+      ask('Proclaim the Kingdom', `Your City becomes the Capital. Nothing is lost. You gain ${CONFIG.legacy.proclaimCrowns} Crowns, the Barracks opens, and the header becomes your war chest.`, 'Proclaim', () => { if (Game.proclaim()) { rebuild(); flash($('found-btn')); } }); return; }
     if (!Game.canFound()) return;
     const L = Game.S.legacy;
     fmPick.hero = L.heroPath || 'warrior'; fmPick.kingdom = L.kingdomPath || 'benevolent';
@@ -1382,9 +1383,9 @@ const UI = (() => {
     setText($('found-gain'), '+' + Game.knowledgeGain());
     const cost = Game.foundCost(); setHtml($('found-cost'), Object.keys(cost).length ? costHtml(cost) : '<span class="dim">free — Renown is the price</span>');
     const first = S.legacy.foundings === 0, p3 = Game.phase() === 3;
-    setText($('found-title'), first ? 'Pay Tribute to the Empire' : p3 ? 'Pass the Crown' : 'Proclaim the Kingdom');
-    setText($('found-text'), first ? 'Pay tribute and the Empire grants you land: your first kingdom, with a Forest to work. Your hero keeps everything.' : p3 ? `Your hero crowns an heir. The Crowns you took from fallen rulers become your dynasty's power (Legacy). Lands, taxes, the army and stores start over, and the hero starts again at level 1. His gear, Paths and Techniques, the Capital and its building levels, Crowns, Legacy perks, the Crown Vault, trophies and tech all stay. In lands you conquered before, the hero hits ${3 + Game.perkRank('lap')}× harder.` : 'Once your City is complete, proclaim the Kingdom. Nothing is lost: your City becomes the Capital, and the war for new lands begins.');
-    $('found-btn').textContent = first ? 'Pay Tribute' : p3 ? `Pass the Crown (+${Game.crownsIfPass()} 👑)` : 'Proclaim the Kingdom';
+    const aDone = p3 && S.kingdom.ageDone; setText($('found-title'), first ? 'Pay Tribute to the Empire' : aDone ? `Crown Your Heir — the ${Game.ageName(Game.ageNo() + 1)}` : p3 ? `${Game.ageName()} · Pass the Crown` : 'Proclaim the Kingdom');
+    setText($('found-text'), first ? 'Pay tribute and the Empire grants you land: your first kingdom, with a Forest to work. Your hero keeps everything.' : p3 ? (aDone ? `The Emperor has fallen. Crown your heir to begin the ${Game.ageName(Game.ageNo() + 1)}: the same ten lands, far richer and far tougher. Everything permanent stays.` : `Each Age is ${CONFIG.ages.lands} lands; beat the Emperor at land ${CONFIG.ages.lands} to crown your heir into the next Age. Stuck before then? Pass the Crown early: the heir starts this Age again, lands you know fall faster, and the Crowns from its rulers are yours to spend.`) : 'Once your City is complete, proclaim the Kingdom. Nothing is lost: your City becomes the Capital, and the war for new lands begins.');
+    $('found-btn').textContent = first ? 'Pay Tribute' : aDone ? `👑 Crown your heir (+${Game.crownsIfPass()} 👑)` : p3 ? `Pass the Crown early (+${Game.crownsIfPass()} 👑)` : 'Proclaim the Kingdom'; $('found-btn').classList.toggle('quest-glow', !!aDone);
     if (first) { const reqStage = CONFIG.legacy.foundRequiresStage, okStage = Game.bestStageAll() >= reqStage; setText($('found-req'), okStage ? (Game.canAfford(cost) ? 'Ready.' : 'Gather the tribute: 100 gold and the Rat King\'s Tooth.') : `Reach stage ${reqStage} to pay tribute (best: ${Game.bestStageAll()}).`); }
     else { setText($('found-req'), p3 ? (Game.canPassCrown() ? `Crowns this dynasty: ${Game.crownsIfPass()} · lands held: ${Game.landsHeld()}` : (Game.landsHeld() < 1 ? 'Conquer your first land to pass the crown.' : 'The quests will show you when to pass the crown.')) : Game.canProclaim() ? 'Ready. The City is complete.' : `Complete your City first (now: ${Game.tierDef().name}).`); }
     const can = first ? Game.canFound() : p3 ? Game.canPassCrown() : Game.canProclaim();
@@ -1449,6 +1450,8 @@ const UI = (() => {
       else if (e.who === 'crownpass') CBQ.push({ ico: '👑', kicker: 'Long live the heir', title: `Dynasty ${Game.S.legacy.dynasty}`, sub: `+${e.gain} Crowns to spend in Legacy · lands you know fall ${3 + Game.perkRank('lap')}× faster` });
       else if (e.who === 'depth' && e.first && e.depth % 5 === 0) { const G = Game.landDef(e.n); CBQ.push({ small: 1, ico: '∞', kicker: 'Deeper than ever', title: `${G ? G.name : ''} · depth ${e.depth}`, sub: `Tougher foes, +10% ${G && R[G.spoil] ? R[G.spoil].name.toLowerCase() : 'spoils'}` }); }
       else if (e.who === 'pathrow') CBQ.push({ small: 1, ico: '✦', kicker: 'Paths', title: `Row ${e.t + 1} opens`, sub: 'Deeper ranks: stronger, and costlier.' });
+      else if (e.who === 'emperor') CBQ.push({ ico: '👑', kicker: `The ${Game.ageName(e.a)} is won`, title: 'The Emperor has fallen', sub: 'Crown your heir in the Keep to begin the next Age.' });
+      else if (e.who === 'newage') CBQ.push({ ico: '🏰', kicker: 'A new Age', title: Game.ageName(e.a), sub: `+${e.gain} Crowns · the ten lands, far richer and far tougher` });
       else if (e.who === 'era') { const W = Game.wonderFor(e.e); CBQ.push({ ico: '🏛', kicker: 'Era Ruler defeated', title: `Era ${e.e} complete`, sub: `The ${W.name} can now be built — Kingdom → Keep → Wonders` }); }
       else if (e.who === 'wonder') { const W = Game.wonderFor(e.e); CBQ.push({ ico: W.def.icon, kicker: 'Wonder complete', title: W.name, sub: W.def.desc }); }
       else if (e.who === 'proclaim') CBQ.push({ ico: '🏰', kicker: 'A kingdom is born', title: 'The Kingdom is proclaimed', sub: 'Build the Barracks and march on your first land.' });
@@ -1466,18 +1469,14 @@ const UI = (() => {
     cbTimer = setTimeout(cbDone, c.small ? 2200 : 3800);
   }
   function cbDone() { clearTimeout(cbTimer); const b = $('celebrate'); if (!cbBusy) return; b.classList.add('out'); setTimeout(() => { b.className = 'celebrate hidden'; cbBusy = false; cbNext(); }, 330); }
-  function showStarInfo() { // 0.10.7: where boss tokens go
-    const f = Game.fmt, free = Game.starsFree(), RK = CONFIG.paths.ranks, rows = [];
-    for (const n of Game.pathNodes()) { if (n.kind === 'small') continue; const r = Game.pathRank(n.id), open = Game.pathOpen(n.id), br = CONFIG.paths.branches.find(b => b.id === n.b);
-      const par = n.parents.map(id => Game.pathNode(id).name);
-      rows.push(`<div class="star-row"><div><b>${n.name}</b> <span class="dim small">· ${n.kind === 'key' ? 'Keystone' : 'Notable'} · ${br ? br.name : ''}</span></div><div class="small ${open ? 'warn' : 'dim'}">${open ? `Open · rank ${r} · next: ${f(Game.pathCost(n.id))} gold + 1 ★` : `Opens with row ${n.t + 1} — level row ${n.t} evenly (${Game.rowProgress(n.t).have} / ${Game.rowProgress(n.t).need})`}</div></div>`); }
-    let caps = '';
-    for (const d in CONFIG.trees) for (const node of CONFIG.trees[d]) if (node.capstone) { const r = Game.nodeRank(d, node.id); caps += `<div class="star-row"><div><b>${node.name}</b> <span class="dim small">· ${CONFIG.disciplines[d] ? CONFIG.disciplines[d].name : d} capstone</span></div><div class="small ${r ? 'good' : 'warn'}">${r ? 'Learned' : 'Open now · 1 ★ · ' + (node.desc || '').replace(/^Capstone:\s*/, '')}</div></div>`; }
-    const sp = Game.starsSpare();
-    showInfo('Boss tokens', `You have ${free} ★ to spend`, `<p class="small">Every boss you beat for the first time gives 1 ★. You spend them on the big nodes: each rank of a ★ node in the Paths costs gold + 1 ★ (they have no rank cap, so every star finds a use), and each Gathering capstone costs 1 ★.</p>
-      <div class="star-head">Paths of War — the ★ nodes</div>${rows.join('')}
-      ${caps ? `<div class="star-head">Gathering capstones (Skills → Gathering)</div>${caps}` : ''}
-      <p class="small dim" style="margin-top:8px">Notables open with row 4 and Keystones with row 7. Rows open as you level the row above evenly with gold.</p>`);
+  function showStarInfo() { // 0.11.1: where Crowns come from
+    const C = CONFIG.ages.crowns, A = Game.ageNo();
+    showInfo('Crowns', `You have ${Game.fmt(Game.crowns())} 👑`, `<p class="small">Crowns are forever: spend them in the Crown Tree (and on Gathering capstones, 1 each). You earn them by:</p>
+      <div class="star-row"><b>Every boss in the Wild, the Roads and the Crypts</b><div class="small dim">+${C.boss} the first time</div></div>
+      <div class="star-row"><b>Every land Captain</b><div class="small dim">+${C.captain * A} the first time each Age (× the Age number)</div></div>
+      <div class="star-row"><b>Every land Ruler</b><div class="small dim">paid when the crown passes — more for later lands, × the Age</div></div>
+      <div class="star-row"><b>Era Rulers (land 5) and the Emperor (land ${CONFIG.ages.lands})</b><div class="small dim">+${C.eraRuler * A} and +${C.emperor * A} more, when the crown passes</div></div>
+      <p class="small dim" style="margin-top:8px">You are in the ${Game.ageName()}. Beat the Emperor, then crown your heir in the Keep to begin the next Age.</p>`);
   }
   function hitPop(ev) {
     if (ev.who === 'rest') { const a = $('hero-hpbar') && $('hero-hpbar').offsetParent ? $('hero-hpbar').parentElement : document.querySelector('.top'); const r = a.getBoundingClientRect(); const p = el('div', 'pop heal', '☾ Resting'); p.style.left = (r.left + r.width * 0.5) + 'px'; p.style.top = (r.top + 4) + 'px'; document.body.appendChild(p); setTimeout(() => p.remove(), 1600); return; }
