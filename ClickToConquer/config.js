@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Beta 0.1.1',
+  version: 'Beta 0.1.2',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -504,6 +504,7 @@ const CONFIG = {
   // jobs (jobs completed by hand or thrall), sold (gold earned at market), stage, boss, founded, thrall (assigned), activity (swings).
   // Shown in Settings → What's new (newest first). Keep each line short.
   changelog: [
+    ['Beta 0.1.2', 'The "your kingdom begins" guide is up to date: Production, Work / Cart / Haul and the Keep. It now appears after the Charter story instead of on top of it.'],
     ['Beta 0.1.1', 'The founding quest now points to the right place: Kingdom → Keep → Pay tribute.'],
     ['Beta 0.1.0', 'The Beta begins — everyone starts fresh. Old Alpha saves no longer load (yours stays on this device, untouched). Everything from the 0.12 updates is in: three production chains feed the Barracks, your army is made of people housed in your town, and every building grows new levels (groves, fields, furnaces… only the Mine digs). Balance: building a new level now costs ×12 more each time, matching its ×12 output, and the "grow your slowest building" Deed only asks for a level you can afford. If a level costs more than your Storehouse holds, the building tells you to expand it.'],
     ['0.12.1', 'Buildings grow. After you proclaim the Kingdom, every building can add new levels — Logging clears new groves, the Farm plows new fields, the Forge builds new furnaces, the Bakery new ovens, and the Mine digs deeper. Each one can grow far bigger than the last and has its own Work, Cart and Haul. The buttons on each Production card upgrade the newest one. Crowning your heir now starts a fresh town: levels, houses and people begin again, and the Age\'s gold makes the climb quick. Drillmasters became Deep Foundations: each rank starts every building with one more level built. New quest: Go Deeper.'],

@@ -40,7 +40,7 @@ const UI = (() => {
     document.addEventListener('click', e => { const t = e.target.closest && e.target.closest('.req-src[data-item]'); if (t) { e.stopPropagation(); openItem(t.dataset.item); } }, true);
     $('confirm-no').addEventListener('click', closeAsk); $('confirm-modal').addEventListener('click', e => { if (e.target === $('confirm-modal')) closeAsk(); });
     $('confirm-yes').addEventListener('click', () => { const cb = confirmCb; closeAsk(); if (cb) cb(); });
-    $('story-go').addEventListener('click', () => { const st = Game.S.settings.story = Game.S.settings.story || {}; if (storyOpen) st[storyOpen] = true; storyOpen = null; $('story').classList.add('hidden'); Game.save(); });
+    $('story-go').addEventListener('click', () => { const st = Game.S.settings.story = Game.S.settings.story || {}; if (storyOpen) st[storyOpen] = true; const was = storyOpen; storyOpen = null; $('story').classList.add('hidden'); Game.save(); if (was === 'charter' && guidePending) showGuide(); });
     $('version').textContent = CONFIG.version;
     // Resource chips: icon · amount · name · rate, in config order; a good appears once first gained.
     const rb = $('res-bar'); rb.innerHTML = '';
@@ -168,7 +168,7 @@ const UI = (() => {
       if (gain === false) return;
       $('found-modal').classList.add('hidden'); buildLists(); for (const l in lineKey) lineKey[l] = '';
       document.querySelector('[data-tab=hero]').click();
-      if (Game.S.legacy.foundings === 1 && !Game.S.settings.demoSeen) showInfo('Camp', 'You founded a kingdom.', '<p class="small">The wild is behind you. From here on your land works while you are away.</p><p class="small"><b>Market → Tavern</b> — hire thralls. <b>Kingdom → Forest</b> — put them to work at Logging, and upgrade Work, Cart and Haul with gold.</p><p class="small"><b>Keep</b> — fill Imperial Orders for gold and Renown, and grow your settlement: <b>Camp → Hamlet → Village → City</b>. Each step up costs goods, never your progress.</p>' + (Game.S.settings.guest && window.Cloud && Cloud.available && !Cloud.user ? '<p class="small"><b>Your kingdom lives on this device.</b> Settings (⚙) → Sign in with Google to back it up and play anywhere.</p>' : '') + '<p class="small dim">Alpha — numbers are rough and will change.</p>', 'demoSeen');
+      if (Game.S.legacy.foundings === 1 && !Game.S.settings.demoSeen) guidePending = true; // shown after the Charter story
     });
     $('demo-continue').addEventListener('click', () => { if (infoFlag) Game.S.settings[infoFlag] = true; Game.save(); $('demo-modal').classList.add('hidden'); });
     if (Game.S.migrated03 && !Game.S.settings.migSeen) showInfo('Alpha 0.3', 'The kingdom has been rebuilt.', '<p class="small">Combat, gear and the whole kingdom were redesigned for 0.3, so your old run could not carry over. Your <b>Crowns, Legacy perks and Bestiary kills</b> are kept.</p><p class="small">The wild now starts with bare fists, a 100-item pack and a tribute to the Empire. Past it lies a new idle kingdom of production lines, thralls and Imperial Orders.</p>', 'migSeen');
@@ -1213,7 +1213,8 @@ const UI = (() => {
   const WAR_CHIPS = ['gold', 'people', 'soldiers']; // Phase 3 header: gold, the army — and the three war incomes (built below)
   let lastRender = 0;
   // 0.12: story pop-ups, once per phase
-  let storyOpen = null;
+  let storyOpen = null, guidePending = false;
+  function showGuide() { guidePending = false; showInfo('Camp', 'Your kingdom begins.', '<p class="small">The wild is behind you. From here on your town works while you are away.</p><p class="small"><b>Kingdom → Production</b> — your buildings. Each has three parts, <b>Work, Cart and Haul</b>; upgrade the slowest one (its bar turns gold). Tap <b>Enter</b> to look inside.</p><p class="small"><b>Keep</b> — fill Imperial Orders for gold and Renown, and grow your settlement: <b>Camp → Hamlet → Village → City</b>. Each step up costs goods, never your progress.</p><p class="small">Your hero keeps fighting — the bosses he beats open each new step.</p>' + (Game.S.settings.guest && window.Cloud && Cloud.available && !Cloud.user ? '<p class="small"><b>Your kingdom lives on this device.</b> Settings (⚙) → Sign in with Google to back it up and play anywhere.</p>' : ''), 'demoSeen'); }
   function checkStory() {
     if (storyOpen || !$('welcome').classList.contains('hidden')) return; const S = Game.S, st = S.settings.story = S.settings.story || {}, q = Game.questCurrent();
     const due = !st.beta && Game.hadAlpha && S.hero.totalKills === 0 ? 'beta' : !st.wild && S.hero.totalKills === 0 && q && q.id === 'f01' ? 'wild' : !st.charter && S.legacy.foundings > 0 ? 'charter' : !st.capital && Game.phase() === 3 ? 'capital' : !st.fallow && q && q.id === 'w05b' ? 'fallow' : null;
