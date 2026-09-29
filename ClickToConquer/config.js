@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Alpha 0.10.3',
+  version: 'Alpha 0.10.4',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -473,6 +473,7 @@ const CONFIG = {
   // jobs (jobs completed by hand or thrall), sold (gold earned at market), stage, boss, founded, thrall (assigned), activity (swings).
   // Shown in Settings → What's new (newest first). Keep each line short.
   changelog: [
+    ['0.10.4', 'Crowns reworked. Every ruler now pays a little more than the last (1, 1, 2, 2, 3, 4, 5, 7…) and proclaiming gives 5. Passing the Crown no longer takes your gear or building levels — only the lands, taxes, army and stores go, and the hero starts at level 1. Perks: Bloodline now multiplies (×1.08 per rank); War College replaces Drill Sergeants and Standing Army; Founder\'s Cache pays out from your last taxes; Heirloom Arms, Old Blade and Blueprints are gone (nothing to keep anymore); the Ledger, Danger Sense, Chronicler, Surveyor and Almanac now open through quests. Every retired perk\'s Crowns are refunded. New quests teach the army — supply lines, casualties, the Endless Battle and growing demand — and after Blackwood March a quest leads you to Pass the Crown for the first time (+20 Crowns). In your first dynasty, the third land opens once you have passed the crown.'],
     ['0.10.3', 'In the Kingdom phase the building tabs are named for what they supply — Housing, Arms, Food, Soldiers — in the same order as the header. Taxes now flow straight into your gold (no more Collect button; if you bought Stewards, its 15 Crowns are back). Lands are listed newest first.'],
     ['0.10.2', 'Battles cost soldiers. The harder the fight, the more fall — easy fights cost nothing, new lands and captains the most. The Barracks replaces them, but every recruit needs swords, so a strong Mine decides how hard you can push. The army settles where replacements keep up and never falls below half. Push to conquer, fall back to rebuild: the hero screen shows losses, recruits and where your army will hold.'],
     ['0.10.1', 'Every new land is a real step up. Enemies grow steadily through a land, and the next land starts well above where the last one ended — from the Iron Hills on, expect to need better gear and a bigger army. Hardened gear now goes on forever: Hardened I, II, III… each tier makes your weapon, chest and helm about 60% stronger (Mythril is folded into Hardened). Hardened I costs about what Steel did, and conquered lands send 5× more silver and heartwood.'],
@@ -557,7 +558,7 @@ const CONFIG = {
       steps: [
         { label: 'Click the Axe slot on your Equipment → Make (Wooden)', check: { tool: 'axe' } },
       ], reward: { wood: 10 }, focus: { tab: 'hero', sub: 'gear', el: 'tool:axe' } },
-    { id: 'q04', name: 'Timber', text: 'A hero does one thing at a time — fight, or work. He keeps working even when the game is closed.',
+    { id: 'q04', name: 'Timber', text: 'A hero does one thing at a time — fight, or work. He keeps working even when the game is closed — the hero screen now shows what he earns while you are away.',
       steps: [
         { label: 'Activity → Chop Wood', check: { activity: 'wood' } },
         { label: 'Chop 50 wood with the axe', check: { harvested: 'wood', need: 50, since: true } },
@@ -581,7 +582,7 @@ const CONFIG = {
       steps: [
         { label: 'Kingdom → Tech → Research Leatherworking', check: { tech: 'leatherwork' } },
       ], reward: { hide: 10, talent: 1 }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:leatherwork' } },
-    { id: 'q06c', name: 'Every Swing Counts', text: 'Gathering has trees too: Logging levels with every swing of the axe. Speed first — a faster axe is more of everything.',
+    { id: 'q06c', name: 'Every Swing Counts', text: 'Gathering has trees too: Logging levels with every swing of the axe. Speed first — a faster axe is more of everything. The harvest screen now shows your swing time and yield per swing.',
       steps: [
         { label: 'Reach Logging level 2', check: { disc: 'wood', need: 2 } },
         { label: 'Skills → Logging → put a point in Swift Axe', check: { node: 'wood:swing', need: 1 } },
@@ -592,12 +593,12 @@ const CONFIG = {
         { label: 'Kingdom → Tech → Research Stone Weapons', check: { tech: 'stoneweapons' }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:stoneweapons' } },
         { label: 'Click the Weapon slot → Forge Stone', check: { gearTier: 'weapon', need: 1 }, focus: { tab: 'hero', sub: 'gear', el: 'gear:weapon' } },
       ], reward: { stone: 30 }, focus: { tab: 'hero', sub: 'gear', el: 'gear:weapon' } },
-    { id: 'q13', name: 'Boss Hunter', text: 'Every tenth stage is a boss. The first time you beat one you get a ★ boss token — the big notables and keystones in your Paths cost them — plus a trophy. The Rat King guarded the Roads; now the Bandit Chief waits at Roads stage 10.',
+    { id: 'q13', name: 'Boss Hunter', text: 'Every tenth stage is a boss. The first time you beat one you get a ★ boss token — the big notables and keystones in your Paths cost them — plus a trophy. The Rat King guarded the Roads; now the Bandit Chief waits at Roads stage 10. From now on the hero screen warns you how much HP each fight costs.',
       steps: [
         { label: 'Where to fight → The Roads', check: { activity: 'fight', ground: 'roads' } },
         { label: 'Slay a boss you have never beaten', check: { counter: 'bossKills', need: 1, since: true } },
       ], reward: { gold: 60 }, focus: { tab: 'hero', sub: 'fight', el: 'ground:roads', el2: 'id:advance-btn' } },
-    { id: 'q13x', name: 'Know Your Enemy', text: 'Every kill teaches your hero something. The Bestiary counts them: 10 of a kind makes it Familiar, 50 Studied, 200 Known, 1,000 Mastered — and each step means you hit it harder and it hits you softer.',
+    { id: 'q13x', name: 'Know Your Enemy', text: 'Every kill teaches your hero something. The Bestiary counts them: 10 of a kind makes it Familiar, 50 Studied, 200 Known, 1,000 Mastered — and each step means you hit it harder and it hits you softer. Your Stats card (DPS, crit, kills per second) is open now too.',
       steps: [ { label: 'Loot → open the Bestiary', check: { viewed: 'bestiary' } } ], reward: { gold: 40 }, focus: { tab: 'inventory', rtab: 'inventory', el: 'id:csub-best-btn' } },
     { id: 'q13a', name: 'Highwayman', text: 'Bandits carry the gold they stole. The Roads pay better the deeper you go.',
       steps: [
@@ -656,9 +657,7 @@ const CONFIG = {
         { label: 'Kingdom → Throne → Pay tribute (100 gold + Rat King\'s Tooth)', check: { founded: 1 } },
       ], reward: { gold: 100 }, focus: { tab: 'kingdom', ksub: 'throne', rtab: 'kingdom', el: 'id:found-btn' } },
     // ===== A Kingdom: after the first founding =====
-    { id: 'p01', chain: 'A Kingdom', name: 'What Survives', text: 'Crowns are forever: Legacy perks survive every new dynasty. Spend your first Crown on The Ledger, so you always know what your hero and your city earn while you are away.',
-      steps: [ { label: 'Kingdom → Legacy → buy The Ledger (1 Crown)', check: { perk: 'ledger' } } ], reward: { gold: 50 }, focus: { tab: 'kingdom', ksub: 'legacy', rtab: 'kingdom', el: 'perk:ledger' } },
-    { id: 'k01', chain: 'A Kingdom', name: 'The First Camp', text: 'Buildings work on their own. Each level makes one faster — and every 10 levels it doubles and gets a new name.',
+    { id: 'k01', chain: 'A Kingdom', name: 'The First Camp', text: 'Buildings work on their own. Each level makes one faster — and every 10 levels it doubles and gets a new name. The header now shows how fast each resource grows.',
       steps: [ { label: 'Kingdom → Forest → Logging → Upgrade to Lv 3', check: { bLv: 'logging', need: 3 } }, { label: 'Haul 60 wood to the Storehouse', check: { made: 'wood', need: 60, since: true } } ], reward: { gold: 60 }, focus: { tab: 'kingdom', ksub: 'forest', rtab: 'kingdom', el: 'step:logging' } },
     { id: 'k02', chain: 'A Kingdom', name: 'Imperial Orders', text: 'The Empire, the Guild and the villages post Orders at your Keep. They pay gold and Renown — no deadline, but a speed bonus.',
       steps: [ { label: 'Kingdom → Keep → Orders → Deliver one', check: { orders: 1, need: 1, since: true } } ], reward: { gold: 60 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:order-list' } },
@@ -703,16 +702,26 @@ const CONFIG = {
       steps: [ { label: 'Every building at Lv 10', check: { allLv: 10 } }, { label: 'Upgrade buildings 10 more times', check: { bLvSum: 1, need: 10, since: true } } ], reward: { gold: 1000 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:settle-card' } },
     { id: 'y04', chain: 'City', name: 'Proclaim the Kingdom', text: 'The City is complete. Proclaim the Kingdom: your City becomes the Capital — nothing is lost — and the conquest begins.',
       steps: [ { label: 'Kingdom → Keep → Proclaim the Kingdom', check: { proclaimed: 1 } } ], reward: { gold: 500 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:found-btn' } },
-    { id: 'w01', chain: 'The Kingdom', name: 'The Barracks', text: 'An army runs on income, not stockpiles. Every soldier needs Housing (the Forest\'s treated lumber), Arms (the Mine\'s swords) and Food (the Farm\'s bread) every minute. Soldiers join the Barracks while all three lines have income to spare.',
-      steps: [ { label: 'Kingdom → Barracks → Build', check: { barracks: 1 } }, { label: 'Recruit 20 soldiers', check: { have: 'soldiers', need: 20 } } ], reward: { gold: 800 }, focus: { tab: 'kingdom', ksub: 'war', rtab: 'kingdom', el: 'id:army-card' } },
+    { id: 'w01', chain: 'The Kingdom', name: 'The Barracks', text: 'An army runs on income, not stockpiles. Every soldier needs Housing, Arms and Food every minute — made by your Forest, Mine and Farm. Build the Barracks: soldiers join while all three have income to spare.',
+      steps: [ { label: 'Kingdom → Soldiers → Build the Barracks', check: { barracks: 1 } }, { label: 'Recruit 20 soldiers', check: { have: 'soldiers', need: 20 } } ], reward: { gold: 800 }, focus: { tab: 'kingdom', ksub: 'war', rtab: 'kingdom', el: 'id:army-card' } },
+    { id: 'w01b', chain: 'The Kingdom', name: 'Three Supply Lines', text: 'The Soldiers tab shows each line side by side: what it makes per minute and how many soldiers it can feed. The lowest one sets your army size, and its tab in the Kingdom row is marked. Upgrade that line — its slowest building first — and the army can grow.',
+      steps: [ { label: 'Raise your army limit by 10', check: { stat: 'armyLimit', need: 10, since: true, low: true } } ], reward: { gold: 1000 }, focus: { tab: 'kingdom', ksub: 'war', rtab: 'kingdom', el: 'id:war-pipe' } },
     { id: 'w02', chain: 'The Kingdom', name: 'March on Ashford', text: 'The hero leads the conquest. The army marches with him and multiplies every blow. Choose Ashford Vale on the hero screen.',
-      steps: [ { label: 'Hero → Where to fight → Ashford Vale', check: { landPct: 1, need: 1 } }, { label: 'Conquer 10% more of Ashford Vale', check: { landPct: 1, need: 10, since: true } } ], reward: { gold: 1000 }, focus: { tab: 'hero', sub: 'fight', el: 'ground:land1' } },
+      steps: [ { label: 'Hero → Where to fight → Ashford Vale', check: { landPct: 1, need: 1 } }, { label: 'Conquer 10% more of Ashford Vale', check: { landPct: 1, need: 10, since: true, orDone: true } } ], reward: { gold: 1000 }, focus: { tab: 'hero', sub: 'fight', el: 'ground:land1' } },
     { id: 'w03', chain: 'The Kingdom', name: 'A Garrison', text: 'A conquered land pays taxes — but only as much as its garrison can hold. Soldiers in a garrison do not march with the hero.',
       steps: [ { label: 'Kingdom → Lands → Ashford Vale → station 10 soldiers', check: { garrison: 1, need: 10 } }, { label: 'Earn 100 gold in taxes', check: { taxed: 100 } } ], reward: { gold: 1000 }, focus: { tab: 'kingdom', ksub: 'lands', rtab: 'kingdom', el: 'id:lands-card' } },
+    { id: 'w03b', chain: 'The Kingdom', name: 'The Fallen', text: 'Hard fights cost soldiers — the harder the hero is pushed, the more fall. The Soldiers tab shows how many you lose each minute. Every recruit is armed with swords from your Arms line, so spare Arms income is what keeps the ranks full — watch the swords pile up.',
+      steps: [ { label: 'Forge 150 more swords', check: { made: 'swords', need: 150, since: true } } ], reward: { gold: 1500 }, focus: { tab: 'kingdom', ksub: 'war', rtab: 'kingdom', el: 'id:loss-card' } },
     { id: 'w04', chain: 'The Kingdom', name: 'Baron Hollin', text: 'At the end of every land waits its Ruler. Beat him and take his crown — Crowns are the power of your dynasty.',
       steps: [ { label: 'Conquer Ashford Vale (defeat Baron Hollin, stage 50)', check: { landDone: 1 } }, { label: 'Earn 100 more gold in taxes', check: { taxed: 1, need: 100, since: true } } ], reward: { gold: 2000 }, focus: { tab: 'hero', sub: 'fight', el: 'ground:land1' } },
-    { id: 'w05', chain: 'The Kingdom', name: 'Blackwood March', text: 'Every land is harder than the last — and pays about four times more.',
+    { id: 'w04c', chain: 'The Kingdom', name: 'The Endless Battle', text: 'Past the Ruler the fighting never ends. In the Endless Battle every stage is a little harder, and it is the one place the hero rests instead of retreating. Only you can march on to the next land — and while the hero still fights in a land, it pays at most half its taxes.',
+      steps: [ { label: 'Win 50 fights in the Endless Battle', check: { stat: 'endlessKills', need: 50, since: true } } ], reward: { gold: 2500 }, focus: { tab: 'hero', sub: 'fight', el: 'ground:land1' } },
+    { id: 'w04b', chain: 'The Kingdom', name: 'Growing Demand', text: 'Every land you hold makes each soldier need 15% more Housing, Arms and Food. When a line falls short, the army fights at less than full strength and its tab turns red. Upgrade that line first — its slowest building — until every tab is back to 100%.',
+      steps: [ { label: 'Upgrade supply buildings 3 times (start with the red tab)', check: { bLvSum: 1, need: 3, since: true } } ], reward: { gold: 3000 }, focus: { tab: 'kingdom', ksub: 'war', rtab: 'kingdom', el: 'id:war-pipe' } },
+    { id: 'w05', chain: 'The Kingdom', name: 'Blackwood March', text: 'Every land is harder than the last — and pays about four times more. March on when you are ready.',
       steps: [ { label: 'Conquer Blackwood March', check: { landDone: 2 } } ], reward: { gold: 5000 }, focus: { tab: 'hero', sub: 'fight', el: 'ground:land2' } },
+    { id: 'w05b', chain: 'The Kingdom', name: 'Pass the Crown', text: 'Two lands are yours, and the next ones only get harder. Time to think in dynasties. When you Pass the Crown your heir takes the throne: the lands, their taxes, the army and your stores are gone, and the hero starts again at level 1. Everything else stays: his gear, Paths and Techniques, the Capital and every building level, Crowns and trophies. Lands you have conquered before fall three times faster for the heir, and the Crowns you took from their rulers become yours to spend. Spend a Crown in Legacy first — perks there last forever.',
+      steps: [ { label: 'Kingdom → Legacy → buy a perk', check: { stat: 'perksBought', need: 1, since: true }, focus: { tab: 'kingdom', ksub: 'legacy', rtab: 'kingdom', el: 'perk:bloodline' } }, { label: 'Kingdom → Keep → Pass the Crown', check: { stat: 'passed', need: 1 } } ], reward: { crystal: 20 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:found-btn' } },
     { id: 'w06', chain: 'The Kingdom', name: 'The Iron Hills', text: 'The hills hold silver — the metal of Hardened gear.',
       steps: [ { label: 'Conquer the Iron Hills', check: { landDone: 3 } } ], reward: { gold: 20000 }, focus: { tab: 'hero', sub: 'fight', el: 'ground:land3' } },
   ],
@@ -750,7 +759,10 @@ const CONFIG = {
   // ---------- Legacy: founding (prestige), paths, knowledge, thralls ----------
   legacy: {
     foundRequiresStage: 20,
-    tribute: { gold: 100, ratkingtooth: 1 },   // the first founding: pay tribute to the Empire
+    tribute: { gold: 100, ratkingtooth: 1 },
+    proclaimCrowns: 5,
+    passKeep: 1,                               // 0.10.4: share of building, hall and Barracks levels kept when the crown passes (all of them)                         // 0.10.4: a flat gift when the Kingdom is proclaimed
+    infoUnlock: { ledger: 'q04', surveyor: 'q06c', danger: 'q13', chronicler: 'q13x', almanac: 'k01' }, // 0.10.4: info that used to be Crown perks opens with these quests   // the first founding: pay tribute to the Empire
     foundCostGold: lvl => Math.round(1000 * Math.pow(2.5, lvl - 1)),  // gold only; the first founding is cheap so the kingdom opens early
     knowledge: s => s.foundings === 0 ? 1 : Math.floor(s.bestStage / 4) + Object.keys(s.bossesKilled).length * 2 + s.maxTier * 3 + Math.max(0, Math.floor(Math.log10((s.lifetimeGold || 0) + 1)) - 2),
 
@@ -775,27 +787,18 @@ const CONFIG = {
     // 0.9: Crowns (formerly Crystals) buy perks in four trees
     trees: [ { id: 'bloodline', name: 'Bloodline', desc: 'The hero' }, { id: 'crown', name: 'Crown', desc: 'The city' }, { id: 'war', name: 'War', desc: 'The army' }, { id: 'realm', name: 'Realm', desc: 'The conquest' } ],
     perks: [
-      { id: 'bloodline', tree: 'bloodline', name: 'Bloodline',       icon: [1,0],  max: 10, cost: 3,  costMult: 1.5, desc: '+5% attack, HP and healing per rank' },
+      { id: 'bloodline', tree: 'bloodline', name: 'Bloodline',       icon: [1,0],  max: 10, cost: 3,  costMult: 1.5, desc: 'Attack, HP and healing ×1.08 per rank — it multiplies, so every rank is worth more' },
       { id: 'veteran',   tree: 'bloodline', name: 'Veteran',         icon: [1,4],  max: 3,  cost: 8,  costMult: 2,   desc: '+3 Path points per rank' },
-      { id: 'heirloom',  tree: 'bloodline', name: 'Heirloom Arms',   icon: [5,1],  max: 3,  cost: 10, costMult: 2.2, desc: 'A new dynasty starts with gear one tier better per rank (Wooden → Stone → Iron)' },
-      { id: 'oldblade',  tree: 'bloodline', name: 'Old Blade',       icon: [5,1],  max: 1,  cost: 20, costMult: 1,   desc: 'Keep your weapon when you pass the crown' },
-      { id: 'cache',     tree: 'crown',     name: "Founder's Cache", icon: [11,11], max: 5, cost: 4,  costMult: 1.6, desc: 'Begin each dynasty with 1,000 gold per rank' },
-      { id: 'blueprints',tree: 'crown',     name: 'Blueprints',      icon: [13,12], max: 3, cost: 6,  costMult: 1.8, desc: 'Every building starts 5 levels higher per rank' },
+      { id: 'cache',     tree: 'crown',     name: "Founder's Cache", icon: [11,11], max: 5, cost: 4,  costMult: 1.6, desc: 'Begin each dynasty with 15 minutes of your last dynasty\'s taxes per rank (at least 1,000 gold)' },
       { id: 'charter',   tree: 'war',       name: 'Quartermasters',  icon: [14,14], max: 3, cost: 6,  costMult: 2,   desc: '+10% Housing, Arms and Food income per rank' },
-      { id: 'cellar',    tree: 'crown',     name: 'Deep Cellar',     icon: [19,9], max: 4,  cost: 5,  costMult: 1.7, desc: 'AFK cap +2h per rank' },
+      { id: 'cellar',    tree: 'crown',     name: 'Deep Cellar',     icon: [19,9], max: 4,  cost: 5,  costMult: 1.7, desc: 'AFK cap +2h and Storehouse +25% per rank' },
       { id: 'memory',    tree: 'crown',     name: 'Long Memory',     icon: [13,8], max: 3,  cost: 6,  costMult: 1.8, desc: 'AFK efficiency +10% per rank' },
       { id: 'haggler',   tree: 'crown',     name: 'Haggler',         icon: [12,10], max: 5, cost: 4,  costMult: 1.7, desc: 'Sell prices +10% per rank' },
-      { id: 'drill',     tree: 'war',       name: 'Drill Sergeants', icon: [1,4],  max: 5,  cost: 4,  costMult: 1.7, desc: 'Soldiers join 20% faster per rank' },
       { id: 'rations',   tree: 'war',       name: 'Rations',         icon: [14,14], max: 5, cost: 5,  costMult: 1.7, desc: 'Soldiers need 10% less Housing, Arms and Food per rank' },
-      { id: 'standing',  tree: 'war',       name: 'Standing Army',   icon: [7,1],  max: 3,  cost: 8,  costMult: 2,   desc: 'Begin each dynasty with 25 soldiers per rank' },
+      { id: 'warcollege',tree: 'war',       name: 'War College',     icon: [7,1],  max: 5,  cost: 5,  costMult: 1.8, desc: 'The army\'s boost to the hero is 10% bigger per rank' },
       { id: 'tax',       tree: 'realm',     name: 'Tax Collectors',  icon: [12,7], max: 10, cost: 3,  costMult: 1.5, desc: '+25% taxes per rank' },
       { id: 'spoils',    tree: 'realm',     name: 'Plunder',         icon: [12,15], max: 5, cost: 5,  costMult: 1.8, desc: '+25% spoils per rank' },
       { id: 'lap',       tree: 'realm',     name: 'Victory Lap',     icon: [5,7],  max: 3,  cost: 6,  costMult: 2,   desc: 'Lands you have conquered before: hero damage ×3 there, +×1 per rank' },
-      { id: 'ledger',    tree: 'realm',     name: 'The Ledger',      icon: [13,11], max: 1, cost: 1,  costMult: 1,   desc: 'See your AFK forecast (gold and goods per hour while away)' },
-      { id: 'danger',    tree: 'realm',     name: 'Danger Sense',    icon: [0,9],   max: 1, cost: 2,  costMult: 1,   desc: 'See how much HP each fight costs and whether the next stage is safe' },
-      { id: 'chronicler',tree: 'realm',     name: 'Chronicler',      icon: [13,8],  max: 1, cost: 2,  costMult: 1,   desc: 'Unlock the Stats card: DPS, crit, kills per second, loot' },
-      { id: 'surveyor',  tree: 'crown',     name: 'Surveyor',        icon: [10,7],  max: 1, cost: 2,  costMult: 1,   desc: 'See swing times and yield per swing on the harvest screen' },
-      { id: 'almanac',   tree: 'crown',     name: 'Almanac',         icon: [13,3],  max: 1, cost: 2,  costMult: 1,   desc: 'See per-second rates next to every resource in the header' },
     ],
   },
 };

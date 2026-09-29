@@ -286,7 +286,7 @@ const UI = (() => {
       case 'halls': return reached('h04') || (Game.kingdomNo() > 0 && Game.kTier() >= 2);
       case 'tavern': return false;
       case 'keep': return reached('q17') || S.legacy.foundings > 0;
-      case 'legacy': return reached('p01') || S.legacy.foundings > 1;
+      case 'legacy': return reached('w05b') || (S.legacy.dynasty || 1) > 1 || Game.questStat('perksBought') > 0;
       case 'gear': return reached('f03');
       case 'skills': return reached('q02b');
       case 'market': return reached('q14') || S.legacy.foundings > 0;
@@ -1052,7 +1052,7 @@ const UI = (() => {
       const open = p3 ? wi >= 0 : R[k].kind !== 'loot' && R[k].kind !== 'war' && S.lifetime[k] > 0 && Game.pinned(k);
       e.style.order = p3 ? String(wi) : ''; e.classList.toggle('war-chip', p3 && wi >= 0);
       e.classList.toggle('hidden', !open); if (!open) continue;
-      e.querySelector('.rrate').classList.toggle('hidden', !Game.perkRank('almanac'));
+      e.querySelector('.rrate').classList.toggle('hidden', !Game.infoOn('almanac'));
       { const cap = k === 'soldiers' ? Game.armyLimit() : Game.resCap(k), full = k !== 'soldiers' && (S.res[k] || 0) >= cap - 1e-9; setHtml(e.querySelector('[data-f=amt]'), `${f(Math.floor((S.res[k] || 0) + 1e-6))}${k === 'officers' ? '' : `<span class="capn">/${f(cap)}</span>`}`); e.classList.toggle('full', full); }
       const rate = (kr[k] || 0) + (hr[k] || 0) + (hrv[k] || 0);
       const re = e.querySelector('[data-f=rate]'); setText(re, (rate > 0 ? '+' + f(rate) : '0') + '/s'); re.classList.toggle('zero', !(rate > 0));
@@ -1069,7 +1069,7 @@ const UI = (() => {
     for (const id in CONFIG.grounds) { const b = rows.ground[id], G = CONFIG.grounds[id], un = Game.groundUnlocked(id), gs = id === h.ground ? { stage: h.stage } : (h.grounds[id] || { stage: 1 });
       if (G.land) { const show = Game.phase() === 3 && G.land <= Game.landsHeld() + 2; b.classList.toggle('hidden', !show); if (!show) continue; b.classList.toggle('land-done', Game.landDone(G.land)); }
       b.classList.toggle('active', id === h.ground); b.disabled = !un; b.classList.toggle('locked', !un);
-      setText(b.querySelector('[data-f=st]'), G.land ? (Game.landDone(G.land) ? '👑 100%' : un ? `${Game.landPct(G.land)}% · stage ${gs.stage}` : G.reqText) : un ? Game.stageLabel(gs.stage, id) : G.reqText); }
+      setText(b.querySelector('[data-f=st]'), G.land ? (Game.landDone(G.land) ? '👑 100%' : un ? `${Game.landPct(G.land)}% · stage ${gs.stage}` : Game.landReqText(G.land)) : un ? Game.stageLabel(gs.stage, id) : G.reqText); }
     { const p3 = Game.phase() === 3, LN = Game.landN(), G = Game.ground();
       $('army-line').classList.toggle('hidden', !p3 || !Game.heroFighting()); if (!p3) { $('army-flow').classList.add('hidden'); $('strain-card').classList.add('hidden'); }
       if (p3) { const st2 = Game.stats(); setHtml($('army-line'), `${ico(R.soldiers.icon, 18)} <b>${f(Game.marching())}</b>&nbsp;soldiers march with you · hits <b>${f(st2.attack)}</b>&nbsp;<span class="dim">(${f(st2.gearAttack)} × army ×${st2.army.toFixed(2)}${st2.lap > 1 ? ' × victory lap ×' + st2.lap : ''})</span>${Game.armyEff() < 1 ? ` <b class="bad">· army at ${Math.round(Game.armyEff() * 100)}%</b>` : ''}`); $('army-line').classList.toggle('stall', Game.armyEff() < 1);
@@ -1118,7 +1118,7 @@ const UI = (() => {
     setText($('advance-btn'), Game.isBoss() ? `Hunt ${Game.nextTypeName()} ▶` : Game.isBoss(h.stage + 1) ? `Face the ${Game.enemyName(h.stage + 1)} ▶` : 'Advance ▶');
     $('retreat-btn').disabled = h.stage <= 1;
     const dNext = Game.stageDanger(h.stage + 1), dHere = Game.stageDanger();
-    setText($('danger'), !Game.perkRank('danger') ? (dHere >= 1 ? '⚠ You cannot survive here.' : '') : dHere >= 1 ? '⚠ You cannot survive here. Retreat or gear up.'
+    setText($('danger'), !Game.infoOn('danger') ? (dHere >= 1 ? '⚠ You cannot survive here.' : '') : dHere >= 1 ? '⚠ You cannot survive here. Retreat or gear up.'
       : Game.canAdvance() ? (dNext >= 1 ? '⚠ Next stage would kill you. Gear up first.' : dNext > 0.6 ? 'Next stage looks dangerous.' : 'Next stage looks fine.')
       : dHere > 0 ? `He loses ground here — about ${Math.round(dHere * 100)}% HP per fight after healing.` : 'He heals faster than he is hurt here.');
     setText(rows.basic.querySelector('[data-f=dps]'), `${f(st.attack)}/hit · ${f(st.dps)} DPS`);
@@ -1134,8 +1134,8 @@ const UI = (() => {
       setText(b.querySelector('.sk-cd'), ready ? 'TAP' : cd.toFixed(1) + 's');
       b.style.setProperty('--cd', ready ? 0 : (cd / Game.skillCd(id)));
     }
-    $('stat-grid').parentElement.classList.toggle('hidden', !Game.perkRank('chronicler'));
-    if (Game.perkRank('chronicler')) setHtml($('stat-grid'), [
+    $('stat-grid').parentElement.classList.toggle('hidden', !Game.infoOn('chronicler'));
+    if (Game.infoOn('chronicler')) setHtml($('stat-grid'), [
       ['Attack', f(st.attack)], ['DPS', f(st.dps)], ['Atk speed', st.speed.toFixed(2) + '/s'],
       ['Crit', Game.pct(st.crit) + ' ×' + st.critDmg.toFixed(1)], ['Max HP', f(st.maxHp)], ['Regen', f(st.regen) + '/s'],
       ['Armor', f(st.armor) + (st.dr ? ' −' + Game.pct(st.dr) : '')], ['Drops', '×' + st.drop.toFixed(2)], ['Kills/s', Game.farmRate().toFixed(2)],
@@ -1144,7 +1144,7 @@ const UI = (() => {
     if (showLog) setHtml($('log'), S.log.slice(0, 8).map(l => `<div>${l}</div>`).join(''));
     for (const ev of Game.drainEvents()) hitPop(ev);
     const eff = Game.afkEfficiency(), afkHr = Object.entries(hr).filter(([, v]) => v > 0), afkKr = Object.entries(kr).filter(([, v]) => v > 0);
-    setHtml($('afk-info'), !Game.perkRank('ledger') ? `<span class="dim">AFK forecast — unlock <b>The Ledger</b> in Kingdom → Legacy to see what he earns while you're away.</span>` : `AFK mode: ${Game.pct(eff)} of this rate while closed (max ${Game.fmtTime(Game.afkCap())})` + (afkHr.length ? ` → ${afkHr.map(([k, v]) => `${ico(R[k].icon, 14)}${f(v * eff * 3600)}/h`).join(' ')}` : ' → XP only here') + (afkKr.length ? `, kingdom ${afkKr.map(([k, v]) => `${ico(R[k].icon, 14)}${f(v * eff * 3600)}/h`).join(' ')}` : ''));
+    setHtml($('afk-info'), !Game.infoOn('ledger') ? '' : `AFK mode: ${Game.pct(eff)} of this rate while closed (max ${Game.fmtTime(Game.afkCap())})` + (afkHr.length ? ` → ${afkHr.map(([k, v]) => `${ico(R[k].icon, 14)}${f(v * eff * 3600)}/h`).join(' ')}` : ' → XP only here') + (afkKr.length ? `, kingdom ${afkKr.map(([k, v]) => `${ico(R[k].icon, 14)}${f(v * eff * 3600)}/h`).join(' ')}` : ''));
 
     // Gear
     let anyGear = false;
@@ -1246,7 +1246,7 @@ const UI = (() => {
       { const chain = q.chain || (CONFIG.quests.slice(0, S.quests.index).reverse().find(x => x.chain) || {}).chain || ''; const inChain = CONFIG.quests.filter((x, i) => (x.chain || (CONFIG.quests.slice(0, i).reverse().find(y => y.chain) || {}).chain) === chain); setText($('quest-n'), `${chain} · ${inChain.indexOf(q) + 1} / ${inChain.length}`); }
       setText($('quest-name'), q.name); setText($('quest-text'), q.text); setText($('quest-hint'), q.hint || ''); $('quest-hint').classList.toggle('hidden', !q.hint);
       setHtml($('quest-obj'), pr.parts.map(partHtml).join(''));
-      setHtml($('quest-reward'), 'Reward: ' + Object.entries(q.reward).map(([k, v]) => k === 'crystal' ? `<span class="costitem">👑 ${v} Crown</span>` : k === 'talent' ? `<span class="costitem">★ ${v} boss token</span>` : `<span class="costitem">${ico(R[k].icon, 14)}${f(v)}</span>`).join(' '));
+      setHtml($('quest-reward'), 'Reward: ' + Object.entries(q.reward).map(([k, v]) => k === 'crystal' ? `<span class="costitem">👑 ${v} Crown${v === 1 ? '' : 's'}</span>` : k === 'talent' ? `<span class="costitem">★ ${v} boss token</span>` : `<span class="costitem">${ico(R[k].icon, 14)}${f(v)}</span>`).join(' '));
       $('quest-claim').classList.remove('hidden'); $('quest-claim').disabled = !pr.done; $('quest-card').classList.toggle('ready', pr.done);
     } else if (goal) {
       setText($('quest-n'), ''); setText($('quest-name'), goal.name); setText($('quest-text'), goal.text); setText($('quest-hint'), goal.hint); $('quest-hint').classList.remove('hidden');
@@ -1274,15 +1274,15 @@ const UI = (() => {
       setHtml($('harvest-icon'), ico(a.icon, 48));
       setHtml($('harvest-yield'), 'Each swing: ' + Object.entries(y).map(([k, v]) => `<span class="costitem">${ico(R[k].icon, 16)}${f(v)}</span>`).join(' '));
       $('harvest-bar').style.width = Math.min(100, 100 * h.harvestTimer / t) + '%';
-      setText($('harvest-time'), Game.perkRank('surveyor') ? t.toFixed(1) + 's per swing' : '');
-      $('harvest-yield').classList.toggle('hidden', !Game.perkRank('surveyor'));
+      setText($('harvest-time'), Game.infoOn('surveyor') ? t.toFixed(1) + 's per swing' : '');
+      $('harvest-yield').classList.toggle('hidden', !Game.infoOn('surveyor'));
       setText($('harvest-tool'), `${CONFIG.toolTiers[tool.tier].name} ${CONFIG.toolSlots[a.tool].name} Lv${tool.level} · power ×${Game.toolPower(a.tool).toFixed(2)}`);
       setText($('harvest-mastery'), `Mastery ${Game.masteryLevel(act)} (${h.mastery[act] || 0} swings)`);
       { const outs = Object.keys(y), full = outs.filter(k => Game.atCap(k)), open = outs.filter(k => !Game.atCap(k));
         $('harvest-full').classList.toggle('hidden', !full.length);
         if (full.length) setText($('harvest-full'), `${full.map(k => R[k].name).join(' and ')} ${full.length > 1 ? 'are' : 'is'} full (${f(Game.resCap(full[0]))}) — ${open.length ? 'only ' + open.map(k => R[k].name).join(' and ') + ' ' + (open.length > 1 ? 'are' : 'is') + ' being gathered' : 'nothing more can be gathered'}. Spend it on gear or sell it at the Market to make room.`); }
       const hrv = Game.harvestRates(act);
-      setHtml($('harvest-afk'), !Game.perkRank('ledger') ? `<span class="dim">AFK forecast — unlock <b>The Ledger</b> in Kingdom → Legacy.</span>` : `AFK: ${Game.pct(Game.afkEff())} of this while closed (max ${Game.fmtTime(Game.afkCap())}) → ` + Object.entries(hrv).map(([k, v]) => `<span class="costitem">${ico(R[k].icon, 14)}${f(v * Game.afkEff() * 3600)}/h</span>`).join(' '));
+      setHtml($('harvest-afk'), !Game.infoOn('ledger') ? '' : `AFK: ${Game.pct(Game.afkEff())} of this while closed (max ${Game.fmtTime(Game.afkCap())}) → ` + Object.entries(hrv).map(([k, v]) => `<span class="costitem">${ico(R[k].icon, 14)}${f(v * Game.afkEff() * 3600)}/h</span>`).join(' '));
     }
     renderMini(fighting, idle, act, st, eMax);
     // Tools
@@ -1343,10 +1343,10 @@ const UI = (() => {
     const cost = Game.foundCost(); setHtml($('found-cost'), Object.keys(cost).length ? costHtml(cost) : '<span class="dim">free — Renown is the price</span>');
     const first = S.legacy.foundings === 0, p3 = Game.phase() === 3;
     setText($('found-title'), first ? 'Pay Tribute to the Empire' : p3 ? 'Pass the Crown' : 'Proclaim the Kingdom');
-    setText($('found-text'), first ? 'Pay tribute and the Empire grants you land: your first kingdom, with a Forest to work. Your hero keeps everything.' : p3 ? `Your hero crowns an heir. The Crowns you took from fallen rulers become your dynasty's power (Legacy). Lands, taxes, the army and stores start over; the Capital stands, its building levels back to 1; the hero starts again at level 1. Crowns, Legacy perks, the Crown Vault, trophies and tech stay. In lands you conquered before, the hero hits ${3 + Game.perkRank('lap')}× harder.` : 'Once your City is complete, proclaim the Kingdom. Nothing is lost: your City becomes the Capital, and the war for new lands begins.');
+    setText($('found-text'), first ? 'Pay tribute and the Empire grants you land: your first kingdom, with a Forest to work. Your hero keeps everything.' : p3 ? `Your hero crowns an heir. The Crowns you took from fallen rulers become your dynasty's power (Legacy). Lands, taxes, the army and stores start over, and the hero starts again at level 1. His gear, Paths and Techniques, the Capital and its building levels, Crowns, Legacy perks, the Crown Vault, trophies and tech all stay. In lands you conquered before, the hero hits ${3 + Game.perkRank('lap')}× harder.` : 'Once your City is complete, proclaim the Kingdom. Nothing is lost: your City becomes the Capital, and the war for new lands begins.');
     $('found-btn').textContent = first ? 'Pay Tribute' : p3 ? `Pass the Crown (+${Game.crownsIfPass()} 👑)` : 'Proclaim the Kingdom';
     if (first) { const reqStage = CONFIG.legacy.foundRequiresStage, okStage = Game.bestStageAll() >= reqStage; setText($('found-req'), okStage ? (Game.canAfford(cost) ? 'Ready.' : 'Gather the tribute: 100 gold and the Rat King\'s Tooth.') : `Reach stage ${reqStage} to pay tribute (best: ${Game.bestStageAll()}).`); }
-    else { setText($('found-req'), p3 ? (Game.canPassCrown() ? `Crowns this dynasty: ${Game.crownsIfPass()} · lands held: ${Game.landsHeld()}` : 'Conquer your first land to pass the crown.') : Game.canProclaim() ? 'Ready. The City is complete.' : `Complete your City first (now: ${Game.tierDef().name}).`); }
+    else { setText($('found-req'), p3 ? (Game.canPassCrown() ? `Crowns this dynasty: ${Game.crownsIfPass()} · lands held: ${Game.landsHeld()}` : (Game.landsHeld() < 1 ? 'Conquer your first land to pass the crown.' : 'The quests will show you when to pass the crown.')) : Game.canProclaim() ? 'Ready. The City is complete.' : `Complete your City first (now: ${Game.tierDef().name}).`); }
     const can = first ? Game.canFound() : p3 ? Game.canPassCrown() : Game.canProclaim();
     setText($('found-gain-lab'), first ? 'Crowns on founding:' : 'Crowns when proclaimed:'); $('found-gain-row').classList.toggle('hidden', p3); $('found-cost-row').classList.toggle('hidden', !first);
     $('found-btn').disabled = !can;
