@@ -674,7 +674,7 @@ const UI = (() => {
     setHtml(tip, t); tip.classList.toggle('hidden', !t);
   }
   // Beta 0.1.7: the flow view — overview strip, a card per step, and the piles between them
-  const ART_V = 2; // bump when step/pile art is replaced
+  const ART_V = 3; // bump when step/pile art is replaced
   const artSlot = (src, cls, label) => `<div class="art-slot ${cls}"><span class="art-ph">${label}</span><img src="${src}?v=${ART_V}" alt="" onerror="this.remove()"></div>`;
   function levelHtml(st, d) {
     const id = st.id, key = st.art || id, P = Game.PARTS, nm = p => Game.partName(id, p);
