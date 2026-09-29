@@ -503,7 +503,12 @@ function add(resId, amt) {
 }
 function storeCap(k) { const c = Math.round((S.legacy.foundings > 0 ? tierDef().cap : CONFIG.caps.store) * (1 + (S.kingdom.storeLv || 0) * 0.5) * (rankIndex() >= 1 ? 2 : 1) * (1 + 0.25 * perkRank('cellar'))); return k === 'gold' ? c * CONFIG.caps.goldMult : c; }
 // Storehouse delivery: whatever does not fit is sold to passing merchants, cheaply.
-function storeDeliver(k, n) { const got = add(k, n), extra = n - got; if (extra > 0 && CONFIG.resources[k].sell) { const g = extra * CONFIG.resources[k].sell * KC().autoSell; add('gold', g); S.kingdom.autoSold = (S.kingdom.autoSold || 0) + g; } S.stats.made = S.stats.made || {}; S.stats.made[k] = (S.stats.made[k] || 0) + n; return got; }
+// Beta 0.1.26: overflow is measured so the building view can show what's being sold off
+const OFLOW = { acc: {}, rate: {}, t: 0 };
+function overflowTick(dt) { OFLOW.t += dt; if (OFLOW.t < 5) return; for (const k in OFLOW.rate) if (!OFLOW.acc[k]) delete OFLOW.rate[k]; for (const k in OFLOW.acc) OFLOW.rate[k] = { u: OFLOW.acc[k].u / OFLOW.t, g: OFLOW.acc[k].g / OFLOW.t }; OFLOW.acc = {}; OFLOW.t = 0; }
+function overflowRate(k) { return OFLOW.rate[k] || { u: 0, g: 0 }; }
+function overflowSell(k, extra) { if (!(extra > 0) || !CONFIG.resources[k] || !CONFIG.resources[k].sell) return 0; const g = extra * CONFIG.resources[k].sell * KC().autoSell; add('gold', g); S.kingdom.autoSold = (S.kingdom.autoSold || 0) + g; const a = OFLOW.acc[k] = OFLOW.acc[k] || { u: 0, g: 0 }; a.u += extra; a.g += g; return g; }
+function storeDeliver(k, n) { const got = add(k, n), extra = n - got; overflowSell(k, extra); S.stats.made = S.stats.made || {}; S.stats.made[k] = (S.stats.made[k] || 0) + n; return got; }
 function canAfford(cost) { if (!cost) return false; for (const k in cost) if ((S.res[k] || 0) < cost[k]) return false; return true; }
 function pay(cost) { for (const k in cost) S.res[k] -= cost[k]; }
 
@@ -722,7 +727,7 @@ function routeOut(st, nx, rest) {
 }
 // Live tick: each step fills its cart; the cart delivers to the next step's input, or to the Storehouse.
 function tickKingdom(dt) {
-  if (kingdomNo() < 1) return;
+  if (kingdomNo() < 1) return; overflowTick(dt);
   const K = S.kingdom;
   K.offerTimer = (K.offerTimer || KC().offerRefresh) - dt; if (K.offerTimer <= 0) refreshOffers();
   K.ordCheck = (K.ordCheck || 0) - dt; if (K.ordCheck <= 0) { K.ordCheck = 20; const g = orderGoods(); (K.orders || []).forEach((o, i) => { if (Object.keys(o.wants).some(k => !g.includes(k) && (S.res[k] || 0) < o.wants[k])) K.orders.splice(i, 1, makeOrder(i)); }); // an Order for a good you no longer have spare is replaced
@@ -1204,6 +1209,7 @@ function claimOffline(data, mult = 1) {
     S.res.people = Math.max(0, people() + P.pop); S.res.soldiers = Math.max(0, soldiers() + P.sol); if (P.gold > 0) { add('gold', P.gold * mult); S.stats.headTax = (S.stats.headTax || 0) + P.gold * mult; }
     S.stats.trained = (S.stats.trained || 0) + P.trained; S.stats.fallen = (S.stats.fallen || 0) + P.fallen; S.stats.settled = (S.stats.settled || 0) + P.settled; }
   const kept = {}; for (const k in data.gains) kept[k] = add(k, data.gains[k] > 0 ? data.gains[k] * mult : data.gains[k]); // inputs consumed aren't doubled
+  { const made = new Set(allSteps().filter(st => stepBuilt(st.id)).map(st => st.make)); for (const k in data.gains) if (made.has(k) && data.gains[k] > 0) { const over = data.gains[k] * mult - (kept[k] || 0); if (over > 0) { const g = over * CONFIG.resources[k].sell * KC().autoSell; if (g > 0) { add('gold', g); S.kingdom.autoSold = (S.kingdom.autoSold || 0) + g; data.sold = (data.sold || 0) + g; } } } } // Beta 0.1.26: overflow while away is sold too, like live play
   for (const [src, key] of [[data.harvested, 'harvested'], [data.looted, 'looted']]) for (const k in (src || {})) { const share = data.gains[k] > 0 ? Math.min(1, src[k] / data.gains[k]) : 0, n = Math.floor(Math.max(0, kept[k] || 0) * share); if (n > 0) { S.stats[key] = S.stats[key] || {}; S.stats[key][k] = (S.stats[key][k] || 0) + n; } } // quests that count gathering and loot count it while away too
   for (const k of ['food', 'supplies', 'soldiers', 'bread', 'swords', 'lumber']) if ((S.res[k] || 0) < 0) S.res[k] = 0;
   for (const n in (data.tax || {})) { const t = data.tax[n] * mult; add('gold', t - titheTo(t)); S.stats.taxed = (S.stats.taxed || 0) + t; if (false) { const L = landState(+n); L.coffer = Math.min(cofferCap(+n), (L.coffer || 0) + t); } }
@@ -1620,7 +1626,7 @@ window.Game = {
   toolTierUnlocked, toolPower, toolCraftCost, toolUpgradeCost, canToolTierUp, craftTool, upgradeTool, activityDef, activityAvailable, setActivity, masteryLevel, harvestTime, harvestYield, harvestRates,
   questCurrent, questProgress, questClaim, suggestGoal, ground, setGround, groundUnlocked, dropToolMult, bestStageAll, groundDrops, toolSlotUnlocked,
   techDef, hasTech, techProgress, canResearch, research, researching, buildingUnlocked, gearTierUnlocked, dropUnlocked, counter,
-  kingdomRates, chainFlow, limitParts, kingdomNo, allSteps, stepDef, stepUnlocked, lineUnlocked, lineSteps, stepState, nextStep, stepMods, kTier, tierDef, stepAvailable, stepBuilt, canBuild, buildStep, tierGoods, tierNeed, tierPaid, tierPaidDone, tierStepsReady, contribute, canRaise, raiseTier, accountantSteps, assignAccountant, cityChecks, cityComplete, stepRate, stepPhases, stepCycle, stepBatch, stepOutput, thrallLevel, thrallCap, dismiss, stepLimit, stepUpCost, stepUpPlan, upgradeStep, stepWorkerSlots,
+  kingdomRates, chainFlow, limitParts, overflowRate, kingdomNo, allSteps, stepDef, stepUnlocked, lineUnlocked, lineSteps, stepState, nextStep, stepMods, kTier, tierDef, stepAvailable, stepBuilt, canBuild, buildStep, tierGoods, tierNeed, tierPaid, tierPaidDone, tierStepsReady, contribute, canRaise, raiseTier, accountantSteps, assignAccountant, cityChecks, cityComplete, stepRate, stepPhases, stepCycle, stepBatch, stepOutput, thrallLevel, thrallCap, dismiss, stepLimit, stepUpCost, stepUpPlan, upgradeStep, stepWorkerSlots,
   assignWorker, assignOverseer, unassign, thrallPost, useAbility, refreshOffers, hire, maxStars, storeUpCost, upgradeStore, orderGoods, foundRenownNeed, canDeliver, deliver, swapOrder, swapReady, rankIndex, rankInfo, heroFighting, thrallCount, sellPrice, sell, buyPrice, buyRes, buyMax, canBuyRes,
   canAdvance, advance, stageSustainable, autoAdvanceBlock, autoKillsNeeded, killHeal, retreat, canAfford, add, simulate, applyOffline, claimOffline, offlineStages,
   save, load, exportSave, importSave, hardReset,
