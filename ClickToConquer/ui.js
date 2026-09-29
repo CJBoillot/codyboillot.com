@@ -40,13 +40,14 @@ const UI = (() => {
     document.addEventListener('click', e => { const t = e.target.closest && e.target.closest('.req-src[data-item]'); if (t) { e.stopPropagation(); openItem(t.dataset.item); } }, true);
     $('confirm-no').addEventListener('click', closeAsk); $('confirm-modal').addEventListener('click', e => { if (e.target === $('confirm-modal')) closeAsk(); });
     $('confirm-yes').addEventListener('click', () => { const cb = confirmCb; closeAsk(); if (cb) cb(); });
+    $('story-go').addEventListener('click', () => { const st = Game.S.settings.story = Game.S.settings.story || {}; if (storyOpen) st[storyOpen] = true; storyOpen = null; $('story').classList.add('hidden'); Game.save(); });
     $('version').textContent = CONFIG.version;
     // Resource chips: icon · amount · name · rate, in config order; a good appears once first gained.
     const rb = $('res-bar'); rb.innerHTML = '';
     for (const k in R) {
       const d = el('div', 'res hidden'); d.id = 'res-' + k; d.title = `${R[k].name} — ${R[k].desc || ''}`;
       d.innerHTML = `${ico(R[k].icon, 22)}<div class="res-txt"><b data-f="amt">0</b><span class="res-name">${R[k].name}</span></div><span class="rrate" data-f="rate"></span>`;
-      d.addEventListener('click', () => { if (Game.phase() !== 3) return; const go = { soldiers: 'war', gold: 'lands' }[k]; if (!go) return; const t = document.querySelector('[data-tab=kingdom]'); if (t && !t.disabled) t.click(); const b = document.querySelector(`[data-ksub=${go}]`); if (b && !b.disabled) b.click(); const r = document.querySelector('[data-rtab=kingdom]'); if (r && desktop) r.click(); });
+      d.addEventListener('click', () => { if (Game.phase() !== 3 && k !== 'people' && k !== 'soldiers') return; const go = { soldiers: 'prod', people: 'prod', gold: 'lands' }[k]; if (!go) return; const t = document.querySelector('[data-tab=kingdom]'); if (t && !t.disabled) t.click(); const b = document.querySelector(`[data-ksub=${go}]`); if (b && !b.disabled) b.click(); const r = document.querySelector('[data-rtab=kingdom]'); if (r && desktop) r.click(); });
       rb.appendChild(d);
     }
     for (const wk of Game.WAR_KEYS) { const W = CONFIG.kingdom.army.lines[wk], d = el('div', 'res inc-chip hidden'); d.id = 'inc-' + wk; d.title = `${W.name} income per minute vs what the army uses`;
@@ -129,7 +130,6 @@ const UI = (() => {
     $('item-pin').addEventListener('click', () => { if (invItem) { Game.togglePin(invItem); openItem(invItem); } });
     // Founding
     $('found-btn').addEventListener('click', openFound);
-    $('barracks-up').addEventListener('click', () => { if (Game.upgradeBarracks()) { flash($('barracks-card')); render(true); } });
     $('build-cancel').addEventListener('click', () => $('build-modal').classList.add('hidden'));
     $('slot-close').addEventListener('click', closeSlot);
     $('doll').addEventListener('click', e => { const s = e.target.closest('.doll-slot'); if (s && s.dataset.slot) openSlot(s.dataset.kind, s.dataset.slot); });
@@ -286,6 +286,7 @@ const UI = (() => {
       case 'kingdom': return reached('f02') || S.legacy.foundings > 0;
       case 'tech': return reached('f02');
       case 'forest': case 'farm': case 'mine': return Game.lineUnlocked(key);
+      case 'prod': return Game.kingdomNo() > 0;
       case 'war': case 'lands': return Game.phase() === 3;
       case 'halls': return reached('h04') || (Game.kingdomNo() > 0 && Game.kTier() >= 2);
       case 'tavern': return false;
@@ -312,8 +313,6 @@ const UI = (() => {
       b.disabled = !ok; b.classList.toggle('locked-tab', !ok);
     });
     $('kline-row').classList.toggle('hidden', Game.kingdomNo() < 1);
-    { const war = Game.phase() === 3, NAMES = { forest: ['Housing', 0], mine: ['Arms', 1], farm: ['Food', 2], war: ['Soldiers', 3] };
-      for (const k in NAMES) { const b = document.querySelector(`[data-ksub=${k}]`); if (!b) continue; const nm = b.querySelector('.kl-name'); setText(nm, war ? NAMES[k][0] : nm.dataset.base); b.style.order = war ? String(NAMES[k][1]) : ''; } }
     { const ma = document.querySelector('[data-msub].active'); if (ma && !tabUnlocked(ma.dataset.msub)) document.querySelector('[data-msub=trade]').click(); }
     document.querySelectorAll('#skill-seg [data-sk]').forEach(b => { const ok = tabUnlocked('sk-' + b.dataset.sk); b.disabled = !ok; b.classList.toggle('locked-tab', !ok); });
     if (!tabUnlocked('sk-' + skView)) { const first = ['paths', 'gather', 'tech'].find(k => tabUnlocked('sk-' + k)); if (first && first !== skView) setSkillView(first); }
@@ -351,7 +350,7 @@ const UI = (() => {
       if (!sel) continue; const ci = sel.indexOf(':'), kind = sel.slice(0, ci), id = sel.slice(ci + 1);
       if (kind === 'tech') add(rows.tech[id]); else if (kind === 'tool') { add(rows.tool[id]); add(document.querySelector(`.doll-slot[data-slot=${id}]`)); } else if (kind === 'gear') { add(rows.gear[id]); add(document.querySelector(`.doll-slot[data-slot=${id}]`)); }
       else if (kind === 'act') add(rows.act[id]); else if (kind === 'id') add($(id));
-      else if (kind === 'step') { const d = Game.stepDef(id); if (d && rows.step[d.line]) add(rows.step[d.line][id]); }
+      else if (kind === 'step') { add(document.querySelector(`#prod-grid [data-card="${id}"]`)); if (bldOpen === id) add($('bld-view').querySelector('.depth-card')); }
       else if (kind === 'market') add($('market-list'));
       else if (kind === 'ground') { add(rows.ground[id]); add(rows.act.fight); }
       else if (kind === 'perk') add(rows.perk[id]);
@@ -587,6 +586,137 @@ const UI = (() => {
     return anyUp;
   }
 
+  // ---- 0.12: Kingdom → Production — three chains feed the Barracks ----
+  const PROD_COLS = ['forest', 'mine', 'farm'], PROD_HEAD = { forest: 'People', mine: 'Arms', farm: 'Food' };
+  const artOf = st => `assets/buildings/${st.art || st.id}.webp`;
+  let prodKey = '', bldOpen = null, bldKey = '';
+  function openBld(id) { bldOpen = id; bldKey = ''; Game.markViewed('bld:' + id); $('prod-view').classList.add('hidden'); $('bld-view').classList.remove('hidden'); render(true); window.scrollTo(0, 0); }
+  function closeBld() { bldOpen = null; $('bld-view').classList.add('hidden'); $('prod-view').classList.remove('hidden'); render(true); }
+  function partBtn(id, p, small) { return `<button class="buy pbtn" data-part="${p}" data-id="${id}"><span class="${small ? 'tiny' : 'small'}" data-f="pl${p}">${Game.PART_NAME[p]}</span>${small ? '' : ' <span class="small dim" data-f="plv' + p + '"></span>'}<br><span class="cost" data-f="pc${p}"></span></button>`; }
+  function wirePartBtns(root) { root.querySelectorAll('[data-part]').forEach(b => b.addEventListener('click', e => { e.stopPropagation(); if (Game.upgradeStep(b.dataset.id, b.dataset.part, kBuy)) { flash(b); render(true); } })); }
+  function fillPartBtn(root, id, p, small) {
+    const b = root.querySelector(`[data-part="${p}"][data-id="${id}"]`); if (!b) return false;
+    const cap = Game.levelCap(), lv = Game.partLv(id, p), plan = Game.stepUpPlan(id, p, kBuy), lim = Game.limitPart(id) === p;
+    b.classList.toggle('hot', lim); b.disabled = !plan.n;
+    if (!small) setText(b.querySelector(`[data-f=plv${p}]`), `Lv ${lv}${plan.n > 1 ? ' → ' + (lv + plan.n) : ''}`);
+    else setText(b.querySelector(`[data-f=pl${p}]`), `${Game.PART_NAME[p]} ${lv}`);
+    setHtml(b.querySelector(`[data-f=pc${p}]`), lv >= cap ? '<span class="dim tiny">max</span>' : costHtml(plan.n ? plan.cost : Game.stepUpCost(id, p)).replace(/<span class="cost-name">[^<]*<\/span>/g, ''));
+    return !!plan.n;
+  }
+  function buildProd() {
+    const S = Game.S, T = CONFIG.kingdom.tiers; let h = '';
+    for (let r = 0; r < 3; r++) {
+      if (r) h += `<div class="prod-arrows">${PROD_COLS.map(() => '<span>▼</span>').join('')}</div>`;
+      h += '<div class="prod-row">';
+      for (const lid of PROD_COLS) { const st = CONFIG.kingdom.lines[lid].steps[r], built = Game.stepBuilt(st.id), avail = Game.stepAvailable(st.id);
+        if (built) h += `<div class="pcard" data-card="${st.id}" data-glow="step:${st.id}"><img class="part-art" src="${artOf(st)}" alt=""><span class="ptag" data-f="lv"></span><span class="pslow hidden" data-f="slow">slowest</span><div class="pname">${st.name}</div><div class="prate" data-f="rate"></div><div class="pparts">${Game.PARTS.map(p => partBtn(st.id, p, true)).join('')}</div><button class="penter" data-enter="${st.id}">Enter ›</button></div>`;
+        else if (avail) h += `<div class="pcard pbuild" data-card="${st.id}" data-glow="step:${st.id}"><img class="part-art dimart" src="${artOf(st)}" alt=""><div class="pname">${st.name}</div><div class="pdesc">${st.from ? `${R[st.from].name} → ${R[st.make].name}` : 'Makes ' + R[st.make].name.toLowerCase()}</div><button class="buy wide" data-build="${st.id}"><span class="small">Build</span><br><span class="cost" data-f="bcost"></span></button></div>`;
+        else h += `<div class="pcard plock"><img class="part-art lockart" src="${artOf(st)}" alt=""><div class="pname">${st.name}</div><div class="pdesc">🔒 ${T[st.tier].name}</div></div>`; }
+      h += '</div>';
+    }
+    setHtml($('prod-grid'), h);
+    $('prod-grid').querySelectorAll('[data-build]').forEach(b => b.addEventListener('click', () => { if (Game.buildStep(b.dataset.build)) { prodKey = ''; render(true); } }));
+    $('prod-grid').querySelectorAll('[data-enter]').forEach(b => b.addEventListener('click', () => openBld(b.dataset.enter)));
+    $('prod-grid').querySelectorAll('.pcard[data-card] .part-art').forEach(im => im.addEventListener('click', () => { const id = im.closest('[data-card]').dataset.card; if (Game.stepBuilt(id)) openBld(id); }));
+    wirePartBtns($('prod-grid'));
+    $('prod-kbar').innerHTML = kbarHtml(); $('prod-kbar').querySelectorAll('[data-kbuy]').forEach(b => b.addEventListener('click', () => { kBuy = b.dataset.kbuy === 'max' ? 'max' : +b.dataset.kbuy; prodKey = ''; bldKey = ''; render(true); }));
+    glowKey = '';
+  }
+  function rateTxt(st) { const out = Game.stepOutput(st.id); if (st.id === 'carpenter' && Game.housesOn()) { const sec = out > 0 ? Game.houseCost() / out : 0; return sec ? `1 house / ${sec < 90 ? Math.round(sec) + 's' : Math.round(sec / 60) + 'm'}` : '—'; } return `${out < 10 ? out.toFixed(2) : Game.fmt(out)}<small>/s ${R[st.make].name.toLowerCase()}</small>`; }
+  function renderProd() {
+    const S = Game.S, f = Game.fmt; if (Game.kingdomNo() < 1) return false;
+    const key = Game.kTier() + '|' + Game.phase() + '|' + JSON.stringify(S.kingdom.built || {}) + '|' + kBuy;
+    if (prodKey !== key) { prodKey = key; buildProd(); }
+    let any = false; const slow = {}; for (const lid of PROD_COLS) slow[Game.slowestInLine(lid)] = true;
+    for (const lid of PROD_COLS) for (const st of CONFIG.kingdom.lines[lid].steps) { const card = $('prod-grid').querySelector(`[data-card="${st.id}"]`); if (!card) continue;
+      if (card.classList.contains('pbuild')) { setHtml(card.querySelector('[data-f=bcost]'), costHtml(st.build)); const cb = Game.canBuild(st.id); card.querySelector('[data-build]').disabled = !cb; if (cb) any = true; continue; }
+      setText(card.querySelector('[data-f=lv]'), 'Lv ' + Game.stepLv(st.id)); setHtml(card.querySelector('[data-f=rate]'), rateTxt(st));
+      const sl = !!slow[st.id]; card.classList.toggle('slowest', sl); card.querySelector('[data-f=slow]').classList.toggle('hidden', !sl);
+      for (const p of Game.PARTS) if (fillPartBtn(card, st.id, p, true)) any = true; }
+    renderTown(); renderBarracks(); renderProdTip();
+    if (bldOpen) renderBld();
+    return any;
+  }
+  function renderTown() {
+    const S = Game.S, f = Game.fmt, box = $('prod-town'), hs = Game.houses(), built = Game.stepBuilt('carpenter');
+    box.classList.toggle('hidden', !built && hs < 1); if (!built && hs < 1) return;
+    const cap = Game.houseCap(), pop = Game.people(), sol = Game.soldiers(), room = Game.houseRoom(), prog = (S.kingdom.houseProg || 0) / Game.houseCost(), tr = Game.turnedRecent(), sph = Game.settlersPerHour();
+    setHtml(box, `<div class="town-row"><img src="assets/buildings/carpenter.webp" alt=""><div class="town-main"><div class="town-n"><b>${f(pop)}</b> people${sol ? ` · <b>${f(sol)}</b> soldiers` : ''} <span class="dim">/ ${f(cap)} room in ${f(hs)} house${hs === 1 ? '' : 's'}</span></div>
+      <div class="bar town-bar"><div style="width:${cap ? Math.min(100, 100 * (pop + sol) / cap) : 0}%"></div><span>${Game.birthRoom() > 0 ? `+1 person every ${Math.round(60 / Math.max(0.01, Game.birthsPerMin()))}s` : room > 0 ? `${f(room)} homes kept for settlers` : 'Full — build houses'}</span></div>
+      <div class="tiny dim">Next house ${Math.round(prog * 100)}% · head tax ${f(Game.headTaxPerHour())} gold/h${sph > 0 ? ` · settlers ${sph.toFixed(1)}/h from your lands` : ''}</div>
+      ${tr > 0 ? `<div class="tiny warn">${f(tr)} settlers found no home in the last hour — build houses.</div>` : ''}</div></div>`);
+  }
+  function renderBarracks() {
+    const S = Game.S, f = Game.fmt, card = $('barracks-card'), av = Game.barracksAvailable(), built = Game.barracksBuilt();
+    const c = Game.nextSoldierCost(), bl = Game.trainBlocker(), rate = Game.trainPerMin(), p3 = Game.phase() === 3, held = Game.landsHeld(), nx = Math.min(held + 1, CONFIG.ages.lands), rec = Game.recArmy(nx), sol = Game.soldiers();
+    const why = { houses: 'no houses yet — build the Carpenter', people: 'no free people — houses fill with people', swords: 'short of arms — grow the Mine chain', bread: 'short of bread — grow the Farm chain' }[bl];
+    const k = [av, built, Game.barracksLv(), bl, sol, Math.ceil(c.swords), Math.ceil(c.bread), rate.toFixed(1), p3, held, S.res.gold > 0 && Game.canUpBarracks()].join('|');
+    if (card.__k !== k) { card.__k = k;
+      setHtml(card, `<div class="bk-top"><img src="assets/buildings/barracks.webp" alt=""><div><div class="pname pname-lg">Barracks ${built ? '<span class="dim small">Lv ' + Game.barracksLv() + '</span>' : ''}</div><div class="tiny dim">1 person + arms + bread → 1 soldier</div></div><div class="bk-sol"><b>${f(sol)}</b><span class="tiny dim">soldiers</span></div></div>
+        ${!av ? `<div class="small dim">🔒 The Barracks is built in a City.</div>` : `
+        ${built ? `<div class="bk-row"><span>Next soldier</span><span>${costHtml({ people: 1, swords: Math.ceil(c.swords), bread: Math.ceil(c.bread) }).replace(/<span class="cost-name">[^<]*<\/span>/g, '')}</span></div>
+        <div class="bk-row"><span>Training</span><span class="${bl ? 'warn' : 'good'}">${bl ? 'paused: ' + why : `+${rate.toFixed(1)} / min`}</span></div>
+        <div class="tiny dim">Each soldier costs a little more than the last; losses in battle bring the price back down.</div>` : ''}
+        ${p3 ? `<div class="bk-rec"><div class="row-between small"><span>Next land${Game.landDef(nx) ? ' · <b>' + Game.landDef(nx).name + '</b>' : ''}</span><span class="dim">recommended ${f(rec)}</span></div><div class="bar gold-bar"><div style="width:${Math.min(100, 100 * Game.marching() / rec)}%"></div><span>${f(Game.marching())} marching</span></div></div>` : ''}
+        <button class="buy wide" id="barracks-up"><span class="small">${built ? 'Upgrade the Barracks (faster training)' : 'Build the Barracks'}</span><br><span class="cost">${costHtml(Game.barracksCost())}</span></button>`}`);
+      const b = $('barracks-up'); if (b) { b.disabled = !Game.canUpBarracks(); b.addEventListener('click', () => { if (Game.upgradeBarracks()) { card.__k = ''; render(true); } }); } }
+    else { const b = $('barracks-up'); if (b) b.disabled = !Game.canUpBarracks(); }
+    return av && !built && Game.canUpBarracks();
+  }
+  function renderProdTip() {
+    const tip = $('prod-tip'); let t = '';
+    if (Game.barracksBuilt()) { const bl = Game.trainBlocker();
+      if (bl === 'people' || bl === 'houses') t = `<b>The Barracks is waiting for people.</b> Every soldier is a person — houses fill with people, so build houses: grow the People chain (the Carpenter raises them).`;
+      else if (bl === 'swords') t = `<b>Arms are holding the army back.</b> Grow the Arms chain — start with its slowest building.`;
+      else if (bl === 'bread') t = `<b>Bread is holding the army back.</b> Grow the Food chain — start with its slowest building.`; }
+    if (!t) { const sl = PROD_COLS.map(l => Game.slowestInLine(l)).filter(Boolean); if (sl.length) t = `Each chain's <b>slowest</b> building is marked — upgrading it speeds up everything after it. Inside a building, the part with the <b>gold</b> bar is the one holding it back.`; }
+    setHtml(tip, t); tip.classList.toggle('hidden', !t);
+  }
+  function renderBld() {
+    const S = Game.S, f = Game.fmt, id = bldOpen, st = Game.stepDef(id), box = $('bld-view'); if (!st || !Game.stepBuilt(id)) { closeBld(); return; }
+    const L = CONFIG.kingdom.lines[st.line], nx = Game.nextStep(id), key = id + '|' + kBuy + '|' + (nx ? nx.id : '') + '|' + Game.housesOn();
+    if (bldKey !== key) { bldKey = key;
+      const stock = nx ? `<div class="kstock"><div class="kstock-head"><span>Keep ${R[st.make].name.toLowerCase()} in stock</span><span class="kstock-n" data-f="stn"></span></div><div class="seg kstock-seg">${Game.STOCK_MODES.map(m => `<button data-stock="${m}">${m === 'auto' ? 'Auto' : m === 0 ? '0' : m === 1 ? 'Full' : m === 0.5 ? '½' : '¼'}</button>`).join('')}</div><div class="tiny kstock-why" data-f="stwhy"></div></div>` : '';
+      const houseBox = id === 'carpenter' ? `<div class="card"><div class="row-between"><b>Houses</b><span class="seg"><button data-houses="1" class="${Game.housesOn() ? 'active' : ''}">Build houses</button><button data-houses="0" class="${Game.housesOn() ? '' : 'active'}">Store lumber</button></span></div><div data-f="houses" class="small" style="margin-top:6px"></div></div>` : '';
+      setHtml(box, `<button class="back-btn" data-back>‹ Production</button>
+        <div class="bld-hero"><img src="${artOf(st)}" srcset="${artOf(st)} 1x, assets/buildings/${st.art || st.id}@2x.webp 2x" alt=""><div class="bld-title">${st.name}<small>${st.desc || ''}</small></div><div class="bld-out" data-f="out"></div></div>
+        <div class="kbar" id="bld-kbar"></div>
+        <div class="card depth-card"><div class="depth-l"><small>DEPTH</small><b>1</b></div><div class="depth-r">
+          <div class="row-between small"><b>${R[st.make].name}</b><span data-f="drate"></span></div>
+          ${Game.PARTS.map(p => `<div class="part-row" data-prow="${p}"><div class="pr-name"><b>${Game.PART_NAME[p]}</b> <span class="dim small" data-f="lv${p}"></span><div class="bar part-bar"><div data-f="bar${p}"></div></div><span class="tiny dim" data-f="d${p}"></span></div>${partBtn(id, p, false)}</div>`).join('')}
+          <div class="kcycle">${[0, 1, 2].map(i => `<div class="kseg kseg${i}" data-seg="${i}"><div class="kfill"></div><span>${i === 0 && st.from ? 'Craft' : PH[i]}</span></div>`).join('')}</div><div class="tiny dim" data-f="cyc"></div>
+          ${st.from ? `<div class="kin"><span class="small dim">${R[st.from].name} in</span><div class="bar green-bar"><div data-f="inbar"></div><span data-f="inlab"></span></div></div>` : ''}
+        </div></div>
+        <div class="card dim small center">More depths lie below. The deep seams open in the next update.</div>
+        ${houseBox}${stock}`);
+      box.querySelector('[data-back]').addEventListener('click', closeBld);
+      wirePartBtns(box);
+      box.querySelectorAll('[data-stock]').forEach(b => b.addEventListener('click', () => { const v = b.dataset.stock; if (Game.setStockMode(st.make, v === 'auto' ? 'auto' : +v)) { Game.save(); render(true); } }));
+      box.querySelectorAll('[data-houses]').forEach(b => b.addEventListener('click', () => { Game.setHousesOn(b.dataset.houses === '1'); bldKey = ''; render(true); }));
+      $('bld-kbar').innerHTML = kbarHtml(); $('bld-kbar').querySelectorAll('[data-kbuy]').forEach(b => b.addEventListener('click', () => { kBuy = b.dataset.kbuy === 'max' ? 'max' : +b.dataset.kbuy; prodKey = ''; bldKey = ''; render(true); }));
+      glowKey = ''; }
+    const s = Game.stepState(id), P = Game.stepPhases(id), cyc = P[0] + P[1] + P[2], lim = Game.limitPart(id), out = Game.stepOutput(id), mx = Math.max(...P);
+    const dest = id === 'carpenter' && Game.housesOn() ? 'To houses' : nx ? `To the ${nx.name}` : 'To the Storehouse', use = nx ? Game.stepOutput(nx.id) * nx.ratio : 0;
+    setHtml(box.querySelector('[data-f=out]'), `${dest}<b>${out < 10 ? out.toFixed(2) : f(out)}/s</b>${nx ? `${nx.name} uses ${use < 10 ? use.toFixed(2) : f(use)}/s` : ''}`);
+    setHtml(box.querySelector('[data-f=drate]'), `<b>${out < 10 ? out.toFixed(2) : f(out)}</b> <span class="dim">/s</span>`);
+    Game.PARTS.forEach((p, i) => { const lv = Game.partLv(id, p), nm = p === 'W' ? Game.nextMilestone(lv) : null;
+      setText(box.querySelector(`[data-f=lv${p}]`), 'Lv ' + lv);
+      const bar = box.querySelector(`[data-f=bar${p}]`); bar.style.width = (100 * P[i] / mx) + '%'; bar.parentElement.classList.toggle('lim', p === lim);
+      setText(box.querySelector(`[data-f=d${p}]`), p === lim ? `slowest part · ${P[i].toFixed(1)}s of the ${cyc.toFixed(1)}s cycle` : p === 'W' ? `${Game.stepBatch(id)} per load${nm ? ' · ×2 at Lv ' + nm : ''} · ${P[i].toFixed(1)}s` : `${P[i].toFixed(1)}s`);
+      fillPartBtn(box, id, p, false); });
+    box.querySelectorAll('[data-seg]').forEach(seg => { const i = +seg.dataset.seg; seg.style.flexGrow = (P[i] / cyc).toFixed(4); seg.firstChild.style.width = (i < s.phase ? 100 : i > s.phase ? 0 : 100 * Math.min(1, s.t / P[i])) + '%'; seg.classList.toggle('on', i === s.phase); });
+    setText(box.querySelector('[data-f=cyc]'), `${Game.stepBatch(id)} ${R[st.make].name.toLowerCase()} every ${cyc.toFixed(1)}s · now ${[st.from ? 'crafting' : 'working', 'loading the cart', 'hauling'][s.phase]}`);
+    if (st.from) { box.querySelector('[data-f=inbar]').style.width = Math.min(100, 100 * s.inBuf / (st.ratio * Game.stepBatch(id) * 2)) + '%'; setText(box.querySelector('[data-f=inlab]'), `${Math.floor(s.inBuf)} waiting`); }
+    { const hb = box.querySelector('[data-f=houses]'); if (hb) setHtml(hb, `${f(Game.houses())} houses · room for ${f(Game.houseCap())} · next house needs ${Game.houseCost().toFixed(1)} lumber (${Math.round(100 * (S.kingdom.houseProg || 0) / Game.houseCost())}%). ${Game.housesOn() ? 'All new lumber goes to houses (after what the Storehouse needs).' : 'Lumber goes to the Storehouse; no houses are being built.'}`); }
+    if (box.querySelector('[data-f=stn]')) { const k = st.make, T = Game.stockTarget(k), have = Math.floor(S.res[k] || 0), nxn = nx ? nx.name : 'next building';
+      box.querySelectorAll('[data-stock]').forEach(b => b.classList.toggle('active', String(T.mode) === b.dataset.stock));
+      setText(box.querySelector('[data-f=stn]'), `${f(Math.min(have, T.target))} / ${f(T.target)}`);
+      const why = box.querySelector('[data-f=stwhy]');
+      if (T.target <= 0) setHtml(why, `<span class="dim">Nothing needed — every ${R[k].name.toLowerCase()} feeds the ${nxn}.</span>`);
+      else if (have < T.target) setHtml(why, `<span class="kstock-fill">${T.share < 1 ? 'Half to the Storehouse' : 'Storehouse first'}${T.why.length ? ' for the ' + T.why.join(', the ').replace(/the orders$/, 'Keep orders') : ''}${T.share < 1 ? ', half to the ' + nxn : ', then the ' + nxn}.</span>`);
+      else setHtml(why, `<span class="dim">Stock is full${T.why.length ? ' (' + T.why.join(', ') + ')' : ''} — the rest feeds the ${nxn}.</span>`); }
+  }
+
   // ---- 0.9: the army (Barracks tab) ----
   function renderArmy() {
     const S = Game.S, f = Game.fmt, p3 = Game.phase() === 3; if (!p3) return false;
@@ -760,8 +890,8 @@ const UI = (() => {
         if (cr) keepHint = true;
       } else {
         const p3 = Game.phase() === 3, need = CONFIG.kingdom.minLv;
-        setText($('settle-need'), p3 ? 'Your City is the Capital. Keep upgrading: every level feeds the army and the conquest.' : `Raise every building to Lv ${need} — each doubles when it gets there — then proclaim the Kingdom.`);
-        if (!p3) { const rowsL = Game.allSteps().filter(x => !x.phase).map(st => { const b = Game.stepBuilt(st.id), lv = b ? Game.stepLv(st.id) : 0, ok = lv >= need; return `<div class="row-between small"><span>${ok ? '✓' : '○'} ${st.name}</span><span class="${ok ? 'good' : 'dim'}">${b ? 'Lv ' + lv + ' / ' + need : 'not built'}</span></div>`; }); lh += rowsL.join(''); }
+        setText($('settle-need'), p3 ? 'Your City is the Capital. Keep upgrading: every part feeds the army and the conquest.' : `Build the Barracks and raise every part (Work, Cart, Haul) of every building to Lv ${need}, then proclaim the Kingdom.`);
+        if (!p3) { const rowsL = Game.allSteps().filter(x => !x.phase).map(st => { const b = Game.stepBuilt(st.id), lv = b ? Game.stepLv(st.id) : 0, ok = lv >= need; return `<div class="row-between small"><span>${ok ? '✓' : '○'} ${st.name}</span><span class="${ok ? 'good' : 'dim'}">${b ? 'lowest part Lv ' + lv + ' / ' + need : 'not built'}</span></div>`; }); rowsL.push(`<div class="row-between small"><span>${Game.barracksBuilt() ? '✓' : '○'} Barracks</span><span class="${Game.barracksBuilt() ? 'good' : 'dim'}">${Game.barracksBuilt() ? 'built' : 'not built'}</span></div>`); lh += rowsL.join(''); }
         $('settle-pay').classList.add('hidden'); $('settle-raise').classList.add('hidden');
       }
       setHtml($('settle-list'), lh);
@@ -776,6 +906,7 @@ const UI = (() => {
     const oh = (K.orders || []).map((o, i) => { const can = Game.canDeliver(i); if (can) anyOrder = true; const left = o.bonusBy - S.hero.time;
       return `<div class="korder"><div class="row-between"><b>${o.from}</b><span class="small ${left > 0 ? 'good' : 'dim'}">${left > 0 ? 'Speed bonus ' + Game.fmtTime(left) : 'No bonus'}</span></div>
       ${Object.entries(o.wants).map(([k, n]) => `<div class="bar kob"><div style="width:${Math.min(100, 100 * (S.res[k] || 0) / n)}%"></div><span>${R[k].name} ${f(Math.min(S.res[k] || 0, n))} / ${n}</span></div>`).join('')}
+      ${Object.keys(o.wants).some(k => (S.res[k] || 0) >= o.wants[k] && (S.res[k] || 0) - o.wants[k] < Game.orderReserve(k)) ? `<div class="tiny dim">Waiting: ${Object.keys(o.wants).filter(k => (S.res[k] || 0) - o.wants[k] < Game.orderReserve(k)).map(k => `${f(Game.orderReserve(k))} ${R[k].name.toLowerCase()}`).join(', ')} kept for building.</div>` : ''}
       <div class="row-between"><span class="small">Pays <b class="accent-inline">${f(o.gold)} gold · ${o.renown} Renown</b></span><span style="display:flex;gap:6px"><button class="buy kswap" data-swap="${i}" ${Game.swapReady() ? '' : 'disabled'} title="Swap for a different order (every 2 min)">⇄</button><button class="buy" data-deliver="${i}" ${can ? '' : 'disabled'}><span class="small">Deliver</span></button></span></div></div>`; }).join('');
     const ol = $('order-list'); if (ol.__h !== oh) { ol.innerHTML = oh || '<div class="dim small">No orders yet — produce something first.</div>'; ol.__h = oh; ol.querySelectorAll('[data-deliver]').forEach(b => b.onclick = () => { if (Game.deliver(+b.dataset.deliver)) { ol.__h = ''; render(true); } }); ol.querySelectorAll('[data-swap]').forEach(b => b.onclick = () => { if (Game.swapOrder(+b.dataset.swap)) { ol.__h = ''; render(true); } }); }
     // hiring
@@ -1076,8 +1207,16 @@ const UI = (() => {
   }
 
   // ---- Render ----
-  const WAR_CHIPS = ['gold', 'soldiers']; // Phase 3 header: gold, the army — and the three war incomes (built below)
+  const WAR_CHIPS = ['gold', 'people', 'soldiers']; // Phase 3 header: gold, the army — and the three war incomes (built below)
   let lastRender = 0;
+  // 0.12: story pop-ups, once per phase
+  let storyOpen = null;
+  function checkStory() {
+    if (storyOpen || !$('welcome').classList.contains('hidden')) return; const S = Game.S, st = S.settings.story = S.settings.story || {}, q = Game.questCurrent();
+    const due = !st.wild && S.hero.totalKills === 0 && q && q.id === 'f01' ? 'wild' : !st.charter && S.legacy.foundings > 0 ? 'charter' : !st.capital && Game.phase() === 3 ? 'capital' : !st.fallow && q && q.id === 'w05b' ? 'fallow' : null;
+    if (!due) return; const T = CONFIG.story[due]; storyOpen = due;
+    setText($('story-title'), T.title); setText($('story-text'), T.text); setText($('story-go'), T.go); $('story').classList.remove('hidden');
+  }
   function render(force) {
     const now = performance.now(); if (!force && now - lastRender < 100) return; lastRender = now;
     const S = Game.S, f = Game.fmt, h = S.hero, st = Game.stats();
@@ -1085,19 +1224,19 @@ const UI = (() => {
     const kr = Game.kingdomRates(true), hr = Game.heroFighting() ? Game.heroRates() : {}, hrv = Game.harvestRates();
     for (const k in R) {
       const e = $('res-' + k), wi = WAR_CHIPS.indexOf(k), p3 = Game.phase() === 3;
-      const open = p3 ? wi >= 0 : R[k].kind !== 'loot' && R[k].kind !== 'war' && S.lifetime[k] > 0 && Game.pinned(k);
+      const open = p3 ? wi >= 0 : (R[k].kind !== 'loot' && R[k].kind !== 'war' && S.lifetime[k] > 0 && Game.pinned(k)) || (k === 'people' && Game.houses() > 0) || (k === 'soldiers' && Game.barracksBuilt());
       e.style.order = p3 ? String(wi) : ''; e.classList.toggle('war-chip', p3 && wi >= 0);
       e.classList.toggle('hidden', !open); if (!open) continue;
       e.querySelector('.rrate').classList.toggle('hidden', !Game.infoOn('almanac'));
-      { const cap = k === 'soldiers' ? Game.armyLimit() : Game.resCap(k), full = k !== 'soldiers' && (S.res[k] || 0) >= cap - 1e-9; setHtml(e.querySelector('[data-f=amt]'), `${f(Math.floor((S.res[k] || 0) + 1e-6))}${k === 'officers' ? '' : `<span class="capn">/${f(cap)}</span>`}`); e.classList.toggle('full', full); }
+      { const war = k === 'soldiers' || k === 'people', cap = k === 'people' ? Game.houseCap() - Game.soldiers() : Game.resCap(k), full = k === 'people' ? Game.houseRoom() < 1 : k !== 'soldiers' && (S.res[k] || 0) >= cap - 1e-9; setHtml(e.querySelector('[data-f=amt]'), `${f(Math.floor((S.res[k] || 0) + 1e-6))}${k === 'soldiers' ? '' : `<span class="capn">/${f(cap)}</span>`}`); e.classList.toggle('full', full && !war); }
       let rate = (kr[k] || 0) + (hr[k] || 0) + (hrv[k] || 0);
-      if (Game.phase() === 3) { if (k === 'gold') rate += Game.taxTotalPerHour() / 3600; else if (k === 'soldiers') rate = S.res.soldiers < Game.armyLimit() ? Game.recruitPerMin() / 60 : 0; } // 0.10.5: taxes and recruits count too
-      const re = e.querySelector('[data-f=rate]'); setText(re, (rate > 0 ? '+' + f(rate) : '0') + '/s'); re.classList.toggle('zero', !(rate > 0));
+      if (k === 'gold') rate += (Game.phase() === 3 ? Game.taxTotalPerHour() / 3600 : 0) + Game.headTaxPerHour() / 3600; else if (k === 'soldiers') rate = (Game.recruitPerMin() - Game.lossPerMin()) / 60; else if (k === 'people') rate = Game.birthRoom() > 0 ? Game.birthsPerMin() / 60 : 0; // taxes, births and recruits count too
+      const re = e.querySelector('[data-f=rate]'); if (k === 'soldiers' || k === 'people') { const pm = rate * 60; setText(re, (pm > 0 ? '+' : '') + (Math.abs(pm) < 10 ? pm.toFixed(1) : f(pm)) + '/m'); } else setText(re, (rate > 0 ? '+' + f(rate) : '0') + '/s'); re.classList.toggle('zero', !(rate > 0));
     }
     { const p3 = Game.phase() === 3 && Game.barracksBuilt(); Game.WAR_KEYS.forEach((wk, i) => { const e = $('inc-' + wk); e.classList.toggle('hidden', !p3); if (!p3) return; e.style.order = String(1 + i);
         const inc = Game.warIncome(wk), dem = Game.warDemand(wk), cov = Game.warCover(wk), stall = cov < 1 && Game.soldiers() > 0;
         setText(e.querySelector('[data-f=in]'), '+' + f(inc)); setText(e.querySelector('[data-f=out]'), '−' + f(dem)); e.classList.toggle('stall', stall);
-        e.querySelector('[data-f=m]').style.width = Math.min(100, dem > 0 ? 100 * dem / Math.max(inc, 1e-9) : 0) + '%'; }); if (Game.phase() === 3) $('res-soldiers').style.order = '4'; }
+        e.querySelector('[data-f=m]').style.width = Math.min(100, dem > 0 ? 100 * dem / Math.max(inc, 1e-9) : 0) + '%'; }); }
     if (desktop) { const hh = document.querySelector('.sticky-head').offsetHeight + 'px'; if (document.documentElement.style.getPropertyValue('--headh') !== hh) document.documentElement.style.setProperty('--headh', hh); }
 
     // Fight
@@ -1110,19 +1249,13 @@ const UI = (() => {
       setText(b.querySelector('[data-f=st]'), G.land ? (Game.landDone(G.land) ? '👑 100%' : un ? `${Game.landPct(G.land)}% · stage ${gs.stage}` : Game.landReqText(G.land)) : un ? Game.stageLabel(gs.stage, id) : G.reqText); }
     { const p3 = Game.phase() === 3, LN = Game.landN(), G = Game.ground();
       $('army-line').classList.toggle('hidden', !p3 || !Game.heroFighting()); if (!p3) { $('army-flow').classList.add('hidden'); $('strain-card').classList.add('hidden'); }
-      if (p3) { const st2 = Game.stats(); setHtml($('army-line'), `${ico(R.soldiers.icon, 18)} <b>${f(Game.marching())}</b>&nbsp;soldiers march with you · hits <b>${f(st2.attack)}</b>&nbsp;<span class="dim">(${f(st2.gearAttack)} × army ×${st2.army.toFixed(2)}${st2.lap > 1 ? ' × victory lap ×' + st2.lap : ''})</span>${Game.armyEff() < 1 ? ` <b class="bad">· army at ${Math.round(Game.armyEff() * 100)}%</b>` : ''}`); $('army-line').classList.toggle('stall', Game.armyEff() < 1);
-        { const loss = Game.lossPerMin(), rec = Game.recruitPerMin(), sw = Math.floor(S.res.swords || 0), eta = Game.swordsLeftMin();
-          const fshow = Game.heroFighting() && (loss > 0.05 || Game.soldiers() < Game.armyLimit()); $('army-flow').classList.toggle('hidden', !fshow);
-          if (fshow) setHtml($('army-flow'), `<div class="fchip loss"><b>−${loss.toFixed(1)} / min</b>fallen in battle</div><div class="fchip rec"><b>+${rec.toFixed(1)} / min</b>recruits</div><div class="fchip stock"><b>${sw < Game.recruitCost() ? 'empty' : f(sw) + ' ⚔'}</b>swords${sw >= Game.recruitCost() && isFinite(eta) ? ' · ' + Math.max(1, Math.round(eta)) + ' min' : ''}</div>`);
-          const p = Game.battlePressure(), hold = Game.armyHold(), lim = Game.armyLimit(), fl = Game.armyFloor(), sol = Game.soldiers(), show = p >= 0.15 && loss > 0.3;
-          $('strain-card').classList.toggle('hidden', !show);
-          if (show) { const pc = v => Math.max(0, Math.min(100, 100 * v / Math.max(1, lim)));
-            setHtml($('strain-card'), `<div class="h">⚔ ${p >= 0.5 ? 'Brutal fighting' : 'Heavy fighting'}</div><div class="small" style="margin-top:3px">Every fight here costs soldiers. ${isFinite(eta) && eta > 0.5 ? `Your spare swords run out in <b>${Math.round(eta)} min</b>; after that the army` : 'The army'} thins until it holds at <b class="bad">${f(hold)}</b>${hold <= fl ? ' (its floor — it never falls below half)' : ''}.</div>
-              <div class="gauge2"><div class="now" style="width:${pc(sol)}%"></div><div class="eq" style="left:${pc(hold)}%"></div><div class="fl" style="left:50%"></div></div>
-              <div class="glab"><span>floor ${f(fl)}</span><span class="bad">holds ${f(hold)} here</span><span>${f(sol)} now · ${f(lim)} max</span></div>
-              <div class="opts"><div class="opt"><span class="ic">🛡</span><span><b>Better gear</b> — he takes less damage, so fewer soldiers fall</span></div><div class="opt"><span class="ic">⛏</span><span><b>Grow the Mine</b> — spare swords arm new recruits faster</span></div><div class="opt"><span class="ic">∞</span><span><b>Fall back</b> to an easier fight or an Endless Battle to rebuild</span></div></div>`); } }
-        { const dn = S.kingdom.demandNote, show = !!dn && !dn.seen && h.time - dn.t < 1800; $('demand-note').classList.toggle('hidden', !show);
-          if (show) { const e = Game.armyEff(), by = Game.armyLimitBy(), W = CONFIG.kingdom.army.lines[by]; setHtml($('demand-note'), `<b class="dh">${dn.name} conquered 👑</b><br>A bigger realm is harder to supply: every soldier now needs <b>+${Math.round(CONFIG.kingdom.army.demandPerLand * 100)}%</b> more. ${e < 1 ? `Your <b class="bad">${W.name}</b> can't keep up — the army fights at <b class="bad">${Math.round(e * 100)}%</b> until you grow the ${CONFIG.kingdom.lines[W.line].name.replace('Grain ', '').replace('Iron ', '')} line.` : 'Your lines are keeping up — well supplied.'}<button class="retreat-x" aria-label="Dismiss" data-dn>×</button>`); const x = $('demand-note').querySelector('[data-dn]'); if (x) x.onclick = () => { dn.seen = true; }; } } }
+      if (p3) { const st2 = Game.stats(), rec = LN ? Game.recArmy(LN) : 0, mar = Game.marching();
+        setHtml($('army-line'), `${ico(R.soldiers.icon, 18)} <b>${f(mar)}</b>&nbsp;soldiers march with you${rec ? ` <span class="dim">(recommended ${f(rec)})</span>` : ''} · hits <b>${f(st2.attack)}</b>&nbsp;<span class="dim">(${f(st2.gearAttack)} × army ×${st2.army.toFixed(2)}${st2.lap > 1 ? ' × victory lap ×' + st2.lap : ''})</span>`); $('army-line').classList.toggle('stall', rec > 0 && mar < rec * 0.5);
+        { const loss = Game.lossPerMin(), rec2 = Game.recruitPerMin(), bl = Game.trainBlocker(), fshow = Game.heroFighting() && (loss > 0.05 || (bl && bl !== 'barracks')); $('army-flow').classList.toggle('hidden', !fshow);
+          if (fshow) setHtml($('army-flow'), `<div class="fchip loss"><b>−${loss.toFixed(1)} / min</b>fallen in battle</div><div class="fchip rec"><b>+${rec2.toFixed(1)} / min</b>${bl ? { people: 'no free people', houses: 'no houses', swords: 'short of arms', bread: 'short of bread' }[bl] || 'trained' : 'trained'}</div><div class="fchip stock"><b>${f(Game.people())}</b>people ready</div>`);
+          $('strain-card').classList.add('hidden'); }
+        { const sn = S.kingdom.settleNote, show = !!sn && !sn.seen && h.time - sn.t < 1800; $('demand-note').classList.toggle('hidden', !show);
+          if (show) { setHtml($('demand-note'), `<b class="dh">${sn.name} conquered 👑</b><br>${f(sn.moved)} settlers moved to your Capital${sn.turned ? ` — <b class="bad">${f(sn.turned)} found no home</b> and turned back. Build houses (People chain) so the next wave stays.` : '.'} Every land you hold keeps sending more.<button class="retreat-x" aria-label="Dismiss" data-dn>×</button>`); const x = $('demand-note').querySelector('[data-dn]'); if (x) x.onclick = () => { sn.seen = true; }; } } }
       $('conquest-box').classList.toggle('hidden', !LN);
       if (LN) { const pct = Game.landPct(LN); setText($('cq-name'), `Conquest of ${G.name}`); setText($('cq-pct'), pct + '%'); $('cq-bar').style.width = pct + '%'; setText($('cq-text'), Game.isEndless() ? `∞ Endless Battle · 👑 ${G.crown}` : Game.landDone(LN) ? `Conquered · 👑 ${G.crown}` : `Stage ${h.stage} / ${G.stages}`);
         const ck = LN + '|' + G.stages; if ($('cq-ticks').__k !== ck) { $('cq-ticks').__k = ck; setHtml($('cq-ticks'), `<span>Captains every 10 stages</span><span>👑 ${G.ruler} · stage ${G.stages}</span>`); } }
@@ -1180,6 +1313,7 @@ const UI = (() => {
     ].map(([k, v]) => `<div><span class="dim">${k}</span><b>${v}</b></div>`).join(''));
     const showLog = S.settings.showLog !== false; $('log-card').classList.toggle('hidden', !showLog); if ($('set-log').checked !== showLog) $('set-log').checked = showLog;
     if (showLog) setHtml($('log'), S.log.slice(0, 8).map(l => `<div>${l}</div>`).join(''));
+    checkStory();
     for (const ev of Game.drainEvents()) hitPop(ev);
     { const bg = Game.drainBig(); if (bg.length) celebrate(bg); }
     const eff = Game.afkEfficiency(), afkHr = Object.entries(hr).filter(([, v]) => v > 0), afkKr = Object.entries(kr).filter(([, v]) => v > 0);
@@ -1227,8 +1361,7 @@ const UI = (() => {
     $('badge-hero').classList.toggle('hidden', !(anyGear || anySkill));
 
     // Kingdom
-    for (const lid in CONFIG.kingdom.lines) { const any = Game.lineUnlocked(lid) ? renderLine(lid) : false; $('badge-' + lid).classList.toggle('hidden', !any); }
-    $('badge-war').classList.toggle('hidden', !renderArmy()); renderFeeds(); $('badge-lands').classList.toggle('hidden', !renderLands()); renderWonders(); $('badge-halls').classList.toggle('hidden', !renderHalls());
+    { const anyP = renderProd(); $('badge-prod').classList.toggle('hidden', !anyP); setText($('klsub-prod'), Game.barracksBuilt() ? `${Game.fmt(Game.soldiers())} ⚔` : Game.houses() ? `${Game.fmt(Game.people())} 👥` : ''); } $('badge-lands').classList.toggle('hidden', !renderLands()); renderWonders(); $('badge-halls').classList.toggle('hidden', !renderHalls());
     const keepAct = renderKeep();
     renderThrone();
 

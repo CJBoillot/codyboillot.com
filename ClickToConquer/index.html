@@ -16,7 +16,7 @@
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=a0112">
+  <link rel="stylesheet" href="style.css?v=a0120">
 </head>
 <body>
 
@@ -201,10 +201,7 @@
     <div id="tab-kingdom" class="tab hidden">
       <nav class="subtabs subtabs2" id="kingdom-subtabs">
         <div class="subrow" id="kline-row">
-        <button data-ksub="forest" class="kline"><span class="kl-name" data-base="Forest">Forest</span><small class="kl-sub" id="klsub-forest"></small> <span id="badge-forest" class="dot hidden"></span></button>
-        <button data-ksub="farm" class="kline"><span class="kl-name" data-base="Farm">Farm</span><small class="kl-sub" id="klsub-farm"></small> <span id="badge-farm" class="dot hidden"></span></button>
-        <button data-ksub="mine" class="kline"><span class="kl-name" data-base="Mine">Mine</span><small class="kl-sub" id="klsub-mine"></small> <span id="badge-mine" class="dot hidden"></span></button>
-        <button data-ksub="war" class="kline"><span class="kl-name" data-base="Barracks">Barracks</span><small class="kl-sub" id="klsub-war"></small> <span id="badge-war" class="dot hidden"></span></button>
+        <button data-ksub="prod" class="kline"><span class="kl-name" data-base="Production">Production</span><small class="kl-sub" id="klsub-prod"></small> <span id="badge-prod" class="dot hidden"></span></button>
         </div><div class="subrow">
         <button data-ksub="tech" class="active">Tech <span id="badge-tech" class="dot hidden"></span></button>
         <button data-ksub="keep">Keep <span id="badge-throne" class="dot hidden"></span></button>
@@ -213,36 +210,17 @@
         <button data-ksub="legacy" class="hidden" aria-hidden="true">Legacy <span id="badge-legacy" class="dot hidden"></span></button>
         </div>
       </nav>
-      <div id="ksub-forest" class="ksub hidden"><div class="feed-banner hidden" id="feed-forest"></div><div class="kbar" data-kbar></div><div id="line-forest" class="kline-body"></div></div>
-      <div id="ksub-farm" class="ksub hidden"><div class="feed-banner hidden" id="feed-farm"></div><div class="kbar" data-kbar></div><div id="line-farm" class="kline-body"></div></div>
-      <div id="ksub-mine" class="ksub hidden"><div class="feed-banner hidden" id="feed-mine"></div><div class="kbar" data-kbar></div><div id="line-mine" class="kline-body"></div></div>
-      <div id="ksub-war" class="ksub hidden">
-        <div class="card" id="army-card">
-          <div class="row-between"><div class="card-title" style="margin:0">War economy</div><span class="small dim">per minute</span></div>
-          <div class="army-head"><span class="army-ico" id="army-ico"></span><b id="army-n">0</b><span class="dim small" id="army-lim"></span><span class="small dim" id="army-status"></span><b class="army-eff" id="army-eff">100%</b></div>
-          <p class="small dim" style="margin:4px 0 6px">Your army runs on income, not stockpiles. It fights at the strength of its <b>weakest</b> line.</p>
-          <div class="pipe" id="war-pipe"></div>
-          <div id="war-flows"></div>
-          <div class="flow-legend"><span><i class="lg-in"></i>income</span><span><i class="lg-dem"></i>army uses</span><span>past the line = spare → soldiers join</span></div>
-          <div class="war-tip" id="war-tip"></div>
-          <div class="small dim" id="army-split" style="margin-top:6px"></div>
+      <div id="ksub-prod" class="ksub hidden">
+        <div id="prod-view">
+          <div class="card prod-town hidden" id="prod-town"></div>
+          <div class="kbar" id="prod-kbar"></div>
+          <div class="prod-heads"><span>People</span><span>Arms</span><span>Food</span></div>
+          <div id="prod-grid" class="prod-grid"></div>
+          <div class="prod-arrows bk-arrows"><span>houses ↘</span><span>arms ↓</span><span>↙ bread</span></div>
+          <div class="card bk-card" id="barracks-card"></div>
+          <div class="war-tip hidden" id="prod-tip"></div>
         </div>
-        <div class="card" id="barracks-card">
-          <div class="row-between"><div class="card-title" style="margin:0">Barracks <span class="dim small" id="barracks-lv"></span></div><span class="small dim" id="barracks-rate"></span></div>
-          <p class="small dim" id="barracks-desc" style="margin:4px 0 8px"></p>
-          <div class="bar"><div id="train-bar"></div><span id="train-txt"></span></div>
-          <button id="barracks-up" class="buy wide" style="margin-top:8px"><span class="small" id="barracks-uplab">Build the Barracks</span><br><span class="cost" id="barracks-cost"></span></button>
-        </div>
-        <div class="card" id="loss-card">
-          <div class="row-between"><div class="card-title" style="margin:0">Losses &amp; replacements</div><span class="small dim">per minute</span></div>
-          <div id="loss-rows"></div>
-        </div>
-        <div class="card" id="demand-card">
-          <div class="card-title">Demand grows with your realm</div>
-          <div class="small">Each soldier needs, per minute:</div>
-          <div class="need-row" id="need-row"></div>
-          <div class="small dim" id="demand-txt" style="margin-top:6px"></div>
-        </div>
+        <div id="bld-view" class="hidden"></div>
       </div>
       <div id="ksub-lands" class="ksub hidden">
         <div class="card" id="lands-card">
@@ -387,6 +365,14 @@
       <div class="mini-row"><div class="bar kills mini-action"><div id="mini-action-bar"></div><span id="mini-action-text"></span></div><button id="mini-advance" class="primary mini-adv hidden">Advance ▶</button></div>
       <div class="mini-loot" id="mini-loot"><span class="dim small">No loot yet</span></div>
     </div>
+<div id="story" class="modal hidden">
+  <div class="modal-box story-box">
+    <div class="story-kicker">From the Chronicle</div>
+    <div class="story-title" id="story-title"></div>
+    <p class="story-text" id="story-text"></p>
+    <button id="story-go" class="big accent"></button>
+  </div>
+</div>
 <div id="welcome" class="modal hidden">
   <div class="modal-box">
     <div class="card-title">Welcome back</div>
@@ -504,11 +490,11 @@
 </div>
 
 
-<script src="config.js?v=a0112"></script>
-<script src="cloud-config.js?v=a0112"></script>
-<script src="game.js?v=a0112"></script>
-<script src="ui.js?v=a0112"></script>
-<script src="cloud.js?v=a0112"></script>
+<script src="config.js?v=a0120"></script>
+<script src="cloud-config.js?v=a0120"></script>
+<script src="game.js?v=a0120"></script>
+<script src="ui.js?v=a0120"></script>
+<script src="cloud.js?v=a0120"></script>
 <script>window.addEventListener("error", e => { const d = document.getElementById("err"); if (d) { d.textContent = "Error: " + e.message; d.classList.remove("hidden"); } });</script>
 <div id="celebrate" class="celebrate hidden" role="status" aria-live="polite"><div class="cb-ico" id="cb-ico"></div><div class="cb-txt"><div class="cb-kicker" id="cb-kicker"></div><div class="cb-title" id="cb-title"></div><div class="cb-sub" id="cb-sub"></div></div></div>
 </body>
