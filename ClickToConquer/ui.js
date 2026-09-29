@@ -723,6 +723,7 @@ const UI = (() => {
         <div class="card dig-card"><div class="dig-t">${st.dig} · ${Game.unitName(id)} ${Game.depthCount(id) + 1}</div><div class="tiny dim" data-f="digwhy"></div><button class="buy wide" data-dig><span class="small">${st.dig}</span><br><span class="cost" data-f="digcost"></span></button></div>
         ${houseBox}${stock}`);
       box.querySelector('[data-back]').addEventListener('click', closeBld);
+      box.querySelector('[data-f=chain]').addEventListener('click', e => { const g = e.target.closest('[data-go]'); if (g) openBld(g.dataset.go); });
       wirePartBtns(box); box.querySelector('[data-dig]').addEventListener('click', () => { if (Game.dig(id)) { bldKey = ''; prodKey = ''; render(true); } });
       box.querySelectorAll('[data-stock]').forEach(b => b.addEventListener('click', () => { const v = b.dataset.stock; if (Game.setStockMode(st.make, v === 'auto' ? 'auto' : +v)) { Game.save(); render(true); } }));
       box.querySelectorAll('[data-houses]').forEach(b => b.addEventListener('click', () => { Game.setHousesOn(b.dataset.houses === '1'); bldKey = ''; render(true); }));
@@ -736,7 +737,7 @@ const UI = (() => {
     { const db = box.querySelector('[data-dig]'), open = Game.digOpen(), nd = Game.depthCount(id) + 1; db.disabled = !Game.canDig(id); setHtml(box.querySelector('[data-f=digcost]'), open ? costHtml(Game.digCost(id)) + (Game.digCost(id).gold > Game.resCap('gold') ? '<br><span class="tiny warn">more than your Storehouse holds — expand it in the Keep</span>' : '') : '<span class="dim">after Proclaim</span>');
       setText(box.querySelector('[data-f=digwhy]'), open ? `Starts at Lv 1 but makes ×${f(Game.depthYield(nd))} what the first ${Game.unitName(id).toLowerCase()} makes at the same level. Its own Work, Cart and Haul.` : 'Your town grows new levels once the Kingdom is proclaimed.'); }
     { const CF = Game.chainFlow(st.line), me = CF.findIndex(c => c.id === id), rn = k => R[k].name.toLowerCase();
-      setHtml(box.querySelector('[data-f=chain]'), CF.map((c, i) => `${i ? '<span class="cs-ar">→</span>' : ''}<div class="cs-b${i === me ? ' me' : ''}"><span class="tiny dim">${c.name}</span><b>${fo(c.out)}</b><span class="tiny dim">${rn(c.make)}/s</span></div>`).join(''));
+      setHtml(box.querySelector('[data-f=chain]'), CF.map((c, i) => `${i ? '<span class="cs-ar">→</span>' : ''}<div class="cs-b${i === me ? ' me' : ' go'}"${i === me ? '' : ` data-go="${c.id}" role="button"`}><span class="tiny dim">${c.name}${i === me ? '' : ' ›'}</span><b>${fo(c.out)}</b><span class="tiny dim">${rn(c.make)}/s</span></div>`).join(''));
       if (st.from && me > 0) { let root = me - 1; while (root > 0 && CF[root].out < CF[root].cap - 1e-6) root--; const c = CF[me], p = CF[me - 1], pct = c.use > 0 ? Math.min(1, c.supply / c.use) : 0, pn = Game.stepDef(p.id).name, stP = Game.stockTarget(st.from), filling = stP.target > (S.res[st.from] || 0) && stP.share < 1;
         setText(box.querySelector('[data-f=supin]'), `${fo(c.supply)}/s`); setText(box.querySelector('[data-f=supuse]'), `${fo(c.use)}/s`);
         const sb = box.querySelector('[data-f=supbar]'); sb.style.width = (100 * pct) + '%'; sb.parentElement.classList.toggle('short', pct < 0.999);

@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Beta 0.1.13',
+  version: 'Beta 0.1.14',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -504,6 +504,7 @@ const CONFIG = {
   // jobs (jobs completed by hand or thrall), sold (gold earned at market), stage, boss, founded, thrall (assigned), activity (swings).
   // Shown in Settings → What's new (newest first). Keep each line short.
   changelog: [
+    ['Beta 0.1.14', 'Tap any building in the chain strip to jump straight to it.'],
     ['Beta 0.1.13', 'Every building now shows its whole chain at the top: what each building really makes per second, how much input reaches it versus how much it could use, and which building to upgrade when it runs short.'],
     ['Beta 0.1.12', 'The Armory, Mill and Bakery get their art: every step and pile in all nine production chains is now painted.'],
     ['Beta 0.1.11', 'New art for the Carpenter and the Forge.'],

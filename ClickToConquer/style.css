@@ -1220,3 +1220,4 @@ html, body { max-width: 100%; overflow-x: hidden; }
 .sup-bar { height: 14px; margin: 0; } .sup-bar > div { background: linear-gradient(90deg, #3f9e5c, #7fd28f); }
 .sup-bar.short > div { background: linear-gradient(90deg, #b8862f, #e8c06a); }
 .sup-why { color: #e9dcc0; line-height: 1.35; } .sup-why b { color: var(--bronze2); }
+.cs-b.go { cursor: pointer; transition: border-color .15s, background .15s; } .cs-b.go:hover, .cs-b.go:active { border-color: var(--bronze-dim); background: #1f1812; }
