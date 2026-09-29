@@ -645,8 +645,10 @@ const UI = (() => {
     const ns = Game.landsTouched().slice().reverse(); const k = ns.join(',') + '|' + Game.soldiers(); // newest land first
     if (landKey !== k) { landKey = k;
       $('land-list').innerHTML = ns.map(n => `<div class="land-row" data-land="${n}"><div class="lr-main"><div class="lr-name" data-f="nm"></div><div class="small dim" data-f="meta"></div></div><div class="lr-coffer"><b data-f="cof"></b><span class="small dim" data-f="rate"></span></div>
-        <div class="lr-gar"><span data-f="gar"></span><span class="lr-btns"><button class="buy" data-g="-10">−10</button><button class="buy" data-g="10">+10</button><button class="buy" data-g="fill">Fill</button></span></div></div>`).join('') || '<div class="dim small">Conquer your first land from the hero screen.</div>';
-      $('land-list').querySelectorAll('[data-land]').forEach(row => { const n = +row.dataset.land; row.querySelectorAll('[data-g]').forEach(b => b.onclick = () => { const L = Game.landState(n), v = b.dataset.g; Game.setGarrison(n, v === 'fill' ? Game.garrisonNeed(n) : (L.garrison || 0) + +v); landKey = ''; render(true); }); });
+        <div class="lr-gar"><span data-f="gar"></span><span class="lr-btns"><button class="buy" data-g="-10">−10</button><button class="buy" data-g="10">+10</button><button class="buy" data-g="fill">Fill</button></span></div>
+        <div class="lr-farm hidden" data-f="farm"><span data-f="farmtxt"></span><button class="buy" data-farm="1">Fight here</button></div></div>`).join('') || '<div class="dim small">Conquer your first land from the hero screen.</div>';
+      $('land-list').querySelectorAll('[data-land]').forEach(row => { const n = +row.dataset.land; { const fb = row.querySelector('[data-farm]'); if (fb) fb.onclick = () => { if (Game.farmLand(n)) { landKey = ''; document.querySelector('[data-tab=hero]').click(); render(true); } }; }
+        row.querySelectorAll('[data-g]').forEach(b => b.onclick = () => { const L = Game.landState(n), v = b.dataset.g; Game.setGarrison(n, v === 'fill' ? Game.garrisonNeed(n) : (L.garrison || 0) + +v); landKey = ''; render(true); }); });
     }
     let any = false;
     for (const n of ns) { const row = $('land-list').querySelector(`[data-land="${n}"]`); if (!row) continue; const G = Game.landDef(n), L = Game.landState(n), pct = Game.landPct(n), done = Game.landDone(n), need = Game.garrisonNeed(n), g = L.garrison || 0;
@@ -658,6 +660,9 @@ const UI = (() => {
       setText(row.querySelector('[data-f=rate]'), pct > 0 ? `/ hour${Game.garrisonFill(n) < 1 ? ` (full garrison: ${f(Game.taxFull(n) * Game.landShare(n))})` : ''}` : `~${f(Game.taxFull(n))} / h when conquered`);
       setHtml(row.querySelector('[data-f=gar]'), pct > 0 ? `🛡 Garrison <b class="${g >= need ? 'good' : 'warn'}">${g} / ${need}</b> <span class="${g >= need ? 'good' : 'warn'}">· ${Math.round(100 * Math.min(1, g / need))}% taxes</span>` : '<span class="dim">Garrison once you hold part of it</span>');
       row.querySelectorAll('[data-g]').forEach(b => b.disabled = pct <= 0);
+      { const fr = row.querySelector('[data-f=farm]'); fr.classList.toggle('hidden', !done); if (done) { const dp = Game.endlessDepth(n), best = (S.legacy.depthBest || {})[n] || 0, farmingHere = Game.farming() && Game.landN() === n, L2 = Game.landState(n);
+        setHtml(row.querySelector('[data-f=farmtxt]'), `∞ Endless Battle · depth <b>${dp}</b>${best > dp ? ` <span class="dim">(best ${best})</span>` : ''} · drops ${ico(R[G.spoil].icon, 14)} ${R[G.spoil].name}${farmingHere ? ` <span class="good">· fighting here · ${L2.wins || 0}/50 to the next depth</span>` : ''}`);
+        const fb = row.querySelector('[data-farm]'); fb.disabled = farmingHere; fb.textContent = farmingHere ? 'Here' : 'Fight here'; } }
       if (pct > 0 && g < need && Game.marching() > 0) any = true; }
     return any;
   }
@@ -1263,6 +1268,7 @@ const UI = (() => {
     applyQuestGlow(q || goal);
 
     { const col = handCollapsed(); $('hand-card').classList.toggle('collapsed', col); $('hand-toggle').setAttribute('aria-expanded', String(!col)); }
+    { const p3 = Game.phase() === 3; $('hand-card').classList.toggle('hidden', p3 || Game.kTier() >= 3); $('activity-card').classList.toggle('hidden', p3); } // 0.10.6: by hand ends at the City, gathering at the Kingdom
     // By hand
     for (const hd of CONFIG.hand) { const b = rows.hand[hd.id], ok = Game.handUnlocked(hd.id); b.disabled = !ok; b.classList.toggle('locked', !ok); setText(b.querySelector('[data-f=sub]'), ok ? `+1 ${R[hd.gives].name}` : (hd.unlock.tech ? 'needs ' + Game.techDef(hd.unlock.tech).name : hd.unlock.gear ? 'needs clothing' : 'locked')); }
     // Activity
@@ -1415,6 +1421,7 @@ const UI = (() => {
     for (const e of evs) {
       if (e.who === 'crown') { const G = Game.landDef(e.n); CBQ.push({ ico: '👑', kicker: 'Land conquered', title: G ? G.name : 'Conquered', sub: `You take ${G ? G.crown : 'a crown'} · +${e.v} Crown${e.v === 1 ? '' : 's'} when the crown passes${e.first ? ' · new in the Vault' : ''}` }); }
       else if (e.who === 'crownpass') CBQ.push({ ico: '👑', kicker: 'Long live the heir', title: `Dynasty ${Game.S.legacy.dynasty}`, sub: `+${e.gain} Crowns to spend in Legacy · lands you know fall ${3 + Game.perkRank('lap')}× faster` });
+      else if (e.who === 'depth' && e.first && e.depth % 5 === 0) { const G = Game.landDef(e.n); CBQ.push({ small: 1, ico: '∞', kicker: 'Deeper than ever', title: `${G ? G.name : ''} · depth ${e.depth}`, sub: `Tougher foes, +10% ${G && R[G.spoil] ? R[G.spoil].name.toLowerCase() : 'spoils'}` }); }
       else if (e.who === 'proclaim') CBQ.push({ ico: '🏰', kicker: 'A kingdom is born', title: 'The Kingdom is proclaimed', sub: 'Build the Barracks and march on your first land.' });
       else if (e.who === 'tier') CBQ.push({ ico: '🏘', kicker: 'Your settlement grows', title: `A ${e.name}!`, sub: 'New buildings and a bigger Storehouse.' });
       else if (e.who === 'trophy') { const T = CONFIG.trophies.tiers[e.tier]; CBQ.push({ small: 1, ico: '🏆', kicker: 'Trophy', title: `${T ? T.name : ''} ${e.name || ''} head`, sub: `+${Math.round(CONFIG.trophies.lootPerTrophy * 100)}% loot and XP, for good` }); }

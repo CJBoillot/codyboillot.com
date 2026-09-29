@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Alpha 0.10.5',
+  version: 'Alpha 0.10.6',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -410,7 +410,7 @@ const CONFIG = {
     ],
     hallCost: { base: 100, exp: 1.7 },
     // Lands (0.9): conquered from the hero screen; taxes grow ×4 per land
-    lands: { taxBase: 1000, taxGrowth: 4, garrisonPer: 10, cofferHours: 8, shortStages: 50, longStages: 100, shortLands: 3, offsetStart: 6, offsetStep: 3, spoilPerHour: 30, victoryLap: 3, heroHereCap: 0.5,
+    lands: { taxBase: 1000, taxGrowth: 4, garrisonPer: 10, cofferHours: 8, shortStages: 50, longStages: 100, shortLands: 3, offsetStart: 6, offsetStep: 3, spoilPerHour: 30, victoryLap: 3, heroHereCap: 0.5, endlessDepth: { winsPer: 50, hp: 1.12, hit: 1.10, drop: 1.05, dropCap: 4, spoilBase: 0.03, perLand: 0.2 },
       // 0.10.1 land difficulty: smooth inside a land (×span from first stage to the Ruler's), a wall between lands (next land starts ×(land/span) above the last one's end)
       curve: { hp: 105, hit: 11.5, landHp: 2.4, landHit: 1.75, spanHp: 2.0, spanHit: 1.6, captainHp: 3, captainHit: 1.4, rulerHp: 4, rulerHit: 1.4, endless: 1.15 } },
     // Settlement tiers inside one land. Raising a tier costs `cap` of every good made so far (pay in as you go) and loses nothing.
@@ -473,6 +473,7 @@ const CONFIG = {
   // jobs (jobs completed by hand or thrall), sold (gold earned at market), stage, boss, founded, thrall (assigned), activity (swings).
   // Shown in Settings → What's new (newest first). Keep each line short.
   changelog: [
+    ['0.10.6', 'Go back and farm! Every conquered land has a Fight here button (Kingdom → Lands) that takes your hero to its Endless Battle, where the land\'s spoil (silver, heartwood, relics) drops on a share of kills. Every 50 wins it goes a depth deeper — tougher foes, better drops — and a knock-out only drops you one depth. A conquered land now pays its full taxes even while your hero fights there. The gathering and By hand panels are gone once you proclaim (By hand already at the City): the Capital gathers, the hero fights.'],
     ['0.10.5', 'Big moments get a banner: conquering a land, passing the crown, proclaiming, raising your settlement, buildings doubling, new trophies — and a pop on every level. After the story quests, Deeds of the Dynasty keep you going with new goals (take the next land, temper your gear, grow the host, hunt a trophy) that pay gold and ★. Stars past what your Paths can use now give +0.5% attack and HP each. Tech requirements say where a good comes from (tap for more). Land 2 is now the Iron Hills (it pays silver) and land 3 is Blackwood March. Raising your settlement asks less of new and in-between goods; Baron needs 200 Renown. Trophies come at 500 kills and give +2%. Lands ramp up more steadily inside, with a smaller jump at the border. The kingdom paths (Benevolent, Iron Empire) now really change your buildings, and the gold rate in the header counts taxes.'],
     ['0.10.4', 'Crowns reworked. Every ruler now pays a little more than the last (1, 1, 2, 2, 3, 4, 5, 7…) and proclaiming gives 5. Passing the Crown no longer takes your gear or building levels — only the lands, taxes, army and stores go, and the hero starts at level 1. Perks: Bloodline now multiplies (×1.08 per rank); War College replaces Drill Sergeants and Standing Army; Founder\'s Cache pays out from your last taxes; Heirloom Arms, Old Blade and Blueprints are gone (nothing to keep anymore); the Ledger, Danger Sense, Chronicler, Surveyor and Almanac now open through quests. Every retired perk\'s Crowns are refunded. New quests teach the army — supply lines, casualties, the Endless Battle and growing demand — and after Blackwood March a quest leads you to Pass the Crown for the first time (+20 Crowns). In your first dynasty, the third land opens once you have passed the crown.'],
     ['0.10.3', 'In the Kingdom phase the building tabs are named for what they supply — Housing, Arms, Food, Soldiers — in the same order as the header. Taxes now flow straight into your gold (no more Collect button; if you bought Stewards, its 15 Crowns are back). Lands are listed newest first.'],

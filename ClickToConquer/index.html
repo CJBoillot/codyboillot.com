@@ -12,7 +12,7 @@
   <title>Click to Conquer</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=a0105">
+  <link rel="stylesheet" href="style.css?v=a0106">
 </head>
 <body>
 
@@ -99,7 +99,7 @@
           <div class="row-between adv-row"><label class="auto-toggle small"><input type="checkbox" id="auto-adv" checked> Auto-advance every 50 kills</label><span id="danger" class="dim small"></span></div>
           <div id="afk-info" class="dim small afk-info"></div>
         </div>
-        <div class="card">
+        <div class="card" id="activity-card">
           <div class="card-title">Your hero is…</div>
           <div id="activity-bar" class="activity-bar"></div>
           <div id="activity-hint" class="dim small"></div>
@@ -499,11 +499,11 @@
 </div>
 
 
-<script src="config.js?v=a0105"></script>
-<script src="cloud-config.js?v=a0105"></script>
-<script src="game.js?v=a0105"></script>
-<script src="ui.js?v=a0105"></script>
-<script src="cloud.js?v=a0105"></script>
+<script src="config.js?v=a0106"></script>
+<script src="cloud-config.js?v=a0106"></script>
+<script src="game.js?v=a0106"></script>
+<script src="ui.js?v=a0106"></script>
+<script src="cloud.js?v=a0106"></script>
 <script>window.addEventListener("error", e => { const d = document.getElementById("err"); if (d) { d.textContent = "Error: " + e.message; d.classList.remove("hidden"); } });</script>
 <div id="celebrate" class="celebrate hidden" role="status" aria-live="polite"><div class="cb-ico" id="cb-ico"></div><div class="cb-txt"><div class="cb-kicker" id="cb-kicker"></div><div class="cb-title" id="cb-title"></div><div class="cb-sub" id="cb-sub"></div></div></div>
 </body>

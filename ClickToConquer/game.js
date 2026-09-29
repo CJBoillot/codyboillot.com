@@ -145,7 +145,7 @@ function canToolTierUp(slot) { const it = S.hero.tools[slot], next = it ? it.tie
 function craftTool(slot) { if (crafting() || !canToolTierUp(slot)) return false; const c = toolCraftCost(slot); if (!c || !canAfford(c)) return false; pay(c); const it = S.hero.tools[slot]; S.hero.crafting = { kind: 'tool', slot, t: 0, total: CONFIG.craftSeconds, name: `${CONFIG.toolTiers[it ? it.tier + 1 : 0].name} ${CONFIG.toolSlots[slot].name}` }; return true; }
 function upgradeTool(slot) { if (crafting()) return false; const c = toolUpgradeCost(slot); if (!c || !canAfford(c)) return false; pay(c); const it = S.hero.tools[slot]; S.hero.crafting = { kind: 'toolUp', slot, t: 0, total: CONFIG.upgradeSeconds, name: `${CONFIG.toolTiers[it.tier].name} ${CONFIG.toolSlots[slot].name} Lv${it.level + 1}` }; return true; }
 function activityDef(id) { return CONFIG.activities[id]; }
-function activityAvailable(id) { const a = activityDef(id); return !!a && (!a.tool || !!S.hero.tools[a.tool]) && (!a.gear || !!S.hero.gear[a.gear]); }
+function activityAvailable(id) { const a = activityDef(id); if (phase() === 3 && id !== 'fight') return false; /* 0.10.6: a King's hero only fights — the Capital gathers */ return !!a && (!a.tool || !!S.hero.tools[a.tool]) && (!a.gear || !!S.hero.gear[a.gear]); }
 function setActivity(id) { if (!activityAvailable(id)) return false; S.hero.activity = id; S.hero.harvestTimer = 0; S.hero.chose = S.hero.chose || {}; S.hero.chose[id] = true; if (id !== 'fight') { S.hero.resting = false; S.hero.enemyHp = 0; } return true; }
 function heroFighting() { return S.hero.activity === 'fight' && activityAvailable('fight'); }
 function masteryLevel(id) { return Math.floor(Math.sqrt((S.hero.mastery[id] || 0) / 10)); } // swings → level; +2% speed each
@@ -364,11 +364,19 @@ function enemyType(stage = S.hero.stage, gid = S.hero.ground) { const L = CONFIG
 function enemyTypeLoops(stage = S.hero.stage, gid = S.hero.ground) { const L = CONFIG.grounds[gid].line, { t } = stageType(stage); return Math.max(0, t - (L.length - 1)); }
 function isBoss(stage = S.hero.stage) { return stageType(stage).k === CONFIG.stages.perType; }
 function effType(stage = S.hero.stage, gid = S.hero.ground) { return stageType(stage).t + (CONFIG.stages.groundOffset[gid] || 0); }
+function endlessDepth(n) { return ((S.kingdom && S.kingdom.lands && S.kingdom.lands[n]) || {}).depth || 0; }
+function farming(gid = S.hero.ground, stage = S.hero.stage) { const n = landN(gid); return n > 0 && isEndless(stage, gid) && landDone(n); }
+function endlessWin(k = 1) { // 0.10.6: every 50 wins in a conquered land's Endless Battle go one level deeper — tougher foes, richer spoils
+  const n = landN(), L = landState(n), ED = LC().endlessDepth; L.wins = (L.wins || 0) + k;
+  while (L.wins >= ED.winsPer) { L.wins -= ED.winsPer; L.depth = (L.depth || 0) + 1; S.legacy.depthBest = S.legacy.depthBest || {}; const first = L.depth > (S.legacy.depthBest[n] || 0); if (first) S.legacy.depthBest[n] = L.depth;
+    log(`${landDef(n).name}: the Endless Battle grows fiercer — depth ${L.depth}.`); pushEvent({ who: 'depth', n, depth: L.depth, first }); }
+}
+function farmLand(n) { const G = landDef(n); if (!G || !landDone(n)) return false; if (S.hero.ground !== landId(n) && !setGround(landId(n))) return false; const h = S.hero; h.stage = G.stages + 1; h.kills = 0; h.enemyHp = 0; h.carry = 0; return true; }
 function landCurve(stage, gid) { // 0.10.1: {hp, hit} for a land stage, or null outside lands
   const G = CONFIG.grounds[gid]; if (!G || !G.land) return null; const C = LC().curve, n = G.land, S_ = G.stages, end = stage > S_;
   const f = Math.min(1, Math.max(0, (stage - 1) / Math.max(1, S_ - 1))), boss = !end && isBoss(stage), ruler = stage === S_;
   let hp = C.hp * Math.pow(C.landHp, n - 1) * Math.pow(C.spanHp, f), hit = C.hit * Math.pow(C.landHit, n - 1) * Math.pow(C.spanHit, f);
-  if (ruler) { hp *= C.rulerHp; hit *= C.rulerHit; } else if (boss) { hp *= C.captainHp; hit *= C.captainHit; } else if (end) { hp *= C.endless; hit *= C.endless; }
+  if (ruler) { hp *= C.rulerHp; hit *= C.rulerHit; } else if (boss) { hp *= C.captainHp; hit *= C.captainHit; } else if (end) { const ED = LC().endlessDepth, dp = endlessDepth(n); hp *= C.endless * Math.pow(ED.hp, dp); hit *= C.endless * Math.pow(ED.hit, dp); }
   return { hp: Math.max(1, Math.round(hp)), hit: Math.round(hit * 10) / 10 };
 }
 function enemyMaxHp(stage = S.hero.stage, gid = S.hero.ground) { const lc = landCurve(stage, gid); if (lc) return lc.hp; const t = effType(stage, gid), { k } = stageType(stage), R = CONFIG.stages.refHit(t); return Math.max(1, Math.round(isBoss(stage) ? R * 8 : R * (2 + (k - 1) / 8))); }
@@ -388,7 +396,7 @@ function enemyName(stage = S.hero.stage) {
   const T = enemyType(stage), loops = enemyTypeLoops(stage), pre = loops ? 'Elder '.repeat(Math.min(loops, 2)) : '';
   return pre + (isBoss(stage) ? T.boss : T.name);
 }
-function stageLabel(stage = S.hero.stage, gid = S.hero.ground) { const { k } = stageType(stage), T = enemyType(stage, gid); if (landN(gid)) return isEndless(stage, gid) ? `∞ Endless Battle · ${T.name}` : `Stage ${stage} · ${isBoss(stage) ? T.boss : T.name}`; return `${enemyTypeLoops(stage, gid) ? 'Elder ' : ''}${T.name} ${k}/${CONFIG.stages.perType}`; }
+function stageLabel(stage = S.hero.stage, gid = S.hero.ground) { const { k } = stageType(stage), T = enemyType(stage, gid); if (landN(gid)) return isEndless(stage, gid) ? `∞ Endless${endlessDepth(landN(gid)) ? ' · depth ' + endlessDepth(landN(gid)) : ''} · ${T.name}` : `Stage ${stage} · ${isBoss(stage) ? T.boss : T.name}`; return `${enemyTypeLoops(stage, gid) ? 'Elder ' : ''}${T.name} ${k}/${CONFIG.stages.perType}`; }
 function nextTypeName(stage = S.hero.stage) { const T = enemyType(stage + 1); return (enemyTypeLoops(stage + 1) ? 'Elder ' : '') + T.plural; }
 // Drop table for a stage: current type's pool at its stage chance, earlier types' pools at their stage-10 chance. Gated by tech / tool. Values are expected units per kill.
 function stagePool(stage = S.hero.stage, gid = S.hero.ground) {
@@ -405,6 +413,7 @@ function dropToolMult(slot) { const p = toolPower(slot); return p > 0 ? 1 + 0.6 
 function groundDrops(stage = S.hero.stage) { // per kill, gated by tech, boosted by tool
   const G = ground(), pool = stagePool(stage), o = {};
   for (const k in pool) { if (!dropUnlocked(k)) continue; let v = pool[k]; const t = G.dropTool && G.dropTool[k]; if (t) { if (!S.hero.tools[t]) continue; v *= dropToolMult(t); } o[k] = v; }
+  if (G.land && G.spoil && farming(S.hero.ground, stage)) { const ED = LC().endlessDepth; o[G.spoil] = Math.max(o[G.spoil] || 0, ED.spoilBase * (1 + ED.perLand * (G.land - 1)) * Math.min(ED.dropCap, Math.pow(ED.drop, endlessDepth(G.land))) * (1 + 0.25 * perkRank('spoils'))); } // farming a conquered land pays its spoil
   return o;
 }
 function lootRarity(k) { return (CONFIG.resources[k] && CONFIG.resources[k].rarity) || 'common'; }
@@ -450,6 +459,8 @@ function offlineStages(kills) { // AFK: retreat to a stage he can hold, then pus
     rem -= need; h.kills += need; if (!advance()) break;
   }
   h.kills += rem; if (isEndless()) S.stats.endlessKills = (S.stats.endlessKills || 0) + Math.floor(kills);
+  if (farming()) { const L = landState(landN()), ED = LC().endlessDepth; let w = Math.floor(kills); // AFK: go deeper only while the next depth is safe
+    while (w > 0) { const step = Math.min(w, ED.winsPer - (L.wins || 0)); if ((L.wins || 0) + step >= ED.winsPer) { L.depth = (L.depth || 0) + 1; if (!stageSustainable(h.stage)) { L.depth--; L.wins = ED.winsPer - 1; break; } L.depth--; endlessWin(step); } else L.wins = (L.wins || 0) + step; w -= step; } }
 }
 // ---------- Resources ----------
 // Caps: P0 = the Pack (100, Leather Pack 150). P1+ = the Storehouse (§7.6 of the v0.3 design).
@@ -490,7 +501,7 @@ function phase() { return S.kingdom && S.kingdom.phase === 3 ? 3 : kingdomNo() >
 function canProclaim() { return kingdomNo() > 0 && phase() < 3 && cityComplete() && questReached('y04'); }
 function proclaim() {
   if (!canProclaim()) return false;
-  const gain = CONFIG.legacy.proclaimCrowns; S.legacy.knowledge += gain; S.kingdom.phase = 3; S.kingdom.proclaimedAt = S.hero.time;
+  const gain = CONFIG.legacy.proclaimCrowns; S.legacy.knowledge += gain; S.kingdom.phase = 3; if (S.hero.activity !== 'fight') { S.hero.activity = 'fight'; S.hero.harvestTimer = 0; } S.kingdom.proclaimedAt = S.hero.time;
   for (const k of ['food', 'supplies', 'soldiers']) S.res[k] = S.res[k] || 0;
   log(`The Kingdom is proclaimed! Your City is now the Capital. +${gain} Crowns.`); pushEvent({ who: 'proclaim' }); save(); return gain;
 }
@@ -785,7 +796,7 @@ function deedCurrent() {
   if (!Q.dq) { Q.dq = deedGen(); if (!Q.dq) return null; Q.cur = Q.dq.id; if (Q.base) delete Q.base[Q.dq.id]; }
   const d = Q.dq, tail = { id: d.id, dyn: d.n, chain: 'Deeds', focus: null };
   if (d.type === 'land') { const G = landDef(d.a), rn = G.ruler.charAt(0).toUpperCase() + G.ruler.slice(1);
-    return { ...tail, name: `Take ${G.name}`, text: `${rn} holds ${G.name} — land ${d.a}, ${G.stages} stages, and harder than anything behind you. His crown is worth ${rulerCrowns(d.a)} Crown${rulerCrowns(d.a) === 1 ? '' : 's'} when the crown passes.${deedOk('pass') ? ` Or, if the wall is too high: this dynasty would pass ${crownsIfPass()} Crowns, more than any before it (Keep → Pass the Crown).` : ''}`,
+    return { ...tail, name: `Take ${G.name}`, text: `${G.name} is held by ${G.ruler} — land ${d.a}, ${G.stages} stages, and harder than anything behind you. Its crown is worth ${rulerCrowns(d.a)} Crown${rulerCrowns(d.a) === 1 ? '' : 's'} when the crown passes.${deedOk('pass') ? ` Or, if the wall is too high: this dynasty would pass ${crownsIfPass()} Crowns, more than any before it (Keep → Pass the Crown).` : ''}`,
       steps: [{ label: `Conquer ${G.name}`, check: { landDone: d.a } }], reward: { gold: d.gold, talent: 2 }, focus: { tab: 'hero', sub: 'fight', el: 'ground:' + landId(d.a) } }; }
   if (d.type === 'gear') { const nm = tierName('weapon', d.a);
     return { ...tail, name: 'Temper the Arms', text: `Weapon, chest and helm carry the fight. Forge all three up to ${nm}${d.a >= HARD_T ? ' — every Hardened tier is far stronger than the last' : ''}.`,
@@ -957,7 +968,7 @@ function onKill(st) {
   const loot = {}; for (const k in exp) { const n = roll(exp[k]); if (n > 0) { add(k, n); loot[k] = n; S.stats.looted = S.stats.looted || {}; S.stats.looted[k] = (S.stats.looted[k] || 0) + n; } }
   if (Object.keys(loot).length) pushEvent({ who: 'loot', loot });
   gainXp(H.xpPerKill * CONFIG.stages.xpPerKill(LN ? s + 10 * (CONFIG.stages.groundOffset[S.hero.ground] || 0) : s) * (isBoss(s) ? 3 : 1) * st.xp);
-  S.hero.kills++; S.hero.totalKills++; if (isEndless()) S.stats.endlessKills = (S.stats.endlessKills || 0) + 1;
+  S.hero.kills++; S.hero.totalKills++; if (isEndless()) { S.stats.endlessKills = (S.stats.endlessKills || 0) + 1; if (farming()) endlessWin(1); }
   if (!S.hero.gear.weapon) { const b = fistLevel(); S.hero.fistKills = (S.hero.fistKills || 0) + 1; if (fistLevel() > b) { log(`Your fists harden: ${slotValue('weapon').toFixed(1)} damage`); pushEvent({ who: 'craft', name: 'Fists ' + slotValue('weapon').toFixed(1) }); } }
   { const key = typeKey(s); S.legacy.kills = S.legacy.kills || {}; const before = trophyTier(key), bt = bestiaryTier(key); S.legacy.kills[key] = (S.legacy.kills[key] || 0) + 1; const after = trophyTier(key); if (after > before) { log(`Trophy earned: ${CONFIG.trophies.tiers[after].name} ${enemyType(s).name} head!`); pushEvent({ who: 'trophy', key, tier: after, name: enemyType(s).name }); } if (bestiaryTier(key) > bt) log(`Bestiary: ${enemyType(s).plural} — ${CONFIG.bestiary.tiers[bestiaryTier(key)].name}`); }
   if (isBoss(s)) { const bk = S.hero.ground + ':' + s; if (!S.hero.bossesKilled[bk]) { S.hero.bossesKilled[bk] = true; S.hero.stars = S.hero.stars || {}; const newStar = !S.hero.stars[bk]; S.hero.stars[bk] = true; if (LN && s === ground().stages) onRulerSlain(LN); const u = enemyType(s).unique; if (u && CONFIG.resources[u]) { add(u, 1); pushEvent({ who: 'loot', loot: { [u]: 1 }, unique: true }); } log(`Defeated ${enemyName(s)}!${newStar ? ' +1 ★' : ''}${u ? ' +' + CONFIG.resources[u].name : ''}`); } else { const u = enemyType(s).unique; if (u && S.legacy.foundings === 0 && CONFIG.legacy.tribute[u] && !(S.res[u] >= 1)) { add(u, 1); pushEvent({ who: 'loot', loot: { [u]: 1 }, unique: true }); } log(`Defeated ${enemyName(s)}!`); } }
@@ -978,7 +989,7 @@ function log(msg) { S.log.unshift(msg); if (S.log.length > 30) S.log.length = 30
 // ---------- Live simulation ----------
 // Discrete combat: hero swings every 1/speed sec (rolls crit), enemy swings every enemyAttackInterval sec.
 const EVENTS = []; // transient hit events for the UI: {who:'hero'|'enemy', dmg, crit, skill}
-const BIG_EV = { crown: 1, crownpass: 1, proclaim: 1, tier: 1, milestone: 1, trophy: 1, levelup: 1 }, BIGS = []; // 0.10.5: moments worth a banner, kept apart so hit numbers can't push them out
+const BIG_EV = { depth: 1, crown: 1, crownpass: 1, proclaim: 1, tier: 1, milestone: 1, trophy: 1, levelup: 1 }, BIGS = []; // 0.10.5: moments worth a banner, kept apart so hit numbers can't push them out
 function pushEvent(e) { if (BIG_EV[e.who]) { BIGS.push(e); if (BIGS.length > 12) BIGS.shift(); return; } EVENTS.push(e); if (EVENTS.length > 20) EVENTS.shift(); }
 function heroStrike(st) {
   const crit = Math.random() < st.crit;
@@ -1007,7 +1018,7 @@ function simulate(dt) {
     const dmg = effectiveEnemyDps(st) * H.enemyAttackInterval;
     h.hp -= dmg; pushEvent({ who: 'enemy', dmg });
   }
-  if (h.hp <= 0) { if (isEndless()) { h.hp = 0; h.resting = true; h.enemyHp = 0; h.carry = 0; h.atkTimer = 0; h.eTimer = 0; log('Your hero falls back to rest. He returns to the Endless Battle at full health.'); pushEvent({ who: 'rest' }); return; } heroRetreat(st); return; }
+  if (h.hp <= 0) { if (isEndless()) { h.hp = 0; h.resting = true; h.enemyHp = 0; h.carry = 0; h.atkTimer = 0; h.eTimer = 0; { const L = farming() ? landState(landN()) : null; if (L && (L.depth || 0) > 0) { L.depth--; L.wins = 0; log(`Your hero falls back to rest — and back to depth ${L.depth}. He returns at full health.`); } else log('Your hero falls back to rest. He returns to the Endless Battle at full health.'); } pushEvent({ who: 'rest' }); return; } heroRetreat(st); return; }
   if (h.enemyHp <= 0) { h.hp = Math.min(st.maxHp, h.hp + killHeal(st)); onKill(st); h.enemyHp = 0; h.atkTimer = Math.min(h.atkTimer, interval * 0.5); }
 }
 
@@ -1185,7 +1196,7 @@ function garrisonFill(n) { return Math.min(1, (landState(n).garrison || 0) / gar
 function vaultCount() { return Object.keys(S.legacy.vault || {}).length; }
 function taxFull(n) { return LC().taxBase * Math.pow(LC().taxGrowth, n - 1) * (1 + 0.25 * perkRank('tax')) * (1 + 0.02 * vaultCount()); }
 function landShare(n) { const pct = landPct(n) / 100; return heroInLand(n) ? Math.min(pct, LC().heroHereCap) : pct; } // while the hero still fights in a land, it pays at most half
-function heroInLand(n) { return phase() === 3 && landN() === n; }
+function heroInLand(n) { return phase() === 3 && landN() === n && !landDone(n); } // 0.10.6: a conquered land pays in full even while the hero farms its Endless Battle
 function taxPerHour(n) { const pct = landShare(n); return pct > 0 ? taxFull(n) * pct * garrisonFill(n) : 0; }
 function spoilPerHour(n) { return LC().spoilPerHour * landShare(n) * garrisonFill(n) * (1 + 0.25 * perkRank('spoils')); }
 function cofferCap(n) { return taxFull(n) * LC().cofferHours; }
@@ -1297,6 +1308,7 @@ function load() {
     { const P = S.legacy.perks || {}, OLD = { heirloom: [10, 2.2], oldblade: [20, 1], blueprints: [6, 1.8], drill: [4, 1.7], standing: [8, 2], ledger: [1, 1], danger: [2, 1], chronicler: [2, 1], surveyor: [2, 1], almanac: [2, 1] }; // 0.10.4: retired perks refunded
       for (const id in OLD) if (P[id]) { let c = 0; for (let i = 0; i < P[id]; i++) c += Math.ceil(OLD[id][0] * Math.pow(OLD[id][1], i)); S.legacy.knowledge = (S.legacy.knowledge || 0) + c; delete P[id]; } }
     if (S.kingdom && !S.kingdom.cr104) { S.kingdom.cr104 = true; if (phase() === 3) { let c = 0; for (let n = 1; landDef(n) && landDone(n); n++) c += rulerCrowns(n); S.kingdom.crownsRun = c; } } // 0.10.4: the new Crown curve counts for this dynasty too
+    if (phase() === 3 && S.hero.activity !== 'fight') { S.hero.activity = 'fight'; S.hero.harvestTimer = 0; } // 0.10.6: no gathering in the Kingdom phase
     return S;
   } catch (e) { return null; }
 }
@@ -1348,7 +1360,7 @@ window.Game = {
   hallDef, hallLv, hallAvailable, hallCost, canHall, upgradeHall,
   barracksLv, barracksBuilt, barracksCost, canUpBarracks, upgradeBarracks, trainPerMin, housing, foodPerMin, suppliesPerMin, upkeepPerMin, armyLimit, armyLimitBy, soldiers, garrisoned, marching, armyMult, armyHpMult,
   landId, landN, landDef, landState, landDone, landPct, landsHeld, landOpen, landsTouched, garrisonNeed, garrisonFill, taxFull, taxPerHour, spoilPerHour, cofferCap, cofferTotal, taxTotalPerHour, collectTaxes, setGarrison,
-  rulerCrowns, starsSpare, starDemand, vaultCount, canPassCrown, landReqText, landQuestOk, passKeep, infoOn, questStat, crownsIfPass, passCrown, lapActive,
+  rulerCrowns, endlessDepth, farming, farmLand, starsSpare, starDemand, vaultCount, canPassCrown, landReqText, landQuestOk, passKeep, infoOn, questStat, crownsIfPass, passCrown, lapActive,
   repairPosts,
   phase, canProclaim, proclaim,
   stockMode, setStockMode, stockTarget, stockDemand, STOCK_MODES,
