@@ -550,6 +550,7 @@ function minBuildingLv() { return Math.min(...allSteps().filter(st => !st.phase)
 function stepState(id) { const K = S.kingdom; K.steps = K.steps || {}; if (!K.steps[id]) K.steps[id] = { lv: 1, lvW: 1, lvC: 1, lvH: 1, rate: 1, haul: 1, cart: 1, inBuf: 0, phase: 0, t: 0, workers: [], overseer: null, abilityUntil: 0, abilityReady: 0 }; const st = K.steps[id]; if (st.phase === undefined) { st.phase = 0; st.t = 0; } if (!st.lv) st.lv = 1; if (!st.lvW) { st.lvW = st.lv; st.lvC = st.lv; st.lvH = st.lv; } return st; }
 // 0.12: every building has three parts — Work makes the goods, Cart loads them, Haul brings them home. Each has its own level.
 const PARTS = ['W', 'C', 'H'], PART_NAME = { W: 'Work', C: 'Cart', H: 'Haul' };
+function partName(id, p) { const d = stepDef(id), n = d && d.parts; return n ? n[PARTS.indexOf(p)] : PART_NAME[p]; } // each building names its own steps
 function partLv(id, p, d = 1) { const s = stepState(id); if (d <= 1) return s['lv' + p] || 1; return (((s.deep || [])[d - 2]) || {})[p] || 1; }
 // 0.12.1: every building grows levels (groves, fields, furnaces… the Mine's depths). Level 1 keeps the animated cycle; deeper levels produce steadily.
 const DC = () => KC().depths;
@@ -637,7 +638,7 @@ function upgradeStep(id, part, n = 1, d = 1) {
   pay(p.cost); if (d <= 1) s['lv' + part] += p.n; else s.deep[d - 2][part] += p.n; s.lv = stepLv(id);
   const St = S.stats; St.partUps = (St.partUps || 0) + p.n; if (part === lim) { St.limitUps = St.limitUps || {}; St.limitUps[id] = (St.limitUps[id] || 0) + p.n; } if (slow) St.slowUps = (St.slowUps || 0) + p.n;
   if (id === 'forge' || id === 'baker') St.armsFoodUps = (St.armsFoodUps || 0) + p.n;
-  { const now = partLv(id, part, d); if (milestoneCount(now) > milestoneCount(before)) { log(`${stepDef(id).name}${d > 1 ? ' ' + unitName(id) + ' ' + d : ''}: ${PART_NAME[part]} reached Lv ${now} — its capacity doubled!`); pushEvent({ who: 'milestone', id, name: stepName(id), lv: now }); } }
+  { const now = partLv(id, part, d); if (milestoneCount(now) > milestoneCount(before)) { log(`${stepDef(id).name}${d > 1 ? ' ' + unitName(id) + ' ' + d : ''}: ${partName(id, part)} reached Lv ${now} — its capacity doubled!`); pushEvent({ who: 'milestone', id, name: stepName(id), lv: now }); } }
   return p.n;
 }
 // the chain's slowest building: its output in final-good terms is the lowest
@@ -1547,7 +1548,7 @@ function boot() {
 window.Game = {
   stepLv, stepName, milestoneCount, nextMilestone, levelCap, cityComplete, minBuildingLv, tierThreat,
   hallDef, hallLv, hallAvailable, hallCost, canHall, upgradeHall,
-  PARTS, PART_NAME, partLv, limitPart, partCap, tripTime, tripLoad, pipe, depthCount, depthYield, depthOutput, deepOutput, unitName, digOpen, digCost, canDig, dig, newAgeTown, slowestInLine, housesOn, houses, houseCap, people, townsfolk, houseRoom, birthRoom, houseCost, birthsPerMin, headTaxPerHour, settlersPerHour, settlerWave, turnedRecent, setHousesOn, barracksAvailable, nextSoldierCost, trainBlocker, recArmy, soldierCostMult, garrisonNeed,
+  PARTS, PART_NAME, partName, partLv, limitPart, partCap, tripTime, tripLoad, pipe, depthCount, depthYield, depthOutput, deepOutput, unitName, digOpen, digCost, canDig, dig, newAgeTown, slowestInLine, housesOn, houses, houseCap, people, townsfolk, houseRoom, birthRoom, houseCost, birthsPerMin, headTaxPerHour, settlersPerHour, settlerWave, turnedRecent, setHousesOn, barracksAvailable, nextSoldierCost, trainBlocker, recArmy, soldierCostMult, garrisonNeed,
   barracksLv, barracksBuilt, barracksCost, canUpBarracks, upgradeBarracks, trainPerMin, housing, foodPerMin, suppliesPerMin, upkeepPerMin, armyLimit, armyLimitBy, soldiers, garrisoned, marching, armyMult, armyHpMult,
   landId, landN, landDef, landState, landDone, landPct, landsHeld, landOpen, landsTouched, garrisonNeed, garrisonFill, taxFull, taxPerHour, spoilPerHour, cofferCap, cofferTotal, taxTotalPerHour, collectTaxes, setGarrison,
   rulerCrowns, ageNo, ageName, gEra, crowns, pathMaxed, crownHeir, titheShare, eraOf, isEraRuler, landTrait, wonderFor, wonderState, wonderUnlocked, wonderBuilt, wonderCost, wonderProgress, contributeWonder, wonderMult, nextWonderEra, gatherOn, bgFactor, pathCost, rowOpen, rowProgress, pathRow, combatLevelBonus, endlessDepth, farming, farmLand, starsSpare, starDemand, vaultCount, canPassCrown, landReqText, landQuestOk, passKeep, infoOn, questStat, crownsIfPass, passCrown, lapActive,

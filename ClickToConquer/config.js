@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Beta 0.1.5',
+  version: 'Beta 0.1.6',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -399,17 +399,17 @@ const CONFIG = {
   kingdom: {
     lines: {
       forest: { name: 'People', chain: 'houses', icon: [4,6], steps: [
-        { id: 'logging',   name: 'Logging',    icon: [17,0],  make: 'wood',   base: 0.5, batch: 6,  tier: 0, build: null, unit: ['Grove', 'groves'], dig: 'Clear a new grove', art: 'logging', desc: 'Woodcutters fell trees for logs.' },
-        { id: 'sawmill',   name: 'Sawmill',    icon: [19,11], make: 'planks', from: 'wood',   ratio: 2, base: 0.3, batch: 4,  tier: 1, build: { wood: 100, ore: 40, gold: 200 }, unit: ['Saw Pit', 'saw pits'], dig: 'Build a new saw pit', art: 'sawmill', desc: '2 logs → 1 plank.' },
-        { id: 'carpenter', name: 'Carpenter',  icon: [10,4],  make: 'lumber', from: 'planks', ratio: 2, base: 0.15, batch: 3, tier: 2, build: { planks: 120, ingot: 30, gold: 500 }, unit: ['Workbench', 'workbenches'], dig: 'Set up a new workbench', art: 'carpenter', desc: '2 planks → 1 lumber. Lumber raises houses.' } ] },
+        { id: 'logging',   name: 'Logging',    icon: [17,0],  make: 'wood',   base: 0.5, batch: 6,  tier: 0, build: null, parts: ['Grow', 'Fell', 'Haul'], unit: ['Grove', 'groves'], dig: 'Clear a new grove', art: 'logging', desc: 'Woodcutters fell trees for logs.' },
+        { id: 'sawmill',   name: 'Sawmill',    icon: [19,11], make: 'planks', from: 'wood',   ratio: 2, base: 0.3, batch: 4,  tier: 1, build: { wood: 100, ore: 40, gold: 200 }, parts: ['Load', 'Saw', 'Stack'], unit: ['Saw Pit', 'saw pits'], dig: 'Build a new saw pit', art: 'sawmill', desc: '2 logs → 1 plank.' },
+        { id: 'carpenter', name: 'Carpenter',  icon: [10,4],  make: 'lumber', from: 'planks', ratio: 2, base: 0.15, batch: 3, tier: 2, build: { planks: 120, ingot: 30, gold: 500 }, parts: ['Plane', 'Join', 'Raise'], unit: ['Workbench', 'workbenches'], dig: 'Set up a new workbench', art: 'carpenter', desc: '2 planks → 1 lumber. Lumber raises houses.' } ] },
       farm: { name: 'Food', chain: 'bread', icon: [12,5], steps: [
-        { id: 'fields', name: 'Farm', icon: [14,13], make: 'grain', base: 0.5, batch: 6,  tier: 0, build: { wood: 40, gold: 40 }, unit: ['Field', 'fields'], dig: 'Plow a new field', art: 'farm', desc: 'Farmers sow and reap grain.' },
-        { id: 'mill',   name: 'Mill',   icon: [15,10], make: 'flour', from: 'grain', ratio: 2, base: 0.3, batch: 4,  tier: 1, build: { wood: 80, grain: 100, gold: 200 }, unit: ['Millstone', 'millstones'], dig: 'Set a new millstone', art: 'mill', desc: '2 grain → 1 flour.' },
-        { id: 'baker',  name: 'Bakery',  icon: [14,14], make: 'bread', from: 'flour', ratio: 2, base: 0.15, batch: 3, tier: 2, build: { flour: 120, planks: 60, gold: 500 }, unit: ['Oven', 'ovens'], dig: 'Build a new oven', art: 'bakery', desc: '2 flour → 1 bread.' } ] },
+        { id: 'fields', name: 'Farm', icon: [14,13], make: 'grain', base: 0.5, batch: 6,  tier: 0, build: { wood: 40, gold: 40 }, parts: ['Plant', 'Grow', 'Harvest'], unit: ['Field', 'fields'], dig: 'Plow a new field', art: 'farm', desc: 'Farmers sow and reap grain.' },
+        { id: 'mill',   name: 'Mill',   icon: [15,10], make: 'flour', from: 'grain', ratio: 2, base: 0.3, batch: 4,  tier: 1, build: { wood: 80, grain: 100, gold: 200 }, parts: ['Pour', 'Grind', 'Sack'], unit: ['Millstone', 'millstones'], dig: 'Set a new millstone', art: 'mill', desc: '2 grain → 1 flour.' },
+        { id: 'baker',  name: 'Bakery',  icon: [14,14], make: 'bread', from: 'flour', ratio: 2, base: 0.15, batch: 3, tier: 2, build: { flour: 120, planks: 60, gold: 500 }, parts: ['Knead', 'Bake', 'Deliver'], unit: ['Oven', 'ovens'], dig: 'Build a new oven', art: 'bakery', desc: '2 flour → 1 bread.' } ] },
       mine: { name: 'Arms', chain: 'arms', icon: [4,5], steps: [
-        { id: 'shaft',   name: 'Mine', icon: [17,2], make: 'ore',    base: 0.5, batch: 6,  tier: 0, build: { wood: 60, grain: 30, gold: 80 }, unit: ['Depth', 'depths'], dig: 'Dig deeper', art: 'mine', desc: 'Miners dig iron ore.' },
-        { id: 'smelter', name: 'Forge',    icon: [17,3], make: 'ingot',  from: 'ore',   ratio: 2, base: 0.3, batch: 4,  tier: 1, build: { ore: 100, wood: 80, gold: 200 }, unit: ['Furnace', 'furnaces'], dig: 'Build a new furnace', art: 'forge', desc: '2 ore → 1 ingot.' },
-        { id: 'forge',   name: 'Armory',     icon: [5,1],  make: 'swords', from: 'ingot', ratio: 2, base: 0.15, batch: 3, tier: 2, build: { ingot: 120, planks: 60, gold: 500 }, unit: ['Anvil', 'anvils'], dig: 'Raise a new anvil', art: 'armory', desc: '2 ingots → 1 set of arms.' } ] },
+        { id: 'shaft',   name: 'Mine', icon: [17,2], make: 'ore',    base: 0.5, batch: 6,  tier: 0, build: { wood: 60, grain: 30, gold: 80 }, parts: ['Dig', 'Extract', 'Haul'], unit: ['Depth', 'depths'], dig: 'Dig deeper', art: 'mine', desc: 'Miners dig iron ore.' },
+        { id: 'smelter', name: 'Forge',    icon: [17,3], make: 'ingot',  from: 'ore',   ratio: 2, base: 0.3, batch: 4,  tier: 1, build: { ore: 100, wood: 80, gold: 200 }, parts: ['Stoke', 'Smelt', 'Cast'], unit: ['Furnace', 'furnaces'], dig: 'Build a new furnace', art: 'forge', desc: '2 ore → 1 ingot.' },
+        { id: 'forge',   name: 'Armory',     icon: [5,1],  make: 'swords', from: 'ingot', ratio: 2, base: 0.15, batch: 3, tier: 2, build: { ingot: 120, planks: 60, gold: 500 }, parts: ['Heat', 'Hammer', 'Temper'], unit: ['Anvil', 'anvils'], dig: 'Raise a new anvil', art: 'armory', desc: '2 ingots → 1 set of arms.' } ] },
     },
     startGold: 50, foundRenown: 500, swapCooldown: 120,
     war: { thrallBonus: 10, supplyCapMult: 2, soldierCapBase: 50, soldierCapPerTier: 25, soldierGold: 2, quartermaster: { bread: 'food', swords: 'supplies', lumber: 'supplies' } },
@@ -504,6 +504,7 @@ const CONFIG = {
   // jobs (jobs completed by hand or thrall), sold (gold earned at market), stage, boss, founded, thrall (assigned), activity (swings).
   // Shown in Settings → What's new (newest first). Keep each line short.
   changelog: [
+    ['Beta 0.1.6', 'Every building has its own steps: the Farm Plants, Grows and Harvests; the Mine Digs, Extracts and Hauls; Logging Grows, Fells and Hauls; the Sawmill Loads, Saws and Stacks; the Carpenter Planes, Joins and Raises; the Forge Stokes, Smelts and Casts; the Armory Heats, Hammers and Tempers; the Mill Pours, Grinds and Sacks; the Bakery Kneads, Bakes and Delivers.'],
     ['Beta 0.1.5', 'Goods now move through a building one step at a time. Work makes a load, the Cart carries it, and Haul brings it to the Storehouse — each part has a capacity (how much per trip) and a speed (how long a trip takes). If a part can\'t keep up, goods pile up in front of it, so you can see the bottleneck: upgrade that part.'],
     ['Beta 0.1.4', 'Progress bars move again. Inside a building, each part fills once per load: faster parts finish early and wait (dimmed) for the slowest one. Every Production card has a small bar that fills with each load.'],
     ['Beta 0.1.3', 'Buildings now work like a real production line: Work, Cart and Haul run side by side, each with its own capacity per second, and the building makes as much as its slowest part. Upgrading the part with the gold bar raises output; the others wait until it catches up. Each part doubles its capacity at Lv 10, 25, 50, 100…'],
@@ -704,8 +705,8 @@ const CONFIG = {
       ], reward: { gold: 100 }, focus: { tab: 'kingdom', ksub: 'throne', rtab: 'kingdom', el: 'id:found-btn' } },
     // ===== A Kingdom: after the first founding =====
     { id: 'k01', chain: 'A Kingdom', name: 'The First Camp', text: 'Kingdom → Production is your town: every building feeds the next, and they all work on their own. Open one to see how it runs.',
-      steps: [ { label: 'Production → Logging → Enter', check: { viewed: 'bld:logging' } }, { label: 'Inside Logging → upgrade Work to Lv 3', check: { partLv: 'logging:W', need: 3 } }, { label: 'Haul 60 wood to the Storehouse', check: { made: 'wood', need: 60, since: true } } ], reward: { gold: 60 }, focus: { tab: 'kingdom', ksub: 'prod', rtab: 'kingdom', el: 'step:logging' } },
-    { id: 'k01b', chain: 'A Kingdom', name: 'Inside the Building', text: 'Every building has three parts. Work makes the goods, Cart loads them, Haul brings them home. The slowest part sets the pace — its bar turns gold. Upgrade that one.',
+      steps: [ { label: 'Production → Logging → Enter', check: { viewed: 'bld:logging' } }, { label: 'Inside Logging → upgrade Grow to Lv 3', check: { partLv: 'logging:W', need: 3 } }, { label: 'Haul 60 wood to the Storehouse', check: { made: 'wood', need: 60, since: true } } ], reward: { gold: 60 }, focus: { tab: 'kingdom', ksub: 'prod', rtab: 'kingdom', el: 'step:logging' } },
+    { id: 'k01b', chain: 'A Kingdom', name: 'Inside the Building', text: 'Every building works in three steps — at Logging they Grow, Fell and Haul. Goods pass through them one after another, and each step has its own level. The slowest step sets the pace: its bar turns gold and goods pile up in front of it. Upgrade that one.',
       steps: [ { label: 'Logging → upgrade the part with the gold bar, twice', check: { stat: 'limitUps:logging', need: 2, since: true } } ], reward: { gold: 80 }, focus: { tab: 'kingdom', ksub: 'prod', rtab: 'kingdom', el: 'step:logging' } },
     { id: 'k02', chain: 'A Kingdom', name: 'Imperial Orders', text: 'The Empire, the Guild and the villages post Orders at your Keep. They pay gold and Renown — no deadline, but a speed bonus.',
       steps: [ { label: 'Kingdom → Keep → Orders → Deliver one', check: { orders: 1, need: 1, since: true } } ], reward: { gold: 60 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:order-list' } },
@@ -763,7 +764,7 @@ const CONFIG = {
     { id: 'w03', chain: 'The Kingdom', name: 'A Garrison', text: 'A conquered land pays taxes — but only as much as its garrison can hold. Soldiers in a garrison do not march with the hero.',
       steps: [ { label: 'Kingdom → Lands → Ashford Vale → station 2 soldiers', check: { garrison: 1, need: 2 } }, { label: 'Earn 100 gold in taxes', check: { taxed: 100 } } ], reward: { gold: 1000 }, focus: { tab: 'kingdom', ksub: 'lands', rtab: 'kingdom', el: 'id:lands-card' } },
     { id: 'w01', chain: 'The Kingdom', name: 'Go Deeper', text: 'Taxes are flowing, and every building can grow: the Mine digs deeper, the Farm plows new fields, the Forge builds new furnaces. Each new one can grow far bigger than the last.',
-      steps: [ { label: 'Production → Mine → Enter → Dig deeper', check: { stat: 'levels:shaft', need: 2 } }, { label: 'Raise Depth 2\'s Work to Lv 5', check: { partLv: 'shaft:W:2', need: 5 } } ], reward: { gold: 5000 }, focus: { tab: 'kingdom', ksub: 'prod', rtab: 'kingdom', el: 'step:shaft' } },
+      steps: [ { label: 'Production → Mine → Enter → Dig deeper', check: { stat: 'levels:shaft', need: 2 } }, { label: 'Raise Depth 2\'s Dig to Lv 5', check: { partLv: 'shaft:W:2', need: 5 } } ], reward: { gold: 5000 }, focus: { tab: 'kingdom', ksub: 'prod', rtab: 'kingdom', el: 'step:shaft' } },
     { id: 'w03b', chain: 'The Kingdom', name: 'The Fallen', text: 'Hard fights cost soldiers — the harder the hero is pushed, the more fall. Every new soldier needs a person, arms and bread, so keep the Barracks fed.',
       steps: [ { label: 'Train 25 more soldiers', check: { stat: 'trained', need: 25, since: true } } ], reward: { gold: 1500 }, focus: { tab: 'kingdom', ksub: 'prod', rtab: 'kingdom', el: 'id:barracks-card' } },
     { id: 'w04', chain: 'The Kingdom', name: 'Baron Hollin', text: 'At the end of every land waits its Ruler. Beat him and take his crown — Crowns are the power of your dynasty.',

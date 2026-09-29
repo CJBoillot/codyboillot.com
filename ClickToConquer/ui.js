@@ -592,14 +592,14 @@ const UI = (() => {
   let prodKey = '', bldOpen = null, bldKey = '';
   function openBld(id) { bldOpen = id; bldKey = ''; Game.markViewed('bld:' + id); $('prod-view').classList.add('hidden'); $('bld-view').classList.remove('hidden'); render(true); window.scrollTo(0, 0); }
   function closeBld() { bldOpen = null; $('bld-view').classList.add('hidden'); $('prod-view').classList.remove('hidden'); render(true); }
-  function partBtn(id, p, small, d = 1) { return `<button class="buy pbtn" data-part="${p}" data-id="${id}" data-d="${d}"><span class="${small ? 'tiny' : 'small'}" data-f="pl${p}">${Game.PART_NAME[p]}</span>${small ? '' : ' <span class="small dim" data-f="plv' + p + '"></span>'}<br><span class="cost" data-f="pc${p}"></span></button>`; }
+  function partBtn(id, p, small, d = 1) { return `<button class="buy pbtn" data-part="${p}" data-id="${id}" data-d="${d}"><span class="${small ? 'tiny' : 'small'}" data-f="pl${p}">${Game.partName(id, p)}</span>${small ? '' : ' <span class="small dim" data-f="plv' + p + '"></span>'}<br><span class="cost" data-f="pc${p}"></span></button>`; }
   function wirePartBtns(root) { root.querySelectorAll('[data-part]').forEach(b => b.addEventListener('click', e => { e.stopPropagation(); if (Game.upgradeStep(b.dataset.id, b.dataset.part, kBuy, +b.dataset.d || 1)) { flash(b); render(true); } })); }
   function fillPartBtn(root, id, p, small, d = 1) {
     const b = root.querySelector(`[data-part="${p}"][data-id="${id}"][data-d="${d}"]`); if (!b) return false;
     const cap = Game.levelCap(), lv = Game.partLv(id, p, d), plan = Game.stepUpPlan(id, p, kBuy, d), lim = Game.limitPart(id, d) === p;
     b.classList.toggle('hot', lim); b.disabled = !plan.n;
     if (!small) setText(b.querySelector(`[data-f=plv${p}]`), `Lv ${lv}${plan.n > 1 ? ' → ' + (lv + plan.n) : ''}`);
-    else setText(b.querySelector(`[data-f=pl${p}]`), `${Game.PART_NAME[p]} ${lv}`);
+    else setText(b.querySelector(`[data-f=pl${p}]`), `${Game.partName(id, p)} ${lv}`);
     setHtml(b.querySelector(`[data-f=pc${p}]`), lv >= cap ? '<span class="dim tiny">max</span>' : costHtml(plan.n ? plan.cost : Game.stepUpCost(id, p, null, d)).replace(/<span class="cost-name">[^<]*<\/span>/g, ''));
     return !!plan.n;
   }
@@ -684,7 +684,7 @@ const UI = (() => {
         <div class="kbar" id="bld-kbar"></div>
         ${Array.from({ length: Game.depthCount(id) }, (_, i) => i + 1).map(d => `<div class="card depth-card" data-depth="${d}"><div class="depth-l"><small>${Game.unitName(id).toUpperCase()}</small><b>${d}</b><em>×${Game.depthYield(d) < 10 ? Game.depthYield(d).toFixed(1) : Game.fmt(Game.depthYield(d))}</em></div><div class="depth-r">
           <div class="row-between small"><b>${R[st.make].name}</b><span data-f="drate"></span></div>
-          ${Game.PARTS.map(p => `<div class="part-row" data-prow="${p}"><div class="pr-name"><b>${Game.PART_NAME[p]}</b> <span class="dim small" data-f="lv${p}"></span><div class="bar part-bar"><div data-f="bar${p}"></div><span data-f="load${p}"></span></div><span class="tiny dim" data-f="d${p}"></span></div>${partBtn(id, p, false, d)}</div>${p !== 'H' ? `<div class="pile" data-f="pile${p}"></div>` : ''}`).join('')}
+          ${Game.PARTS.map(p => `<div class="part-row" data-prow="${p}"><div class="pr-name"><b>${Game.partName(id, p)}</b> <span class="dim small" data-f="lv${p}"></span><div class="bar part-bar"><div data-f="bar${p}"></div><span data-f="load${p}"></span></div><span class="tiny dim" data-f="d${p}"></span></div>${partBtn(id, p, false, d)}</div>${p !== 'H' ? `<div class="pile" data-f="pile${p}"></div>` : ''}`).join('')}
         </div></div>`).join('')}
         ${st.from ? `<div class="card kin"><span class="small dim">${R[st.from].name} in</span><div class="bar green-bar"><div data-f="inbar"></div><span data-f="inlab"></span></div></div>` : ''}
         <div class="card dig-card"><div class="dig-t">${st.dig} · ${Game.unitName(id)} ${Game.depthCount(id) + 1}</div><div class="tiny dim" data-f="digwhy"></div><button class="buy wide" data-dig><span class="small">${st.dig}</span><br><span class="cost" data-f="digcost"></span></button></div>
@@ -698,17 +698,17 @@ const UI = (() => {
     const s = Game.stepState(id), out = Game.stepOutput(id), fo = v => v < 10 ? v.toFixed(2) : f(v);
     const dest = id === 'carpenter' && Game.housesOn() ? 'To houses' : nx ? `To the ${nx.name}` : 'To the Storehouse', use = nx ? Game.stepOutput(nx.id) * nx.ratio : 0;
     setHtml(box.querySelector('[data-f=out]'), `${dest}<b>${fo(out)}/s</b>${nx ? `${nx.name} uses ${fo(use)}/s` : ''}`);
-    const PDESC = { W: st.from ? 'crafts' : 'makes', C: 'loads the carts', H: 'hauls it home' };
+
     for (let d = 1; d <= Game.depthCount(id); d++) { const dc = box.querySelector(`[data-depth="${d}"]`); if (!dc) continue; const caps = Game.PARTS.map(p => Game.partCap(id, p, d)), mx = Math.max(...caps), lim = Game.limitPart(id, d), dout = Game.depthOutput(id, d);
       setHtml(dc.querySelector('[data-f=drate]'), `<b>${fo(dout)}</b> <span class="dim">/s</span>`);
-      const P = Game.pipe(id, d), prog = { W: [P.w, P.tw], C: [P.c, P.tc], H: [P.h, P.th] }, next = { W: 'Cart', C: 'Haul', H: dest.replace('To ', '') };
+      const P = Game.pipe(id, d), prog = { W: [P.w, P.tw], C: [P.c, P.tc], H: [P.h, P.th] }, next = { W: Game.partName(id, 'C'), C: Game.partName(id, 'H'), H: dest.replace('To ', '') };
       Game.PARTS.forEach((p, i) => { const lv = Game.partLv(id, p, d), nm = Game.nextMilestone(lv), T = Game.tripTime(id, p, d), L = Game.tripLoad(id, p, d), [carry, t] = prog[p], moving = carry > 1e-9;
         setText(dc.querySelector(`[data-f=lv${p}]`), 'Lv ' + lv);
         const bar = dc.querySelector(`[data-f=bar${p}]`); bar.style.width = (moving ? 100 * Math.min(1, t / T) : 0) + '%'; bar.parentElement.classList.toggle('lim', p === lim);
         setText(dc.querySelector(`[data-f=load${p}]`), moving ? `${fo(carry)} ${R[st.make].name.toLowerCase()}` : (p === 'W' ? (st.from ? `waiting for ${R[st.from].name.toLowerCase()}` : 'resting') : 'waiting'));
-        setText(dc.querySelector(`[data-f=d${p}]`), `${PDESC[p]} ${fo(L)} per trip · ${T.toFixed(1)}s · ${fo(caps[i])}/s${p === lim ? ' — slowest' : nm ? ' · ×2 at Lv ' + nm : ''}`);
+        setText(dc.querySelector(`[data-f=d${p}]`), `${fo(L)} per trip · ${T.toFixed(1)}s · ${fo(caps[i])}/s${p === lim ? ' — slowest' : nm ? ' · ×2 at Lv ' + nm : ''}`);
         if (p !== 'H') { const pile = p === 'W' ? P.a : P.b, pe = dc.querySelector(`[data-f=pile${p}]`), big = pile > Game.tripLoad(id, p === 'W' ? 'C' : 'H', d) * 1.5;
-          setHtml(pe, `▼ <b>${fo(pile)}</b> waiting for the ${next[p]}${big ? ' — <span class="warn">piling up: the ' + next[p] + ' can\'t keep up</span>' : ''}`); pe.classList.toggle('jam', big); }
+          setHtml(pe, `▼ <b>${fo(pile)}</b> waiting to ${next[p].toLowerCase()}${big ? ' — <span class="warn">piling up: ' + next[p] + ' can\'t keep up</span>' : ''}`); pe.classList.toggle('jam', big); }
         fillPartBtn(dc, id, p, false, d); }); }
     { const db = box.querySelector('[data-dig]'), open = Game.digOpen(), nd = Game.depthCount(id) + 1; db.disabled = !Game.canDig(id); setHtml(box.querySelector('[data-f=digcost]'), open ? costHtml(Game.digCost(id)) + (Game.digCost(id).gold > Game.resCap('gold') ? '<br><span class="tiny warn">more than your Storehouse holds — expand it in the Keep</span>' : '') : '<span class="dim">after Proclaim</span>');
       setText(box.querySelector('[data-f=digwhy]'), open ? `Starts at Lv 1 but makes ×${f(Game.depthYield(nd))} what the first ${Game.unitName(id).toLowerCase()} makes at the same level. Its own Work, Cart and Haul.` : 'Your town grows new levels once the Kingdom is proclaimed.'); }
@@ -1217,7 +1217,7 @@ const UI = (() => {
   let lastRender = 0;
   // 0.12: story pop-ups, once per phase
   let storyOpen = null, guidePending = false;
-  function showGuide() { guidePending = false; showInfo('Camp', 'Your kingdom begins.', '<p class="small">The wild is behind you. From here on your town works while you are away.</p><p class="small"><b>Kingdom → Production</b> — your buildings. Each has three parts, <b>Work, Cart and Haul</b>; upgrade the slowest one (its bar turns gold). Tap <b>Enter</b> to look inside.</p><p class="small"><b>Keep</b> — fill Imperial Orders for gold and Renown, and grow your settlement: <b>Camp → Hamlet → Village → City</b>. Each step up costs goods, never your progress.</p><p class="small">Your hero keeps fighting — the bosses he beats open each new step.</p>' + (Game.S.settings.guest && window.Cloud && Cloud.available && !Cloud.user ? '<p class="small"><b>Your kingdom lives on this device.</b> Settings (⚙) → Sign in with Google to back it up and play anywhere.</p>' : ''), 'demoSeen'); }
+  function showGuide() { guidePending = false; showInfo('Camp', 'Your kingdom begins.', '<p class="small">The wild is behind you. From here on your town works while you are away.</p><p class="small"><b>Kingdom → Production</b> — your buildings. Each works in three steps (the Farm Plants, Grows and Harvests); upgrade the slowest one — its bar turns gold and goods pile up in front of it. Tap <b>Enter</b> to look inside.</p><p class="small"><b>Keep</b> — fill Imperial Orders for gold and Renown, and grow your settlement: <b>Camp → Hamlet → Village → City</b>. Each step up costs goods, never your progress.</p><p class="small">Your hero keeps fighting — the bosses he beats open each new step.</p>' + (Game.S.settings.guest && window.Cloud && Cloud.available && !Cloud.user ? '<p class="small"><b>Your kingdom lives on this device.</b> Settings (⚙) → Sign in with Google to back it up and play anywhere.</p>' : ''), 'demoSeen'); }
   function checkStory() {
     if (storyOpen || !$('welcome').classList.contains('hidden')) return; const S = Game.S, st = S.settings.story = S.settings.story || {}, q = Game.questCurrent();
     const due = !st.beta && Game.hadAlpha && S.hero.totalKills === 0 ? 'beta' : !st.wild && S.hero.totalKills === 0 && q && q.id === 'f01' ? 'wild' : !st.charter && S.legacy.foundings > 0 ? 'charter' : !st.capital && Game.phase() === 3 ? 'capital' : !st.fallow && q && q.id === 'w05b' ? 'fallow' : null;
@@ -1588,7 +1588,7 @@ const UI = (() => {
     for (const e of evs) {
       if (e.who === 'crown') { const G = Game.landDef(e.n); CBQ.push({ ico: '👑', kicker: 'Land conquered', title: G ? G.name : 'Conquered', sub: `You take ${G ? G.crown : 'a crown'} · +${e.v} Crown${e.v === 1 ? '' : 's'} when the crown passes${e.first ? ' · new in the Vault' : ''}` }); }
       else if (e.who === 'crownpass') CBQ.push({ ico: '👑', kicker: 'Long live the heir', title: `Dynasty ${Game.S.legacy.dynasty}`, sub: `+${e.gain} Crowns to spend in Legacy · lands you know fall ${3 + Game.perkRank('lap')}× faster` });
-      else if (e.who === 'dig') CBQ.push({ small: 1, ico: '⛏', kicker: 'Your town grows', title: `${e.name} · ${e.unit} ${e.d}`, sub: 'It starts small but can grow far bigger than the last — upgrade its Work, Cart and Haul inside.' });
+      else if (e.who === 'dig') CBQ.push({ small: 1, ico: '⛏', kicker: 'Your town grows', title: `${e.name} · ${e.unit} ${e.d}`, sub: 'It starts small but can grow far bigger than the last — upgrade its three steps inside.' });
       else if (e.who === 'depth' && e.first && e.depth % 5 === 0) { const G = Game.landDef(e.n); CBQ.push({ small: 1, ico: '∞', kicker: 'Deeper than ever', title: `${G ? G.name : ''} · depth ${e.depth}`, sub: `Tougher foes, +10% ${G && R[G.spoil] ? R[G.spoil].name.toLowerCase() : 'spoils'}` }); }
       else if (e.who === 'pathrow') CBQ.push({ small: 1, ico: '✦', kicker: 'Paths', title: `Row ${e.t + 1} opens`, sub: 'Deeper ranks: stronger, and costlier.' });
       else if (e.who === 'emperor') CBQ.push({ ico: '👑', kicker: `The ${Game.ageName(e.a)} is won`, title: 'The Emperor has fallen', sub: 'Crown your heir in the Keep to begin the next Age.' });
