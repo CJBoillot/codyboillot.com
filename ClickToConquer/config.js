@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Alpha 0.10.12',
+  version: 'Alpha 0.11.0',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -55,7 +55,7 @@ const CONFIG = {
     // ---- Spoils of conquest (0.9): from the taxes of conquered lands ----
     heartwood: { name: 'Heartwood', icon: 'assets/res/wood.webp',  tier: 4, sell: 40, desc: 'Ancient timber from conquered forests. Hardened gear.' },
     silver:    { name: 'Silver',    icon: 'assets/res/ingot.webp', tier: 4, sell: 60, desc: 'From conquered hills. Hardened gear.' },
-    relic:     { name: 'Relic',     icon: 'assets/res/gold.webp',  tier: 4, sell: 200, desc: 'Holy relics from conquered shrines. Wonders, later.' },
+    relic:     { name: 'Relic',     icon: [6,9],  tier: 4, sell: 200, desc: 'Holy relics from conquered shrines. Wonders, later.' },
     // ---- The war chest (Phase 3): shown in the header after the Kingdom is proclaimed ----
     food:      { name: 'Food',      icon: 'assets/res/bread.webp',      kind: 'war', tier: 4, sell: 0, desc: 'Bread sent to the army. Soldiers are trained on it and eat it every minute.' },
     supplies:  { name: 'Supplies',  icon: 'assets/gear/weapon_t2.webp', kind: 'war', tier: 4, sell: 0, desc: 'Iron swords and treated lumber sent to the army. Soldiers are trained on them and wear them out.' },
@@ -230,7 +230,7 @@ const CONFIG = {
   // Points: 1 per Combat level. ★ tokens: 1 per boss ever slain (first kill of each boss stage) + quest rewards.
   // A node opens when a connected node one tier closer to the centre is maxed (10/10). Notables and keystones cost 1 point + 1 ★ per rank.
   paths: { // 0.10.9: ranks are bought with gold, a sliver at a time; each row opens once the row above is levelled evenly
-    ranks: 10, openAvg: 10, openMin: 5, cost: { base: 10, tier: 6, rank: 1.12 }, valueScale: 1 / 60, valueTier: 2, levelBonus: 0.03,
+    ranks: 10, openAvg: 10, openMin: 5, cost: { base: 10, tier: 6, rank: 1.2 }, valueScale: 1 / 60, valueTier: 2, levelBonus: 0.03,
     branches: [ { id: 'M', name: 'Might', desc: 'attack · crit · bosses', color: '#d9604c' }, { id: 'G', name: 'Guard', desc: 'HP · armor · healing', color: '#6fa3d9' }, { id: 'C', name: 'Command', desc: 'army · gold · loot', color: '#7fd28f' } ],
     plan: [[1],[0,2],[0,1,2],[1],[0,2],[0,1,2],[1]], // tier → column positions (0..2) in each branch
     nodes: {
@@ -245,6 +245,28 @@ const CONFIG = {
            ['Conqueror', { armyPct: 0.12, attackPct: -0.015 }, 'key'] ],
     },
   },
+
+  // ---------- 0.11: Eras — every 5 lands end in an Era Ruler; beating one unlocks a Wonder (kept forever) ----------
+  eras: {
+    size: 5, rulerHp: 12, rulerHit: 3,
+    // enemy traits by era (era 1 is plain). Applied to every stage of that era's lands.
+    traits: [
+      null,
+      { id: 'armoured', name: 'Armoured', icon: '🛡', desc: 'Thick plate: +50% HP. Your Techniques hit 50% harder here.', hp: 1.5, hit: 1, mods: { skillPct: 0.5 } },
+      { id: 'swarm',    name: 'Swarm',    icon: '🐀', desc: 'Many and weak: −40% HP, +30% hits. They carry 50% more gold.', hp: 0.6, hit: 1.3, gold: 1.5 },
+      { id: 'casters',  name: 'Casters',  icon: '🔮', desc: 'Spells pass through the ranks: your army adds only half its HP here.', hp: 1, hit: 1, armyHp: 0.5 },
+      { id: 'beasts',   name: 'Beasts',   icon: '🐺', desc: 'Savage: +40% hits, −20% HP.', hp: 0.8, hit: 1.4 },
+      { id: 'undead',   name: 'Undead',   icon: '💀', desc: 'The dead carry no coin, but their land yields double spoils when farmed.', hp: 1.1, hit: 1, gold: 0, spoil: 2 },
+    ],
+  },
+  wonders: [ // cycle through these; era e builds wonders[(e-1)%5] at level floor((e-1)/5)+1. Effects stack across levels.
+    { id: 'granary',   name: 'Great Granary',    icon: '🌾', desc: 'Housing, Arms and Food income ×3', supply: 3, spoil: 'heartwood' },
+    { id: 'armoury',   name: 'Royal Armoury',    icon: '⚔', desc: 'Hero attack ×3', attack: 3, spoil: 'silver' },
+    { id: 'colosseum', name: 'Colosseum',        icon: '🏟', desc: 'Hero attack and HP ×2, Combat XP ×2', attack: 2, hp: 2, xp: 2, spoil: 'relic' },
+    { id: 'college',   name: 'War College',      icon: '🎖', desc: 'Army boost to the hero +50%, recruits ×3', armyPct: 0.5, recruit: 3, spoil: 'silver' },
+    { id: 'harbour',   name: 'Harbour of Kings', icon: '⚓', desc: 'Taxes and spoils ×3', tax: 3, spoil: 'relic' },
+  ],
+  wonderCost: { taxHours: 10, spoilBase: 150, spoilGrowth: 1.8 },
 
   // ---------- Bestiary & trophies (kill counts per enemy type; persist through founding) ----------
   // Bestiary: the more you kill a type, the better you fight it — bonus = ×damage dealt and −damage taken vs that type.
@@ -411,9 +433,9 @@ const CONFIG = {
     ],
     hallCost: { base: 100, exp: 1.7 },
     // Lands (0.9): conquered from the hero screen; taxes grow ×4 per land
-    lands: { taxBase: 1000, taxGrowth: 4, garrisonPer: 10, cofferHours: 8, shortStages: 50, longStages: 100, shortLands: 3, offsetStart: 6, offsetStep: 3, spoilPerHour: 30, victoryLap: 3, heroHereCap: 0.5, endlessDepth: { winsPer: 50, hp: 1.12, hit: 1.10, drop: 1.05, dropCap: 4, spoilBase: 0.03, perLand: 0.2 },
+    lands: { taxBase: 1000, taxGrowth: 2.6, garrisonPer: 10, cofferHours: 8, shortStages: 50, longStages: 100, shortLands: 3, offsetStart: 6, offsetStep: 3, spoilPerHour: 30, victoryLap: 3, heroHereCap: 0.5, endlessDepth: { winsPer: 50, hp: 1.12, hit: 1.10, drop: 1.05, dropCap: 4, spoilBase: 0.03, perLand: 0.2 },
       // 0.10.1 land difficulty: smooth inside a land (×span from first stage to the Ruler's), a wall between lands (next land starts ×(land/span) above the last one's end)
-      curve: { hp: 105, hit: 11.5, landHp: 2.4, landHit: 1.75, spanHp: 2.0, spanHit: 1.6, captainHp: 3, captainHit: 1.4, rulerHp: 4, rulerHit: 1.4, endless: 1.15 } },
+      curve: { hp: 105, hit: 11.5, landHp: 2.8, landHit: 1.9, spanHp: 2.0, spanHit: 1.6, captainHp: 3, captainHit: 1.4, rulerHp: 4, rulerHit: 1.4, endless: 1.15 } },
     // Settlement tiers inside one land. Raising a tier costs `cap` of every good made so far (pay in as you go) and loses nothing.
     tiers: [
       { name: 'Camp',    cap: 300, slots: 1, thralls: 6,  lvCap: 25,  threat: 'roads:20',  need: 'Build Logging, the Fields and the Mine Shaft.' },
@@ -474,6 +496,7 @@ const CONFIG = {
   // jobs (jobs completed by hand or thrall), sold (gold earned at market), stage, boss, founded, thrall (assigned), activity (swings).
   // Shown in Settings → What's new (newest first). Keep each line short.
   changelog: [
+    ['0.11.0', 'Eras and Wonders. Every fifth land now ends in an Era Ruler — far tougher than a normal ruler. Beat one and its Wonder opens in the Keep: Great Granary, Royal Armoury, Colosseum, War College, Harbour of Kings, then stronger versions of each. Wonders are huge, permanent boosts that survive every Pass the Crown; by default half your taxes flow into the one being built (change it in the Keep). From land 6 each era\'s enemies have a trait — Armoured, Swarm, Casters, Beasts, Undead. The economy is rebalanced so late lands no longer fall like dominoes: taxes grow ×2.6 per land, Path ranks get 20% dearer each, Crowns grow steadily with each land (and Bloodline has no rank cap, so every Crown has a use), recruits scale with your army, and there are now 200 lands.'],
     ['0.10.12', 'Tools now work for you. Once you own an axe, pickaxe or sickle, it gathers on its own — all the time, even while your hero fights and while you are away. A new tool is slow; every level makes it much faster, so upgrading tools matters more than ever. The Chop Wood, Mine and Forage boxes now just open that tool\'s screen (swing speed, yield, what you have in store); the fight carries on in the bar at the bottom.'],
     ['0.10.11', 'In Paths, the box for buying ranks now sits above the tree, so you can tap a node and buy without scrolling.'],
     ['0.10.10', 'The game has its own icon in the browser tab and on your home screen — the Click to Conquer crest.'],
@@ -798,7 +821,7 @@ const CONFIG = {
     // 0.9: Crowns (formerly Crystals) buy perks in four trees
     trees: [ { id: 'bloodline', name: 'Bloodline', desc: 'The hero' }, { id: 'crown', name: 'Crown', desc: 'The city' }, { id: 'war', name: 'War', desc: 'The army' }, { id: 'realm', name: 'Realm', desc: 'The conquest' } ],
     perks: [
-      { id: 'bloodline', tree: 'bloodline', name: 'Bloodline',       icon: [1,0],  max: 10, cost: 3,  costMult: 1.5, desc: 'Attack, HP and healing ×1.08 per rank — it multiplies, so every rank is worth more' },
+      { id: 'bloodline', tree: 'bloodline', name: 'Bloodline',       icon: [1,0],  max: 999, cost: 3,  costMult: 1.12, desc: 'Attack, HP and healing ×1.08 per rank — no limit; it multiplies, so every rank is worth more' },
       { id: 'veteran',   tree: 'bloodline', name: 'Veteran',         icon: [1,4],  max: 3,  cost: 8,  costMult: 2,   desc: 'Each Combat level gives +1% more attack and HP per rank' },
       { id: 'cache',     tree: 'crown',     name: "Founder's Cache", icon: [11,11], max: 5, cost: 4,  costMult: 1.6, desc: 'Begin each dynasty with 15 minutes of your last dynasty\'s taxes per rank (at least 1,000 gold)' },
       { id: 'charter',   tree: 'war',       name: 'Quartermasters',  icon: [14,14], max: 3, cost: 6,  costMult: 2,   desc: '+10% Housing, Arms and Food income per rank' },
@@ -833,10 +856,10 @@ const CONFIG = {
   const TERRAIN = [['heartwood', 'forest'], ['silver', 'hills'], ['heartwood', 'forest'], ['silver', 'hills'], ['relic', 'holy site']];
   const ART = ['roads_a', 'roads_b', 'wilds_night', 'crypts_b', 'wilds_dusk'];
   let offset = L.offsetStart;
-  for (let n = 1; n <= 80; n++) {
+  for (let n = 1; n <= 200; n++) {
     const stages = n <= L.shortLands ? L.shortStages : L.longStages, types = stages / 10, id = 'land' + n;
     const era = ERAS.filter(e => n >= e[0]).pop()[1], i0 = (n * 3) % era.length;
-    const cycle = Math.floor((n - 1) / NAMES.length), sfx = cycle ? ' ' + ['II', 'III', 'IV', 'V'][Math.min(cycle - 1, 3)] : '';
+    const cycle = Math.floor((n - 1) / NAMES.length), sfx = cycle ? ' ' + (['II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'][cycle - 1] || (cycle + 1)) : '';
     const [spoil, terrain] = TERRAIN[(n - 1) % TERRAIN.length];
     const line = [];
     for (let t = 0; t < types; t++) {
@@ -845,7 +868,7 @@ const CONFIG = {
         pool: [{ k: spoil, base: 0.01, growth: 0.004 }] });
     }
     C.grounds[id] = { name: NAMES[(n - 1) % NAMES.length] + sfx, land: n, stages, terrain, spoil, crown: CROWNS[(n - 1) % CROWNS.length] + sfx, ruler: RULERS[(n - 1) % RULERS.length] + sfx,
-      icon: [5, 7], desc: `Land ${n} · ${terrain} · pays ${C.resources[spoil].name.toLowerCase()}.`, goldMult: 1.5, req: { land: n }, reqText: n === 1 ? 'Proclaim the Kingdom' : `Conquer land ${n - 1}`, line };
+      icon: [5, 7], desc: `Land ${n} · ${terrain} · pays ${C.resources[spoil].name.toLowerCase()}.` + (() => { const e = Math.ceil(n / C.eras.size), T = C.eras.traits, tr = e <= 1 ? null : T[1 + (e - 2) % (T.length - 1)]; return (tr ? ` ${tr.icon} ${tr.name}: ${tr.desc}` : '') + (n % C.eras.size === 0 ? ' 👑 Its ruler is an Era Ruler — beat him to unlock a Wonder.' : ''); })(), goldMult: 1.5, req: { land: n }, reqText: n === 1 ? 'Proclaim the Kingdom' : `Conquer land ${n - 1}`, line };
     C.stages.groundOffset[id] = offset; offset += L.offsetStep;
     C.art.grounds[id] = `assets/enemies/${ART[(n - 1) % ART.length]}.webp`;
   }

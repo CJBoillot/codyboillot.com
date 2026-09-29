@@ -1069,3 +1069,8 @@ html, body { max-width: 100%; overflow-x: hidden; }
 .star-head { margin: 12px 0 4px; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--bronze2); }
 .star-row { padding: 6px 0; border-bottom: 1px solid var(--line); display: flex; flex-direction: column; gap: 2px; }
 .path-pts .pts-btn { border: 1px solid #3a2e24; background: #15110e; padding: 6px 4px; }
+.wonder-row { display: flex; flex-direction: column; gap: 6px; padding: 10px; border: 1px solid var(--line); border-radius: 10px; background: #15110e; }
+.wonder-row.done { border-color: #2f4a36; background: #131a14; }
+.wonder-row.locked { opacity: .6; }
+.wbar-w { height: 8px; }
+.wbar-w > div { height: 100%; background: linear-gradient(90deg, #8a6a33, #e8c06a); border-radius: inherit; }

@@ -35,6 +35,7 @@ const UI = (() => {
   function init() {
     try { if (screen.orientation && screen.orientation.lock) screen.orientation.lock('portrait').catch(() => {}); } catch (e) {}
     $('celebrate').addEventListener('click', () => cbDone());
+    document.querySelectorAll('[data-tithe]').forEach(b => b.addEventListener('click', () => { Game.S.legacy.tithe = +b.dataset.tithe; render(true); }));
     $('path-stars-box').addEventListener('click', showStarInfo);
     document.addEventListener('click', e => { const t = e.target.closest && e.target.closest('.req-src[data-item]'); if (t) { e.stopPropagation(); openItem(t.dataset.item); } }, true);
     $('confirm-no').addEventListener('click', closeAsk); $('confirm-modal').addEventListener('click', e => { if (e.target === $('confirm-modal')) closeAsk(); });
@@ -639,6 +640,27 @@ const UI = (() => {
   }
   // ---- 0.9: lands, garrisons, taxes ----
   let landKey = '';
+  let wonderKey = '';
+  function renderWonders() { // 0.11: the Keep's Wonders
+    const S = Game.S, f = Game.fmt, p3 = Game.phase() === 3; $('wonder-card').classList.toggle('hidden', !p3); if (!p3) return false;
+    const best = S.legacy.eraBest || 0, show = []; for (let e = 1; e <= best; e++) show.push(e); show.push(best + 1);
+    const k = show.join(','); if (wonderKey !== k) { wonderKey = k;
+      $('wonder-list').innerHTML = show.map(e => `<div class="wonder-row" data-era="${e}"><div class="row-between"><b data-f="nm"></b><span class="small dim" data-f="tag"></span></div><div class="small" data-f="desc"></div><div data-f="cost" class="small"></div><div class="bar wbar-w"><div data-f="bar"></div></div><button class="buy" data-f="go">Contribute</button></div>`).join('');
+      $('wonder-list').querySelectorAll('[data-era]').forEach(r => r.querySelector('[data-f=go]').onclick = () => { if (Game.contributeWonder(+r.dataset.era)) { flash(r); render(true); } }); }
+    let built = 0, any = false;
+    for (const e of show) { const r = $('wonder-list').querySelector(`[data-era="${e}"]`); if (!r) continue; const W = Game.wonderFor(e), un = Game.wonderUnlocked(e), done = Game.wonderBuilt(e), c = Game.wonderCost(e), st = Game.wonderState(e);
+      if (done) built++;
+      setText(r.querySelector('[data-f=nm]'), `${W.def.icon} ${W.name}`); setText(r.querySelector('[data-f=tag]'), done ? 'Built' : un ? `Era ${e}` : `Beat the Era Ruler of land ${e * CONFIG.eras.size}`);
+      setText(r.querySelector('[data-f=desc]'), W.def.desc + (done ? ' — active.' : ''));
+      setHtml(r.querySelector('[data-f=cost]'), done ? '' : Object.keys(c).map(k2 => { const have = st.paid[k2] || 0; return `<span class="costitem ${have >= c[k2] ? 'good' : ''}">${ico(R[k2].icon, 14)}${f(have)} / ${f(c[k2])}</span>`; }).join(' '));
+      r.querySelector('[data-f=bar]').style.width = (done ? 100 : 100 * Game.wonderProgress(e)) + '%';
+      const btn = r.querySelector('[data-f=go]'), can = un && !done && Object.keys(c).some(k2 => (st.paid[k2] || 0) < c[k2] && (S.res[k2] || 0) >= 1);
+      btn.classList.toggle('hidden', done || !un); btn.disabled = !can; if (can) any = true;
+      r.classList.toggle('locked', !un); r.classList.toggle('done', done); }
+    setText($('wonder-n'), `${built} built`);
+    document.querySelectorAll('[data-tithe]').forEach(b => b.classList.toggle('active', Math.abs(+b.dataset.tithe - Game.titheShare()) < 1e-9));
+    return any;
+  }
   function renderLands() {
     const S = Game.S, f = Game.fmt; if (Game.phase() !== 3) return false;
     const auto = true;
@@ -1206,7 +1228,7 @@ const UI = (() => {
 
     // Kingdom
     for (const lid in CONFIG.kingdom.lines) { const any = Game.lineUnlocked(lid) ? renderLine(lid) : false; $('badge-' + lid).classList.toggle('hidden', !any); }
-    $('badge-war').classList.toggle('hidden', !renderArmy()); renderFeeds(); $('badge-lands').classList.toggle('hidden', !renderLands()); $('badge-halls').classList.toggle('hidden', !renderHalls());
+    $('badge-war').classList.toggle('hidden', !renderArmy()); renderFeeds(); $('badge-lands').classList.toggle('hidden', !renderLands()); renderWonders(); $('badge-halls').classList.toggle('hidden', !renderHalls());
     const keepAct = renderKeep();
     renderThrone();
 
@@ -1427,6 +1449,8 @@ const UI = (() => {
       else if (e.who === 'crownpass') CBQ.push({ ico: '👑', kicker: 'Long live the heir', title: `Dynasty ${Game.S.legacy.dynasty}`, sub: `+${e.gain} Crowns to spend in Legacy · lands you know fall ${3 + Game.perkRank('lap')}× faster` });
       else if (e.who === 'depth' && e.first && e.depth % 5 === 0) { const G = Game.landDef(e.n); CBQ.push({ small: 1, ico: '∞', kicker: 'Deeper than ever', title: `${G ? G.name : ''} · depth ${e.depth}`, sub: `Tougher foes, +10% ${G && R[G.spoil] ? R[G.spoil].name.toLowerCase() : 'spoils'}` }); }
       else if (e.who === 'pathrow') CBQ.push({ small: 1, ico: '✦', kicker: 'Paths', title: `Row ${e.t + 1} opens`, sub: 'Deeper ranks: stronger, and costlier.' });
+      else if (e.who === 'era') { const W = Game.wonderFor(e.e); CBQ.push({ ico: '🏛', kicker: 'Era Ruler defeated', title: `Era ${e.e} complete`, sub: `The ${W.name} can now be built — Kingdom → Keep → Wonders` }); }
+      else if (e.who === 'wonder') { const W = Game.wonderFor(e.e); CBQ.push({ ico: W.def.icon, kicker: 'Wonder complete', title: W.name, sub: W.def.desc }); }
       else if (e.who === 'proclaim') CBQ.push({ ico: '🏰', kicker: 'A kingdom is born', title: 'The Kingdom is proclaimed', sub: 'Build the Barracks and march on your first land.' });
       else if (e.who === 'tier') CBQ.push({ ico: '🏘', kicker: 'Your settlement grows', title: `A ${e.name}!`, sub: 'New buildings and a bigger Storehouse.' });
       else if (e.who === 'trophy') { const T = CONFIG.trophies.tiers[e.tier]; CBQ.push({ small: 1, ico: '🏆', kicker: 'Trophy', title: `${T ? T.name : ''} ${e.name || ''} head`, sub: `+${Math.round(CONFIG.trophies.lootPerTrophy * 100)}% loot and XP, for good` }); }
