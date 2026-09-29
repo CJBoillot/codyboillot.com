@@ -7,15 +7,15 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Beta 0.1.15',
+  version: 'Beta 0.1.16',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
 
   caps: { pack: 100, leatherPack: 150, store: 200, goldMult: 10 },
   offline: {
-    capSeconds: 8 * 3600,
-    efficiency: 0.10,   // idle runs at 10% of active speed (Long Memory perk adds +10% per rank)
+    capSeconds: 12 * 3600, // Beta 0.1.16: the AFK standard — 100% of live output for up to 12 h (Deep Cellar and Long Memory add +2 h per rank)
+    efficiency: 1.0,
     minSecondsToShow: 60,
     adDoubleMultiplier: 2,
   },
@@ -233,7 +233,7 @@ const CONFIG = {
            ['Conqueror', { armyX: 1.5, attackPct: -0.05 }, 'key', 1], ['Dynastic Treasury', {}, 'endless', 0, 'treasury'] ],
     },
     perkDesc: { charter: '+15% production in every building', rations: '−10% arms and bread per soldier', foundations: 'Each new Age, every building starts with one more level already built', tax: '+25% taxes', spoils: '+25% spoils', lap: '+1× damage in lands you know', cellar: 'AFK cap +2 h and Storehouse +25%',
-      memory: '+10% AFK efficiency', warcollege: 'Army boost to the hero +10%', cache: 'Start each dynasty with 15 min of your last taxes', bloodline: 'Attack ×1.08', lineage: 'HP and healing ×1.08', treasury: 'Taxes and production +10%' },
+      memory: '+2 h of time away counted', warcollege: 'Army boost to the hero +10%', cache: 'Start each dynasty with 15 min of your last taxes', bloodline: 'Attack ×1.08', lineage: 'HP and healing ×1.08', treasury: 'Taxes and production +10%' },
   },
 
   // ---------- 0.11.1: Ages — ten lands per Age; beating the Emperor (land 10) lets you crown your heir into the next Age ----------
@@ -443,7 +443,7 @@ const CONFIG = {
     // Lands (0.9): conquered from the hero screen; taxes grow ×4 per land
     lands: { taxBase: 1000, taxGrowth: 2.6, garrisonPer: 10, cofferHours: 8, shortStages: 50, longStages: 100, shortLands: 3, offsetStart: 6, offsetStep: 3, spoilPerHour: 30, victoryLap: 3, heroHereCap: 0.5, endlessDepth: { winsPer: 50, hp: 1.12, hit: 1.10, drop: 1.05, dropCap: 4, spoilBase: 0.03, perLand: 0.2 },
       // 0.10.1 land difficulty: smooth inside a land (×span from first stage to the Ruler's), a wall between lands (next land starts ×(land/span) above the last one's end)
-      curve: { hp: 105, hit: 11.5, landHp: 2.8, landHit: 1.9, spanHp: 2.0, spanHit: 1.6, captainHp: 3, captainHit: 1.4, rulerHp: 4, rulerHit: 1.4, endless: 1.15 } },
+      curve: { hp: 105, hit: 11.5, landHp: 2.8, landHit: 1.9, spanHp: 2.0, spanHit: 1.6, captainHp: 9, captainHit: 0.47, rulerHp: 12, rulerHit: 0.47, /* Beta 0.1.16: bosses take ~3× longer and hit ~3× softer — same total danger, a real fight */ endless: 1.15 } },
     // Settlement tiers inside one land. Raising a tier costs `cap` of every good made so far (pay in as you go) and loses nothing.
     tiers: [
       { name: 'Camp',    cap: 300, slots: 1, thralls: 6,  lvCap: 25,  threat: 'roads:20',  need: 'Build Logging, the Farm and the Mine.' },
@@ -504,6 +504,7 @@ const CONFIG = {
   // jobs (jobs completed by hand or thrall), sold (gold earned at market), stage, boss, founded, thrall (assigned), activity (swings).
   // Shown in Settings → What's new (newest first). Keep each line short.
   changelog: [
+    ['Beta 0.1.16', 'Time away now counts in full: 100% of your normal progress for up to 12 hours (Deep Cellar and Long Memory each add 2 hours per rank). Bosses are real fights — about three times the HP, hitting a third as hard per swing. Beating the Rat King is now its own quest, before you spend your first Crown. The little fight window on other screens is hidden by default once you found your Camp (Settings → Show fight preview on other screens brings it back). Ranger Lord and Merchant Republic are gone.'],
     ['Beta 0.1.15', 'Reliability fixes. Reloading a new save no longer re-runs old Alpha updates (which could reset building parts and refund Crown Tree ranks). Offline rewards are banked the moment you come back, so closing the game before tapping the button loses nothing. While away: gathering and loot count toward quests, captains you march past are recorded, the Barracks trains at full speed, production chains no longer count the same goods twice, and land gold and XP match live play. Two attack skills landing in the same instant no longer bring a slain enemy back. The cloud never uploads while you are choosing between saves or when the cloud save is from a newer version. Importing a bad save is refused and your save is kept. Crowning your heir saves once, after the town reset, and keeps its Deed reward. The Settlers quest counts the settlers your conquest brought. The City stores as much as the Village. The Roads open after the Rat King falls. Quest texts corrected (sword Lv 9, trophies at 1,000 kills, plank recipe, taxes per land, settlement costs).'],
     ['Beta 0.1.14', 'Tap any building in the chain strip to jump straight to it.'],
     ['Beta 0.1.13', 'Every building now shows its whole chain at the top: what each building really makes per second, how much input reaches it versus how much it could use, and which building to upgrade when it runs short.'],
@@ -597,11 +598,16 @@ const CONFIG = {
     // Each quest is a checklist of steps. Step checks: activity, ground, tool, gear, tech, counter, plots, building, jobs, sold, stage, boss, founded, thrall.
     { id: 'f07', chain: 'First Steps', name: 'Keep Your Progress', text: 'Your hero keeps fighting even while the game is closed, and the game saves itself on this device. Sign in with Google to back your progress up and play on any device — or carry on as a guest.',
       steps: [ { label: 'Settings (⚙) → Sign in with Google, or Continue as guest', check: { account: 1 } } ], reward: { fiber: 10 }, focus: { el: 'id:dev-toggle', el2: 'id:cloud-box' } },
-    { id: 'q01', chain: 'Settling In', name: 'Onward', text: 'Deeper stages have tougher enemies but drop more loot and experience — pushing is how you grow. If he starts losing, Retreat a stage and upgrade.',
+    { id: 'q01b', chain: 'Settling In', name: 'The Rat King', text: 'Every tenth stage a boss waits — far tougher than the foes before it, and a long fight. Fill the kills bar and press Advance to push deeper; the hero never walks into a boss on his own, so you choose when he is ready. The first time you beat a boss you win a Crown 👑 — the power of your bloodline, never lost.',
       steps: [
         { label: 'Fight in The Wilds', check: { activity: 'fight', ground: 'wilds' } },
+        { label: 'Press Advance until you reach the Rat King (stage 10)', check: { stage: 10 } },
+        { label: 'Defeat the Rat King', check: { bossKey: 'wilds:10' } },
+      ], reward: { gold: 25 }, focus: { tab: 'hero', sub: 'fight', el: 'id:advance-btn' } },
+    { id: 'q01', name: 'Onward', text: 'Past the Rat King the Wilds grow meaner: boars, wolves and worse. Deeper stages drop more loot and experience — pushing is how you grow. If he starts losing, Retreat a stage and upgrade.',
+      steps: [
         { label: 'Slay 30 more enemies', check: { counter: 'kills', need: 30, since: true } },
-        { label: 'Fill the kills bar and press Advance — reach stage 4', check: { stage: 4 } },
+        { label: 'Push on to stage 12', check: { stage: 12 } },
       ], reward: { wood: 20 }, focus: { tab: 'hero', sub: 'fight', el: 'id:advance-btn' } },
     { id: 'q02', name: 'Woodcraft', text: 'Tools open up the wild. Woodcraft is the first thing you can research: crude tools carved from wood.',
       steps: [
@@ -609,10 +615,9 @@ const CONFIG = {
         { label: 'Have 25 wood (Trees box)', check: { have: 'wood', need: 25 } },
         { label: 'Kingdom → Tech → Research Woodcraft', check: { tech: 'stonetools' } },
       ], reward: { wood: 40, gold: 25 }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:stonetools' } },
-    { id: 'q02b', name: 'Growing Stronger', text: 'Kills give Combat XP, and every Combat level makes your hero 3% stronger. The first time you beat a boss — like the Rat King — you win a Crown 👑. Crowns buy the Crown Tree on the Skills tab: permanent, and never reset.',
+    { id: 'q02b', name: 'Growing Stronger', text: 'Kills give Combat XP, and every Combat level makes your hero 3% stronger. Your Crown from the Rat King buys a node in the Crown Tree on the Skills tab — permanent, and never reset.',
       steps: [
         { label: 'Reach Combat level 2', check: { disc: 'combat', need: 2 } },
-        { label: 'Beat the Rat King (Wilds, stage 10) for your first Crown', check: { bossKey: 'wilds:10' } },
         { label: 'Skills → Crown Tree → buy Sharpened Edge (1 👑)', check: { path: 'M0', need: 1 } },
       ], reward: { fiber: 15 }, focus: { tab: 'hero', sub: 'skills', rtab: 'skills', el: 'path:M0' } },
     { id: 'q03', name: 'An Axe of Your Own', text: 'You have wood enough for an axe, and the axe will cut the rest. Tools are the row under your armor on the Equipment panel — click a slot to make or upgrade it.',
@@ -837,16 +842,12 @@ const CONFIG = {
         mods: { attackPct: 0.30, hpPct: 0.20, bossDmg: 0.25, skillPct: -0.20 } },
       { id: 'archmage', name: 'Archmage', icon: [6,8], unlock: 1, desc: '+50% skill power, −20% cooldowns, Intellect ×2. Basic attack −25%.',
         mods: { skillPct: 0.50, cdr: 0.20, attackPct: -0.25 }, intMult: 2 },
-      { id: 'ranger', name: 'Ranger Lord', icon: [6,3], unlock: 4, desc: '+25% attack speed, +20% crit, +25% drops. −15% HP.',
-        mods: { speedPct: 0.25, crit: 0.20, dropPct: 0.25, hpPct: -0.15 } },
     ],
     kingdomPaths: [
       { id: 'benevolent', name: 'Benevolent Kingdom', icon: [1,0], unlock: 1, desc: 'Building upgrades −15% cost, buildings work 20% faster. Hero drops −15%.',
         costMult: 0.85, jobSpeed: 1.2, sellMult: 1, mods: { dropPct: -0.15 } },
       { id: 'empire', name: 'Iron Empire', icon: [3,7], unlock: 1, desc: 'Hero drops +30%, the Mine works 50% faster. Building upgrades +15% cost, sell prices −10%.',
         costMult: 1.15, jobSpeed: 1, sellMult: 0.9, outputMult: { mine: 1.5 }, mods: { dropPct: 0.30 } },
-      { id: 'merchant', name: 'Merchant Republic', icon: [12,10], unlock: 4, desc: 'Sell prices +40%, Path ranks cost 15% less gold. Hero attack −10%.',
-        costMult: 1, jobSpeed: 1, sellMult: 1.4, mods: { attackPct: -0.10 }, freeRespec: true },
     ],
 
     // Permanent perks bought with Crystals. cost = base × costMult^rank.

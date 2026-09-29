@@ -397,8 +397,8 @@ function landCurve(stage, gid) { // 0.10.1: {hp, hit} for a land stage, or null 
   if (ruler) { hp *= C.rulerHp; hit *= C.rulerHit; } else if (boss) { hp *= C.captainHp; hit *= C.captainHit; } else if (end) { const ED = LC().endlessDepth, dp = endlessDepth(n); hp *= C.endless * Math.pow(ED.hp, dp); hit *= C.endless * Math.pow(ED.hit, dp); }
   return { hp: Math.max(1, Math.round(hp)), hit: Math.round(hit * 10) / 10 };
 }
-function enemyMaxHp(stage = S.hero.stage, gid = S.hero.ground) { const lc = landCurve(stage, gid); if (lc) return lc.hp; const t = effType(stage, gid), { k } = stageType(stage), R = CONFIG.stages.refHit(t); return Math.max(1, Math.round(isBoss(stage) ? R * 8 : R * (2 + (k - 1) / 8))); }
-function enemyHit(stage = S.hero.stage, gid = S.hero.ground) { const lc = landCurve(stage, gid); if (lc) return lc.hit; const t = effType(stage, gid), { k } = stageType(stage), hp = CONFIG.stages.refHeroHp(t); return Math.round((isBoss(stage) ? hp * 0.15 : hp * (0.05 + 0.10 * (k - 1) / 8)) * 10) / 10; }
+function enemyMaxHp(stage = S.hero.stage, gid = S.hero.ground) { const lc = landCurve(stage, gid); if (lc) return lc.hp; const t = effType(stage, gid), { k } = stageType(stage), R = CONFIG.stages.refHit(t); return Math.max(1, Math.round(isBoss(stage) ? R * 24 : R * (2 + (k - 1) / 8))); } // Beta 0.1.16: bosses ×3 HP (was R × 8)
+function enemyHit(stage = S.hero.stage, gid = S.hero.ground) { const lc = landCurve(stage, gid); if (lc) return lc.hit; const t = effType(stage, gid), { k } = stageType(stage), hp = CONFIG.stages.refHeroHp(t); return Math.round((isBoss(stage) ? hp * 0.05 : hp * (0.05 + 0.10 * (k - 1) / 8)) * 10) / 10; } // Beta 0.1.16: bosses hit ×1/3 as hard (was 0.15)
 function enemyDps(stage = S.hero.stage) { return enemyHit(stage) / H.enemyAttackInterval; }
 function ground() { return CONFIG.grounds[S.hero.ground] || CONFIG.grounds.wilds; }
 function groundUnlocked(id) { const G = CONFIG.grounds[id]; if (!G || !G.req) return true; if (G.req.land) return landOpen(G.req.land) || landPct(G.req.land) > 0; if (G.req.tech) return hasTech(G.req.tech); if (G.req.stage) return (S.hero.ground === 'wilds' ? S.hero.bestStage : (S.hero.grounds.wilds || {}).bestStage || 1) > G.req.stage || !!S.hero.bossesKilled['wilds:' + G.req.stage]; /* Beta 0.1.15: the boss on that stage must fall, not just be reached */ return true; }
@@ -1135,8 +1135,8 @@ function simulate(dt) {
 }
 
 // ---------- Offline ----------
-function afkCap() { return CONFIG.offline.capSeconds + perkRank('cellar') * 2 * 3600; }
-function afkEff() { return Math.min(1, CONFIG.offline.efficiency + perkRank('memory') * 0.10); }
+function afkCap() { return CONFIG.offline.capSeconds + (perkRank('cellar') + perkRank('memory')) * 2 * 3600; }
+function afkEff() { return Math.min(1, CONFIG.offline.efficiency); }
 // AFK: worked plots run their jobs (in chain order so raw → refined → artisan feed each other); the hero farms only if fighting.
 function applyOffline(awaySeconds) {
   if (crafting() && awaySeconds >= (crafting().total - crafting().t)) finishCraft();

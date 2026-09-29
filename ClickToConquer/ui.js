@@ -29,7 +29,7 @@ const UI = (() => {
   // In-game confirmation (no browser popups)
   let confirmCb = null;
   let infoFlag = null, marketMode = 'sell';
-  function showInfo(label, title, html, flag) { infoFlag = flag; setText($('demo-label'), label); setText($('demo-title'), title); $('demo-text').innerHTML = html; $('demo-modal').classList.remove('hidden'); }
+  function showInfo(label, title, html, flag, btn = 'Rule ▶') { infoFlag = flag; setText($('demo-continue'), btn); setText($('demo-label'), label); setText($('demo-title'), title); $('demo-text').innerHTML = html; $('demo-modal').classList.remove('hidden'); }
   function ask(title, text, yesLabel, cb) { setText($('confirm-title'), title); setText($('confirm-text'), text); setText($('confirm-yes'), yesLabel || 'Yes'); confirmCb = cb; $('confirm-modal').classList.remove('hidden'); }
   function closeAsk() { confirmCb = null; $('confirm-modal').classList.add('hidden'); }
   function init() {
@@ -92,6 +92,7 @@ const UI = (() => {
     $('dev-tech').addEventListener('click', () => Game.debug.techAll());
     $('dev-qskip').addEventListener('click', () => Game.debug.questSkip());
     $('set-log').addEventListener('change', e => { Game.S.settings.showLog = e.target.checked; });
+    $('set-preview').addEventListener('change', e => { Game.S.settings.fightPreview = e.target.checked; Game.S.settings.previewTip = true; render(true); });
     $('quest-toggle').addEventListener('click', () => { const S = Game.S; S.settings.questCollapsed = !S.settings.questCollapsed; applyQuestCollapse(); });
     $('quest-claim').addEventListener('click', () => { if (Game.questClaim()) flash($('quest-card')); });
     $('dev-export').addEventListener('click', () => { $('dev-io').value = Game.exportSave(); $('dev-io').select(); });
@@ -1583,8 +1584,14 @@ const UI = (() => {
     const r = c.getBoundingClientRect(), top = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--headh')) || 0;
     return r.bottom - 40 > top && r.top + 120 < window.innerHeight;
   }
+  // Beta 0.1.16: the fight preview on other screens — on while the hero is alone, off by default from the city phase on (Settings turns it back on)
+  function previewOn() { const s = Game.S.settings; return s.fightPreview !== undefined ? s.fightPreview : (Game.S.legacy.foundings || 0) === 0; }
+  function previewTip() { const S = Game.S, s = S.settings; if (s.previewTip || s.fightPreview !== undefined || (S.legacy.foundings || 0) === 0) return;
+    if ([...document.querySelectorAll('.modal')].some(m => !m.classList.contains('hidden'))) return; // wait for the story pop-up to close
+    s.previewTip = true; showInfo('Tip', 'Fight preview hidden', '<p class="small">Your town needs the screen now, so the little fight window at the bottom is hidden while you are away from the Hero screen. Your hero keeps fighting.</p><p class="small">Want it back? <b>Settings → Show fight preview on other screens</b>.</p>', null, 'Got it'); }
   function renderMini(fighting, idle, act, st, eMax) {
-    const S = Game.S, h = S.hero, f = Game.fmt, show = !idle && !heroScreenVisible();
+    const S = Game.S, h = S.hero, f = Game.fmt, show = !idle && !heroScreenVisible() && previewOn();
+    { const cb = $('set-preview'); if (cb && cb.checked !== previewOn()) cb.checked = previewOn(); } previewTip();
     $('mini-hero').classList.toggle('hidden', !show); document.body.classList.toggle('has-dock', show); if (!show) return;
     const m = $('mini-hero');
     if (desktop) { const cr = document.querySelector('.panel-center').getBoundingClientRect(); m.style.left = cr.left + 'px'; m.style.right = (window.innerWidth - cr.right) + 'px'; }
