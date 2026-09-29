@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Beta 0.1.6',
+  version: 'Beta 0.1.7',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -399,17 +399,17 @@ const CONFIG = {
   kingdom: {
     lines: {
       forest: { name: 'People', chain: 'houses', icon: [4,6], steps: [
-        { id: 'logging',   name: 'Logging',    icon: [17,0],  make: 'wood',   base: 0.5, batch: 6,  tier: 0, build: null, parts: ['Grow', 'Fell', 'Haul'], unit: ['Grove', 'groves'], dig: 'Clear a new grove', art: 'logging', desc: 'Woodcutters fell trees for logs.' },
-        { id: 'sawmill',   name: 'Sawmill',    icon: [19,11], make: 'planks', from: 'wood',   ratio: 2, base: 0.3, batch: 4,  tier: 1, build: { wood: 100, ore: 40, gold: 200 }, parts: ['Load', 'Saw', 'Stack'], unit: ['Saw Pit', 'saw pits'], dig: 'Build a new saw pit', art: 'sawmill', desc: '2 logs → 1 plank.' },
-        { id: 'carpenter', name: 'Carpenter',  icon: [10,4],  make: 'lumber', from: 'planks', ratio: 2, base: 0.15, batch: 3, tier: 2, build: { planks: 120, ingot: 30, gold: 500 }, parts: ['Plane', 'Join', 'Raise'], unit: ['Workbench', 'workbenches'], dig: 'Set up a new workbench', art: 'carpenter', desc: '2 planks → 1 lumber. Lumber raises houses.' } ] },
+        { id: 'logging',   name: 'Logging',    icon: [17,0],  make: 'wood',   base: 0.5, batch: 6,  tier: 0, build: null, stepDesc: ['Young trees grow in the grove.', 'Woodcutters bring the trees down.', 'Carts the logs away.'], parts: ['Grow', 'Fell', 'Haul'], unit: ['Grove', 'groves'], dig: 'Clear a new grove', art: 'logging', desc: 'Woodcutters fell trees for logs.' },
+        { id: 'sawmill',   name: 'Sawmill',    icon: [19,11], make: 'planks', from: 'wood',   ratio: 2, base: 0.3, batch: 4,  tier: 1, build: { wood: 100, ore: 40, gold: 200 }, stepDesc: ['Rolls logs onto the saw bench.', 'The blade cuts logs into planks.', 'Stacks the planks for the carpenter.'], parts: ['Load', 'Saw', 'Stack'], unit: ['Saw Pit', 'saw pits'], dig: 'Build a new saw pit', art: 'sawmill', desc: '2 logs → 1 plank.' },
+        { id: 'carpenter', name: 'Carpenter',  icon: [10,4],  make: 'lumber', from: 'planks', ratio: 2, base: 0.15, batch: 3, tier: 2, build: { planks: 120, ingot: 30, gold: 500 }, stepDesc: ['Smooths planks into beams.', 'Joins beams into frames.', 'Raises the frames into houses.'], parts: ['Plane', 'Join', 'Raise'], unit: ['Workbench', 'workbenches'], dig: 'Set up a new workbench', art: 'carpenter', desc: '2 planks → 1 lumber. Lumber raises houses.' } ] },
       farm: { name: 'Food', chain: 'bread', icon: [12,5], steps: [
-        { id: 'fields', name: 'Farm', icon: [14,13], make: 'grain', base: 0.5, batch: 6,  tier: 0, build: { wood: 40, gold: 40 }, parts: ['Plant', 'Grow', 'Harvest'], unit: ['Field', 'fields'], dig: 'Plow a new field', art: 'farm', desc: 'Farmers sow and reap grain.' },
-        { id: 'mill',   name: 'Mill',   icon: [15,10], make: 'flour', from: 'grain', ratio: 2, base: 0.3, batch: 4,  tier: 1, build: { wood: 80, grain: 100, gold: 200 }, parts: ['Pour', 'Grind', 'Sack'], unit: ['Millstone', 'millstones'], dig: 'Set a new millstone', art: 'mill', desc: '2 grain → 1 flour.' },
-        { id: 'baker',  name: 'Bakery',  icon: [14,14], make: 'bread', from: 'flour', ratio: 2, base: 0.15, batch: 3, tier: 2, build: { flour: 120, planks: 60, gold: 500 }, parts: ['Knead', 'Bake', 'Deliver'], unit: ['Oven', 'ovens'], dig: 'Build a new oven', art: 'bakery', desc: '2 flour → 1 bread.' } ] },
+        { id: 'fields', name: 'Farm', icon: [14,13], make: 'grain', base: 0.5, batch: 6,  tier: 0, build: { wood: 40, gold: 40 }, stepDesc: ['Sows seed into the field.', 'Grows planted crops into harvestable grain.', 'Collects the ripe crop for storage.'], parts: ['Plant', 'Grow', 'Harvest'], unit: ['Field', 'fields'], dig: 'Plow a new field', art: 'farm', desc: 'Farmers sow and reap grain.' },
+        { id: 'mill',   name: 'Mill',   icon: [15,10], make: 'flour', from: 'grain', ratio: 2, base: 0.3, batch: 4,  tier: 1, build: { wood: 80, grain: 100, gold: 200 }, stepDesc: ['Pours grain into the hopper.', 'The millstone grinds it to flour.', 'Sacks the flour for the bakers.'], parts: ['Pour', 'Grind', 'Sack'], unit: ['Millstone', 'millstones'], dig: 'Set a new millstone', art: 'mill', desc: '2 grain → 1 flour.' },
+        { id: 'baker',  name: 'Bakery',  icon: [14,14], make: 'bread', from: 'flour', ratio: 2, base: 0.15, batch: 3, tier: 2, build: { flour: 120, planks: 60, gold: 500 }, stepDesc: ['Kneads flour into dough.', 'Bakes the loaves in the oven.', 'Carries the bread to the stores.'], parts: ['Knead', 'Bake', 'Deliver'], unit: ['Oven', 'ovens'], dig: 'Build a new oven', art: 'bakery', desc: '2 flour → 1 bread.' } ] },
       mine: { name: 'Arms', chain: 'arms', icon: [4,5], steps: [
-        { id: 'shaft',   name: 'Mine', icon: [17,2], make: 'ore',    base: 0.5, batch: 6,  tier: 0, build: { wood: 60, grain: 30, gold: 80 }, parts: ['Dig', 'Extract', 'Haul'], unit: ['Depth', 'depths'], dig: 'Dig deeper', art: 'mine', desc: 'Miners dig iron ore.' },
-        { id: 'smelter', name: 'Forge',    icon: [17,3], make: 'ingot',  from: 'ore',   ratio: 2, base: 0.3, batch: 4,  tier: 1, build: { ore: 100, wood: 80, gold: 200 }, parts: ['Stoke', 'Smelt', 'Cast'], unit: ['Furnace', 'furnaces'], dig: 'Build a new furnace', art: 'forge', desc: '2 ore → 1 ingot.' },
-        { id: 'forge',   name: 'Armory',     icon: [5,1],  make: 'swords', from: 'ingot', ratio: 2, base: 0.15, batch: 3, tier: 2, build: { ingot: 120, planks: 60, gold: 500 }, parts: ['Heat', 'Hammer', 'Temper'], unit: ['Anvil', 'anvils'], dig: 'Raise a new anvil', art: 'armory', desc: '2 ingots → 1 set of arms.' } ] },
+        { id: 'shaft',   name: 'Mine', icon: [17,2], make: 'ore',    base: 0.5, batch: 6,  tier: 0, build: { wood: 60, grain: 30, gold: 80 }, stepDesc: ['Miners break ore from the rock.', 'Sorts the ore from the stone.', 'Hauls the ore to the surface.'], parts: ['Dig', 'Extract', 'Haul'], unit: ['Depth', 'depths'], dig: 'Dig deeper', art: 'mine', desc: 'Miners dig iron ore.' },
+        { id: 'smelter', name: 'Forge',    icon: [17,3], make: 'ingot',  from: 'ore',   ratio: 2, base: 0.3, batch: 4,  tier: 1, build: { ore: 100, wood: 80, gold: 200 }, stepDesc: ['Feeds ore and coal to the furnace.', 'Melts the ore into iron.', 'Pours the iron into ingots.'], parts: ['Stoke', 'Smelt', 'Cast'], unit: ['Furnace', 'furnaces'], dig: 'Build a new furnace', art: 'forge', desc: '2 ore → 1 ingot.' },
+        { id: 'forge',   name: 'Armory',     icon: [5,1],  make: 'swords', from: 'ingot', ratio: 2, base: 0.15, batch: 3, tier: 2, build: { ingot: 120, planks: 60, gold: 500 }, stepDesc: ['Heats the ingots in the hearth.', 'Beats the iron into blades and plate.', 'Hardens the arms for battle.'], parts: ['Heat', 'Hammer', 'Temper'], unit: ['Anvil', 'anvils'], dig: 'Raise a new anvil', art: 'armory', desc: '2 ingots → 1 set of arms.' } ] },
     },
     startGold: 50, foundRenown: 500, swapCooldown: 120,
     war: { thrallBonus: 10, supplyCapMult: 2, soldierCapBase: 50, soldierCapPerTier: 25, soldierGold: 2, quartermaster: { bread: 'food', swords: 'supplies', lumber: 'supplies' } },
@@ -504,6 +504,7 @@ const CONFIG = {
   // jobs (jobs completed by hand or thrall), sold (gold earned at market), stage, boss, founded, thrall (assigned), activity (swings).
   // Shown in Settings → What's new (newest first). Keep each line short.
   changelog: [
+    ['Beta 0.1.7', 'A new look inside every building: a flow overview shows each step\'s rate and where the bottleneck is; every step has its own card, and the piles between steps show what is waiting and whether it is building up. Step art is on the way.'],
     ['Beta 0.1.6', 'Every building has its own steps: the Farm Plants, Grows and Harvests; the Mine Digs, Extracts and Hauls; Logging Grows, Fells and Hauls; the Sawmill Loads, Saws and Stacks; the Carpenter Planes, Joins and Raises; the Forge Stokes, Smelts and Casts; the Armory Heats, Hammers and Tempers; the Mill Pours, Grinds and Sacks; the Bakery Kneads, Bakes and Delivers.'],
     ['Beta 0.1.5', 'Goods now move through a building one step at a time. Work makes a load, the Cart carries it, and Haul brings it to the Storehouse — each part has a capacity (how much per trip) and a speed (how long a trip takes). If a part can\'t keep up, goods pile up in front of it, so you can see the bottleneck: upgrade that part.'],
     ['Beta 0.1.4', 'Progress bars move again. Inside a building, each part fills once per load: faster parts finish early and wait (dimmed) for the slowest one. Every Production card has a small bar that fills with each load.'],

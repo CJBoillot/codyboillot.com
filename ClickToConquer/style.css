@@ -1159,3 +1159,49 @@ html, body { max-width: 100%; overflow-x: hidden; }
 .pile { font-size: 11px; color: var(--dim); padding: 0 2px; margin: -3px 0; }
 .pile b { color: var(--text); }
 .pile.jam { color: var(--bronze2); }
+/* Beta 0.1.7: flow view */
+.level-card { padding: 8px; display: flex; flex-direction: column; gap: 0; }
+.flow-head { display: grid; grid-template-columns: 62px 1fr 72px; gap: 8px; align-items: center; border: 1px solid var(--line); border-radius: 10px; padding: 6px 8px; background: #15110e; margin-bottom: 8px; }
+.fh-l { display: flex; flex-direction: column; align-items: center; line-height: 1; }
+.fh-l small { font-size: 8.5px; letter-spacing: 1.5px; color: var(--dim); }
+.fh-l b { font-family: var(--font-head); font-size: 20px; color: var(--bronze2); }
+.fh-l img { width: 40px; height: 26px; object-fit: contain; margin: 2px 0; }
+.fh-l em { font-style: normal; font-size: 10px; color: var(--dim); }
+.fh-title { font-family: var(--font-head); font-size: 10px; letter-spacing: 1px; color: var(--bronze2); text-transform: uppercase; text-align: center; margin-bottom: 3px; }
+.fh-bars { display: flex; align-items: center; gap: 3px; }
+.fh-b { flex: 1; min-width: 0; text-align: center; }
+.fh-b .bar { height: 6px; margin: 2px 0; }
+.fh-b.lim .bar > div { background: linear-gradient(90deg, #b8862f, #e8c06a); }
+.fh-b.lim .tiny { color: var(--bronze2); }
+.fh-ar { color: var(--dim); font-size: 11px; }
+.fh-warn { font-size: 10.5px; color: var(--bronze2); text-align: center; line-height: 1.25; }
+.step-card { display: grid; grid-template-columns: 58px 1fr 96px; gap: 8px; align-items: center; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); padding: 6px; }
+.step-card.bottleneck { border-color: var(--bronze); box-shadow: 0 0 0 1px #c9973f66, 0 0 16px #c9973f44; }
+.step-card .pbtn { min-width: 0; padding: 4px; }
+.step-body { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.step-h { display: flex; align-items: center; gap: 4px; font-family: var(--font-head); font-size: 15px; }
+.bn-tag { margin-left: auto; font-family: var(--font-body); font-size: 9.5px; font-weight: 700; color: var(--bronze2); border: 1px solid var(--bronze-dim); border-radius: 8px; padding: 0 6px; background: #2a1d0a; }
+.step-bar { height: 16px; position: relative; }
+.step-bar > span { position: absolute; left: 0; right: 0; text-align: center; top: 0; font-size: 10px; line-height: 16px; color: var(--text); text-shadow: 0 1px 2px #000; }
+.step-bar.lim > div { background: linear-gradient(90deg, #b8862f, #e8c06a); }
+.flow-arrow { text-align: center; color: var(--bronze-dim); font-size: 14px; line-height: 14px; margin: 1px 0; }
+.pile-card { display: grid; grid-template-columns: 40px 1fr 88px 70px; gap: 6px; align-items: center; border: 1px solid var(--line); border-radius: 10px; background: #15110e; padding: 4px 8px; margin: 0 14px; }
+.pile-card.jam { border-color: var(--bronze-dim); }
+.pile-main { display: flex; flex-direction: column; min-width: 0; font-size: 13px; }
+.pile-gauge { display: grid; grid-template-columns: repeat(10, 1fr); gap: 2px; }
+.pile-gauge i { height: 12px; border-radius: 2px; background: #2a221a; border: 1px solid var(--line); }
+.pile-gauge i.on { background: linear-gradient(180deg, #e8c06a, #b8862f); border-color: #8a6a33; }
+.pile-net { display: flex; flex-direction: column; text-align: right; font-size: 12px; }
+.pile-card.jam .pile-net b { color: var(--bronze2); }
+.art-slot { position: relative; border: 1px dashed var(--line2); border-radius: 8px; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #120e0b; }
+.art-slot img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: #120e0b; }
+.art-ph { font-size: 7px; color: var(--dim); text-align: center; word-break: break-all; padding: 2px; line-height: 1.1; }
+.step-img { width: 56px; height: 56px; }
+.pile-img { width: 38px; height: 38px; }
+@media (max-width: 380px) { .pile-card { grid-template-columns: 34px 1fr 64px 60px; margin: 0 4px; } .step-card { grid-template-columns: 48px 1fr 88px; } .step-img { width: 46px; height: 46px; } }
+.step-body .tiny { font-size: 11px; line-height: 1.3; }
+.pile-main span, .pile-net span { font-size: 10.5px; line-height: 1.2; }
+.pile-main b, .pile-net b { font-size: 13px; }
+.fh-b .tiny { font-size: 10.5px; }
+.fh-b span.tiny:first-child { font-family: var(--font-head); font-size: 11px; }
+.fh-warn b { font-size: 12px; }
