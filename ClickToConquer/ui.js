@@ -601,7 +601,7 @@ const UI = (() => {
     let root = me - 1; while (root > 0 && CF[root].out < CF[root].cap - 1e-6) root--; return CF[root].name; }
   function fillPartBtn(root, id, p, small, d = 1) {
     const b = root.querySelector(`[data-part="${p}"][data-id="${id}"][data-d="${d}"]`); if (!b) return false;
-    const cap = Game.levelCap(), lv = Game.partLv(id, p, d), plan = Game.stepUpPlan(id, p, kBuy, d), lim = Game.limitPart(id, d) === p && !starvedBy(id);
+    const cap = Game.levelCap(), lv = Game.partLv(id, p, d), plan = Game.stepUpPlan(id, p, kBuy, d), lim = Game.limitParts(id, d).includes(p) && !starvedBy(id);
     b.classList.toggle('hot', lim); b.disabled = !plan.n;
     if (!small) setText(b.querySelector(`[data-f=plv${p}]`), `Lv ${lv}${plan.n > 1 ? ' → ' + (lv + plan.n) : ''}`);
     else setText(b.querySelector(`[data-f=pl${p}]`), `${Game.partName(id, p)} ${lv}`);
@@ -697,23 +697,25 @@ const UI = (() => {
     const id = st.id, f = Game.fmt, fo = v => v < 10 ? v.toFixed(2) : f(v), P = Game.pipe(id, d), caps = Game.PARTS.map(p => Game.partCap(id, p, d)), mx = Math.max(...caps), lim = Game.limitPart(id, d), dout = Game.depthOutput(id, d), gd = R[st.make].name.toLowerCase();
     setText(dc.querySelector('[data-f=dout]'), `${fo(dout)} ${gd}/s`);
     const starved = starvedBy(id);
-    setHtml(dc.querySelector('[data-f=bnote]'), starved ? `Waiting on<br><b>the ${starved}</b>` : `⚠ Bottleneck at<br><b>${Game.partName(id, lim)}</b>`); dc.querySelector('[data-f=bnote]').classList.toggle('calm', !!starved);
+    const tied = Game.limitParts(id, d), tn = tied.map(p => Game.partName(id, p));
+    setHtml(dc.querySelector('[data-f=bnote]'), starved ? `Waiting on<br><b>the ${starved}</b>` : tied.length === 3 ? `Balanced —<br><b>raise all three</b>` : tied.length === 2 ? `⚠ Tied:<br><b>${tn.join(' & ')}</b>` : `⚠ Bottleneck at<br><b>${tn[0]}</b>`); dc.querySelector('[data-f=bnote]').classList.toggle('calm', !!starved);
     const prog = { W: [P.w, P.tw], C: [P.c, P.tc], H: [P.h, P.th] };
-    Game.PARTS.forEach((p, i) => { const lv = Game.partLv(id, p, d), nm = Game.nextMilestone(lv), T = Game.tripTime(id, p, d), L = Game.tripLoad(id, p, d), [carry, t] = prog[p], isLim = p === lim && !starved;
+    Game.PARTS.forEach((p, i) => { const lv = Game.partLv(id, p, d), nm = Game.nextMilestone(lv), T = Game.tripTime(id, p, d), L = Game.tripLoad(id, p, d), [carry, t] = prog[p], isLim = tied.includes(p) && !starved;
       const fb = dc.querySelector(`[data-fb="${p}"]`); fb.classList.toggle('lim', isLim); fb.querySelector('.bar > div').style.width = (100 * caps[i] / mx) + '%'; setText(fb.querySelector('[data-f=r]'), `${fo(caps[i])}/s`);
-      const sc = dc.querySelector(`[data-step="${p}"]`); sc.classList.toggle('bottleneck', isLim); sc.querySelector('[data-f=bn]').classList.toggle('hidden', !isLim);
+      const sc = dc.querySelector(`[data-step="${p}"]`); sc.classList.toggle('bottleneck', isLim); sc.querySelector('[data-f=bn]').classList.toggle('hidden', !isLim); setText(sc.querySelector('[data-f=bn]'), tied.length > 1 ? '⚠ Tied' : '⚠ Bottleneck');
       setText(sc.querySelector('[data-f=lv]'), 'Lv ' + lv);
       const bar = sc.querySelector('[data-f=bar]'); bar.style.width = (carry > 1e-9 ? 100 * Math.min(1, t / T) : 0) + '%'; bar.parentElement.classList.toggle('lim', isLim);
       setText(sc.querySelector('[data-f=rate]'), carry > 1e-9 ? `${fo(carry)} ${gd} · ${fo(caps[i])} ${gd} / s` : (p === 'W' && st.from ? `waiting for ${R[st.from].name.toLowerCase()}` : 'waiting'));
-      setText(sc.querySelector('[data-f=sub]'), `${fo(L)} per trip · ${T.toFixed(1)}s${isLim ? ' — slowest' : nm ? ' · ×2 at Lv ' + nm : ''}`);
+      setText(sc.querySelector('[data-f=sub]'), `${fo(L)} per trip · ${T.toFixed(1)}s${isLim ? (tied.length > 1 ? ' — tied for slowest' : ' — slowest') : nm ? ' · ×2 at Lv ' + nm : ''}`);
       fillPartBtn(sc, id, p, false, d); });
     [1, 2].forEach(n => { const pc = dc.querySelector(`[data-pile="${n}"]`), up = n === 1 ? 'W' : 'C', down = n === 1 ? 'C' : 'H', amt = n === 1 ? P.a : P.b;
       const inflow = Math.min(...Game.PARTS.slice(0, n).map(p => Game.partCap(id, p, d))), outCap = Game.partCap(id, down, d), net = inflow - outCap, trip = Game.tripLoad(id, down, d), fill = Math.min(10, Math.round(10 * amt / Math.max(1e-9, trip * 3)));
       setText(pc.querySelector('[data-f=amt]'), `${fo(amt)} ${gd}`); setText(pc.querySelector('[data-f=lab]'), `waiting to ${Game.partName(id, down).toLowerCase()}`);
       pc.querySelectorAll('.pile-gauge i').forEach((g, k) => g.classList.toggle('on', k < fill));
-      setText(pc.querySelector('[data-f=net]'), net > 1e-9 ? `+${fo(net)}/s` : `+${fo(inflow)}/s`);
-      setText(pc.querySelector('[data-f=why]'), net > 1e-9 ? 'building up' : `limited by ${Game.partName(id, lim === 'H' ? up : (Game.PARTS.indexOf(lim) < n ? lim : up)).toLowerCase()}`);
-      pc.classList.toggle('jam', net > 1e-9 && !starved); });
+      const even = Math.abs(net) <= Math.max(inflow, outCap) * 0.005;
+      setText(pc.querySelector('[data-f=net]'), even ? `±0/s` : net > 0 ? `+${fo(net)}/s` : `+${fo(inflow)}/s`);
+      setText(pc.querySelector('[data-f=why]'), even ? `${Game.partName(id, down).toLowerCase()} keeps pace` : net > 0 ? 'building up' : `limited by ${Game.partName(id, lim === 'H' ? up : (Game.PARTS.indexOf(lim) < n ? lim : up)).toLowerCase()}`);
+      pc.classList.toggle('jam', net > 0 && !even && !starved); });
   }
   function renderBld() {
     const S = Game.S, f = Game.fmt, id = bldOpen, st = Game.stepDef(id), box = $('bld-view'); if (!st || !Game.stepBuilt(id)) { closeBld(); return; }

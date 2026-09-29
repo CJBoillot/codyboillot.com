@@ -587,7 +587,9 @@ function digCost(id) { return { gold: Math.round(DC().digBase * Math.pow(DC().di
 function canDig(id) { return digOpen() && stepBuilt(id) && canAfford(digCost(id)); }
 function dig(id) { if (!canDig(id)) return false; pay(digCost(id)); const s = stepState(id); s.deep = s.deep || []; s.deep.push({ W: 1, C: 1, H: 1 }); const d = depthCount(id); S.stats.digs = (S.stats.digs || 0) + 1;
   log(`${stepDef(id).name}: ${unitName(id)} ${d} is ready — it can grow ×${fmt(depthYield(d))} bigger than the first.`); pushEvent({ who: 'dig', id, d, name: stepDef(id).name, unit: unitName(id) }); return d; }
-function limitPart(id, d = 1) { const c = PARTS.map(p => partCap(id, p, d)), mn = Math.min(...c); return PARTS[c.indexOf(mn)]; }
+// Beta 0.1.24: parts within 0.5% of the slowest are tied — all of them hold the level back, and raising just one gains nothing
+function limitParts(id, d = 1) { const c = PARTS.map(p => partCap(id, p, d)), mn = Math.min(...c); return PARTS.filter((p, i) => c[i] <= mn * 1.005); }
+function limitPart(id, d = 1) { const t = limitParts(id, d); return t[t.length - 1]; } // with a tie, the furthest one along (goods wait in front of it)
 function nextStep(id) { const d = stepDef(id); const n = KC().lines[d.line].steps[d.index + 1]; return n && stepUnlocked(n.id) ? n : null; }
 function thrall(i) { return S.kingdom.thralls[i]; }
 function thrallName(i) { const t = thrall(i); return t ? t.name : 'Thrall'; }
@@ -639,9 +641,9 @@ function stepUpCost(id, part, level, d = 1) { const l = level || partLv(id, part
 function stepUpPlan(id, part, n, d = 1) { d = Math.max(1, Math.min(d, depthCount(id))); part = PARTS.includes(part) ? part : limitPart(id, d); let g = 0, k = 0; const l = partLv(id, part, d), room = Math.max(0, levelCap() - l), lim = Math.min(room, n === 'max' ? 999 : n); while (k < lim) { const c = stepUpCost(id, part, l + k, d).gold; if ((S.res.gold || 0) < g + c) break; g += c; k++; } return { n: k, cost: { gold: g }, part, d }; }
 function upgradeStep(id, part, n = 1, d = 1) {
   if (!stepUnlocked(id)) return false; const p = stepUpPlan(id, part, n, d); if (!p.n) return false; part = p.part; d = p.d;
-  const lim = limitPart(id, d), slow = slowestInLine(stepDef(id).line) === id, s = stepState(id), before = partLv(id, part, d);
+  const lims = limitParts(id, d), slow = slowestInLine(stepDef(id).line) === id, s = stepState(id), before = partLv(id, part, d);
   pay(p.cost); if (d <= 1) s['lv' + part] += p.n; else s.deep[d - 2][part] += p.n; s.lv = stepLv(id);
-  const St = S.stats; St.partUps = (St.partUps || 0) + p.n; if (part === lim) { St.limitUps = St.limitUps || {}; St.limitUps[id] = (St.limitUps[id] || 0) + p.n; } if (slow) St.slowUps = (St.slowUps || 0) + p.n;
+  const St = S.stats; St.partUps = (St.partUps || 0) + p.n; if (lims.includes(part)) { St.limitUps = St.limitUps || {}; St.limitUps[id] = (St.limitUps[id] || 0) + p.n; } if (slow) St.slowUps = (St.slowUps || 0) + p.n;
   if (id === 'forge' || id === 'baker') St.armsFoodUps = (St.armsFoodUps || 0) + p.n;
   { const now = partLv(id, part, d); if (milestoneCount(now) > milestoneCount(before)) { log(`${stepDef(id).name}${d > 1 ? ' ' + unitName(id) + ' ' + d : ''}: ${partName(id, part)} reached Lv ${now} — its capacity doubled!`); pushEvent({ who: 'milestone', id, name: stepName(id), lv: now }); } }
   return p.n;
@@ -1618,7 +1620,7 @@ window.Game = {
   toolTierUnlocked, toolPower, toolCraftCost, toolUpgradeCost, canToolTierUp, craftTool, upgradeTool, activityDef, activityAvailable, setActivity, masteryLevel, harvestTime, harvestYield, harvestRates,
   questCurrent, questProgress, questClaim, suggestGoal, ground, setGround, groundUnlocked, dropToolMult, bestStageAll, groundDrops, toolSlotUnlocked,
   techDef, hasTech, techProgress, canResearch, research, researching, buildingUnlocked, gearTierUnlocked, dropUnlocked, counter,
-  kingdomRates, chainFlow, kingdomNo, allSteps, stepDef, stepUnlocked, lineUnlocked, lineSteps, stepState, nextStep, stepMods, kTier, tierDef, stepAvailable, stepBuilt, canBuild, buildStep, tierGoods, tierNeed, tierPaid, tierPaidDone, tierStepsReady, contribute, canRaise, raiseTier, accountantSteps, assignAccountant, cityChecks, cityComplete, stepRate, stepPhases, stepCycle, stepBatch, stepOutput, thrallLevel, thrallCap, dismiss, stepLimit, stepUpCost, stepUpPlan, upgradeStep, stepWorkerSlots,
+  kingdomRates, chainFlow, limitParts, kingdomNo, allSteps, stepDef, stepUnlocked, lineUnlocked, lineSteps, stepState, nextStep, stepMods, kTier, tierDef, stepAvailable, stepBuilt, canBuild, buildStep, tierGoods, tierNeed, tierPaid, tierPaidDone, tierStepsReady, contribute, canRaise, raiseTier, accountantSteps, assignAccountant, cityChecks, cityComplete, stepRate, stepPhases, stepCycle, stepBatch, stepOutput, thrallLevel, thrallCap, dismiss, stepLimit, stepUpCost, stepUpPlan, upgradeStep, stepWorkerSlots,
   assignWorker, assignOverseer, unassign, thrallPost, useAbility, refreshOffers, hire, maxStars, storeUpCost, upgradeStore, orderGoods, foundRenownNeed, canDeliver, deliver, swapOrder, swapReady, rankIndex, rankInfo, heroFighting, thrallCount, sellPrice, sell, buyPrice, buyRes, buyMax, canBuyRes,
   canAdvance, advance, stageSustainable, autoAdvanceBlock, autoKillsNeeded, killHeal, retreat, canAfford, add, simulate, applyOffline, claimOffline, offlineStages,
   save, load, exportSave, importSave, hardReset,
