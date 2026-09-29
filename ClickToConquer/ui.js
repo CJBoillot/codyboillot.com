@@ -47,7 +47,7 @@ const UI = (() => {
     for (const k in R) {
       const d = el('div', 'res hidden'); d.id = 'res-' + k; d.title = `${R[k].name} — ${R[k].desc || ''}`;
       d.innerHTML = `${ico(R[k].icon, 22)}<div class="res-txt"><b data-f="amt">0</b><span class="res-name">${R[k].name}</span></div><span class="rrate" data-f="rate"></span>`;
-      d.addEventListener('click', () => { if (Game.phase() !== 3 && k !== 'people' && k !== 'soldiers') return; const go = { soldiers: 'prod', people: 'prod', gold: 'lands' }[k]; if (!go) return; const t = document.querySelector('[data-tab=kingdom]'); if (t && !t.disabled) t.click(); const b = document.querySelector(`[data-ksub=${go}]`); if (b && !b.disabled) b.click(); const r = document.querySelector('[data-rtab=kingdom]'); if (r && desktop) r.click(); });
+      d.addEventListener('click', () => { if (Game.phase() !== 3 && k !== 'soldiers') return; const go = { soldiers: 'prod', gold: 'lands' }[k]; if (!go) return; const t = document.querySelector('[data-tab=kingdom]'); if (t && !t.disabled) t.click(); const b = document.querySelector(`[data-ksub=${go}]`); if (b && !b.disabled) b.click(); const r = document.querySelector('[data-rtab=kingdom]'); if (r && desktop) r.click(); });
       rb.appendChild(d);
     }
     for (const wk of Game.WAR_KEYS) { const W = CONFIG.kingdom.army.lines[wk], d = el('div', 'res inc-chip hidden'); d.id = 'inc-' + wk; d.title = `${W.name} income per minute vs what the army uses`;
@@ -68,6 +68,7 @@ const UI = (() => {
     $('advance-btn').addEventListener('click', () => Game.advance());
     $('mini-advance').addEventListener('click', () => Game.advance());
     $('auto-adv').addEventListener('change', e => { Game.S.settings.autoAdvance = e.target.checked; });
+    $('auto-march').addEventListener('change', e => { Game.S.settings.autoMarch = e.target.checked; });
     $('retreat-x').addEventListener('click', () => { if (Game.S.hero.retreatNote) Game.S.hero.retreatNote.seen = true; });
     $('retreat-btn').addEventListener('click', () => Game.retreat());
     $('respec-btn').addEventListener('click', () => ask('Respec', 'Reset the points in Logging, Mining and Foraging? Capstones are kept. Costs ' + Game.fmt(Game.respecCost()) + ' gold.', 'Respec', () => Game.respec()));
@@ -589,7 +590,7 @@ const UI = (() => {
   }
 
   // ---- 0.12: Kingdom → Production — three chains feed the Barracks ----
-  const PROD_COLS = ['forest', 'mine', 'farm'], PROD_HEAD = { forest: 'People', mine: 'Arms', farm: 'Food' };
+  const PROD_COLS = ['forest', 'mine', 'farm'], PROD_HEAD = { forest: 'Wood', mine: 'Arms', farm: 'Food' };
   const artOf = st => `assets/buildings/${st.art || st.id}.webp`;
   let prodKey = '', bldOpen = null, bldKey = '';
   function openBld(id) { bldOpen = id; bldKey = ''; Game.markViewed('bld:' + id); $('prod-view').classList.add('hidden'); $('bld-view').classList.remove('hidden'); render(true); window.scrollTo(0, 0); }
@@ -627,7 +628,7 @@ const UI = (() => {
     $('prod-kbar').innerHTML = kbarHtml(); $('prod-kbar').querySelectorAll('[data-kbuy]').forEach(b => b.addEventListener('click', () => { kBuy = b.dataset.kbuy === 'max' ? 'max' : +b.dataset.kbuy; prodKey = ''; bldKey = ''; render(true); }));
     glowKey = '';
   }
-  function rateTxt(st) { const out = Game.stepOutput(st.id); if (st.id === 'carpenter' && Game.housesOn()) { const sec = out > 0 ? Game.houseCost() / out : 0; return sec ? `1 house / ${sec < 90 ? Math.round(sec) + 's' : Math.round(sec / 60) + 'm'}` : '—'; } return `${out < 10 ? out.toFixed(2) : Game.fmt(out)}<small>/s ${R[st.make].name.toLowerCase()}</small>`; }
+  function rateTxt(st) { const out = Game.stepOutput(st.id); return `${out < 10 ? out.toFixed(2) : Game.fmt(out)}<small>/s ${R[st.make].name.toLowerCase()}</small>`; }
   function renderProd() {
     const S = Game.S, f = Game.fmt; if (Game.kingdomNo() < 1) return false;
     const key = Game.kTier() + '|' + Game.phase() + '|' + JSON.stringify(S.kingdom.built || {}) + '|' + kBuy + '|' + Game.allSteps().map(x => Game.depthCount(x.id)).join();
@@ -643,26 +644,18 @@ const UI = (() => {
     if (bldOpen) renderBld();
     return any;
   }
-  function renderTown() {
-    const S = Game.S, f = Game.fmt, box = $('prod-town'), hs = Game.houses(), built = Game.stepBuilt('carpenter');
-    box.classList.toggle('hidden', !built && hs < 1); if (!built && hs < 1) return;
-    const cap = Game.houseCap(), pop = Game.people(), sol = Game.soldiers(), room = Game.houseRoom(), prog = (S.kingdom.houseProg || 0) / Game.houseCost(), tr = Game.turnedRecent(), sph = Game.settlersPerHour();
-    setHtml(box, `<div class="town-row"><img src="assets/buildings/carpenter.webp" alt=""><div class="town-main"><div class="town-n"><b>${f(pop)}</b> people${sol ? ` · <b>${f(sol)}</b> soldiers` : ''} <span class="dim">/ ${f(cap)} room in ${f(hs)} house${hs === 1 ? '' : 's'}</span></div>
-      <div class="bar town-bar"><div style="width:${Game.birthRoom() > 0 ? Math.min(100, 100 * ((S.kingdom.birthAcc || 0) % 1)) : Math.min(100, 100 * prog)}%"></div><span>${Game.birthRoom() > 0 ? `next person · one every ${Math.round(60 / Math.max(0.01, Game.birthsPerMin()))}s` : `next house ${Math.round(prog * 100)}%`}</span></div>
-      <div class="tiny dim">${Game.birthRoom() > 0 ? `Next house ${Math.round(prog * 100)}% · ` : room > 0 ? `${f(room)} homes kept for settlers · ` : 'Full — build houses · '}head tax ${f(Game.headTaxPerHour())} gold/h${sph > 0 ? ` · settlers ${sph.toFixed(1)}/h from your lands` : ''}</div>
-      ${tr > 0 ? `<div class="tiny warn">${f(tr)} settlers found no home in the last hour — build houses.</div>` : ''}</div></div>`);
-  }
+  function renderTown() { $('prod-town').classList.add('hidden'); } // Beta 0.2.0: no town — people and houses are gone
   function renderBarracks() {
     const S = Game.S, f = Game.fmt, card = $('barracks-card'), av = Game.barracksAvailable(), built = Game.barracksBuilt();
     const c = Game.nextSoldierCost(), bl = Game.trainBlocker(), rate = Game.trainPerMin(), p3 = Game.phase() === 3, held = Game.landsHeld(), nx = Math.min(held + 1, CONFIG.ages.lands), rec = Game.recArmy(nx), sol = Game.soldiers();
-    const why = { houses: 'no houses yet — build the Carpenter', people: 'no free people — houses fill with people', swords: 'short of arms — grow the Mine chain', bread: 'short of bread — grow the Farm chain' }[bl];
-    const k = [av, built, Game.barracksLv(), bl, sol, Math.ceil(c.swords), Math.ceil(c.bread), rate.toFixed(1), p3, held, S.res.gold > 0 && Game.canUpBarracks()].join('|');
+    const why = { lumber: 'short of lumber — grow the Wood chain', swords: 'short of arms — grow the Mine chain', bread: 'short of bread — grow the Farm chain' }[bl];
+    const k = [av, built, Game.barracksLv(), bl, sol, Math.ceil(c.lumber), Math.ceil(c.swords), Math.ceil(c.bread), rate.toFixed(1), p3, held, S.res.gold > 0 && Game.canUpBarracks()].join('|');
     if (card.__k !== k) { card.__k = k;
-      setHtml(card, `<div class="bk-top"><img src="assets/buildings/barracks.webp" alt=""><div><div class="pname pname-lg">Barracks ${built ? '<span class="dim small">Lv ' + Game.barracksLv() + '</span>' : ''}</div><div class="tiny dim">1 person + arms + bread → 1 soldier</div></div><div class="bk-sol"><b>${f(sol)}</b><span class="tiny dim">soldiers</span></div></div>
+      setHtml(card, `<div class="bk-top"><img src="assets/buildings/barracks.webp" alt=""><div><div class="pname pname-lg">Barracks ${built ? '<span class="dim small">Lv ' + Game.barracksLv() + '</span>' : ''}</div><div class="tiny dim">lumber + arms + bread → 1 soldier</div></div><div class="bk-sol"><b>${f(sol)}</b><span class="tiny dim">soldiers</span></div></div>
         ${!av ? `<div class="small dim">🔒 The Barracks is built in a City.</div>` : `
-        ${built ? `<div class="bk-row"><span>Next soldier</span><span>${costHtml({ people: 1, swords: Math.ceil(c.swords), bread: Math.ceil(c.bread) }).replace(/<span class="cost-name">[^<]*<\/span>/g, '')}</span></div>
+        ${built ? `<div class="bk-row"><span>Next soldier</span><span>${costHtml({ lumber: Math.ceil(c.lumber), swords: Math.ceil(c.swords), bread: Math.ceil(c.bread) }).replace(/<span class="cost-name">[^<]*<\/span>/g, '')}</span></div>
         <div class="bk-row"><span>Training</span><span class="${bl ? 'warn' : 'good'}">${bl ? 'paused: ' + why : `+${rate.toFixed(1)} / min`}</span></div>
-        <div class="tiny dim">Each soldier costs a little more than the last; losses in battle bring the price back down.</div>` : ''}
+        <div class="tiny dim">Each soldier costs a little more than the last; losses in battle bring the price back down. Goods kept for building are never used.</div>` : ''}
         ${p3 ? `<div class="bk-rec"><div class="row-between small"><span>Next land${Game.landDef(nx) ? ' · <b>' + Game.landDef(nx).name + '</b>' : ''}</span><span class="dim">recommended ${f(rec)}</span></div><div class="bar gold-bar"><div style="width:${Math.min(100, 100 * Game.marching() / rec)}%"></div><span>${f(Game.marching())} marching</span></div></div>` : ''}
         <button class="buy wide" id="barracks-up"><span class="small">${built ? 'Upgrade the Barracks (faster training)' : 'Build the Barracks'}</span><br><span class="cost">${costHtml(Game.barracksCost())}</span></button>`}`);
       const b = $('barracks-up'); if (b) { b.disabled = !Game.canUpBarracks(); b.addEventListener('click', () => { if (Game.upgradeBarracks()) { card.__k = ''; render(true); } }); } }
@@ -672,7 +665,7 @@ const UI = (() => {
   function renderProdTip() {
     const tip = $('prod-tip'); let t = '';
     if (Game.barracksBuilt()) { const bl = Game.trainBlocker();
-      if (bl === 'people' || bl === 'houses') t = `<b>The Barracks is waiting for people.</b> Every soldier is a person — houses fill with people, so build houses: grow the People chain (the Carpenter raises them).`;
+      if (bl === 'lumber') t = `<b>Lumber is holding the army back.</b> Grow the Wood chain — start with its slowest building.`;
       else if (bl === 'swords') t = `<b>Arms are holding the army back.</b> Grow the Arms chain — start with its slowest building.`;
       else if (bl === 'bread') t = `<b>Bread is holding the army back.</b> Grow the Food chain — start with its slowest building.`; }
     if (!t) { const sl = PROD_COLS.map(l => Game.slowestInLine(l)).filter(Boolean); if (sl.length) t = `Each chain's <b>slowest</b> building is marked — upgrading it speeds up everything after it. Inside a building, the part with the <b>gold</b> bar is the one holding it back.`; }
@@ -725,7 +718,7 @@ const UI = (() => {
     const L = CONFIG.kingdom.lines[st.line], nx = Game.nextStep(id), key = id + '|' + kBuy + '|' + (nx ? nx.id : '') + '|' + Game.housesOn() + '|' + Game.depthCount(id);
     if (bldKey !== key) { bldKey = key;
       const stock = nx ? `<div class="kstock"><div class="kstock-head"><span>Keep ${R[st.make].name.toLowerCase()} in stock</span><span class="kstock-n" data-f="stn"></span></div><div class="seg kstock-seg">${Game.STOCK_MODES.map(m => `<button data-stock="${m}">${m === 'auto' ? 'Auto' : m === 0 ? '0' : m === 1 ? 'Full' : m === 0.5 ? '½' : '¼'}</button>`).join('')}</div><div class="tiny kstock-why" data-f="stwhy"></div></div>` : '';
-      const houseBox = id === 'carpenter' ? `<div class="card"><div class="row-between"><b>Houses</b><span class="seg"><button data-houses="1" class="${Game.housesOn() ? 'active' : ''}">Build houses</button><button data-houses="0" class="${Game.housesOn() ? '' : 'active'}">Store lumber</button></span></div><div data-f="houses" class="small" style="margin-top:6px"></div></div>` : '';
+      const houseBox = '';
       setHtml(box, `        <div class="bld-hero"><img src="${artOf(st)}" srcset="${artOf(st)} 1x, assets/buildings/${st.art || st.id}@2x.webp 2x" alt=""><div class="bld-title">${st.name}<small>${st.desc || ''}</small></div><div class="bld-out" data-f="out"></div></div>
         <div class="kbar" id="bld-kbar"></div>
         <div class="card supply-card"><div class="chain-strip" data-f="chain"></div><div class="tiny oflow hidden" data-f="oflow"></div>${st.from ? `<div class="sup-row"><div><span class="tiny dim">${R[st.from].name} in</span><b data-f="supin"></b></div><div class="sup-r"><span class="tiny dim">${st.name} can use</span><b data-f="supuse"></b></div></div><div class="bar sup-bar"><div data-f="supbar"></div><span data-f="suplab"></span></div><div class="tiny sup-why" data-f="supwhy"></div>` : ''}</div>
@@ -736,11 +729,10 @@ const UI = (() => {
         ch.addEventListener('keydown', e => { if (e.key !== 'Enter' && e.key !== ' ') return; const g = e.target.closest('[data-go]'); if (g) { e.preventDefault(); openBld(g.dataset.go); } }); }
       wirePartBtns(box); box.querySelector('[data-dig]').addEventListener('click', () => { if (Game.dig(id)) { bldKey = ''; prodKey = ''; render(true); } });
       box.querySelectorAll('[data-stock]').forEach(b => b.addEventListener('click', () => { const v = b.dataset.stock; if (Game.setStockMode(st.make, v === 'auto' ? 'auto' : +v)) { Game.save(); render(true); } }));
-      box.querySelectorAll('[data-houses]').forEach(b => b.addEventListener('click', () => { Game.setHousesOn(b.dataset.houses === '1'); bldKey = ''; render(true); }));
       $('bld-kbar').innerHTML = kbarHtml(); $('bld-kbar').querySelectorAll('[data-kbuy]').forEach(b => b.addEventListener('click', () => { kBuy = b.dataset.kbuy === 'max' ? 'max' : +b.dataset.kbuy; prodKey = ''; bldKey = ''; render(true); }));
       glowKey = ''; }
     const s = Game.stepState(id), cfMe = Game.chainFlow(st.line).find(c => c.id === id), out = cfMe ? cfMe.out : Game.stepOutput(id), fo = v => v < 10 ? v.toFixed(2) : f(v);
-    const dest = id === 'carpenter' && Game.housesOn() ? 'To houses' : nx ? `To the ${nx.name}` : 'To the Storehouse', use = nx ? Game.stepOutput(nx.id) * nx.ratio : 0;
+    const dest = nx ? `To the ${nx.name}` : 'To the Storehouse', use = nx ? Game.stepOutput(nx.id) * nx.ratio : 0;
     setHtml(box.querySelector('[data-f=out]'), `${dest}<b>${fo(out)}/s</b>${nx ? `${nx.name} uses ${fo(use)}/s` : ''}`);
 
     for (let d = 1; d <= Game.depthCount(id); d++) { const dc = box.querySelector(`[data-depth="${d}"]`); if (dc) renderLevel(dc, st, d, dest); }
@@ -756,7 +748,6 @@ const UI = (() => {
         setText(box.querySelector('[data-f=suplab]'), `running at ${Math.round(100 * pct)}% · ${f(Math.floor(s.inBuf))} ${rn(st.from)} waiting`);
         setHtml(box.querySelector('[data-f=supwhy]'), (pct < 0.999 ? `<b>The ${pn} is the limit.</b> It sends ${fo(c.supply)} ${rn(st.from)}/s; the ${st.name} could use ${fo(c.use)}/s. ${root === me - 1 ? `Upgrade the ${pn} to feed it.` : `But the ${pn} is starved too — upgrade the <b>${CF[root].name}</b> first.`}` : `<b>The ${st.name} is the limit.</b> The ${pn} makes more than it can use${p.spare > 1e-6 ? ` — ${fo(p.spare)} ${rn(st.from)}/s spare goes to the Storehouse` : ''}.`) + (filling ? `<br><span class="dim">Right now half the ${rn(st.from)} goes to the Storehouse until it holds ${f(stP.target)}, so less reaches the ${st.name}.</span>` : '')); }
       else if (st.from) { ['supin', 'supuse'].forEach(k => setText(box.querySelector(`[data-f=${k}]`), '—')); setText(box.querySelector('[data-f=supwhy]'), `Build the ${R[st.from].name.toLowerCase()} building first.`); } }
-    { const hb = box.querySelector('[data-f=houses]'); if (hb) setHtml(hb, `${f(Game.houses())} houses · room for ${f(Game.houseCap())} · next house needs ${Game.houseCost().toFixed(1)} lumber (${Math.round(100 * (S.kingdom.houseProg || 0) / Game.houseCost())}%). ${Game.housesOn() ? 'All new lumber goes to houses (after what the Storehouse needs).' : 'Lumber goes to the Storehouse; no houses are being built.'}`); }
     if (box.querySelector('[data-f=stn]')) { const k = st.make, T = Game.stockTarget(k), have = Math.floor(S.res[k] || 0), nxn = nx ? nx.name : 'next building';
       box.querySelectorAll('[data-stock]').forEach(b => b.classList.toggle('active', String(T.mode) === b.dataset.stock));
       setText(box.querySelector('[data-f=stn]'), `${f(Math.min(have, T.target))} / ${f(T.target)}`);
@@ -1256,7 +1247,7 @@ const UI = (() => {
   }
 
   // ---- Render ----
-  const WAR_CHIPS = ['gold', 'people', 'soldiers']; // Phase 3 header: gold, the army — and the three war incomes (built below)
+  const WAR_CHIPS = ['gold', 'soldiers', 'lumber', 'swords', 'bread']; // Beta 0.2.0: gold, the army and the three goods a soldier is made of // Phase 3 header: gold, the army — and the three war incomes (built below)
   let lastRender = 0;
   // 0.12: story pop-ups, once per phase
   let storyOpen = null, guidePending = false;
@@ -1274,14 +1265,14 @@ const UI = (() => {
     const kr = Game.kingdomRates(true), hr = Game.heroFighting() ? Game.heroRates() : {}, hrv = Game.harvestRates();
     for (const k in R) {
       const e = $('res-' + k), wi = WAR_CHIPS.indexOf(k), p3 = Game.phase() === 3;
-      const open = p3 ? wi >= 0 : (R[k].kind !== 'loot' && R[k].kind !== 'war' && S.lifetime[k] > 0 && Game.pinned(k)) || (k === 'people' && Game.houses() > 0) || (k === 'soldiers' && Game.barracksBuilt());
+      const open = p3 ? wi >= 0 : (R[k].kind !== 'loot' && R[k].kind !== 'war' && S.lifetime[k] > 0 && Game.pinned(k)) || (k === 'soldiers' && Game.barracksBuilt());
       e.style.order = p3 ? String(wi) : ''; e.classList.toggle('war-chip', p3 && wi >= 0);
       e.classList.toggle('hidden', !open); if (!open) continue;
       e.querySelector('.rrate').classList.toggle('hidden', !Game.infoOn('almanac'));
-      { const war = k === 'soldiers' || k === 'people', cap = k === 'people' ? Game.houseCap() - Game.soldiers() : Game.resCap(k), full = k === 'people' ? Game.houseRoom() < 1 : k !== 'soldiers' && (S.res[k] || 0) >= cap - 1e-9; setHtml(e.querySelector('[data-f=amt]'), `${f(Math.floor((S.res[k] || 0) + 1e-6))}${k === 'soldiers' ? '' : `<span class="capn">/${f(cap)}</span>`}`); e.classList.toggle('full', full && !war); }
+      { const war = k === 'soldiers', cap = Game.resCap(k), full = k !== 'soldiers' && (S.res[k] || 0) >= cap - 1e-9; setHtml(e.querySelector('[data-f=amt]'), `${f(Math.floor((S.res[k] || 0) + 1e-6))}${k === 'soldiers' ? '' : `<span class="capn">/${f(cap)}</span>`}`); e.classList.toggle('full', full && !war); }
       let rate = (kr[k] || 0) + (hr[k] || 0) + (hrv[k] || 0);
-      if (k === 'gold') rate += (Game.phase() === 3 ? Game.taxTotalPerHour() / 3600 : 0) + Game.headTaxPerHour() / 3600; else if (k === 'soldiers') rate = (Game.recruitPerMin() - Game.lossPerMin()) / 60; else if (k === 'people') rate = Game.birthRoom() > 0 ? Game.birthsPerMin() / 60 : 0; // taxes, births and recruits count too
-      const re = e.querySelector('[data-f=rate]'); if (k === 'soldiers' || k === 'people') { const pm = rate * 60; setText(re, (pm > 0 ? '+' : '') + (Math.abs(pm) < 10 ? pm.toFixed(1) : f(pm)) + '/m'); } else setText(re, (rate > 0 ? '+' + f(rate) : '0') + '/s'); re.classList.toggle('zero', !(rate > 0));
+      if (k === 'gold') rate += (Game.phase() === 3 ? Game.taxTotalPerHour() / 3600 : 0); else if (k === 'soldiers') rate = (Game.recruitPerMin() - Game.lossPerMin()) / 60; // taxes and recruits count too
+      const re = e.querySelector('[data-f=rate]'); if (k === 'soldiers') { const pm = rate * 60; setText(re, (pm > 0 ? '+' : '') + (Math.abs(pm) < 10 ? pm.toFixed(1) : f(pm)) + '/m'); } else setText(re, (rate > 0 ? '+' + f(rate) : '0') + '/s'); re.classList.toggle('zero', !(rate > 0));
     }
     { const p3 = Game.phase() === 3 && Game.barracksBuilt(); Game.WAR_KEYS.forEach((wk, i) => { const e = $('inc-' + wk); e.classList.toggle('hidden', !p3); if (!p3) return; e.style.order = String(1 + i);
         const inc = Game.warIncome(wk), dem = Game.warDemand(wk), cov = Game.warCover(wk), stall = cov < 1 && Game.soldiers() > 0;
@@ -1302,9 +1293,9 @@ const UI = (() => {
       if (p3) { const st2 = Game.stats(), rec = LN ? Game.recArmy(LN) : 0, mar = Game.marching();
         setHtml($('army-line'), `${ico(R.soldiers.icon, 18)} <b>${f(mar)}</b>&nbsp;soldiers march with you${rec ? ` <span class="dim">(recommended ${f(rec)})</span>` : ''} · hits <b>${f(st2.attack)}</b>&nbsp;<span class="dim">(${f(st2.gearAttack)} × army ×${st2.army.toFixed(2)}${st2.lap > 1 ? ' × victory lap ×' + st2.lap : ''})</span>`); $('army-line').classList.toggle('stall', rec > 0 && mar < rec * 0.5);
         { const loss = Game.lossPerMin(), rec2 = Game.recruitPerMin(), bl = Game.trainBlocker(), fshow = Game.heroFighting() && (loss > 0.05 || (bl && bl !== 'barracks')); $('army-flow').classList.toggle('hidden', !fshow);
-          if (fshow) setHtml($('army-flow'), `<div class="fchip loss"><b>−${loss.toFixed(1)} / min</b>fallen in battle</div><div class="fchip rec"><b>+${rec2.toFixed(1)} / min</b>${bl ? { people: 'no free people', houses: 'no houses', swords: 'short of arms', bread: 'short of bread' }[bl] || 'trained' : 'trained'}</div><div class="fchip stock"><b>${f(Game.people())}</b>people ready</div>`);
+          if (fshow) setHtml($('army-flow'), `<div class="fchip loss"><b>−${loss.toFixed(1)} / min</b>fallen in battle</div><div class="fchip rec"><b>+${rec2.toFixed(1)} / min</b>${bl ? { lumber: 'short of lumber', swords: 'short of arms', bread: 'short of bread' }[bl] || 'trained' : 'trained'}</div>`);
           $('strain-card').classList.add('hidden'); }
-        { const sn = S.kingdom.settleNote, show = !!sn && !sn.seen && h.time - sn.t < 1800; $('demand-note').classList.toggle('hidden', !show);
+        { const sn = S.kingdom.settleNote, show = false && !!sn; // Beta 0.2.0: no settlers $('demand-note').classList.toggle('hidden', !show);
           if (show) { setHtml($('demand-note'), `<b class="dh">${sn.name} conquered 👑</b><br>${f(sn.moved)} settlers moved to your Capital${sn.turned ? ` — <b class="bad">${f(sn.turned)} found no home</b> and turned back. Build houses (People chain) so the next wave stays.` : '.'} Every land you hold keeps sending more.<button class="retreat-x" aria-label="Dismiss" data-dn>×</button>`); const x = $('demand-note').querySelector('[data-dn]'); if (x) x.onclick = () => { sn.seen = true; }; } } }
       $('conquest-box').classList.toggle('hidden', !LN);
       if (LN) { const pct = Game.landPct(LN); setText($('cq-name'), `Conquest of ${G.name}`); setText($('cq-pct'), pct + '%'); $('cq-bar').style.width = pct + '%'; setText($('cq-text'), Game.isEndless() ? `∞ Endless Battle · 👑 ${G.crown}` : Game.landDone(LN) ? `Conquered · 👑 ${G.crown}` : `Stage ${h.stage} / ${G.stages}`);
@@ -1333,6 +1324,8 @@ const UI = (() => {
     $('auto-bar').style.width = at.pct + '%'; setText($('auto-text'), at.text); $('auto-barbox').className = 'bar autoadv ' + at.cls;
     $('auto-why').classList.toggle('hidden', !at.why); if (at.why) setText($('auto-why'), at.why);
     $('auto-adv').checked = S.settings.autoAdvance !== false;
+    { const p3 = Game.phase() === 3, m = p3 ? Game.marchReady() : null; $('march-row').classList.toggle('hidden', !p3); $('auto-march').checked = S.settings.autoMarch !== false;
+      setText($('march-note'), m ? (m.ready ? `${Game.landDef(m.n).name}: ready` : `${Game.landDef(m.n).name}: ${Game.fmt(Game.marching())} / ${Game.fmt(m.need)} soldiers`) : ''); }
     { const rn = h.retreatNote, show = !!rn && !rn.seen && h.time - rn.t < 600; $('retreat-note').classList.toggle('hidden', !show);
       if (show) setText($('retreat-text'), rn.boss ? `The ${rn.foe} was too strong — your hero had to retreat to stage ${rn.to}. Upgrade your gear or raise his healing, then face it again.` : `${rn.away ? 'While you were away, your' : 'Your'} hero had to retreat to stage ${rn.to} — stage ${rn.from} hits harder than he can heal. Upgrade your armor or weapon (Gear), or raise his healing, to push deeper.`); }
     $('advance-btn').disabled = !Game.canAdvance();
@@ -1411,7 +1404,7 @@ const UI = (() => {
     $('badge-hero').classList.toggle('hidden', !(anyGear || anySkill));
 
     // Kingdom
-    { const anyP = renderProd(); $('badge-prod').classList.toggle('hidden', !anyP); setText($('klsub-prod'), Game.barracksBuilt() ? `${Game.fmt(Game.soldiers())} ⚔` : Game.houses() ? `${Game.fmt(Game.people())} 👥` : ''); } $('badge-lands').classList.toggle('hidden', !renderLands()); renderWonders(); $('badge-halls').classList.toggle('hidden', !renderHalls());
+    { const anyP = renderProd(); $('badge-prod').classList.toggle('hidden', !anyP); setText($('klsub-prod'), Game.barracksBuilt() ? `${Game.fmt(Game.soldiers())} ⚔` : ''); } $('badge-lands').classList.toggle('hidden', !renderLands()); renderWonders(); $('badge-halls').classList.toggle('hidden', !renderHalls());
     const keepAct = renderKeep();
     renderThrone();
 
@@ -1531,7 +1524,7 @@ const UI = (() => {
   const fmPick = { hero: null, kingdom: null };
   function openFound() {
     if (Game.phase() === 3) { if (!Game.canPassCrown()) return; const g = Game.crownsIfPass(), S = Game.S;
-      if (S.kingdom.ageDone) { ask('Crown your heir?', `The Emperor has fallen. Your heir begins the ${Game.ageName(Game.ageNo() + 1)} with ${g} new Crown${g === 1 ? '' : 's'}: the same ten lands, far richer and far tougher. Lands, taxes, the army and your stores start over and the hero starts at level 1. The town is rebuilt too: every building goes back to one level with its parts at Lv 1${Game.perkRank('foundations') ? ` (Deep Foundations: +${Game.perkRank('foundations')} level${Game.perkRank('foundations') > 1 ? 's' : ''} already built)` : ''}, and houses, people and the Barracks level start over. His gear, Paths, Techniques, the buildings themselves, Wonders and every Crown stay, and the Halls keep part of their levels. Lands you know fall ${3 + Game.perkRank('lap')}× faster.`, 'Crown your heir', () => { if (Game.crownHeir()) { rebuild(); render(true); } }); return; }
+      if (S.kingdom.ageDone) { ask('Crown your heir?', `The Emperor has fallen. Your heir begins the ${Game.ageName(Game.ageNo() + 1)} with ${g} new Crown${g === 1 ? '' : 's'}: the same ten lands, far richer and far tougher. Lands, taxes, the army and your stores start over and the hero starts at level 1. The town is rebuilt too: every building goes back to one level with its parts at Lv 1${Game.perkRank('foundations') ? ` (Deep Foundations: +${Game.perkRank('foundations')} level${Game.perkRank('foundations') > 1 ? 's' : ''} already built)` : ''}, and the Barracks level starts over. His gear, Paths, Techniques, the buildings themselves, Wonders and every Crown stay, and the Halls keep part of their levels. Lands you know fall ${3 + Game.perkRank('lap')}× faster.`, 'Crown your heir', () => { if (Game.crownHeir()) { rebuild(); render(true); } }); return; }
       ask('Pass the Crown early?', `Your heir takes the throne with ${g} new Crown${g === 1 ? '' : 's'} and starts the ${Game.ageName()} again from land 1. Lands, taxes, the army and your stores start over and the hero starts at level 1; his gear, Paths, Techniques, the Capital, Wonders and Crowns stay. Lands you know fall ${3 + Game.perkRank('lap')}× faster. (Beat the Emperor at land ${CONFIG.ages.lands} to move on to the next Age instead.)`, 'Pass the Crown', () => { if (Game.passCrown()) { rebuild(); render(true); } }); return; }
     if (Game.S.legacy.foundings > 0) { if (!Game.canProclaim()) return;
       ask('Proclaim the Kingdom', `Your City becomes the Capital. Nothing is lost. You gain ${CONFIG.legacy.proclaimCrowns} Crowns, your army marches with the hero, and the lands beyond the hills open for conquest.`, 'Proclaim', () => { if (Game.proclaim()) { rebuild(); flash($('found-btn')); } }); return; }

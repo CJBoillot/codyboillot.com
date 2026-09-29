@@ -1231,3 +1231,4 @@ html, body { max-width: 100%; overflow-x: hidden; }
 .fh-warn.calm { color: var(--dim); } .fh-warn.calm b { color: var(--text); }
 .step-gain { color: #e9dcc0; margin-top: 2px; } .step-gain b { color: var(--hp2); }
 .oflow { border: 1px solid #6a5433; background: #1d160f; border-radius: 8px; padding: 6px 8px; color: #e9dcc0; line-height: 1.35; } .oflow b { color: var(--bronze2); } .oflow b.good { color: var(--hp2); }
+.town-build { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 6px; } .town-build .seg button { padding: 3px 10px; font-size: 11px; }
