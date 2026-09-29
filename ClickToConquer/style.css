@@ -1222,3 +1222,9 @@ html, body { max-width: 100%; overflow-x: hidden; }
 .sup-why { color: #e9dcc0; line-height: 1.35; } .sup-why b { color: var(--bronze2); }
 .cs-b.go { cursor: pointer; transition: border-color .15s, background .15s; } .cs-b.go:hover, .cs-b.go:active { border-color: var(--bronze-dim); background: #1f1812; }
 .cs-b.go:focus-visible { outline: 2px solid var(--bronze2); outline-offset: 2px; }
+/* Beta 0.1.17: a collapsed quest card stays compact on wide screens (the left panel used to stretch it and spread its rows) */
+.quest.collapsed { grid-template-columns: minmax(0, 1fr) auto; align-content: start; row-gap: 2px; }
+.panel-left .quest.collapsed { flex: 0 0 auto; min-height: 0; }
+.quest.collapsed .quest-head { white-space: nowrap; gap: 8px; justify-content: flex-start; }
+.quest.collapsed .quest-foot { grid-row: 1 / 3; }
+.quest.collapsed .quest-obj { grid-column: 1 / -1; }
