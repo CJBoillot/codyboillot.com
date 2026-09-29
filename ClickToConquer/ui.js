@@ -35,6 +35,7 @@ const UI = (() => {
   function init() {
     try { if (screen.orientation && screen.orientation.lock) screen.orientation.lock('portrait').catch(() => {}); } catch (e) {}
     $('celebrate').addEventListener('click', () => cbDone());
+    $('path-stars-box').addEventListener('click', showStarInfo);
     document.addEventListener('click', e => { const t = e.target.closest && e.target.closest('.req-src[data-item]'); if (t) { e.stopPropagation(); openItem(t.dataset.item); } }, true);
     $('confirm-no').addEventListener('click', closeAsk); $('confirm-modal').addEventListener('click', e => { if (e.target === $('confirm-modal')) closeAsk(); });
     $('confirm-yes').addEventListener('click', () => { const cb = confirmCb; closeAsk(); if (cb) cb(); });
@@ -1437,6 +1438,19 @@ const UI = (() => {
     cbTimer = setTimeout(cbDone, c.small ? 2200 : 3800);
   }
   function cbDone() { clearTimeout(cbTimer); const b = $('celebrate'); if (!cbBusy) return; b.classList.add('out'); setTimeout(() => { b.className = 'celebrate hidden'; cbBusy = false; cbNext(); }, 330); }
+  function showStarInfo() { // 0.10.7: where boss tokens go
+    const f = Game.fmt, free = Game.starsFree(), RK = CONFIG.paths.ranks, rows = [];
+    for (const n of Game.pathNodes()) { if (n.kind === 'small') continue; const r = Game.pathRank(n.id), open = Game.pathOpen(n.id), br = CONFIG.paths.branches.find(b => b.id === n.b);
+      const par = n.parents.map(id => Game.pathNode(id).name);
+      rows.push(`<div class="star-row"><div><b>${n.name}</b> <span class="dim small">· ${n.kind === 'key' ? 'Keystone' : 'Notable'} · ${br ? br.name : ''}</span></div><div class="small ${r >= RK ? 'good' : open ? 'warn' : 'dim'}">${r >= RK ? 'Mastered' : open ? `Open now · ${r} / ${RK} · 1 point + 1 ★ per rank` : `Locked · max ${par.join(' or ')} (${RK}/${RK}) to open it`}</div></div>`); }
+    let caps = '';
+    for (const d in CONFIG.trees) for (const node of CONFIG.trees[d]) if (node.capstone) { const r = Game.nodeRank(d, node.id); caps += `<div class="star-row"><div><b>${node.name}</b> <span class="dim small">· ${CONFIG.disciplines[d] ? CONFIG.disciplines[d].name : d} capstone</span></div><div class="small ${r ? 'good' : 'warn'}">${r ? 'Learned' : 'Open now · 1 ★ · ' + (node.desc || '').replace(/^Capstone:\s*/, '')}</div></div>`; }
+    const sp = Game.starsSpare();
+    showInfo('Boss tokens', `You have ${free} ★ to spend`, `<p class="small">Every boss you beat for the first time gives 1 ★. You spend them on the big nodes: each rank of a ★ node in the Paths costs 1 point + 1 ★, and each Gathering capstone costs 1 ★.</p>
+      <div class="star-head">Paths of War — the ★ nodes</div>${rows.join('')}
+      ${caps ? `<div class="star-head">Gathering capstones (Skills → Gathering)</div>${caps}` : ''}
+      <p class="small dim" style="margin-top:8px">The ★ nodes sit deep in each branch — max the nodes above them first. Stars you can never use there are not wasted: each spare ★ gives +0.5% attack and HP${sp ? ` (you have ${sp} spare: +${(sp * 0.5).toFixed(1)}%)` : ''}.</p>`);
+  }
   function hitPop(ev) {
     if (ev.who === 'rest') { const a = $('hero-hpbar') && $('hero-hpbar').offsetParent ? $('hero-hpbar').parentElement : document.querySelector('.top'); const r = a.getBoundingClientRect(); const p = el('div', 'pop heal', '☾ Resting'); p.style.left = (r.left + r.width * 0.5) + 'px'; p.style.top = (r.top + 4) + 'px'; document.body.appendChild(p); setTimeout(() => p.remove(), 1600); return; }
     if (ev.who === 'retreat') { const a = $('hero-hpbar') && $('hero-hpbar').offsetParent ? $('hero-hpbar').parentElement : document.querySelector('.top'); const r = a.getBoundingClientRect(); const p = el('div', 'pop taken', `◀ Retreat to stage ${ev.to}`); p.style.left = (r.left + r.width * 0.5) + 'px'; p.style.top = (r.top + 4) + 'px'; document.body.appendChild(p); setTimeout(() => p.remove(), 1800); return; }
