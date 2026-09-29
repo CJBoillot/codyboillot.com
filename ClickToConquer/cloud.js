@@ -10,7 +10,7 @@
 
   const C = {
     available: false, ready: false, user: null, status: 'off', // off | idle | syncing | ok | error | offline
-    lastSync: 0, dirty: false, busy: false, conflict: false,
+    lastSync: 0, dirty: false, busy: false, conflict: false, hold: null, // Beta 0.1.15: hold = 'resolving' | 'choose' | 'newer' — no upload until it clears
   };
   let auth = null, db = null, lastPush = 0;
   const deviceId = ls.get(LS.device) || (() => { const d = Math.random().toString(36).slice(2) + Date.now().toString(36); ls.set(LS.device, d); return d; })();
@@ -56,25 +56,29 @@
     try { await auth.signInWithPopup(p); }
     catch (e) { if (e && (e.code === 'auth/popup-blocked' || e.code === 'auth/operation-not-supported-in-this-environment' || e.code === 'auth/cancelled-popup-request')) await auth.signInWithRedirect(p); else if (e && e.code !== 'auth/popup-closed-by-user') { C.status = 'error'; C.error = 'Sign-in failed.'; UIhook(); } }
   }
-  async function signOut() { if (C.user && C.dirty) await push(); await auth.signOut(); C.user = null; C.status = 'idle'; UIhook(); }
+  async function signOut() { if (C.user && C.dirty && !C.hold) await push(); C.hold = null; await auth.signOut(); C.user = null; C.status = 'idle'; UIhook(); }
   const docRef = () => db.collection('users').doc(C.user.uid);
 
   // ---------- pull / push ----------
   async function pull() { const snap = await docRef().get(); if (!snap.exists) return null; const d = snap.data(); return { ...d, str: await unpack(d) }; }
   async function push(force = false) {
     if (!C.user || C.busy) return false;
+    if (C.hold && !(force && C.hold !== 'newer')) return false; // never upload over a save the player hasn't chosen between, or over a newer version
     if (!navigator.onLine) { C.status = 'offline'; UIhook(); return false; }
     C.busy = true; C.status = 'syncing'; UIhook();
     const str = Game.saveString(), meta = Game.saveMeta(str), body = await pack(str), L = link();
     try {
       const res = await db.runTransaction(async tx => {
         const snap = await tx.get(docRef());
-        if (!force && snap.exists) { const d = snap.data(); if (d.deviceId !== deviceId && L && L.uid === C.user.uid && d.lastTick > L.tick + 1000) return 'conflict'; }
+        if (snap.exists) { const d = snap.data();
+          if (d.saveKey === Game.SAVE_KEY && versionNewer(d.version, CONFIG.version)) return 'newer'; // checked inside the transaction, even when forced
+          if (!force && d.saveKey === Game.SAVE_KEY && d.deviceId !== deviceId && (!L || L.uid !== C.user.uid || d.lastTick > L.tick + 1000)) return 'conflict'; }
         tx.set(docRef(), { enc: body.enc, data: body.data, lastTick: meta.lastTick, heroTime: meta.played, version: CONFIG.version, saveKey: Game.SAVE_KEY, deviceId,
           name: C.user.displayName || '', photo: C.user.photoURL || '', updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
         return 'ok';
       });
-      if (res === 'conflict') { C.busy = false; C.status = 'error'; C.error = 'Newer progress on another device.'; UIhook(); showConflict(); return false; }
+      if (res === 'newer') { C.busy = false; C.hold = 'newer'; C.status = 'error'; C.error = 'Your cloud save is from a newer version — tap Reload game.'; UIhook(); return false; }
+      if (res === 'conflict') { C.busy = false; C.hold = 'choose'; C.status = 'error'; C.error = 'Newer progress on another device.'; UIhook(); showConflict(); return false; }
       setLink(C.user.uid, meta.lastTick, meta.played); C.lastSync = Date.now(); lastPush = Date.now(); C.dirty = false; C.status = 'ok'; C.error = '';
     } catch (e) { C.status = navigator.onLine ? 'error' : 'offline'; C.error = (e && e.code === 'resource-exhausted') ? 'Cloud is busy today — saved on this device.' : `Could not save to the cloud — saved on this device. (${(e && (e.code || e.message)) || 'unknown'})`; try { console.warn('cloud push', e); } catch (x) {} }
     C.busy = false; UIhook(); return C.status === 'ok';
@@ -82,29 +86,30 @@
 
   // ---------- sign-in resolution: which save wins ----------
   async function afterSignIn(u) {
-    C.status = 'syncing'; UIhook();
-    let cloud; try { cloud = await pull(); } catch (e) { C.status = 'error'; C.error = `Could not read your cloud save. (${(e && (e.code || e.message)) || 'unknown'})`; UIhook(); return; }
+    C.hold = 'resolving'; C.status = 'syncing'; UIhook();
+    let cloud; try { cloud = await pull(); } catch (e) { C.hold = null; C.status = 'error'; C.error = `Could not read your cloud save. (${(e && (e.code || e.message)) || 'unknown'})`; UIhook(); return; }
     const localStr = Game.saveString(), local = Game.saveMeta(localStr), L = link();
-    if (!cloud || cloud.saveKey !== Game.SAVE_KEY) { await push(true); return; } // Beta 0.1.0: an Alpha cloud save is replaced by this game (hard restart)
-    if (versionNewer(cloud.version, CONFIG.version)) { C.status = 'error'; C.error = 'Your cloud save is from a newer version — tap Reload game.'; UIhook(); return; }
+    if (!cloud || cloud.saveKey !== Game.SAVE_KEY) { C.hold = null; await push(true); return; } // Beta 0.1.0: an Alpha cloud save is replaced by this game (hard restart)
+    if (versionNewer(cloud.version, CONFIG.version)) { C.hold = 'newer'; C.status = 'error'; C.error = 'Your cloud save is from a newer version — tap Reload game.'; UIhook(); return; }
     const cm = Game.saveMeta(cloud.str);
     const localFresh = local.played < 300 && (Game.S.legacy.foundings || 0) === 0 && (Game.S.legacy.knowledge || 0) === 0;
     const linked = L && L.uid === u.uid;
     const localMovedSinceSync = !linked || (local.played - (L.heroTime || 0)) > 60;
     const cloudMovedSinceSync = !linked || (cloud.deviceId !== deviceId && cloud.lastTick > (L.tick || 0) + 1000);
     if (localFresh) return useCloud(cloud, false);
-    if (linked && !cloudMovedSinceSync) { await push(true); return; }         // cloud is just our last upload
+    if (linked && !cloudMovedSinceSync) { C.hold = null; await push(true); return; }         // cloud is just our last upload
     if (linked && !localMovedSinceSync) return useCloud(cloud, false);         // only the other device played
     chooseSave(local, cm, cloud);                                              // both have real progress: ask
   }
   function versionNewer(a, b) { const n = v => { const t = String(v || ''); return [/beta/i.test(t) ? 1 : 0, ...(t.match(/\d+/g) || []).map(Number)]; }; const x = n(a), y = n(b); for (let i = 0; i < Math.max(x.length, y.length); i++) { if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0); } return false; }
   function useCloud(cloud, backupLocal) {
+    C.hold = null;
     if (backupLocal) ls.set(LS.backup, JSON.stringify({ at: Date.now(), key: Game.SAVE_KEY, save: Game.saveString() }));
     if (!Game.restoreString(cloud.str)) { C.status = 'error'; C.error = 'That cloud save could not be loaded.'; UIhook(); return; }
     setLink(C.user.uid, cloud.lastTick, (Game.saveMeta(cloud.str) || {}).played || 0); C.lastSync = Date.now(); C.dirty = false; C.status = 'ok'; C.error = '';
     if (typeof UI !== 'undefined' && UI.rebuild) UI.rebuild(); UIhook();
   }
-  function keepLocal() { push(true); }
+  function keepLocal() { C.hold = null; push(true); }
 
   // ---------- modals ----------
   const ago = t => { const s = Math.max(0, (Date.now() - t) / 1000); return s < 90 ? 'just now' : s < 5400 ? Math.round(s / 60) + ' min ago' : s < 129600 ? Math.round(s / 3600) + ' h ago' : Math.round(s / 86400) + ' days ago'; };
@@ -115,7 +120,7 @@
     $('cs-cloud').classList.toggle('pick', cloudNewer); $('cs-local').classList.toggle('pick', !cloudNewer);
     $('cs-use-cloud').onclick = () => { $('cloud-modal').classList.add('hidden'); useCloud(cloud, true); };
     $('cs-use-local').onclick = () => { $('cloud-modal').classList.add('hidden'); keepLocal(); };
-    $('cloud-modal').classList.remove('hidden'); C.status = 'idle'; UIhook();
+    C.hold = 'choose'; $('cloud-modal').classList.remove('hidden'); C.status = 'idle'; UIhook();
   }
   async function showConflict() {
     let cloud; try { cloud = await pull(); } catch (e) { return; } if (!cloud || cloud.saveKey !== Game.SAVE_KEY) return;

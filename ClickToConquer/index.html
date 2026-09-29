@@ -16,13 +16,13 @@
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=b0114">
+  <link rel="stylesheet" href="style.css?v=b0115">
 </head>
 <body>
 
 <div class="sticky-head">
   <header class="top">
-    <div class="brand"><img src="assets/logo.png" alt="Click to Conquer" class="logo"><div id="version" class="version"></div><div id="crystal-chip" class="crystal-chip hidden" title="Crowns — spend in Kingdom → Legacy">👑 <b id="crystal-n">0</b></div><div class="head-btns"><button id="avatar-btn" class="avatar-btn" title="Account" aria-label="Account"><span id="avatar-img" class="avatar-img"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><circle cx="12" cy="8.5" r="4"/><path d="M4 20.5c.8-4 4.2-6 8-6s7.2 2 8 6z"/></svg></span><span id="avatar-dot" class="avatar-dot hidden"></span></button><button id="dev-toggle" class="gear-btn" title="Settings" aria-label="Settings"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button></div></div>
+    <div class="brand"><img src="assets/logo.png" alt="Click to Conquer" class="logo"><div id="version" class="version"></div><div id="crystal-chip" class="crystal-chip hidden" title="Crowns — spend in Skills → Crown Tree">👑 <b id="crystal-n">0</b></div><div class="head-btns"><button id="avatar-btn" class="avatar-btn" title="Account" aria-label="Account"><span id="avatar-img" class="avatar-img"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><circle cx="12" cy="8.5" r="4"/><path d="M4 20.5c.8-4 4.2-6 8-6s7.2 2 8 6z"/></svg></span><span id="avatar-dot" class="avatar-dot hidden"></span></button><button id="dev-toggle" class="gear-btn" title="Settings" aria-label="Settings"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button></div></div>
     <div id="res-bar" class="res-bar"></div>
   </header>
   <nav class="tabs" id="main-tabs">
@@ -380,7 +380,7 @@
     <p class="dim small">AFK mode earns <b id="wb-eff"></b> of active play, up to <b id="wb-cap"></b>.</p>
     <div id="wb-gains" class="wb-gains"></div>
     <button id="wb-ad" class="big accent">▶ Watch ad: ×2</button>
-    <button id="wb-claim" class="big">Claim</button>
+    <button id="wb-claim" class="big">Continue</button>
   </div>
 </div>
 
@@ -490,11 +490,11 @@
 </div>
 
 
-<script src="config.js?v=b0114"></script>
-<script src="cloud-config.js?v=b0114"></script>
-<script src="game.js?v=b0114"></script>
-<script src="ui.js?v=b0114"></script>
-<script src="cloud.js?v=b0114"></script>
+<script src="config.js?v=b0115"></script>
+<script src="cloud-config.js?v=b0115"></script>
+<script src="game.js?v=b0115"></script>
+<script src="ui.js?v=b0115"></script>
+<script src="cloud.js?v=b0115"></script>
 <script>window.addEventListener("error", e => { const d = document.getElementById("err"); if (d) { d.textContent = "Error: " + e.message; d.classList.remove("hidden"); } });</script>
 <div id="celebrate" class="celebrate hidden" role="status" aria-live="polite"><div class="cb-ico" id="cb-ico"></div><div class="cb-txt"><div class="cb-kicker" id="cb-kicker"></div><div class="cb-title" id="cb-title"></div><div class="cb-sub" id="cb-sub"></div></div></div>
 </body>

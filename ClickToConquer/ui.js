@@ -80,7 +80,7 @@ const UI = (() => {
     $('item-close').addEventListener('click', closeItem); $('item-modal').addEventListener('click', e => { if (e.target === $('item-modal')) closeItem(); });
     $('item-s1').addEventListener('click', () => invItem && Game.sell(invItem, 1)); $('item-s10').addEventListener('click', () => invItem && Game.sell(invItem, 10)); $('item-sall').addEventListener('click', () => invItem && Game.sell(invItem, 'all'));
     document.querySelectorAll('[data-speed]').forEach(b => b.addEventListener('click', () => { Game.S.settings.devSpeed = +b.dataset.speed; document.querySelectorAll('[data-speed]').forEach(x => x.classList.toggle('active', x === b)); }));
-    $('dev-offline').addEventListener('click', () => showWelcomeBack(Game.applyOffline(4 * 3600)));
+    $('dev-offline').addEventListener('click', () => { const d = Game.applyOffline(4 * 3600); Game.claimOffline(d, 1); showWelcomeBack(d); });
     const devN = () => +$('dev-n').value || 0;
     for (const k in R) { const o = document.createElement('option'); o.value = k; o.textContent = R[k].name; $('dev-res').appendChild(o); }
     $('dev-give-all').addEventListener('click', () => Game.debug.giveAll(devN()));
@@ -723,7 +723,8 @@ const UI = (() => {
         <div class="card dig-card"><div class="dig-t">${st.dig} · ${Game.unitName(id)} ${Game.depthCount(id) + 1}</div><div class="tiny dim" data-f="digwhy"></div><button class="buy wide" data-dig><span class="small">${st.dig}</span><br><span class="cost" data-f="digcost"></span></button></div>
         ${houseBox}${stock}`);
       box.querySelector('[data-back]').addEventListener('click', closeBld);
-      box.querySelector('[data-f=chain]').addEventListener('click', e => { const g = e.target.closest('[data-go]'); if (g) openBld(g.dataset.go); });
+      { const ch = box.querySelector('[data-f=chain]'); ch.addEventListener('click', e => { const g = e.target.closest('[data-go]'); if (g) openBld(g.dataset.go); });
+        ch.addEventListener('keydown', e => { if (e.key !== 'Enter' && e.key !== ' ') return; const g = e.target.closest('[data-go]'); if (g) { e.preventDefault(); openBld(g.dataset.go); } }); }
       wirePartBtns(box); box.querySelector('[data-dig]').addEventListener('click', () => { if (Game.dig(id)) { bldKey = ''; prodKey = ''; render(true); } });
       box.querySelectorAll('[data-stock]').forEach(b => b.addEventListener('click', () => { const v = b.dataset.stock; if (Game.setStockMode(st.make, v === 'auto' ? 'auto' : +v)) { Game.save(); render(true); } }));
       box.querySelectorAll('[data-houses]').forEach(b => b.addEventListener('click', () => { Game.setHousesOn(b.dataset.houses === '1'); bldKey = ''; render(true); }));
@@ -737,7 +738,7 @@ const UI = (() => {
     { const db = box.querySelector('[data-dig]'), open = Game.digOpen(), nd = Game.depthCount(id) + 1; db.disabled = !Game.canDig(id); setHtml(box.querySelector('[data-f=digcost]'), open ? costHtml(Game.digCost(id)) + (Game.digCost(id).gold > Game.resCap('gold') ? '<br><span class="tiny warn">more than your Storehouse holds — expand it in the Keep</span>' : '') : '<span class="dim">after Proclaim</span>');
       setText(box.querySelector('[data-f=digwhy]'), open ? `Starts at Lv 1 but makes ×${f(Game.depthYield(nd))} what the first ${Game.unitName(id).toLowerCase()} makes at the same level. Its own Work, Cart and Haul.` : 'Your town grows new levels once the Kingdom is proclaimed.'); }
     { const CF = Game.chainFlow(st.line), me = CF.findIndex(c => c.id === id), rn = k => R[k].name.toLowerCase();
-      setHtml(box.querySelector('[data-f=chain]'), CF.map((c, i) => `${i ? '<span class="cs-ar">→</span>' : ''}<div class="cs-b${i === me ? ' me' : ' go'}"${i === me ? '' : ` data-go="${c.id}" role="button"`}><span class="tiny dim">${c.name}${i === me ? '' : ' ›'}</span><b>${fo(c.out)}</b><span class="tiny dim">${rn(c.make)}/s</span></div>`).join(''));
+      setHtml(box.querySelector('[data-f=chain]'), CF.map((c, i) => `${i ? '<span class="cs-ar">→</span>' : ''}<div class="cs-b${i === me ? ' me' : ' go'}"${i === me ? ' aria-current="true"' : ` data-go="${c.id}" role="button" tabindex="0" aria-label="Open the ${c.name}"`}><span class="tiny dim">${c.name}${i === me ? '' : ' ›'}</span><b>${fo(c.out)}</b><span class="tiny dim">${rn(c.make)}/s</span></div>`).join(''));
       if (st.from && me > 0) { let root = me - 1; while (root > 0 && CF[root].out < CF[root].cap - 1e-6) root--; const c = CF[me], p = CF[me - 1], pct = c.use > 0 ? Math.min(1, c.supply / c.use) : 0, pn = Game.stepDef(p.id).name, stP = Game.stockTarget(st.from), filling = stP.target > (S.res[st.from] || 0) && stP.share < 1;
         setText(box.querySelector('[data-f=supin]'), `${fo(c.supply)}/s`); setText(box.querySelector('[data-f=supuse]'), `${fo(c.use)}/s`);
         const sb = box.querySelector('[data-f=supbar]'); sb.style.width = (100 * pct) + '%'; sb.parentElement.classList.toggle('short', pct < 0.999);
@@ -1519,10 +1520,10 @@ const UI = (() => {
   const fmPick = { hero: null, kingdom: null };
   function openFound() {
     if (Game.phase() === 3) { if (!Game.canPassCrown()) return; const g = Game.crownsIfPass(), S = Game.S;
-      if (S.kingdom.ageDone) { ask('Crown your heir?', `The Emperor has fallen. Your heir begins the ${Game.ageName(Game.ageNo() + 1)} with ${g} new Crown${g === 1 ? '' : 's'}: the same ten lands, far richer and far tougher. Lands, taxes, the army and your stores start over and the hero starts at level 1; his gear, Paths, Techniques, the Capital, Wonders and every Crown stay. Lands you know fall ${3 + Game.perkRank('lap')}× faster.`, 'Crown your heir', () => { if (Game.crownHeir()) { rebuild(); render(true); } }); return; }
+      if (S.kingdom.ageDone) { ask('Crown your heir?', `The Emperor has fallen. Your heir begins the ${Game.ageName(Game.ageNo() + 1)} with ${g} new Crown${g === 1 ? '' : 's'}: the same ten lands, far richer and far tougher. Lands, taxes, the army and your stores start over and the hero starts at level 1. The town is rebuilt too: every building goes back to one level with its parts at Lv 1${Game.perkRank('foundations') ? ` (Deep Foundations: +${Game.perkRank('foundations')} level${Game.perkRank('foundations') > 1 ? 's' : ''} already built)` : ''}, and houses, people and the Barracks level start over. His gear, Paths, Techniques, the buildings themselves, Wonders and every Crown stay, and the Halls keep part of their levels. Lands you know fall ${3 + Game.perkRank('lap')}× faster.`, 'Crown your heir', () => { if (Game.crownHeir()) { rebuild(); render(true); } }); return; }
       ask('Pass the Crown early?', `Your heir takes the throne with ${g} new Crown${g === 1 ? '' : 's'} and starts the ${Game.ageName()} again from land 1. Lands, taxes, the army and your stores start over and the hero starts at level 1; his gear, Paths, Techniques, the Capital, Wonders and Crowns stay. Lands you know fall ${3 + Game.perkRank('lap')}× faster. (Beat the Emperor at land ${CONFIG.ages.lands} to move on to the next Age instead.)`, 'Pass the Crown', () => { if (Game.passCrown()) { rebuild(); render(true); } }); return; }
     if (Game.S.legacy.foundings > 0) { if (!Game.canProclaim()) return;
-      ask('Proclaim the Kingdom', `Your City becomes the Capital. Nothing is lost. You gain ${CONFIG.legacy.proclaimCrowns} Crowns, the Barracks opens, and the header becomes your war chest.`, 'Proclaim', () => { if (Game.proclaim()) { rebuild(); flash($('found-btn')); } }); return; }
+      ask('Proclaim the Kingdom', `Your City becomes the Capital. Nothing is lost. You gain ${CONFIG.legacy.proclaimCrowns} Crowns, your army marches with the hero, and the lands beyond the hills open for conquest.`, 'Proclaim', () => { if (Game.proclaim()) { rebuild(); flash($('found-btn')); } }); return; }
     if (!Game.canFound()) return;
     const L = Game.S.legacy;
     fmPick.hero = L.heroPath || 'warrior'; fmPick.kingdom = L.kingdomPath || 'benevolent';
@@ -1533,7 +1534,7 @@ const UI = (() => {
       holder.innerHTML = '';
       for (const p of list) {
         const b = el('button', 'path' + (fmPick[key] === p.id ? ' active' : ''));
-        const ok = Game.pathUnlocked(p);
+        const ok = Game.pathUnlocked(p); if (!ok) continue; // Beta 0.1.15: you found only once, so a locked choice could never open — don't show it
         b.innerHTML = `${ico(p.icon, 28)}<div><div class="path-name">${p.name}${ok ? '' : ` <span class="dim">(Kingdom Lv${p.unlock})</span>`}</div><div class="path-desc">${p.desc}</div></div>`;
         b.disabled = !ok;
         b.addEventListener('click', () => { fmPick[key] = p.id; holder.querySelectorAll('.path').forEach(x => x.classList.toggle('active', x === b)); $('fm-confirm').disabled = !(fmPick.hero && fmPick.kingdom); });
@@ -1618,7 +1619,7 @@ const UI = (() => {
     else if (ms.length > 1) CBQ.push({ small: 1, ico: '⚒', kicker: 'Output doubled', title: `${ms.length} buildings doubled`, sub: ms.map(m => m.name).slice(0, 3).join(' · ') });
     for (const e of evs) {
       if (e.who === 'crown') { const G = Game.landDef(e.n); CBQ.push({ ico: '👑', kicker: 'Land conquered', title: G ? G.name : 'Conquered', sub: `You take ${G ? G.crown : 'a crown'} · +${e.v} Crown${e.v === 1 ? '' : 's'} when the crown passes${e.first ? ' · new in the Vault' : ''}` }); }
-      else if (e.who === 'crownpass') CBQ.push({ ico: '👑', kicker: 'Long live the heir', title: `Dynasty ${Game.S.legacy.dynasty}`, sub: `+${e.gain} Crowns to spend in Legacy · lands you know fall ${3 + Game.perkRank('lap')}× faster` });
+      else if (e.who === 'crownpass') CBQ.push({ ico: '👑', kicker: 'Long live the heir', title: `Dynasty ${Game.S.legacy.dynasty}`, sub: `+${e.gain} Crowns to spend in the Crown Tree · lands you know fall ${3 + Game.perkRank('lap')}× faster` });
       else if (e.who === 'dig') CBQ.push({ small: 1, ico: '⛏', kicker: 'Your town grows', title: `${e.name} · ${e.unit} ${e.d}`, sub: 'It starts small but can grow far bigger than the last — upgrade its three steps inside.' });
       else if (e.who === 'depth' && e.first && e.depth % 5 === 0) { const G = Game.landDef(e.n); CBQ.push({ small: 1, ico: '∞', kicker: 'Deeper than ever', title: `${G ? G.name : ''} · depth ${e.depth}`, sub: `Tougher foes, +10% ${G && R[G.spoil] ? R[G.spoil].name.toLowerCase() : 'spoils'}` }); }
       else if (e.who === 'pathrow') CBQ.push({ small: 1, ico: '✦', kicker: 'Paths', title: `Row ${e.t + 1} opens`, sub: 'Deeper ranks: stronger, and costlier.' });
@@ -1694,7 +1695,7 @@ const UI = (() => {
     $('wb-gains').innerHTML = Object.entries(data.gains).filter(([, v]) => v > 0).map(([k, v]) => `<div class="costitem">${ico(R[k].icon, 24)} +${Game.fmt(v)}</div>`).join('');
     $('welcome').classList.remove('hidden');
   }
-  function claimWelcome(mult) { if (welcomeData) Game.claimOffline(welcomeData, mult); welcomeData = null; $('welcome').classList.add('hidden'); Game.save(); }
+  function claimWelcome(mult) { welcomeData = null; /* Beta 0.1.15: already banked when you came back */ $('welcome').classList.add('hidden'); Game.save(); }
 
   // ---- Enemy art: place the image so the enemy's face sits just under its HP bar ----
   let artLast = 0;
