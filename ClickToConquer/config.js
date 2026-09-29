@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Beta 0.1.8',
+  version: 'Beta 0.1.9',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -504,6 +504,7 @@ const CONFIG = {
   // jobs (jobs completed by hand or thrall), sold (gold earned at market), stage, boss, founded, thrall (assigned), activity (swings).
   // Shown in Settings → What's new (newest first). Keep each line short.
   changelog: [
+    ['Beta 0.1.9', 'Refreshed art for every Farm and Mine step and pile.'],
     ['Beta 0.1.8', 'New art for the Farm and the Mine: every step and every pile now has its own painting.'],
     ['Beta 0.1.7', 'A new look inside every building: a flow overview shows each step\'s rate and where the bottleneck is; every step has its own card, and the piles between steps show what is waiting and whether it is building up. Step art is on the way.'],
     ['Beta 0.1.6', 'Every building has its own steps: the Farm Plants, Grows and Harvests; the Mine Digs, Extracts and Hauls; Logging Grows, Fells and Hauls; the Sawmill Loads, Saws and Stacks; the Carpenter Planes, Joins and Raises; the Forge Stokes, Smelts and Casts; the Armory Heats, Hammers and Tempers; the Mill Pours, Grinds and Sacks; the Bakery Kneads, Bakes and Delivers.'],
