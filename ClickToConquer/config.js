@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Beta 0.1.10',
+  version: 'Beta 0.1.11',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -504,6 +504,7 @@ const CONFIG = {
   // jobs (jobs completed by hand or thrall), sold (gold earned at market), stage, boss, founded, thrall (assigned), activity (swings).
   // Shown in Settings → What's new (newest first). Keep each line short.
   changelog: [
+    ['Beta 0.1.11', 'New art for the Carpenter and the Forge.'],
     ['Beta 0.1.10', 'New art for Logging and the Sawmill, and a fresh set for the Farm and the Mine.'],
     ['Beta 0.1.9', 'Refreshed art for every Farm and Mine step and pile.'],
     ['Beta 0.1.8', 'New art for the Farm and the Mine: every step and every pile now has its own painting.'],
