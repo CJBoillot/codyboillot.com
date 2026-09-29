@@ -1375,6 +1375,12 @@ function load() {
       for (const id in OLD) if (P[id]) { let c = 0; for (let i = 0; i < P[id]; i++) c += Math.ceil(OLD[id][0] * Math.pow(OLD[id][1], i)); S.legacy.knowledge = (S.legacy.knowledge || 0) + c; delete P[id]; } }
     if (S.kingdom && !S.kingdom.cr104) { S.kingdom.cr104 = true; if (phase() === 3) { let c = 0; for (let n = 1; landDef(n) && landDone(n); n++) c += rulerCrowns(n); S.kingdom.crownsRun = c; } } // 0.10.4: the new Crown curve counts for this dynasty too
     if (phase() === 3 && S.hero.activity !== 'fight') { S.hero.activity = 'fight'; S.hero.harvestTimer = 0; } // 0.10.6: no gathering in the Kingdom phase
+    if (!S.legacy.v112) { S.legacy.v112 = true; // 0.11.2 loot cleanup: items that did nothing are sold for their old price; meat, berries and the cleaver are gone
+      const OLD = { berries: 1, meat: 5, rattail: 3, tusk: 12, greatboartusk: 90, wolfpelt: 15, alphafang: 120, bearclaw: 20, cavebearhide: 150, saberfang: 30, beastkingcrown: 300, rope: 4, lockbox: 40, banditseal: 200, tollbaronring: 350, bonedust: 3, graveiron: 25, bonelordskull: 250, cultidol: 400 };
+      let g = 0; for (const k in OLD) { g += Math.floor((S.res[k] || 0) * OLD[k]); delete S.res[k]; if (S.lifetime) delete S.lifetime[k]; if (S.settings.unpinned) delete S.settings.unpinned[k]; }
+      if (g > 0) { S.res.gold = (S.res.gold || 0) + g; log(`Old trinkets sold for ${fmt(g)} gold.`); }
+      if (S.hero.tools) delete S.hero.tools.cleaver; if (S.hero.crafting && S.hero.crafting.slot === 'cleaver') S.hero.crafting = null; if (S.tech) delete S.tech.butchery; if (S.researching && S.researching.id === 'butchery') S.researching = null;
+      if (S.kingdom && S.kingdom.orders) S.kingdom.orders = S.kingdom.orders.filter(o => !Object.keys(o.wants || {}).some(k => OLD[k])); }
     if (!S.legacy.v111) { S.legacy.v111 = true; const L = S.legacy, h = S.hero; // 0.11.1: the Crown Tree and Ages
       let capsLearned = 0; for (const d in CONFIG.trees) for (const node of CONFIG.trees[d]) if (node.capstone && nodeRank(d, node.id)) capsLearned++;
       const starsOld = Object.keys(h.stars || {}).length + (h.bonusTalent || 0), starBack = Math.max(0, starsOld - capsLearned); h.bonusTalent = 0;

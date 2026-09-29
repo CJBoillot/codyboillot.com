@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Alpha 0.11.1',
+  version: 'Alpha 0.11.2',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -32,17 +32,15 @@ const CONFIG = {
   resourceTiers: 3,
   resources: {
     // Tier 1 — the wild
-    fiber:   { name: 'Plant Fiber', icon: [11,15], tier: 1, sell: 1, buy: 2,  desc: 'Pulled from plants, or foraged with a sickle. Clothing and rope.' },
+    fiber:   { name: 'Plant Fiber', icon: [11,15], tier: 1, sell: 1, buy: 2,  desc: 'Pulled from plants, or foraged with a sickle. Clothing and hide armour.' },
     wood:    { name: 'Wood',     icon: [17,0],  tier: 1, sell: 1, buy: 5,  desc: 'Snapped from trees, or chopped with an axe. Tools, buildings, weapon hafts.' },
     hide:    { name: 'Hide',     icon: [17,8],  tier: 1, sell: 2, buy: 7,  desc: 'From beasts in the Wilds (with a Skinning Knife). Tannery turns 3 into Leather.' },
     stone:   { name: 'Stone',    icon: [17,1],  tier: 1, sell: 1, buy: 5,  desc: 'Picked up, or quarried with a pickaxe. Stone weapons, buildings.' },
-    berries: { name: 'Berries',  icon: [14,4],  tier: 1, sell: 1, buy: 3,  desc: 'Foraged with a sickle. Food, and later potions.' },
     // Tier 2 — spoils and the forge
     gold:    { name: 'Gold',     icon: [12,7],  tier: 2, sell: 0,  desc: 'Coin. Buys plots, founds kingdoms, levels skills. Earned at the Market and from bandits on the Roads.' },
     ore:     { name: 'Iron Ore', icon: [17,2],  tier: 2, sell: 1, buy: 10,  desc: 'Mined once you know Prospecting. Blacksmith turns 5 into an Ingot.' },
     leather: { name: 'Leather',  icon: [8,2],   tier: 2, sell: 8, buy: 25,  desc: 'Tannery. Leather armor.' },
     ingot:   { name: 'Ingot',    icon: [17,3],  tier: 2, sell: 10, buy: 40, desc: 'Blacksmith. Iron gear and tools.' },
-    meat:    { name: 'Meat',     icon: [15,1],  tier: 2, sell: 5, buy: 15,  desc: 'From beasts once you know Butchery, and from Husbandry. Sells well; feeds thralls one day.' },
     // Tier 3 — the settled kingdom
     grain:   { name: 'Grain',    icon: [14,13], tier: 3, sell: 1, buy: 4,  desc: 'From the Farm. Feeds Husbandry.' },
     wool:    { name: 'Wool',     icon: [17,5],  tier: 3, sell: 2, buy: 6,  desc: 'From Husbandry. Weaver turns 3 into Cloth.' },
@@ -62,24 +60,7 @@ const CONFIG = {
     soldiers:  { name: 'Soldiers',  icon: 'assets/gear/helm_t2.webp',   kind: 'war', tier: 4, sell: 0, desc: 'Trained at the Barracks. The army marches with the hero and multiplies his power.' },
     bricks:  { name: 'Bricks',   icon: [13,4],  tier: 3, sell: 12, buy: 40, desc: 'Kiln turns 5 stone into a brick. Hardened gear, grand buildings.' },
     // ---- Loot (kind: 'loot'): dropped by enemies, shown in the Inventory, not in the header bar ----
-    rattail:   { name: 'Rat Tail',        icon: [16,2],  kind: 'loot', rarity: 'common',   sell: 3,   desc: 'Proof of a rat well killed. Sells for a little.' },
     ratkingtooth: { name: "Rat King's Tooth", icon: [17,9], kind: 'loot', rarity: 'rare', sell: 60,  desc: 'Trophy from the Rat King. A crafting material for fine trinkets.' },
-    tusk:      { name: 'Boar Tusk',       icon: [17,9],  kind: 'loot', rarity: 'uncommon', sell: 12,  desc: 'Curved ivory. Weapon hilts and trinkets.' },
-    greatboartusk: { name: 'Great Tusk',  icon: [17,9],  kind: 'loot', rarity: 'rare',     sell: 90,  desc: 'Trophy from the Great Boar.' },
-    wolfpelt:  { name: 'Wolf Pelt',       icon: [17,8],  kind: 'loot', rarity: 'uncommon', sell: 15,  desc: 'Thick winter pelt. Warm armor linings.' },
-    alphafang: { name: 'Alpha Fang',      icon: [17,9],  kind: 'loot', rarity: 'rare',     sell: 120, desc: 'Trophy from the Alpha Wolf. Needed for Beast Mastery.' },
-    bearclaw:  { name: 'Bear Claw',       icon: [8,0],   kind: 'loot', rarity: 'uncommon', sell: 20,  desc: 'A claw as long as a finger. Weapon studs.' },
-    cavebearhide: { name: 'Cave Bear Hide', icon: [17,8], kind: 'loot', rarity: 'rare',    sell: 150, desc: 'Trophy from the Cave Bear. Hardened armor.' },
-    saberfang: { name: 'Saber Fang',      icon: [17,9],  kind: 'loot', rarity: 'uncommon', sell: 30,  desc: 'Long curved fang. Blades.' },
-    beastkingcrown: { name: "Beast King's Crown", icon: [12,7], kind: 'loot', rarity: 'rare', sell: 300, desc: 'Trophy from the Beast King.' },
-    rope:      { name: 'Rope',            icon: [11,15], kind: 'loot', rarity: 'common',   sell: 4,   desc: 'Bandit rope. Buildings and traps.' },
-    lockbox:   { name: 'Lockbox',         icon: [16,14], kind: 'loot', rarity: 'uncommon', sell: 40,  desc: 'A bandit strongbox. Sells for a tidy sum.' },
-    banditseal: { name: "Chief's Seal",   icon: [13,11], kind: 'loot', rarity: 'rare',     sell: 200, desc: 'Trophy from the Bandit Chief.' },
-    tollbaronring: { name: "Toll Baron's Ring", icon: [8,4], kind: 'loot', rarity: 'rare', sell: 350, desc: 'Trophy from the Toll Baron.' },
-    bonedust:  { name: 'Bone Dust',       icon: [15,10], kind: 'loot', rarity: 'common',   sell: 3,   desc: 'What is left of the dead. Potions, one day.' },
-    graveiron: { name: 'Grave Iron',      icon: [17,2],  kind: 'loot', rarity: 'uncommon', sell: 25,  desc: 'Rusted armor plate. Melts down to ingots.' },
-    bonelordskull: { name: "Bone Lord's Skull", icon: [0,0], kind: 'loot', rarity: 'rare', sell: 250, desc: 'Trophy from the Bone Lord.' },
-    cultidol:  { name: 'Cult Idol',       icon: [6,9],   kind: 'loot', rarity: 'rare',     sell: 400, desc: 'Trophy from the Cult Priest.' },
   },
   rarities: { common: { name: 'Common', color: '#b9b0a3' }, uncommon: { name: 'Uncommon', color: '#5fbf7a' }, rare: { name: 'Rare', color: '#e8c06a' } },
 
@@ -160,7 +141,6 @@ const CONFIG = {
     pick:   { name: 'Pickaxe', icon: [10,2], activity: 'mine',   base: 1 },
     sickle: { name: 'Sickle',  icon: [5,5], activity: 'forage', base: 1 },
     knife:  { name: 'Skinning Knife', icon: [5,6], base: 1, boosts: 'hide' },
-    cleaver: { name: "Butcher's Cleaver", icon: [3,0], base: 1, boosts: 'meat' },
   },
   toolTiers: [
     { name: 'Wooden', mult: 1, craftCost: { wood: 10 },                      upgradeCost: { wood: 6 },                upgradeMult: 1.3 },
@@ -173,7 +153,7 @@ const CONFIG = {
     fight:  { name: 'Fight',     icon: [5,1],  desc: 'Slay enemies for XP and loot. Bandits on the Roads carry gold.' },
     wood:   { name: 'Chop Wood', icon: [4,6],  tool: 'axe',    time: 5, outputs: { wood: 1 },              desc: 'Fell trees in the wild. Needs an axe.' },
     mine:   { name: 'Mine',      icon: [4,5],  tool: 'pick',   time: 6, outputs: { stone: 1, ore: 1 },     desc: 'Work a rockface for stone. Needs a pickaxe. Iron ore once you know Prospecting.' },
-    forage: { name: 'Forage',    icon: [11,15], tool: 'sickle', time: 4, outputs: { fiber: 1, berries: 1 }, desc: 'Gather fiber and berries. Needs a sickle.' },
+    forage: { name: 'Forage',    icon: [11,15], tool: 'sickle', time: 4, outputs: { fiber: 1 }, desc: 'Gather plant fiber. Needs a sickle.' },
   },
   gather: { bgBase: 0.35, bgExp: 0.5 }, // 0.10.12: owned tools gather in the background at bgBase × power^bgExp of the old full-attention rate — slow with a new tool, far faster once it is levelled
   harvestStrPct: 0.01, // +1% harvest speed per Strength point
@@ -219,10 +199,10 @@ const CONFIG = {
     ],
     forage: [
       { id: 'swing',   name: 'Quick Sickle',icon: [5,5],  row: 0, per: { harvestSpeed: 0.05 },  desc: '+5% foraging speed per rank' },
-      { id: 'yield',   name: 'Full Basket', icon: [11,15],row: 0, per: { harvestYield: 0.05 },  desc: '+5% fiber & berries per swing per rank' },
+      { id: 'yield',   name: 'Full Basket', icon: [11,15],row: 0, per: { harvestYield: 0.05 },  desc: '+5% fiber per swing per rank' },
       { id: 'edge',    name: 'Light Step',  icon: [0,7],  row: 1, parent: 'swing', per: { harvestSpeed: 0.03 }, desc: '+3% foraging speed per rank' },
       { id: 'double',  name: 'Bounty',      icon: [14,4], row: 1, parent: 'yield', per: { harvestDouble: 0.02 }, desc: '+2% chance of a double swing per rank' },
-      { id: 'herbalist', name: 'Herbalist', icon: [11,13],row: 2, parent: 'double', capstone: true, side: { berries: 0.5 }, desc: 'Capstone: half of swings yield extra berries' },
+      { id: 'herbalist', name: 'Herbalist', icon: [11,13],row: 2, parent: 'double', capstone: true, side: { fiber: 0.5 }, desc: 'Capstone: half of swings yield extra fiber' },
     ],
   },
 
@@ -285,7 +265,7 @@ const CONFIG = {
   // Bestiary: the more you kill a type, the better you fight it — bonus = ×damage dealt and −damage taken vs that type.
   bestiary: { tiers: [ { kills: 10, name: 'Familiar', bonus: 0.02 }, { kills: 50, name: 'Studied', bonus: 0.05 }, { kills: 200, name: 'Known', bonus: 0.10 }, { kills: 1000, name: 'Mastered', bonus: 0.15 } ] },
   // Trophies: mounted heads for kill milestones. Each trophy owned = +lootPerTrophy loot and XP, permanently.
-  trophies: { lootPerTrophy: 0.02, tiers: [ { kills: 500, name: 'Wood', color: '#8a6a3a' }, { kills: 1500, name: 'Stone', color: '#9a9a9a' }, { kills: 4000, name: 'Bronze', color: '#c08040' }, { kills: 10000, name: 'Silver', color: '#d8dce0' }, { kills: 25000, name: 'Gold', color: '#e8c06a' } ] },
+  trophies: { lootPerTrophy: 0.02, tiers: [ { kills: 1000, name: 'Bronze', color: '#c08040' }, { kills: 3000, name: 'Silver', color: '#d8dce0' }, { kills: 10000, name: 'Gold', color: '#e8c06a' }, { kills: 30000, name: 'Platinum', color: '#9fd8e0' }, { kills: 100000, name: 'Diamond', color: '#b9a8ff' } ] },
 
   // ---------- Techniques (active). Unlocked by milestones, levelled by use (mastery), never reset. ----------
   // Mastery XP per cast = the technique's base cooldown (so every technique levels at about the same pace per minute of fighting).
@@ -361,28 +341,28 @@ const CONFIG = {
   },
   grounds: {
     // Each ground is a LINE of enemy types. A type has 10 stages; stage 10 is its boss. Pool: per-kill drop chance = base + growth × (stage−1), capped.
-    // Loot from earlier types carries over at its stage-10 chance. `unique` drops once, on the first boss kill (+1 ★).
-    // dropTool: the drop needs that tool and scales with it. Tech gating (Skinning → hide, Butchery → meat, Grave Robbing → ingot) applies by resource.
-    wilds:  { name: 'The Wilds',  icon: [17,8],  desc: 'Beasts. Hide and meat — no gold.',              goldMult: 0, dropTool: { hide: 'knife', meat: 'cleaver' }, line: [
-      { id: 'rat',   name: 'Rat',      plural: 'Rats',      boss: 'Rat King',    unique: 'ratkingtooth', pool: [{ k: 'hide', base: 0.10, growth: 0.05 }, { k: 'rattail', base: 0.00, growth: 0.03 }] },
-      { id: 'boar',  name: 'Boar',     plural: 'Boars',     boss: 'Great Boar',  unique: 'greatboartusk', pool: [{ k: 'hide', base: 0.35, growth: 0.04 }, { k: 'meat', base: 0.25, growth: 0.04 }, { k: 'tusk', base: 0.03, growth: 0.03 }] },
-      { id: 'wolf',  name: 'Wolf',     plural: 'Wolves',    boss: 'Alpha Wolf',  unique: 'alphafang',    pool: [{ k: 'hide', base: 0.45, growth: 0.04 }, { k: 'meat', base: 0.30, growth: 0.04 }, { k: 'wolfpelt', base: 0.03, growth: 0.03 }] },
-      { id: 'bear',  name: 'Bear',     plural: 'Bears',     boss: 'Cave Bear',   unique: 'cavebearhide', pool: [{ k: 'hide', base: 0.55, growth: 0.05 }, { k: 'meat', base: 0.40, growth: 0.05 }, { k: 'bearclaw', base: 0.03, growth: 0.03 }] },
-      { id: 'saber', name: 'Sabercat', plural: 'Sabercats', boss: 'Beast King',  unique: 'beastkingcrown', pool: [{ k: 'hide', base: 0.65, growth: 0.05 }, { k: 'meat', base: 0.45, growth: 0.05 }, { k: 'saberfang', base: 0.04, growth: 0.03 }] },
+    // Loot from earlier types carries over at its stage-10 chance. `unique` drops once, on the first boss kill (only the Rat King's Tooth, for the tribute).
+    // dropTool: the drop needs that tool and scales with it. Tech gating (Skinning → hide, Grave Robbing → ingot) applies by resource.
+    wilds:  { name: 'The Wilds',  icon: [17,8],  desc: 'Beasts. Hide — no gold.',              goldMult: 0, dropTool: { hide: 'knife' }, line: [
+      { id: 'rat',   name: 'Rat',      plural: 'Rats',      boss: 'Rat King',    unique: 'ratkingtooth', pool: [{ k: 'hide', base: 0.10, growth: 0.05 }] },
+      { id: 'boar',  name: 'Boar',     plural: 'Boars',     boss: 'Great Boar',   pool: [{ k: 'hide', base: 0.35, growth: 0.04 }] },
+      { id: 'wolf',  name: 'Wolf',     plural: 'Wolves',    boss: 'Alpha Wolf',      pool: [{ k: 'hide', base: 0.45, growth: 0.04 }] },
+      { id: 'bear',  name: 'Bear',     plural: 'Bears',     boss: 'Cave Bear',    pool: [{ k: 'hide', base: 0.55, growth: 0.05 }] },
+      { id: 'saber', name: 'Sabercat', plural: 'Sabercats', boss: 'Beast King',   pool: [{ k: 'hide', base: 0.65, growth: 0.05 }] },
     ] },
     roads:  { name: 'The Roads',  icon: [5,7],   desc: 'Bandits. The only enemies that carry gold.',     goldMult: 1, req: { stage: 10 }, reqText: 'Slay the Rat King in the Wilds', line: [
-      { id: 'cutpurse', name: 'Cutpurse',   plural: 'Cutpurses',   boss: 'Bandit Chief',       unique: 'banditseal',    pool: [{ k: 'fiber', base: 0.20, growth: 0.04 }, { k: 'rope', base: 0.05, growth: 0.03 }] },
-      { id: 'bandit',   name: 'Bandit',     plural: 'Bandits',     boss: 'Toll Baron',         unique: 'tollbaronring', pool: [{ k: 'fiber', base: 0.40, growth: 0.04 }, { k: 'rope', base: 0.15, growth: 0.03 }, { k: 'lockbox', base: 0.01, growth: 0.01 }] },
-      { id: 'merc',     name: 'Mercenary',  plural: 'Mercenaries', boss: 'Mercenary Captain',  unique: 'lockbox',       pool: [{ k: 'rope', base: 0.30, growth: 0.03 }, { k: 'lockbox', base: 0.03, growth: 0.02 }, { k: 'ingot', base: 0.02, growth: 0.01 }] },
-      { id: 'raider',   name: 'Raider',     plural: 'Raiders',     boss: 'Raider Lord',        unique: 'lockbox',       pool: [{ k: 'rope', base: 0.40, growth: 0.03 }, { k: 'lockbox', base: 0.06, growth: 0.02 }, { k: 'ingot', base: 0.05, growth: 0.02 }] },
-      { id: 'assassin', name: 'Assassin',   plural: 'Assassins',   boss: 'The Black Prince',   unique: 'lockbox',       pool: [{ k: 'lockbox', base: 0.10, growth: 0.03 }, { k: 'ingot', base: 0.08, growth: 0.02 }] },
+      { id: 'cutpurse', name: 'Cutpurse',   plural: 'Cutpurses',   boss: 'Bandit Chief',           pool: [{ k: 'fiber', base: 0.20, growth: 0.04 }] },
+      { id: 'bandit',   name: 'Bandit',     plural: 'Bandits',     boss: 'Toll Baron',          pool: [{ k: 'fiber', base: 0.40, growth: 0.04 }] },
+      { id: 'merc',     name: 'Mercenary',  plural: 'Mercenaries', boss: 'Mercenary Captain',         pool: [{ k: 'ingot', base: 0.02, growth: 0.01 }] },
+      { id: 'raider',   name: 'Raider',     plural: 'Raiders',     boss: 'Raider Lord',               pool: [{ k: 'ingot', base: 0.05, growth: 0.02 }] },
+      { id: 'assassin', name: 'Assassin',   plural: 'Assassins',   boss: 'The Black Prince',          pool: [{ k: 'ingot', base: 0.08, growth: 0.02 }] },
     ] },
     crypts: { name: 'The Crypts', icon: [0,0],   desc: 'Undead. Grave gold, and old iron.',              goldMult: 1.6, req: { tech: 'graverobbing' }, reqText: 'Research Grave Robbing', line: [
-      { id: 'skeleton', name: 'Skeleton',   plural: 'Skeletons',   boss: 'Bone Lord',    unique: 'bonelordskull', pool: [{ k: 'bonedust', base: 0.20, growth: 0.04 }, { k: 'ingot', base: 0.02, growth: 0.01 }, { k: 'graveiron', base: 0.02, growth: 0.02 }] },
-      { id: 'ghoul',    name: 'Ghoul',      plural: 'Ghouls',      boss: 'Cult Priest',  unique: 'cultidol',      pool: [{ k: 'bonedust', base: 0.40, growth: 0.04 }, { k: 'ingot', base: 0.04, growth: 0.01 }, { k: 'graveiron', base: 0.05, growth: 0.02 }] },
-      { id: 'wraith',   name: 'Wraith',     plural: 'Wraiths',     boss: 'Crypt Wight',  unique: 'cultidol',      pool: [{ k: 'bonedust', base: 0.50, growth: 0.04 }, { k: 'ingot', base: 0.06, growth: 0.02 }, { k: 'graveiron', base: 0.08, growth: 0.02 }] },
-      { id: 'knight',   name: 'Bone Knight',plural: 'Bone Knights',boss: 'Lich',         unique: 'cultidol',      pool: [{ k: 'ingot', base: 0.10, growth: 0.02 }, { k: 'graveiron', base: 0.12, growth: 0.03 }] },
-      { id: 'shade',    name: 'Shade',      plural: 'Shades',      boss: 'The Sleeper',  unique: 'cultidol',      pool: [{ k: 'ingot', base: 0.15, growth: 0.02 }, { k: 'graveiron', base: 0.15, growth: 0.03 }] },
+      { id: 'skeleton', name: 'Skeleton',   plural: 'Skeletons',   boss: 'Bone Lord',     pool: [{ k: 'ingot', base: 0.02, growth: 0.01 }] },
+      { id: 'ghoul',    name: 'Ghoul',      plural: 'Ghouls',      boss: 'Cult Priest',        pool: [{ k: 'ingot', base: 0.04, growth: 0.01 }] },
+      { id: 'wraith',   name: 'Wraith',     plural: 'Wraiths',     boss: 'Crypt Wight',        pool: [{ k: 'ingot', base: 0.06, growth: 0.02 }] },
+      { id: 'knight',   name: 'Bone Knight',plural: 'Bone Knights',boss: 'Lich',               pool: [{ k: 'ingot', base: 0.10, growth: 0.02 }] },
+      { id: 'shade',    name: 'Shade',      plural: 'Shades',      boss: 'The Sleeper',        pool: [{ k: 'ingot', base: 0.15, growth: 0.02 }] },
     ] },
   },
 
@@ -472,9 +452,9 @@ const CONFIG = {
     hirePrice: [0, 40, 120, 350, 900, 2200], offerRefresh: 300, refreshCost: 25,
     ranks: [ { name: 'Reeve', renown: 0, perk: 'Start' }, { name: 'Baron', renown: 200, perk: 'Storehouse ×2 · Orders pay 50% more' }, { name: 'Count', renown: 1000, perk: 'Orders pay double' }, { name: 'Duke', renown: 3000, perk: 'Orders pay ×2.5' } ],
     orderFrom: ['The Northern Legion', 'The Merchant Guild', 'The Village of Ashford', 'The Imperial Court', 'The Border Garrison'],
-    orderBase: { wood: 40, grain: 40, ore: 30, planks: 20, flour: 20, ingot: 15, lumber: 10, bread: 10, swords: 6, hide: 25, meat: 15, stone: 40, fiber: 40, berries: 30 },
-    heroOrderGoods: ['hide', 'meat', 'stone', 'fiber', 'berries'],   // when the kingdom makes fewer than 3 goods, Orders ask for what the hero gathers
-    renownPer: { wood: 0.5, grain: 0.5, ore: 0.7, planks: 1.5, flour: 1.5, ingot: 2, lumber: 4, bread: 4, swords: 6, hide: 0.8, meat: 1, stone: 0.4, fiber: 0.4, berries: 0.4 },
+    orderBase: { wood: 40, grain: 40, ore: 30, planks: 20, flour: 20, ingot: 15, lumber: 10, bread: 10, swords: 6, hide: 25, stone: 40, fiber: 40 },
+    heroOrderGoods: ['hide', 'stone', 'fiber'],   // when the kingdom makes fewer than 3 goods, Orders ask for what the hero gathers
+    renownPer: { wood: 0.5, grain: 0.5, ore: 0.7, planks: 1.5, flour: 1.5, ingot: 2, lumber: 4, bread: 4, swords: 6, hide: 0.8, stone: 0.4, fiber: 0.4 },
     orderGoldMult: 2.5, orderBonusSeconds: 600, speedBonus: 0.2,
   },
 
@@ -509,6 +489,7 @@ const CONFIG = {
   // jobs (jobs completed by hand or thrall), sold (gold earned at market), stage, boss, founded, thrall (assigned), activity (swings).
   // Shown in Settings → What's new (newest first). Keep each line short.
   changelog: [
+    ['0.11.2', 'Loot cleanup. Drops that did nothing are gone: rat tails, tusks, pelts, claws, fangs, rope, lockboxes, bone dust, grave iron and the boss trinkets (the Rat King\'s Tooth stays: it pays the tribute). Meat, berries, the Butcher\'s Cleaver and Butchery are gone too. The Wilds drop hide, the Roads gold, the Crypts gold and ingots. Anything you were holding was sold for its old price. Trophies are kill milestones per enemy: Bronze at 1,000 kills, Silver 3,000, Gold 10,000, Platinum 30,000, Diamond 100,000 (+2% loot and XP each).'],
     ['0.11.1', 'Ages and the Crown Tree. Each Age is ten lands; beat the Emperor at land 10 and press Crown your heir in the Keep to begin the next Age — the same ten lands, far richer and far tougher, with the Age named on Where to fight. Eras and Wonders keep counting across Ages. Permanent power now comes from one place: the Crown Tree (Skills → Crown Tree), bought with Crowns — few ranks, big effects, and an endless node at the bottom of each branch. Every first boss kill gives a Crown (boss tokens are gone), Captains pay Crowns each Age, and rulers pay more in later Ages. Your old Path gold, boss tokens and Legacy perks were refunded, and saves past land 10 moved into the right Age.'],
     ['0.11.0', 'Eras and Wonders. Every fifth land now ends in an Era Ruler — far tougher than a normal ruler. Beat one and its Wonder opens in the Keep: Great Granary, Royal Armoury, Colosseum, War College, Harbour of Kings, then stronger versions of each. Wonders are huge, permanent boosts that survive every Pass the Crown; by default half your taxes flow into the one being built (change it in the Keep). From land 6 each era\'s enemies have a trait — Armoured, Swarm, Casters, Beasts, Undead. The economy is rebalanced so late lands no longer fall like dominoes: taxes grow ×2.6 per land, Path ranks get 20% dearer each, Crowns grow steadily with each land (and Bloodline has no rank cap, so every Crown has a use), recruits scale with your army, and there are now 200 lands.'],
     ['0.10.12', 'Tools now work for you. Once you own an axe, pickaxe or sickle, it gathers on its own — all the time, even while your hero fights and while you are away. A new tool is slow; every level makes it much faster, so upgrading tools matters more than ever. The Chop Wood, Mine and Forage boxes now just open that tool\'s screen (swing speed, yield, what you have in store); the fight carries on in the bar at the bottom.'],
@@ -687,15 +668,9 @@ const CONFIG = {
         { label: 'Fight in The Crypts', check: { activity: 'fight', ground: 'crypts' } },
         { label: 'Take 3 ingots from the dead', check: { looted: 'ingot', need: 3, since: true } },
       ], reward: { gold: 100 }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:graverobbing', el2: 'ground:crypts' } },
-    { id: 'q14b', name: 'Butcher', text: 'Beasts are meat as well as hide, if you have the blade for it. A better cleaver takes more meat per kill. Meat sells well — and your skills feed on it.',
+    { id: 'q16', name: 'Deeper', text: 'Back to the Wilds: the beasts grow fiercer the deeper you go, and every stage deeper is more hide and more experience. When fights get slow, upgrade your weapon — that is what the hide and stone are for.',
       steps: [
-        { label: 'Kingdom → Tech → Research Butchery', check: { tech: 'butchery' } },
-        { label: "Gear → click the Butcher's Cleaver slot → Make (10 wood)", check: { tool: 'cleaver' }, focus: { tab: 'hero', sub: 'gear', el: 'tool:cleaver' } },
-        { label: 'Fight in The Wilds', check: { activity: 'fight', ground: 'wilds' } },
-        { label: 'Take 20 meat from boars or bigger beasts (rats have none)', check: { looted: 'meat', need: 20, since: true } },
-      ], reward: { meat: 10 }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:butchery', el2: 'ground:wilds' } },
-    { id: 'q16', name: 'Deeper', text: 'Every stage deeper is more loot and more experience. When fights get slow, upgrade your weapon — that is what the hide and stone are for.',
-      steps: [
+        { label: 'Where to fight → The Wilds', check: { activity: 'fight', ground: 'wilds' } },
         { label: 'Push 5 stages past your best', check: { counter: 'stage', need: 5, since: true } },
       ], reward: { gold: 200 }, focus: { tab: 'hero', sub: 'fight', el: 'act:fight', el2: 'id:advance-btn' } },
     { id: 'q16b', name: 'The Trophy Wall', text: 'Kill 500 of one kind and its head goes on your wall — Wood, then Stone, Bronze, Silver and Gold. Every head is +2% loot and XP, for good.',
@@ -788,7 +763,6 @@ const CONFIG = {
     { id: 'stoneweapons',tier: 0, name: 'Stone Weapons',    icon: [17,1],  req: { stone: 30 },            cost: { stone: 10, wood: 5 },           unlocks: { gearTier: 1, slots: ['weapon'] }, desc: 'Knap a stone edge onto a wooden haft. Weapons go Wood → Stone → Iron → Steel.' },
     // Tier 1 — Settlement
     { id: 'prospecting',tier: 1, name: 'Prospecting',      icon: [17,2],  req: { stone: 120 },           cost: { stone: 40, wood: 20 },          unlocks: { drop: 'ore' },           desc: 'Tell ore from rock. Mining — by pick or by Mine — now yields Iron Ore as well as stone.' },
-    { id: 'butchery',   tier: 1, name: 'Butchery',         icon: [15,1],  req: { kills: 100 },           cost: { hide: 10, wood: 10 },          unlocks: { drop: 'meat', tool: 'cleaver' }, desc: "Lets you make a Butcher's Cleaver. With one, beasts in the Wilds drop Meat — better cleaver, better chance." },
     { id: 'graverobbing',tier: 1, name: 'Grave Robbing',    icon: [0,0],   req: { bossKills: 1 },         cost: { gold: 100 },                   unlocks: { drop: 'ingot' },         desc: 'Open the Crypts: the dead carry gold and rusted iron.' },
     // Tier 2 — Ironworking
     { id: 'irongear',   tier: 2, name: 'Iron Gear',        icon: [5,1],   req: { ingot: 50 },            cost: { gold: 400, ingot: 10 },        unlocks: { gearTier: 2 },           desc: 'Forge Iron gear.' },
