@@ -596,9 +596,12 @@ const UI = (() => {
   function closeBld() { bldOpen = null; $('bld-view').classList.add('hidden'); $('prod-view').classList.remove('hidden'); render(true); }
   function partBtn(id, p, small, d = 1) { return `<button class="buy pbtn" data-part="${p}" data-id="${id}" data-d="${d}"><span class="${small ? 'tiny' : 'small'}" data-f="pl${p}">${Game.partName(id, p)}</span>${small ? '' : ' <span class="small dim" data-f="plv' + p + '"></span>'}<br><span class="cost" data-f="pc${p}"></span></button>`; }
   function wirePartBtns(root) { root.querySelectorAll('[data-part]').forEach(b => b.addEventListener('click', e => { e.stopPropagation(); if (Game.upgradeStep(b.dataset.id, b.dataset.part, kBuy, +b.dataset.d || 1)) { flash(b); render(true); } })); }
+  // Beta 0.1.19: a building short of input isn't its own bottleneck — the building that starves it is
+  function starvedBy(id) { const st = Game.stepDef(id); if (!st || !st.from) return null; const CF = Game.chainFlow(st.line), me = CF.findIndex(c => c.id === id); if (me < 1) return null; const c = CF[me]; if (!(c.supply < c.use - 1e-6)) return null;
+    let root = me - 1; while (root > 0 && CF[root].out < CF[root].cap - 1e-6) root--; return CF[root].name; }
   function fillPartBtn(root, id, p, small, d = 1) {
     const b = root.querySelector(`[data-part="${p}"][data-id="${id}"][data-d="${d}"]`); if (!b) return false;
-    const cap = Game.levelCap(), lv = Game.partLv(id, p, d), plan = Game.stepUpPlan(id, p, kBuy, d), lim = Game.limitPart(id, d) === p;
+    const cap = Game.levelCap(), lv = Game.partLv(id, p, d), plan = Game.stepUpPlan(id, p, kBuy, d), lim = Game.limitPart(id, d) === p && !starvedBy(id);
     b.classList.toggle('hot', lim); b.disabled = !plan.n;
     if (!small) setText(b.querySelector(`[data-f=plv${p}]`), `Lv ${lv}${plan.n > 1 ? ' → ' + (lv + plan.n) : ''}`);
     else setText(b.querySelector(`[data-f=pl${p}]`), `${Game.partName(id, p)} ${lv}`);
@@ -693,9 +696,10 @@ const UI = (() => {
   function renderLevel(dc, st, d, dest) {
     const id = st.id, f = Game.fmt, fo = v => v < 10 ? v.toFixed(2) : f(v), P = Game.pipe(id, d), caps = Game.PARTS.map(p => Game.partCap(id, p, d)), mx = Math.max(...caps), lim = Game.limitPart(id, d), dout = Game.depthOutput(id, d), gd = R[st.make].name.toLowerCase();
     setText(dc.querySelector('[data-f=dout]'), `${fo(dout)} ${gd}/s`);
-    setHtml(dc.querySelector('[data-f=bnote]'), `⚠ Bottleneck at<br><b>${Game.partName(id, lim)}</b>`);
+    const starved = starvedBy(id);
+    setHtml(dc.querySelector('[data-f=bnote]'), starved ? `Waiting on<br><b>the ${starved}</b>` : `⚠ Bottleneck at<br><b>${Game.partName(id, lim)}</b>`); dc.querySelector('[data-f=bnote]').classList.toggle('calm', !!starved);
     const prog = { W: [P.w, P.tw], C: [P.c, P.tc], H: [P.h, P.th] };
-    Game.PARTS.forEach((p, i) => { const lv = Game.partLv(id, p, d), nm = Game.nextMilestone(lv), T = Game.tripTime(id, p, d), L = Game.tripLoad(id, p, d), [carry, t] = prog[p], isLim = p === lim;
+    Game.PARTS.forEach((p, i) => { const lv = Game.partLv(id, p, d), nm = Game.nextMilestone(lv), T = Game.tripTime(id, p, d), L = Game.tripLoad(id, p, d), [carry, t] = prog[p], isLim = p === lim && !starved;
       const fb = dc.querySelector(`[data-fb="${p}"]`); fb.classList.toggle('lim', isLim); fb.querySelector('.bar > div').style.width = (100 * caps[i] / mx) + '%'; setText(fb.querySelector('[data-f=r]'), `${fo(caps[i])}/s`);
       const sc = dc.querySelector(`[data-step="${p}"]`); sc.classList.toggle('bottleneck', isLim); sc.querySelector('[data-f=bn]').classList.toggle('hidden', !isLim);
       setText(sc.querySelector('[data-f=lv]'), 'Lv ' + lv);
@@ -709,7 +713,7 @@ const UI = (() => {
       pc.querySelectorAll('.pile-gauge i').forEach((g, k) => g.classList.toggle('on', k < fill));
       setText(pc.querySelector('[data-f=net]'), net > 1e-9 ? `+${fo(net)}/s` : `+${fo(inflow)}/s`);
       setText(pc.querySelector('[data-f=why]'), net > 1e-9 ? 'building up' : `limited by ${Game.partName(id, lim === 'H' ? up : (Game.PARTS.indexOf(lim) < n ? lim : up)).toLowerCase()}`);
-      pc.classList.toggle('jam', net > 1e-9); });
+      pc.classList.toggle('jam', net > 1e-9 && !starved); });
   }
   function renderBld() {
     const S = Game.S, f = Game.fmt, id = bldOpen, st = Game.stepDef(id), box = $('bld-view'); if (!st || !Game.stepBuilt(id)) { closeBld(); return; }
