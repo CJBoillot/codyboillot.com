@@ -848,7 +848,7 @@ const UI = (() => {
       row.classList.toggle('full', done); row.classList.toggle('front', !done && pct > 0 || (!done && Game.landOpen(n)));
       setHtml(row.querySelector('[data-f=nm]'), `${n} · ${G.name}`);
       const here = Game.heroInLand(n);
-      setHtml(row.querySelector('[data-f=meta]'), (done ? `100% conquered · 👑 ${G.ruler}` : pct > 0 ? `${pct}% conquered · ${G.ruler} waits at stage ${G.stages}` : `Not yet attacked · ${G.terrain}`) + (here && pct > 50 ? ` <span class="warn">· pays 50% while your hero is here — move on to collect it all</span>` : ''));
+      setHtml(row.querySelector('[data-f=meta]'), (done ? `100% conquered · 👑 ${G.ruler}` : pct > 0 ? `${pct}% conquered · ${G.ruler} waits at battle ${G.stages}` : `Not yet attacked · ${G.terrain}`) + (here && pct > 50 ? ` <span class="warn">· pays 50% while your hero is here — move on to collect it all</span>` : ''));
       setHtml(row.querySelector('[data-f=cof]'), pct > 0 ? `${ico(R.gold.icon, 14)} ${f(Game.taxPerHour(n))}` : '');
       setText(row.querySelector('[data-f=rate]'), pct > 0 ? `/ hour${Game.garrisonFill(n) < 1 ? ` (full garrison: ${f(Game.taxFull(n) * Game.landShare(n))})` : ''}` : `~${f(Game.taxFull(n))} / h when conquered`);
       setHtml(row.querySelector('[data-f=gar]'), pct > 0 ? `🛡 Garrison <b class="${g >= need ? 'good' : 'warn'}">${g} / ${need}</b> <span class="${g >= need ? 'good' : 'warn'}">· ${Math.round(100 * Math.min(1, g / need))}% taxes</span>` : '<span class="dim">Garrison once you hold part of it</span>');
@@ -1287,7 +1287,7 @@ const UI = (() => {
     for (const id in CONFIG.grounds) { const b = rows.ground[id], G = CONFIG.grounds[id], un = Game.groundUnlocked(id), gs = id === h.ground ? { stage: h.stage } : (h.grounds[id] || { stage: 1 });
       if (G.land) { const show = Game.phase() === 3 && G.land <= Game.landsHeld() + 2; b.classList.toggle('hidden', !show); if (!show) continue; b.classList.toggle('land-done', Game.landDone(G.land)); }
       b.classList.toggle('active', id === h.ground); b.disabled = !un; b.classList.toggle('locked', !un);
-      setText(b.querySelector('[data-f=st]'), G.land ? (Game.landDone(G.land) ? '👑 100%' : un ? `${Game.landPct(G.land)}% · stage ${gs.stage}` : Game.landReqText(G.land)) : un ? Game.stageLabel(gs.stage, id) : G.reqText); }
+      setText(b.querySelector('[data-f=st]'), G.land ? (Game.landDone(G.land) ? '👑 100%' : un ? `${Game.landPct(G.land)}% · battle ${gs.stage}` : Game.landReqText(G.land)) : un ? Game.stageLabel(gs.stage, id) : G.reqText); }
     { const p3 = Game.phase() === 3, LN = Game.landN(), G = Game.ground();
       $('army-line').classList.toggle('hidden', !p3 || !Game.heroFighting()); if (!p3) { $('army-flow').classList.add('hidden'); $('strain-card').classList.add('hidden'); }
       if (p3) { const st2 = Game.stats(), rec = LN ? Game.recArmy(LN) : 0, mar = Game.marching();
@@ -1299,7 +1299,7 @@ const UI = (() => {
           if (show) { setHtml($('demand-note'), `<b class="dh">${sn.name} conquered 👑</b><br>${f(sn.moved)} settlers moved to your Capital${sn.turned ? ` — <b class="bad">${f(sn.turned)} found no home</b> and turned back. Build houses (People chain) so the next wave stays.` : '.'} Every land you hold keeps sending more.<button class="retreat-x" aria-label="Dismiss" data-dn>×</button>`); const x = $('demand-note').querySelector('[data-dn]'); if (x) x.onclick = () => { sn.seen = true; }; } } }
       $('conquest-box').classList.toggle('hidden', !LN);
       if (LN) { const pct = Game.landPct(LN); setText($('cq-name'), `Conquest of ${G.name}`); setText($('cq-pct'), pct + '%'); $('cq-bar').style.width = pct + '%'; setText($('cq-text'), Game.isEndless() ? `∞ Endless Battle · 👑 ${G.crown}` : Game.landDone(LN) ? `Conquered · 👑 ${G.crown}` : `Stage ${h.stage} / ${G.stages}`);
-        const ck = LN + '|' + G.stages; if ($('cq-ticks').__k !== ck) { $('cq-ticks').__k = ck; setHtml($('cq-ticks'), `<span>Captains every 10 stages</span><span>👑 ${G.ruler} · stage ${G.stages}</span>`); } }
+        const ck = LN + '|' + G.stages; if ($('cq-ticks').__k !== ck) { $('cq-ticks').__k = ck; setHtml($('cq-ticks'), `<span>Captains every 10 battles</span><span>👑 ${G.ruler} · battle ${G.stages}</span>`); } }
       }
     { const G = Game.ground(), drops = Game.groundDrops(), pool = Game.stagePool();
       const why = k => k === 'hide' ? (Game.dropUnlocked('hide') ? 'needs a Skinning Knife' : 'needs Skinning') : !Game.dropUnlocked(k) ? 'needs ' + (CONFIG.techs.find(t => t.unlocks.drop === k) || {}).name : '';
@@ -1324,7 +1324,7 @@ const UI = (() => {
     $('auto-bar').style.width = at.pct + '%'; setText($('auto-text'), at.text); $('auto-barbox').className = 'bar autoadv ' + at.cls;
     $('auto-why').classList.toggle('hidden', !at.why); if (at.why) setText($('auto-why'), at.why);
     $('auto-adv').checked = S.settings.autoAdvance !== false;
-    { const p3 = Game.phase() === 3, m = p3 ? Game.marchReady() : null; $('march-row').classList.toggle('hidden', !p3); $('auto-march').checked = S.settings.autoMarch !== false;
+    { const p3 = Game.phase() === 3, m = p3 ? Game.marchReady() : null; $('march-row').classList.toggle('hidden', true); /* Beta 0.3.0: only the player marches on */ $('auto-march').checked = S.settings.autoMarch !== false;
       setText($('march-note'), m ? (m.ready ? `${Game.landDef(m.n).name}: ready` : `${Game.landDef(m.n).name}: ${Game.fmt(Game.marching())} / ${Game.fmt(m.need)} soldiers`) : ''); }
     { const rn = h.retreatNote, show = !!rn && !rn.seen && h.time - rn.t < 600; $('retreat-note').classList.toggle('hidden', !show);
       if (show) setText($('retreat-text'), rn.boss ? `The ${rn.foe} was too strong — your hero had to retreat to stage ${rn.to}. Upgrade your gear or raise his healing, then face it again.` : `${rn.away ? 'While you were away, your' : 'Your'} hero had to retreat to stage ${rn.to} — stage ${rn.from} hits harder than he can heal. Upgrade your armor or weapon (Gear), or raise his healing, to push deeper.`); }
@@ -1482,7 +1482,9 @@ const UI = (() => {
     }
     setText($('activity-hint'), act === 'fight' || act === 'idle' ? CONFIG.activities[act].desc + (Object.keys(Game.harvestRates()).length ? ' Your tools keep gathering in the background.' : '') : `Your ${CONFIG.toolSlots[CONFIG.activities[act].tool].name.toLowerCase()} works on its own — while you fight, and while you're away. Every level of it makes it much faster.`);
     const fighting = act === 'fight', idle = act === 'idle';
-    $('fight-card').classList.toggle('hidden', !fighting); $('harvest-card').classList.toggle('hidden', fighting || idle);
+    const battling = fighting && Game.inBattle(); // Beta 0.3.0: in a land the army fights — the battle card replaces the hero's fight
+    $('fight-card').classList.toggle('hidden', !fighting || battling); $('battle-card').classList.toggle('hidden', !battling); if (battling) renderBattle();
+    $('harvest-card').classList.toggle('hidden', fighting || idle);
     $('ground-card').classList.toggle('hidden', !S.hero.gear.weapon);
     if (!fighting && !idle) {
       const a = CONFIG.activities[act], t = Game.harvestTime(act), y = Game.harvestYield(act), tool = h.tools[a.tool];
@@ -1582,8 +1584,82 @@ const UI = (() => {
   // ---- Mini hero strip: mirrors the fight/harvest screen when that screen is off-tab ----
   const lootTally = {}; let lootFresh = {};
   // "visible" = the full card's bars are actually inside the viewport, not just on the current tab
+  // ===== Beta 0.3.0: the battle ledger =====
+  const DIE = n => `<img class="die20" src="assets/dice/d20_${n}.webp" alt="${n}">`;
+  const FACES_LEFT = { knight_boss: 1, skeleton_boss: 1, ghoul_boss: 1 }; // art already facing the player's army
+  let battleKey = '';
+  function battleReport(d) { // Beta 0.3.3: the away report — where the army fought, what it cost, and why it stopped
+    const f = Game.fmt, G = Game.landDef(d.n) || { name: 'the land' }, at = `battle ${d.b} of ${G.name}`;
+    if (d.stalled) return `<br><b>Your army held its camp.</b> ${at[0].toUpperCase() + at.slice(1)} is too strong to fight without you — strengthen the hero or grow the army, then Strike.`;
+    const why = d.why === 'hold' ? `It stopped at three-quarters strength to rebuild — Strike to fight on.` : d.why === 'lost' ? `It stopped after losing one — this battle is too close to fight unattended.` : `It fought the whole time.`;
+    return `<br><b>Your army fought ${f(d.battles)} battle${d.battles === 1 ? '' : 's'} at ${at}</b> and won ${f(d.wins)}.${d.unlocked ? ` <b class="good">Battle ${d.b} is won — Advance when you're back.</b>` : ''}<br>Soldiers lost: <b>${f(d.lost)}</b>${d.lost === 0 ? ' — holding a won field in Defend costs no one' : ''}${d.conv ? ` · ${f(d.conv)} prisoners joined you` : ''}. ${why}`; }
+  function battleSeq(len, max) { if (len <= max) return Array.from({ length: len }, (_, i) => i); const s = []; for (let i = 0; i < max; i++) { const v = Math.round(i * (len - 1) / (max - 1)); if (s[s.length - 1] !== v) s.push(v); } return s; } // long battles: show a handful of rounds, always the first and the last
+  function battleArt(b) { const t = Game.enemyType(b), base = (t && t.art) || 'merc', key = Game.battleKind(b) === 'line' ? base : base + '_boss'; return { src: `assets/enemies/${key}.webp`, flip: !FACES_LEFT[key] }; }
+  function renderBattle() {
+    const S = Game.S, h = S.hero, B = CONFIG.kingdom.battles, f = Game.fmt, n = Game.landN(), b = Game.battleNo(), G = Game.landDef(n), bt = Game.battleState(), kind = Game.battleKind(b), box = $('battle-card');
+    const key = [n, b, kind].join('|');
+    if (battleKey !== key || !box.firstChild) { battleKey = key; const t = Game.enemyType(b);
+      setHtml(box, `<div class="bl-head"><b>${G.name}</b><span>Battle ${b} / ${B.count}${kind === 'captain' ? ' · <em>Captain</em>' : kind === 'host' ? ' · <em>The ruler\'s host</em>' : ''}</span></div>
+        <div class="bl-camp"><i data-f="camp"></i></div>
+        <div class="bl-vs"><div class="bl-side me"><div class="bl-n" data-f="yn"></div><small>YOUR ARMY</small><div class="bl-pip" data-f="ypip"></div></div>
+          <div class="bl-x"><span class="sw a">${ico([5, 1], 30)}</span><span class="sw b">${ico([5, 1], 30)}</span></div>
+          <div class="bl-side foe"><div class="bl-n" data-f="en"></div><small>${kind === 'host' ? G.ruler.toUpperCase() + '\'S HOST' : (kind === 'captain' ? t.boss : t.plural).toUpperCase()}</small><div class="bl-pip" data-f="epip"></div></div></div>
+        <div class="bl-bar"><i class="a" data-f="ba"></i><i class="b" data-f="bb"></i></div>
+        <div class="bl-dice" data-f="dice"></div>
+        <div class="bl-round" data-f="round"></div>
+        <div class="bl-tick" data-f="tick"></div>
+        <div class="bl-prep" data-f="prep"><div class="row-between tiny"><span data-f="preptxt"></span><span class="dim">Defend if you don't strike</span></div><div class="bl-pbar"><i data-f="pbar"></i></div>
+          <div class="bl-orders">${Game.ORDERS.map(o => `<button class="bl-o" data-order="${o.id}" title="${o.desc}"><span class="e">${o.icon}</span>${o.name}<small data-f="cd"></small></button>`).join('')}</div>
+          <button class="bl-strike" data-strike>STRIKE ▶</button></div>
+        <div class="bl-result hidden" data-f="result"></div>
+        <div class="btn-row bl-nav"><button data-bret>◀ Fall back</button><button class="primary" data-badv>Advance ▶</button></div>
+        <div class="tiny dim bl-note" data-f="note"></div>`);
+      box.querySelectorAll('[data-order]').forEach(el => el.addEventListener('click', () => { if (!Game.orderReady(el.dataset.order)) return; S.hero.border = S.hero.border === el.dataset.order ? 'defend' : el.dataset.order; renderBattle(); }));
+      box.querySelector('[data-strike]').addEventListener('click', () => { const o = S.hero.border && S.hero.border !== 'defend' ? S.hero.border : 'defend'; if (Game.strikeBattle(o)) { S.hero.border = 'defend'; render(true); } });
+      box.querySelector('[data-badv]').addEventListener('click', e => { const m = e.currentTarget.dataset.march; if (m ? Game.setGround(Game.landId(+m)) : Game.battleAdvance()) render(true); });
+      box.querySelector('[data-bret]').addEventListener('click', () => { if (Game.battleRetreat()) render(true); }); }
+    const q = s => box.querySelector(s), res = bt.res && bt.res.b === b ? bt.res : null, showing = bt.ph === 'show' && res;
+    q('[data-f=camp]').style.width = (100 * Math.min(B.count, (Game.landDone(n) ? B.count : (h.bestStage || 1) - 1)) / B.count) + '%';
+    // counts: during a battle they follow the round being shown; otherwise your marching army vs the force waiting for you
+    let yN = Game.marching(), eN = Game.enemyArmy(n, b, Game.battleWon(n, b)), ri = -1, e0 = eN;
+    const seq = res ? battleSeq(res.rounds.length, Math.max(1, Math.round(B.showMax / B.roundT))) : [], showDur = seq.length * B.roundT;
+    let si = seq.length - 1;
+    if (showing) { si = Math.min(seq.length - 1, Math.floor(bt.t / B.roundT)); ri = seq[si]; const r = res.rounds[ri] || {}; e0 = res.e0; yN = r.y !== undefined ? r.y : res.y0; eN = r.e !== undefined ? r.e : res.e0 - (r.volley || 0); if (bt.t >= showDur) { yN = res.y; eN = res.e; } }
+    setText(q('[data-f=yn]'), f(yN)); setText(q('[data-f=en]'), f(Math.max(0, eN)));
+    const yp = Game.yourPip(n, b), ep = Game.enemyPip(b);
+    const sg = v => (v >= 0 ? '+' : '−') + Math.abs(v), won = Game.battleWon(n, b), epn = ep - (won ? B.replayPip : 0);
+    setText(q('[data-f=ypip]'), `hero ${sg(yp)} on every die`); q('[data-f=ypip]').title = 'Your hero leads the army. The stronger he is for this land (gear, levels, Crowns), the more every die gets.';
+    setText(q('[data-f=epip]'), won ? `beaten before: ${sg(epn)}` : ep ? `${sg(ep)} ${kind === 'host' ? 'veterans' : 'captain'}` : '');
+    const tot = Math.max(1, yN + Math.max(0, eN)); q('[data-f=ba]').style.width = (100 * yN / tot) + '%'; q('[data-f=bb]').style.width = (100 * Math.max(0, eN) / tot) + '%';
+    // the decisive duels of the round on screen
+    const r = showing && ri >= 0 ? res.rounds[ri] : res && !showing ? res.rounds[res.rounds.length - 1] : null;
+    if (r && r.show && r.show.length) { // one duel, big enough to read: a crit if there was one, otherwise the first clash
+      const [y, e, w] = r.show.find(d => d[0] === 20 && d[2] > 0) || r.show[0], mp = yp + (res.order === 'rally' ? B.rally : 0), fp = ep - (res.pushing ? 0 : B.replayPip), more = (r.dn || r.show.length) - 1;
+      const tot = (v, p) => p ? `<small>${v} ${p > 0 ? '+' : '−'} ${Math.abs(p)} = <b>${v + p}</b></small>` : `<small>&nbsp;</small>`;
+      setHtml(q('[data-f=dice]'), `<div class="bl-feat ${w > 0 ? 'win' : w < 0 ? 'loss' : 'even'}"><div class="bl-fd me">${DIE(y)}${tot(y, mp)}</div><div class="bl-fvs">${w > 0 ? (y === 20 ? '<b class="crit">CRIT!</b>' : '<b class="good">You win</b>') : w < 0 ? '<b class="bad">They win</b>' : '<span class="dim">Held</span>'}</div><div class="bl-fd foe">${DIE(e)}${tot(e, fp)}</div></div>${more > 0 ? `<div class="bl-more">+ ${f(more)} more duel${more === 1 ? '' : 's'} this round</div>` : ''}`); }
+    else setHtml(q('[data-f=dice]'), `<span class="dim small">${bt.ph === 'prep' ? 'The lines form…' : ''}</span>`);
+    setHtml(q('[data-f=round]'), r && r.show ? `Round ${ri + 1 || res.rounds.length} · <b class="good">${f(r.k)} slain</b> · <b class="bad">${f(r.l)} fell</b>${r.c ? ` · <b class="crit">CRIT — ${f(r.c)} taken prisoner</b>` : ''}` : r && r.volley !== undefined ? `Volley! <b class="good">${f(r.volley)} fall before the lines meet</b>` : '');
+    // ticker: the last rounds shown so far
+    if (res) { const lines = []; for (let j = Math.max(0, si - 2); j <= si; j++) { const i = seq[j], x = res.rounds[i]; if (!x) continue; lines.push(x.volley !== undefined ? `<span>Volley · ${f(x.volley)} slain</span>` : `<span>Round ${i + 1} · ${f(x.k)} slain · ${f(x.l)} fell${x.c ? ` · <b class="crit">${f(x.c)} captured</b>` : ''}</span>`); } setHtml(q('[data-f=tick]'), lines.reverse().join('')); } else setHtml(q('[data-f=tick]'), '');
+    // prep: countdown, orders, strike
+    const prep = bt.ph === 'prep'; q('[data-f=prep]').classList.toggle('hidden', !prep);
+    if (prep) { setHtml(q('[data-f=preptxt]'), bt.hold ? `<b class="bad">The army holds its ground</b> to rebuild (${f(Game.marching())} of ${f(Math.ceil(h.bPeak * B.holdAt))}) — Strike to fight on` : `Battle in <b>${Math.ceil(B.prep - bt.t)}s</b>`); q('[data-f=pbar]').style.width = (100 * bt.t / B.prep) + '%';
+      const sel = S.hero.border || 'defend';
+      box.querySelectorAll('[data-order]').forEach(el => { const id = el.dataset.order, open = Game.orderOpen(id), cd = Game.orderCd(id); el.classList.toggle('hidden', !open); el.classList.toggle('sel', sel === id); el.classList.toggle('cd', cd > 0); el.disabled = cd > 0; setText(el.querySelector('[data-f=cd]'), id === 'defend' ? 'always' : cd > 0 ? Math.ceil(cd) + 's' : 'ready'); });
+      setHtml(q('[data-strike]'), `STRIKE ▶${sel !== 'defend' ? ` <span>with ${Game.orderDef(sel).name}</span>` : ''}`); }
+    // result, once every round has been shown
+    const done = res && (!showing || bt.t >= showDur); q('[data-f=result]').classList.toggle('hidden', !done);
+    if (done) setHtml(q('[data-f=result]'), res.won ? `<b class="good">Victory</b>${res.order !== 'defend' ? ` with ${Game.orderDef(res.order).name}` : ' (Defend)'} · ${f(res.kills)} slain${res.conv ? ` · <b class="crit">${f(res.conv)} joined you</b>` : ''} · ${f(res.lost - res.back)} lost${res.back ? ` (${f(res.back)} wounded returned)` : ''}<br><b class="gold">+${f(res.gold || 0)} gold</b>${Object.entries(res.drops || {}).map(([k, v]) => ` · +${f(v)} ${R[k].name.toLowerCase()}`).join('')}${res.duel === true ? `<br>👑 <b>${G.ruler} falls in the duel — ${G.name} is yours!</b>` : res.duel === false ? `<br>The hero lost the duel with ${G.ruler} — win the host again to face him.` : ''}`
+      : `<b class="bad">${res.fled ? 'Your army fell back' : 'No victory'}</b> · ${f(res.kills)} slain · ${f(res.lost - res.back)} lost. ${res.fled ? 'Half the army fell — it regroups and tries again.' : ''} Grow the army, strengthen the hero, or use an order.`);
+    // navigation
+    const mr = Game.landDone(n) ? Game.marchReady() : null, adv = q('[data-badv]');
+    if (mr) { setHtml(adv, `March to ${Game.landDef(mr.n).name} ▶`); adv.disabled = false; adv.dataset.march = mr.n; }
+    else { setHtml(adv, 'Advance ▶'); adv.disabled = !Game.canBattleAdvance(); delete adv.dataset.march; }
+    q('[data-bret]').disabled = b <= 1;
+    setText(q('[data-f=note]'), bt.note || (Game.landDone(n) ? (mr ? `${G.name} is yours. March on when you're ready (${Game.fmt(mr.need)} soldiers recommended) — until then the army holds the field here for gold, and loses no one in Defend.` : `${G.name} is yours. ${Game.landDef(n + 1) ? Game.landReqText(n + 1) + ' to march on.' : ''} The army holds the field here for gold and loses no one in Defend.`) : Game.battleWon(n, b) ? (Game.canBattleAdvance() ? `Won. Advance for bigger battles and richer spoils — or stay, and the army replays this battle for its gold.` : `Won. The army replays this battle for its gold, even while you are away — in Defend it loses no one.`) : `A new battle — winning it opens battle ${Math.min(B.count, b + 1)}.`));
+  }
   function heroScreenVisible() {
-    const c = $('fight-card').offsetParent ? $('fight-card') : (!Game.heroFighting() && $('harvest-card').offsetParent) ? $('harvest-card') : null; if (!c) return false; // 0.10.12: on a gathering screen the fight shows in the dock
+    const c = $('battle-card').offsetParent ? $('battle-card') : $('fight-card').offsetParent ? $('fight-card') : (!Game.heroFighting() && $('harvest-card').offsetParent) ? $('harvest-card') : null; if (!c) return false; // 0.10.12: on a gathering screen the fight shows in the dock
     const r = c.getBoundingClientRect(), top = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--headh')) || 0;
     return r.bottom - 40 > top && r.top + 120 < window.innerHeight;
   }
@@ -1593,7 +1669,7 @@ const UI = (() => {
     if ([...document.querySelectorAll('.modal')].some(m => !m.classList.contains('hidden'))) return; // wait for the story pop-up to close
     s.previewTip = true; showInfo('Tip', 'Fight preview hidden', '<p class="small">Your town needs the screen now, so the little fight window at the bottom is hidden while you are away from the Hero screen. Your hero keeps fighting.</p><p class="small">Want it back? <b>Settings → Show fight preview on other screens</b>.</p>', null, 'Got it'); }
   function renderMini(fighting, idle, act, st, eMax) {
-    const S = Game.S, h = S.hero, f = Game.fmt, show = !idle && !heroScreenVisible() && previewOn();
+    const S = Game.S, h = S.hero, f = Game.fmt, show = !idle && !heroScreenVisible() && previewOn() && !Game.inBattle();
     { const cb = $('set-preview'); if (cb && cb.checked !== previewOn()) cb.checked = previewOn(); } previewTip();
     $('mini-hero').classList.toggle('hidden', !show); document.body.classList.toggle('has-dock', show); if (!show) return;
     const m = $('mini-hero');
@@ -1700,7 +1776,7 @@ const UI = (() => {
   function showWelcomeBack(data) {
     welcomeData = data;
     $('wb-time').textContent = Game.fmtTime(data.awaySeconds) + (data.counted < data.awaySeconds ? ` (capped ${Game.fmtTime(data.counted)})` : '');
-    $('wb-kills').textContent = data.kills > 0 ? `Hero slew ${Game.fmt(data.kills)} enemies.` : 'Your hero kept working.';
+    $('wb-kills').innerHTML = data.battles ? battleReport(data.battles) : data.kills > 0 ? `Hero slew ${Game.fmt(data.kills)} enemies.` : 'Your hero kept working.';
     $('wb-eff').textContent = Game.pct(Game.afkEfficiency()); $('wb-cap').textContent = Game.fmtTime(Game.afkCap());
     $('wb-gains').innerHTML = Object.entries(data.gains).filter(([, v]) => v > 0).map(([k, v]) => `<div class="costitem">${ico(R[k].icon, 24)} +${Game.fmt(v)}</div>`).join('');
     $('welcome').classList.remove('hidden');

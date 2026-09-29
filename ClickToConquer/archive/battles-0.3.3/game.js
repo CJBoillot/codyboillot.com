@@ -4,8 +4,8 @@
 
 const SAVE_KEY = 'ctc_beta_save_v1'; // Beta 0.1.0: a hard restart — Alpha saves are not loaded
 const ALPHA_KEYS = ['afk_proto_save_v12', 'afk_proto_save_v11'];
-const SCHEMA = 3; // 3: Beta 0.3.4 — back from the 0.3.x battle campaign (archive/battles-0.3.3). 2 was the 0.3.x save. // Beta 0.1.15: save schema. Every save under SAVE_KEY was born in the Beta, so the Alpha migrations below never apply to it.
-function markAlphaMigrated(st) { const L = st.legacy = st.legacy || {}, K = st.kingdom = st.kingdom || {}; L.v111 = L.v112 = L.v120 = L.v121 = true; K.cr104 = true; K.v09 = true; st.schema = SCHEMA; }
+const SCHEMA = 2; // 2: Beta 0.3.0 — lands are 50 battles // Beta 0.1.15: save schema. Every save under SAVE_KEY was born in the Beta, so the Alpha migrations below never apply to it.
+function markAlphaMigrated(st) { const L = st.legacy = st.legacy || {}, K = st.kingdom = st.kingdom || {}; L.v111 = L.v112 = L.v120 = L.v121 = true; K.cr104 = true; K.v09 = true; st.schema = 1; }
 let hadAlpha = false;
 
 // ---------- Formatting ----------
@@ -417,7 +417,7 @@ function enemyName(stage = S.hero.stage) {
   const T = enemyType(stage), loops = enemyTypeLoops(stage), pre = loops ? 'Elder '.repeat(Math.min(loops, 2)) : '';
   return pre + (isBoss(stage) ? T.boss : T.name);
 }
-function stageLabel(stage = S.hero.stage, gid = S.hero.ground) { const { k } = stageType(stage), T = enemyType(stage, gid); if (landN(gid)) return isEndless(stage, gid) ? `∞ Endless${endlessDepth(landN(gid)) ? ' · depth ' + endlessDepth(landN(gid)) : ''} · ${T.name}` : `Stage ${stage} · ${isBoss(stage) ? T.boss : T.name}`; return `${enemyTypeLoops(stage, gid) ? 'Elder ' : ''}${T.name} ${k}/${CONFIG.stages.perType}`; }
+function stageLabel(stage = S.hero.stage, gid = S.hero.ground) { const { k } = stageType(stage), T = enemyType(stage, gid); if (landN(gid)) return `Battle ${stage} · ${isBoss(stage) ? T.boss : T.plural}`; /* Beta 0.3.0 */ return `${enemyTypeLoops(stage, gid) ? 'Elder ' : ''}${T.name} ${k}/${CONFIG.stages.perType}`; }
 function nextTypeName(stage = S.hero.stage) { const T = enemyType(stage + 1); return (enemyTypeLoops(stage + 1) ? 'Elder ' : '') + T.plural; }
 // Drop table for a stage: current type's pool at its stage chance, earlier types' pools at their stage-10 chance. Gated by tech / tool. Values are expected units per kill.
 function stagePool(stage = S.hero.stage, gid = S.hero.ground) {
@@ -888,7 +888,7 @@ function deedCurrent() {
   if (!Q.dq) { Q.dq = deedGen(); if (!Q.dq) return null; Q.cur = Q.dq.id; if (Q.base) delete Q.base[Q.dq.id]; }
   const d = Q.dq, tail = { id: d.id, dyn: d.n, chain: 'Deeds', focus: null };
   if (d.type === 'land') { const G = landDef(d.a), rn = G.ruler.charAt(0).toUpperCase() + G.ruler.slice(1);
-    return { ...tail, name: `Take ${G.name}`, text: `${G.name} is held by ${G.ruler}${d.a === CONFIG.ages.lands ? ', the Emperor — the last and hardest ruler of the Age; his fall lets you crown your heir into the ' + ageName(ageNo() + 1) + ' and unlocks the ' + wonderFor(gEra(d.a)).name : isEraRuler(d.a) ? ', an Era Ruler — far tougher, and his fall unlocks the ' + wonderFor(gEra(d.a)).name : ''} — land ${d.a}, ${G.stages} stages, and harder than anything behind you. Its crown is worth ${rulerCrowns(d.a)} Crown${rulerCrowns(d.a) === 1 ? '' : 's'} when the crown passes.${deedOk('pass') ? ` Or, if the wall is too high: this dynasty would pass ${crownsIfPass()} Crowns, more than any before it (Keep → Pass the Crown).` : ''}`,
+    return { ...tail, name: `Take ${G.name}`, text: `${G.name} is held by ${G.ruler}${d.a === CONFIG.ages.lands ? ', the Emperor — the last and hardest ruler of the Age; his fall lets you crown your heir into the ' + ageName(ageNo() + 1) + ' and unlocks the ' + wonderFor(gEra(d.a)).name : isEraRuler(d.a) ? ', an Era Ruler — far tougher, and his fall unlocks the ' + wonderFor(gEra(d.a)).name : ''} — land ${d.a}, a campaign of ${G.stages} battles, harder than anything behind you. Its crown is worth ${rulerCrowns(d.a)} Crown${rulerCrowns(d.a) === 1 ? '' : 's'} when the crown passes.${deedOk('pass') ? ` Or, if the wall is too high: this dynasty would pass ${crownsIfPass()} Crowns, more than any before it (Keep → Pass the Crown).` : ''}`,
       steps: [{ label: `Conquer ${G.name}`, check: { landDone: d.a } }], reward: { gold: d.gold, talent: 2 }, focus: { tab: 'hero', sub: 'fight', el: 'ground:' + landId(d.a) } }; }
   if (d.type === 'heir') return { ...tail, name: 'Crown Your Heir', text: `The Emperor has fallen and the ${ageName()} is won. In the Keep, crown your heir: the ${ageName(ageNo() + 1)} begins with the same ten lands — far richer and far tougher — and every Crown you took this Age.`, steps: [{ label: 'Kingdom → Keep → Crown your heir', check: { stat: 'age', need: 1, since: true } }], reward: { talent: 5 * ageNo() }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:found-btn' } };
   if (d.type === 'wonder') { const W = wonderFor(d.a);
@@ -937,6 +937,9 @@ function questStat(k) {
     case 'partUps': return S.stats.partUps || 0;
     case 'trained': return S.stats.trained || 0;
     case 'endlessKills': return S.stats.endlessKills || 0;
+    case 'orders': return S.stats.orders || 0;
+    case 'replays': return S.stats.replays || 0;
+    case 'battlesWon': return S.stats.battlesWon || 0;
     case 'perksBought': return S.stats.crownSpent || 0;
     case 'age': return ageNo();
     case 'passed': return (S.legacy.dynasty || 1) > 1 ? 1 : 0;
@@ -1017,7 +1020,7 @@ function questCheckRaw(c) {
 function suggestGoal() {
   if (phase() === 3) { // the Kingdom: the next land
     const n = landsHeld() + 1, G = landDef(n);
-    if (G) return { name: `Conquer ${G.name}`, text: `Lead the army through ${G.stages} stages to ${G.ruler}. ${canPassCrown() ? 'When the lands get too hard, Pass the Crown (Keep) for Crowns that make the next dynasty stronger.' : ''}`, hint: 'Hero → ' + G.name,
+    if (G) return { name: `Conquer ${G.name}`, text: `Lead the army through ${G.stages} battles to ${G.ruler}. ${canPassCrown() ? 'When the lands get too hard, Pass the Crown (Keep) for Crowns that make the next dynasty stronger.' : ''}`, hint: 'Hero → ' + G.name,
       parts: [{ done: landDone(n), have: landPct(n), need: 100, label: G.name + ' conquered %' }], focus: { tab: 'hero', sub: 'fight', el: 'ground:' + landId(n) } };
   }
 
@@ -1121,6 +1124,7 @@ function simulate(dt) {
   if ((h._tu = (h._tu || 0) + dt) >= 1) { h._tu = 0; checkTechUnlocks(); }
   tickHarvest(dt);
   if (!heroFighting()) { const st0 = stats(); h.hp = Math.min(st0.maxHp, h.hp + st0.regen * dt); return; }
+  if (inBattle()) { const st0 = stats(); h.hp = Math.min(st0.maxHp, h.hp + st0.regen * dt); tickBattle(dt); return; } // Beta 0.3.0: in a land the army fights
   for (const id in h.cds) if (h.cds[id] > 0) h.cds[id] -= dt;
   const st = stats();
   if (h.resting) { h.hp = Math.min(st.maxHp, h.hp + st.regen * st.restSpeed * dt); if (h.hp >= st.maxHp) { h.resting = false; h.atkTimer = 0; h.eTimer = 0; } else return; }
@@ -1144,6 +1148,137 @@ function simulate(dt) {
   if (h.enemyHp <= 0) { h.hp = Math.min(st.maxHp, h.hp + killHeal(st)); onKill(st); h.enemyHp = 0; h.atkTimer = Math.min(h.atkTimer, interval * 0.5); }
 }
 
+// ================= Beta 0.3.0: army battles =================
+// Every land is a campaign of 50 battles. Each soldier rolls a d20 every round; both sides sort their dice and pair them off,
+// highest against highest. Beat the die in front of you and that enemy falls; tie or lose and one of yours falls (ties go to the defender).
+// A natural 20 is a critical: on a new battle the beaten enemy joins you, on a replay he falls twice. A natural 1 costs you an extra man.
+const BC = () => KC().battles;
+const ORDERS = [
+  { id: 'defend', name: 'Defend', icon: '🛡', tech: null, desc: 'Hold the line: an enemy must beat you by 2 to kill, and you must beat him by 2' },
+  { id: 'charge', name: 'Charge', icon: '⚔️', tech: 'strike', desc: 'Every soldier rolls two dice and keeps the higher' },
+  { id: 'rally', name: 'Rally', icon: '📯', tech: 'warcry', desc: '+3 on every one of your dice' },
+  { id: 'flank', name: 'Flank', icon: '🗡', tech: 'cleave', desc: 'Your unpaired soldiers join in: every 4 who roll 16+ kill one more' },
+  { id: 'volley', name: 'Volley', icon: '🏹', tech: 'execute', desc: 'Before the first round, every 2 of your soldiers who roll 18+ kill one' },
+  { id: 'medics', name: 'Medics', icon: '✚', tech: 'wind', desc: 'Half of this battle\'s fallen come back' },
+];
+function orderDef(id) { return ORDERS.find(o => o.id === id) || null; }
+function orderOpen(id) { const o = orderDef(id); return !!o && (!o.tech || techUnlocked(o.tech)); }
+function orderCd(id) { return id === 'defend' ? 0 : Math.max(0, ((S.hero.ocd || {})[id]) || 0); }
+function orderReady(id) { return orderOpen(id) && orderCd(id) <= 0; }
+function inBattle() { return phase() === 3 && landN() > 0 && heroFighting(); }
+function battleNo() { return Math.max(1, Math.min(BC().count, S.hero.stage || 1)); }
+function battleKind(b) { return b >= BC().count ? 'host' : b % 10 === 0 ? 'captain' : 'line'; }
+function enemyArmy(n = landN(), b = battleNo(), replay = false) { const B = BC(), k = battleKind(b); return Math.max(1, Math.round((replay ? B.replayArmy : 1) * B.base * Math.pow(B.landGrowth, n - 1) * Math.pow(B.span, (b - 1) / (B.count - 1)) * (k === 'host' ? B.host : k === 'captain' ? B.captain : 1))); }
+function enemyPip(b = battleNo()) { const k = battleKind(b); return k === 'host' ? BC().hostPip : k === 'captain' ? BC().captainPip : 0; }
+// Hero as general: how well he would fare alone against one soldier of this battle, on a log scale → a bonus on every one of your dice
+function heroEdge(n = landN(), b = battleNo()) {
+  const st = stats('sustained'), sb = b % 10 === 0 ? b - 1 : b, lc = landCurve(sb, landId(n)) || { hp: 1, hit: 1 }; // a line soldier of this battle (captains and the host add their own bonus)
+  const heroTtk = lc.hp / Math.max(1e-9, st.dps), sd = Math.max(lc.hit * 0.2, lc.hit - st.armor) * (1 - st.dr) * (1 - st.dodge) / H.enemyAttackInterval;
+  const soldierTtk = st.maxHp / Math.max(1e-9, sd - st.regen * 0.5);
+  return Math.max(1e-6, soldierTtk / heroTtk);
+}
+// The general's bonus is measured against the hero a player normally has when he reaches this land (bots: the frontier edge falls ~0.64 decades per land);
+// later Ages make enemy soldiers far tougher, and the hero is expected to keep up only partly — the rest is the Age wall (tuned in the Age balance pass).
+function edgeRef(n) { const B = BC(); return Math.pow(10, B.refLog - B.refSlope * (n - 1)) / Math.pow(ageMult('hp') * ageMult('hit'), B.refAge); }
+function yourPip(n = landN(), b = battleNo()) { const B = BC(), e = heroEdge(n, b); return Math.max(-B.pipCap, Math.min(B.pipCap, Math.round(B.pipPerDecade * Math.log10(e / edgeRef(n))))); }
+const d20 = () => 1 + Math.floor(Math.random() * 20);
+// One battle, fully resolved. Returns the round-by-round log (top five dice per side) and the totals.
+function rollBattle(Y, E, o) {
+  const B = BC(), order = o.order || 'defend', pushing = !!o.pushing, pip = (o.pip || 0) + (order === 'rally' ? B.rally : 0), epip = (o.epip || 0) - (pushing ? 0 : B.replayPip), def = order === 'defend'; // a battle you have already won: its enemy is demoralized
+  const y0 = Y, e0 = E, rounds = [], convCap = Math.max(1, Math.floor(e0 * B.convCap)); let kills = 0, lost = 0, conv = 0; // Beta 0.3.3: a crit while pushing takes a prisoner (capped per battle); prisoners join you only if the battle is won
+  if (order === 'volley') { let h = 0; for (let i = 0; i < Y; i++) if (d20() >= B.volleyAt) h++; const k = Math.min(E, Math.floor(h / 2)); E -= k; kills += k; rounds.push({ volley: k }); }
+  let fled = false;
+  for (let r = 0; r < B.maxRounds && Y > 0 && E > 0; r++) {
+    if (Y <= y0 * 0.5 && r > 0) { fled = true; break; } // half the army has fallen: the survivors fall back
+    // Risk-style: a quarter of the smaller army clashes this round in one-on-one duels. The side that outnumbers rolls up to 3 dice and keeps the best.
+    const P0 = Math.max(1, Math.ceil(Math.min(Y, E) / 4), Math.min(Y, E, 5)), P = P0 + (order === 'flank' ? Math.ceil(Math.min(Y, E) / 8) : 0); // Flank: extra fights that can only land blows
+    const ya = Math.max(1, Math.min(3, Math.floor(Y / E))) + (order === 'charge' ? 1 : 0), ea = Math.max(1, Math.min(3, Math.floor(E / Y)));
+    let k = 0, l = 0, c = 0, dn = 0; const show = [];
+    for (let i = 0; i < P && E - k - c > 0 && Y - l > 0; i++) {
+      let yn = 0, en = 0; for (let a = 0; a < ya; a++) yn = Math.max(yn, d20()); for (let a = 0; a < ea; a++) en = Math.max(en, d20());
+      const yv = yn + pip, ev = en + epip, need = def ? 2 : 1; let res = 0;
+      if (yv - ev >= need) { res = 1; if (yn === 20 && pushing && conv + c < convCap) c++; else if (yn === 20) k += 2; else k++; }
+      else if (i < P0 && ev - yv >= (def ? 2 : 0)) { res = -1; l++; if (en === 20) l++; if (yn === 1) l++; }
+      dn++; if (show.length < 5) show.push([yn, en, res]);
+    }
+    c = Math.min(c, E); k = Math.min(k, E - c); l = Math.min(l, Y);
+    E -= k + c; Y = Y - l; kills += k; lost += l; conv += c;
+    rounds.push({ show, k, l, c, y: Y, e: E, ya, ea, dn });
+  }
+  const back = lost > 0 ? Math.round(lost * (def && !pushing ? B.replayWound : order === 'medics' ? B.medics : def ? B.defendWound : B.orderWound)) : 0; /* Beta 0.3.3: holding a won field in Defend costs no one */ Y += back; // many of the fallen were only wounded — most in Defend, nearly all with Medics
+  if (E <= 0) Y += conv; else { kills += conv; conv = 0; } // no victory: the prisoners are simply out of the fight
+  return { rounds, won: E <= 0, fled, y0, e0, y: Y, e: E, kills, lost, conv, back, order, pushing };
+}
+function battleReward(n, b, won) {
+  const B = BC(), st = stats('sustained'), k = battleKind(b), m = k === 'host' ? B.hostGold : k === 'captain' ? B.captainGold : 1;
+  if (!won) return { gold: 0, xp: 0, drops: {} };
+  const gold = killGold(b) * st.gold * B.goldKills * m, xp = killXp(b) * st.xp * B.xpKills * m, d = groundDrops(b), drops = {};
+  for (const r in d) { const v = d[r] * st.drop * B.dropKills * m, w = Math.floor(v) + (Math.random() < v - Math.floor(v) ? 1 : 0); if (w > 0) drops[r] = w; }
+  const G = landDef(n); if (G && G.spoil) { const v = 0.02 * m * (1 + 0.25 * perkRank('spoils')) * wonderMult('tax') * ageMult('spoil') * ((landTrait(n) || {}).spoil || 1) * (1 + b / 25), w = Math.floor(v) + (Math.random() < v - Math.floor(v) ? 1 : 0); if (w > 0) drops[G.spoil] = (drops[G.spoil] || 0) + w; }
+  return { gold, xp, drops };
+}
+// Live: a 10-second preparation bar, then the battle (Strike fights at once). Only the player advances.
+function battleState() { const h = S.hero; if (!h.bt || h.bt.n !== landN() || h.bt.b !== battleNo()) h.bt = { ph: 'prep', t: 0, n: landN(), b: battleNo(), res: h.bt && h.bt.n === landN() ? h.bt.res : null }; return h.bt; }
+function battleShowTime(res) { const B = BC(); return Math.min(Math.max(1, Math.round(B.showMax / B.roundT)), res ? res.rounds.length : 1) * B.roundT + B.resultT; }
+function tickBattle(dt) {
+  const h = S.hero, B = BC(); h.ocd = h.ocd || {}; for (const k in h.ocd) if (h.ocd[k] > 0) h.ocd[k] -= dt;
+  const bt = battleState(); bt.t += dt;
+  if (bt.ph === 'show' && bt.t >= battleShowTime(bt.res)) { bt.ph = 'prep'; bt.t = 0; }
+  h.bPeak = Math.max(h.bPeak || 0, marching()); // the army's recent peak — AFK battles never grind it below 75% of this
+  if (bt.ph === 'prep' && bt.t >= B.prep) { if (marching() < (h.bPeak || 0) * B.holdAt) { bt.t = B.prep; bt.hold = true; return; } bt.hold = false; strikeBattle(null); }
+}
+function battleWon(n, b) { const h = S.hero; return landDone(n) || b < (h.bestStage || 1); }
+function strikeBattle(orderId) {
+  const h = S.hero, n = landN(), b = battleNo(), bt = battleState(); if (!inBattle() || bt.ph !== 'prep') return false;
+  const Y = marching(); if (Y <= 0) { bt.t = 0; bt.note = 'No soldiers are marching — the Barracks trains more.'; return false; }
+  if (orderId) h.bPeak = Y; // the player chose to fight: the army's reference resets to what he has now
+  let order = orderId && orderReady(orderId) ? orderId : 'defend';
+  if (order !== 'defend') { h.ocd = h.ocd || {}; h.ocd[order] = BC().orderCd; S.stats.orders = (S.stats.orders || 0) + 1; }
+  const pushing = !battleWon(n, b), res = rollBattle(Y, enemyArmy(n, b, !pushing), { order, pushing, pip: yourPip(n, b), epip: enemyPip(b) });
+  S.res.soldiers = Math.max(0, soldiers() + (res.y - res.y0)); S.stats.fallen = (S.stats.fallen || 0) + res.lost - res.back; S.stats.converted = (S.stats.converted || 0) + res.conv;
+  res.pip = yourPip(n, b); res.epip = enemyPip(b); res.b = b; res.n = n; res.manual = !!orderId;
+  if (res.won) applyBattleWin(n, b, res);
+  bt.res = res; bt.ph = 'show'; bt.t = 0; bt.note = null; return res;
+}
+function applyBattleWin(n, b, res, quiet) {
+  const h = S.hero, rw = battleReward(n, b, true); res.gold = rw.gold; res.drops = rw.drops;
+  add('gold', rw.gold); for (const k in rw.drops) add(k, rw.drops[k]); gainXp(rw.xp);
+  S.stats.battlesWon = (S.stats.battlesWon || 0) + 1; if (!res.pushing) S.stats.replays = (S.stats.replays || 0) + 1;
+  S.hero.totalKills += res.kills + res.conv;
+  { const key = landId(n) + ':' + enemyType(b).id; S.legacy.kills = S.legacy.kills || {}; S.legacy.kills[key] = (S.legacy.kills[key] || 0) + res.kills + res.conv; }
+  if (res.pushing) {
+    if (b % 10 === 0 && b < BC().count) bossSlain(b, n);
+    if (b >= BC().count) { res.duel = duelRuler(n); if (res.duel) { bossSlain(b, n); h.bestStage = BC().count; } }
+    else h.bestStage = Math.max(h.bestStage || 1, b + 1);
+  }
+  if (!quiet) log(res.pushing ? `Battle ${b} won${res.conv ? ` — ${res.conv} enemies joined you` : ''}.${res.duel === false ? ' The ruler escaped the duel.' : ''}` : `Battle ${b} won again.`);
+}
+// Battle 50: the host is routed and the hero duels the ruler — he wins if he can survive the ruler's blows long enough to fell him
+// Battle 50: the host is routed and the hero duels the ruler — best of three d20 rolls, the hero's general bonus against the ruler's
+function duelRuler(n) { const B = BC(), hp = yourPip(n, B.count) + B.duelBonus, rp = B.rulerPip, rolls = []; let w = 0, l = 0;
+  while (w < 2 && l < 2) { const a = d20(), b = d20(); rolls.push([a, b]); if (a + hp > b + rp) w++; else l++; }
+  const ok = w >= 2; S.hero.lastDuel = { n, rolls, ok, hp, rp }; pushEvent({ who: 'duel', n, ok }); return ok; }
+function battleAdvance() { const h = S.hero; if (!inBattle() || battleNo() >= (h.bestStage || 1) || battleNo() >= BC().count) return false; h.stage = battleNo() + 1; h.bt = null; h.bPeak = marching(); return true; }
+function battleRetreat() { const h = S.hero; if (!inBattle() || battleNo() <= 1) return false; h.stage = battleNo() - 1; h.bt = null; return true; }
+function canBattleAdvance() { return inBattle() && battleNo() < Math.min(BC().count, S.hero.bestStage || 1); }
+// Away: the army replays the current battle every 10 s in Defend. A sample of real battles is fought and the rest extrapolated.
+function offlineBattles(secs) {
+  const n = landN(), b = battleNo(), N = Math.floor(secs / (BC().prep + BC().resultT + BC().showMax / 2)); if (!inBattle() || N < 1) return null;
+  let Y = marching(), gold = 0, xp = 0, drops = {}, wins = 0, lost = 0, conv = 0, kills = 0, fought = 0, pushing = !battleWon(n, b), unlocked = false;
+  const K = Math.min(N, 120), floor = marching() * BC().holdAt; let held = false, why = 'time';
+  for (let i = 0; i < K && Y > 0; i++) {
+    if (Y < floor) { held = true; why = 'hold'; break; } // the army holds its ground once it is down a quarter
+    const r = rollBattle(Y, enemyArmy(n, b, !pushing), { order: 'defend', pushing, pip: yourPip(n, b), epip: enemyPip(b) }); fought++;
+    Y = r.y; lost += r.lost - r.back; conv += r.conv; kills += r.kills;
+    if (!r.won) { if (fought === 1) return { battles: 0, wins: 0, gold: 0, xp: 0, drops: {}, lost: 0, conv: 0, kills: 0, unlocked: false, b, n, stalled: true, why: 'stalled' }; why = 'lost'; break; } // an unwinnable battle is not fought while you are away
+    wins++; const rw = battleReward(n, b, true); gold += rw.gold; xp += rw.xp; for (const k in rw.drops) drops[k] = (drops[k] || 0) + rw.drops[k];
+    if (pushing) { unlocked = true; pushing = false; }
+  }
+  const scale = !held && fought === K && wins === K && N > K ? Math.min(N / K, lost > 0 ? Math.max(1, (marching() - floor) / Math.max(1, lost)) : N / K) : 1; // extrapolate, never past the quarter-army floor // a clean sample repeats for the rest of the time away
+  return { battles: Math.round(fought * scale), wins: Math.round(wins * scale), gold: gold * scale, xp: xp * scale, drops: Object.fromEntries(Object.entries(drops).map(([k, v]) => [k, Math.round(v * scale)])),
+    lost: Math.min(marching() + Math.round(conv * scale), Math.round(lost * scale)), conv: Math.round(conv * Math.min(scale, 1)), kills: Math.round(kills * scale), unlocked, b, n, why, secs: Math.round(fought * scale) * (BC().prep + BC().resultT + BC().showMax / 2) };
+}
+
 // ---------- Offline ----------
 function afkCap() { return CONFIG.offline.capSeconds + (perkRank('cellar') + perkRank('memory')) * 2 * 3600; }
 function afkEff() { return Math.min(1, CONFIG.offline.efficiency); }
@@ -1161,9 +1296,11 @@ function applyOffline(awaySeconds) {
   }
   let kills = 0;
   const looted = {}, harvested = {};
-  if (heroFighting()) { const hr = heroRates(); for (const k in hr) { const v = hr[k] * counted * eff; gains[k] = (gains[k] || 0) + v; looted[k] = v; } kills = farmRate() * counted * eff; }
+  let battles = null;
+  if (inBattle()) { battles = offlineBattles(counted * eff); if (battles) { gains.gold = (gains.gold || 0) + battles.gold; for (const k in battles.drops) gains[k] = (gains[k] || 0) + battles.drops[k]; } } // Beta 0.3.0: the army replays its battle
+  else if (heroFighting()) { const hr = heroRates(); for (const k in hr) { const v = hr[k] * counted * eff; gains[k] = (gains[k] || 0) + v; looted[k] = v; } kills = farmRate() * counted * eff; }
   { const hr = harvestRates(); for (const k in hr) { const v = hr[k] * counted * eff; gains[k] = (gains[k] || 0) + v; harvested[k] = v; } } // tools gather while away too
-  return { awaySeconds, counted, gains, kills, tax, looted, harvested, people: peopleSim, startStage: S.hero.stage, endStage: S.hero.stage };
+  return { awaySeconds, counted, gains, kills, tax, looted, harvested, battles, people: peopleSim, startStage: S.hero.stage, endStage: S.hero.stage };
 }
 // Minute steps: houses from lumber, births, settlers, head tax, training and (if fighting) casualties. Returns the net change.
 // Beta 0.1.15: the chains while away, routed like routeOut — the Storehouse's stock-target share first, then what the next building can take, the rest to the Storehouse.
@@ -1208,7 +1345,9 @@ function claimOffline(data, mult = 1) {
   for (const [src, key] of [[data.harvested, 'harvested'], [data.looted, 'looted']]) for (const k in (src || {})) { const share = data.gains[k] > 0 ? Math.min(1, src[k] / data.gains[k]) : 0, n = Math.floor(Math.max(0, kept[k] || 0) * share); if (n > 0) { S.stats[key] = S.stats[key] || {}; S.stats[key][k] = (S.stats[key][k] || 0) + n; } } // quests that count gathering and loot count it while away too
   for (const k of ['food', 'supplies', 'soldiers', 'bread', 'swords', 'lumber']) if ((S.res[k] || 0) < 0) S.res[k] = 0;
   for (const n in (data.tax || {})) { const t = data.tax[n] * mult; add('gold', t - titheTo(t)); S.stats.taxed = (S.stats.taxed || 0) + t; if (false) { const L = landState(+n); L.coffer = Math.min(cofferCap(+n), (L.coffer || 0) + t); } }
-  if (heroFighting() && data.kills > 0) offlineStages(data.kills * mult);
+  if (data.battles) { const B = data.battles; S.res.soldiers = Math.max(0, soldiers() - B.lost + B.conv); S.stats.fallen = (S.stats.fallen || 0) + B.lost; S.stats.battlesWon = (S.stats.battlesWon || 0) + B.wins; S.stats.replays = (S.stats.replays || 0) + Math.max(0, B.wins - (B.unlocked ? 1 : 0)); S.hero.totalKills += B.kills; gainXp(B.xp * mult);
+    if (B.unlocked && B.n === landN() && B.b === battleNo()) { if (B.b % 10 === 0 && B.b < KC().battles.count) bossSlain(B.b, B.n); if (B.b < KC().battles.count) S.hero.bestStage = Math.max(S.hero.bestStage || 1, B.b + 1); } }
+  if (heroFighting() && data.kills > 0 && !data.battles) offlineStages(data.kills * mult);
   gainXp(data.kills * killXp(S.hero.stage) * stats('sustained').xp * mult);
   S.hero.totalKills += data.kills * mult;
   if (data.kills > 0) for (const id of S.hero.loadout) gainMastery(id, data.counted * CONFIG.offlineSkillWeight * mult, true);
@@ -1316,22 +1455,22 @@ function recArmy(n) { return Math.max(10, AC().recBase * n + AC().recOffset); } 
 function soldiers() { return Math.floor(S.res.soldiers || 0); }
 function garrisoned() { let n = 0; for (const k in (S.kingdom.lands || {})) n += S.kingdom.lands[k].garrison || 0; return n; }
 function marching() { return Math.max(0, soldiers() - garrisoned()); }
-function armyMult() { return phase() === 3 ? 1 + marching() / AC().bonusDiv : 1; }
-function armyHpMult() { return phase() === 3 ? 1 + marching() / AC().hpDiv : 1; }
+function armyMult() { return 1; } // Beta 0.3.0: soldiers fight as soldiers now
+function armyHpMult() { return 1; }
 let _press = null, _pressAt = -1;
 function battlePressure() { // share of the hero's HP one fight takes before healing, 0..1 — how hard the army is fighting
   if (phase() < 3 || !heroFighting() || S.hero.resting || marching() <= 0) return 0;
   const t = S.hero.time; if (_pressAt === t && _press !== null) return _press; _pressAt = t;
   const f = fightNet(); return (_press = Math.max(0, Math.min(1, f.taken / Math.max(1, f.maxHp))));
 }
-function lossPerMin() { const p = battlePressure(); return p > 0 ? marching() * AC().lossRate * p : 0; }
+function lossPerMin() { return 0; } // Beta 0.3.0: soldiers fall in battles, not over time
 function trainOne() { if (trainBlocker()) return false; const c = nextSoldierCost(); for (const k of SOLDIER_GOODS) S.res[k] -= c[k]; S.res.soldiers = (S.res.soldiers || 0) + 1; S.stats.trained = (S.stats.trained || 0) + 1; S.lifetime.soldiers = (S.lifetime.soldiers || 0) + 1; return true; }
 // Beta 0.2.0: the endless loop — once a land is conquered, the hero marches on to the next one by himself as soon as the army reaches its recommended size
 function marchReady() { const n = landN(), nx = n + 1; if (phase() < 3 || !n || !landDone(n) || !landDef(nx) || !landOpen(nx)) return null; return { n: nx, ready: marching() >= recArmy(nx), need: recArmy(nx) }; }
 function autoMarch() { if (S.settings.autoMarch === false || !heroFighting()) return false; const m = marchReady(); if (!m || !m.ready) return false; if (!setGround(landId(m.n))) return false; log(`The army is ready — the hero marches on to ${landDef(m.n).name}.`); pushEvent({ who: 'march', n: m.n }); return true; }
 function tickArmy(dt) {
   if (kingdomNo() < 1) return; const K = S.kingdom;
-  K.marchT = (K.marchT || 0) + dt; if (K.marchT >= 1) { K.marchT = 0; autoMarch(); }
+
   const loss = lossPerMin() / 60 * dt; // casualties: hard fighting costs soldiers — people gone for good
   if (loss > 0) { K.lossAcc = (K.lossAcc || 0) + loss; while (K.lossAcc >= 1 && marching() > 0) { K.lossAcc -= 1; S.res.soldiers -= 1; S.stats.fallen = (S.stats.fallen || 0) + 1; } }
   const B = K.barracks;
@@ -1497,24 +1636,10 @@ function load() {
     const d = JSON.parse(raw), b = freshState();
     if (!d || typeof d !== 'object' || !d.hero || !d.res) return null; // not a save
     if (!(d.schema >= 1)) markAlphaMigrated(d); // a Beta save from before the schema number: its Alpha migrations must not run
+    const oldSchema = d.schema || 1;
     S = { ...b, ...d, res: { ...b.res, ...d.res }, kingdom: { ...b.kingdom, ...(d.kingdom || {}), steps: { ...((d.kingdom || {}).steps || {}) } }, tech: { ...(d.tech || {}) }, quests: { ...b.quests, ...(d.quests || {}) }, stats: { ...b.stats, ...(d.stats || {}) }, settings: { ...b.settings, ...d.settings },
       hero: { ...b.hero, ...d.hero, attr: { ...b.hero.attr, ...(d.hero || {}).attr }, gear: { ...b.hero.gear, ...(d.hero || {}).gear }, tools: { ...b.hero.tools, ...((d.hero || {}).tools || {}) }, grounds: { ...((d.hero || {}).grounds || {}) }, skillLv: { ...b.hero.skillLv, ...(d.hero || {}).skillLv } },
       legacy: { ...b.legacy, ...(d.legacy || {}), perks: { ...((d.legacy || {}).perks || {}) }, kills: { ...((d.legacy || {}).kills || {}) } } };
-    if (d.schema === 2) { // Beta 0.3.4: undo the 0.3.x battle campaign — long lands (4+) had been halved to 50 battles, their boss keys halved, auto-march switched off
-      const h = S.hero, short = LC().shortLands, bk = {};
-      for (const k in (h.bossesKilled || {})) { const m = /^land(\d+):(\d+)$/.exec(k); if (!m || +m[1] <= short) bk[k] = h.bossesKilled[k]; else bk['land' + m[1] + ':' + (2 * +m[2])] = true; }
-      h.bossesKilled = bk;
-      const fix = (gid, g2) => { const G = CONFIG.grounds[gid]; if (!G || !G.land || !g2) return; const n = G.land;
-        if (n > short && !landDone(n)) { g2.stage = Math.max(1, Math.min(G.stages, 2 * (g2.stage || 1) - 1)); g2.bestStage = Math.max(1, Math.min(G.stages, 2 * (g2.bestStage || 1) - 1)); }
-        if (landDone(n)) g2.bestStage = Math.max(g2.bestStage || 1, G.stages + 1);
-        for (let s = 10; s < Math.min(G.stages, g2.bestStage || 1); s += 10) h.bossesKilled[landId(n) + ':' + s] = true; // captains already beaten stay beaten
-        g2.kills = 0; };
-      for (const gid in (h.grounds || {})) fix(gid, h.grounds[gid]);
-      { const cur = { stage: h.stage, bestStage: h.bestStage, kills: 0 }; fix(h.ground, cur); h.stage = cur.stage; h.bestStage = cur.bestStage; h.kills = 0; h.enemyHp = 0; }
-      delete h.bt; delete h.bPeak; delete h.ocd; delete h.border; delete S.settings.autoMarch;
-      const Q = S.quests; if (Q.cur === 'w02b') { const i = CONFIG.quests.findIndex(q => q.id === 'w02'); Q.index = i + 1; Q.cur = (CONFIG.quests[Q.index] || {}).id || null; }
-      else if (Q.cur) { const i = CONFIG.quests.findIndex(q => q.id === Q.cur); if (i >= 0) Q.index = i; }
-      S.schema = SCHEMA; }
     // Migration: saves that reached the kingdom quests before the kingdom moved behind the first founding get that founding for free
     ensureThralls();
     // Techniques come from the Combat tree now: rebuild loadout / levels from ranks (migrates old Skills-tab saves)
@@ -1569,6 +1694,14 @@ function load() {
     if ((S.res.ratkingtooth || 0) > 0) S.res.gold = (S.res.gold || 0) + 60 * Math.floor(S.res.ratkingtooth); delete S.res.ratkingtooth; if (S.lifetime) delete S.lifetime.ratkingtooth; // Beta 0.1.21: the Rat King's Tooth is gone — sold for its old price
     for (const k in S.res) if (!CONFIG.resources[k]) delete S.res[k]; // never keep a good that no longer exists
     if (S.quests.dq && S.quests.dq.type === 'houses') { S.quests.dq = null; if (/^deed/.test(S.quests.cur || '')) S.quests.cur = null; } // Beta 0.2.0: the houses Deed is gone
+    if (oldSchema < 2) { // Beta 0.3.0: lands 4–10 had 100 stages, every land is now 50 battles; the Endless Battle is gone
+      const h = S.hero, half = (gid, s) => { const G = CONFIG.grounds[gid]; if (!G || !G.land) return s; const old = G.land <= LC().shortLands ? 50 : 100; return Math.max(1, Math.min(50, Math.ceil((s || 1) * 50 / old))); };
+      for (const gid in (h.grounds || {})) { const g2 = h.grounds[gid]; if (CONFIG.grounds[gid] && CONFIG.grounds[gid].land) { g2.stage = half(gid, g2.stage); g2.bestStage = half(gid, g2.bestStage); g2.kills = 0; } }
+      if (landN() > 0) { h.stage = half(h.ground, h.stage); h.bestStage = half(h.ground, h.bestStage); h.kills = 0; h.enemyHp = 0; }
+      const bk = {}; for (const k in (h.bossesKilled || {})) { const m = /^land(\d+):(\d+)$/.exec(k); if (!m) { bk[k] = h.bossesKilled[k]; continue; } const n = +m[1], s = +m[2], ns = n <= LC().shortLands ? s : s / 2; if (ns === Math.floor(ns) && ns % 10 === 0 && ns <= 50) bk['land' + n + ':' + ns] = true; } h.bossesKilled = bk;
+      for (const n in ((S.kingdom || {}).lands || {})) { if (landDone(+n)) { const id = landId(+n); if (h.ground === id) h.bestStage = 50; else if (h.grounds[id]) h.grounds[id].bestStage = 50; } S.kingdom.lands[n].depth = 0; }
+      S.settings.autoMarch = false; }
+    S.schema = SCHEMA;
     autoUnpin();
     if (S.kingdom && S.kingdom.orders) S.kingdom.orders = S.kingdom.orders.filter(o => o && o.wants && Object.keys(o.wants).every(k => CONFIG.resources[k])); // never keep an Order for a good that no longer exists
     return S;
@@ -1642,7 +1775,7 @@ window.Game = {
   toolTierUnlocked, toolPower, toolCraftCost, toolUpgradeCost, canToolTierUp, craftTool, upgradeTool, activityDef, activityAvailable, setActivity, masteryLevel, harvestTime, harvestYield, harvestRates,
   questCurrent, questProgress, questClaim, suggestGoal, ground, setGround, groundUnlocked, dropToolMult, bestStageAll, groundDrops, toolSlotUnlocked,
   techDef, hasTech, techProgress, canResearch, research, researching, buildingUnlocked, gearTierUnlocked, dropUnlocked, counter,
-  kingdomRates, chainFlow, marchReady, autoMarch, limitParts, overflowRate, kingdomNo, allSteps, stepDef, stepUnlocked, lineUnlocked, lineSteps, stepState, nextStep, stepMods, kTier, tierDef, stepAvailable, stepBuilt, canBuild, buildStep, tierGoods, tierNeed, tierPaid, tierPaidDone, tierStepsReady, contribute, canRaise, raiseTier, accountantSteps, assignAccountant, cityChecks, cityComplete, stepRate, stepPhases, stepCycle, stepBatch, stepOutput, thrallLevel, thrallCap, dismiss, stepLimit, stepUpCost, stepUpPlan, upgradeStep, stepWorkerSlots,
+  kingdomRates, chainFlow, marchReady, autoMarch, ORDERS, orderDef, orderOpen, orderCd, orderReady, inBattle, battleNo, battleKind, enemyArmy, enemyPip, heroEdge, yourPip, rollBattle, battleState, strikeBattle, battleAdvance, battleRetreat, canBattleAdvance, battleWon, battleShowTime, offlineBattles, limitParts, overflowRate, kingdomNo, allSteps, stepDef, stepUnlocked, lineUnlocked, lineSteps, stepState, nextStep, stepMods, kTier, tierDef, stepAvailable, stepBuilt, canBuild, buildStep, tierGoods, tierNeed, tierPaid, tierPaidDone, tierStepsReady, contribute, canRaise, raiseTier, accountantSteps, assignAccountant, cityChecks, cityComplete, stepRate, stepPhases, stepCycle, stepBatch, stepOutput, thrallLevel, thrallCap, dismiss, stepLimit, stepUpCost, stepUpPlan, upgradeStep, stepWorkerSlots,
   assignWorker, assignOverseer, unassign, thrallPost, useAbility, refreshOffers, hire, maxStars, storeUpCost, upgradeStore, orderGoods, foundRenownNeed, canDeliver, deliver, swapOrder, swapReady, rankIndex, rankInfo, heroFighting, thrallCount, sellPrice, sell, buyPrice, buyRes, buyMax, canBuyRes,
   canAdvance, advance, stageSustainable, autoAdvanceBlock, autoKillsNeeded, killHeal, retreat, canAfford, add, simulate, applyOffline, claimOffline, offlineStages,
   save, load, exportSave, importSave, hardReset,

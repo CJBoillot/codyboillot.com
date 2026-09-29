@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Beta 0.3.4',
+  version: 'Beta 0.3.3',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -439,7 +439,12 @@ const CONFIG = {
     ],
     hallCost: { base: 100, exp: 1.7 },
     // Lands (0.9): conquered from the hero screen; taxes grow ×4 per land
-    lands: { taxBase: 1000, taxGrowth: 2.6, garrisonPer: 10, cofferHours: 8, shortStages: 50, longStages: 100, shortLands: 3, offsetStart: 6, offsetStep: 3, spoilPerHour: 30, victoryLap: 3, heroHereCap: 0.5, endlessDepth: { winsPer: 50, hp: 1.12, hit: 1.10, drop: 1.05, dropCap: 4, spoilBase: 0.03, perLand: 0.2 },
+    // Beta 0.3.0: army battles — every land is a campaign of 50 battles, fought Risk-style with a d20 per soldier
+    battles: { count: 50, base: 22, landGrowth: 1.35, span: 4, captain: 1.25, host: 1.5, captainPip: 1, hostPip: 1, duelBonus: 3, rulerPip: 2,
+      prep: 10, roundT: 1.6, showMax: 9.6, resultT: 4, maxRounds: 30, orderCd: 60,
+      refLog: 0.3, refSlope: 0.64, refAge: 0.3, pipPerDecade: 3, pipCap: 12, convCap: 0.05,   // hero as general: pips = 3 × log10(edge ÷ the expected edge for this land), capped ±8
+      goldKills: 3, xpKills: 3, dropKills: 3, captainGold: 2, hostGold: 3, rally: 3, volleyAt: 18, flankAt: 16, medics: 0.9, replayWound: 1, orderWound: 0.5, defendWound: 0.75, replayPip: 2, replayArmy: 0.3, holdAt: 0.75 },
+    lands: { taxBase: 1000, taxGrowth: 2.6, garrisonPer: 10, cofferHours: 8, shortStages: 50, longStages: 50, shortLands: 3, offsetStart: 6, offsetStep: 3, spoilPerHour: 30, victoryLap: 3, heroHereCap: 0.5, endlessDepth: { winsPer: 50, hp: 1.12, hit: 1.10, drop: 1.05, dropCap: 4, spoilBase: 0.03, perLand: 0.2 },
       // 0.10.1 land difficulty: smooth inside a land (×span from first stage to the Ruler's), a wall between lands (next land starts ×(land/span) above the last one's end)
       curve: { hp: 105, hit: 11.5, landHp: 2.8, landHit: 1.9, spanHp: 2.0, spanHit: 1.6, captainHp: 9, captainHit: 0.47, rulerHp: 12, rulerHit: 0.47, /* Beta 0.1.16: bosses take ~3× longer and hit ~3× softer — same total danger, a real fight */ endless: 1.15 } },
     // Settlement tiers inside one land. Raising a tier costs `cap` of every good made so far (pay in as you go) and loses nothing.
@@ -502,7 +507,6 @@ const CONFIG = {
   // jobs (jobs completed by hand or thrall), sold (gold earned at market), stage, boss, founded, thrall (assigned), activity (swings).
   // Shown in Settings → What's new (newest first). Keep each line short.
   changelog: [
-    ['Beta 0.3.4', 'Back to the old battles. The army-vs-army dice campaign (0.3.0–0.3.3) was a misfire and is shelved for now: lands are fought stage by stage again with the hero leading the army, as in 0.2.0, with the Endless Battle and auto-march back. Saves from 0.3.x get their land progress, captains and quest back.'],
     ['Beta 0.3.3', 'AFK battles are safe. Replaying a battle you have already won, in Defend, costs no soldiers — the fallen are only wounded — so the army can farm all night and still be there in the morning. Soldiers are only lost when you push forward. Your hero\'s bonus is recalibrated: a new kingdom starts near 0 ("hero −1 on every die") and it grows as the hero does; enemy armies are larger to match. A crit while pushing now takes a prisoner, who joins you only if you win. On a conquered land, Advance becomes "March to (next land)". The welcome-back report says where the army fought, what it lost and why it stopped.'],
     ['Beta 0.3.2', 'Calmer battles. Each round now shows one duel with big, readable dice and the sum with bonuses ("16 + 3 = 19"), plus how many other duels were fought. Rounds last 1.6 s instead of 0.7 s; a long battle shows six of its rounds, always the first and last. The result stays up for 4 s.'],
     ['Beta 0.3.1', 'The enemy army box no longer shows the enemy picture, so its count sits centred like yours.'],
@@ -788,20 +792,22 @@ const CONFIG = {
       steps: [ { label: 'Every part of every building at Lv 10', check: { allLv: 10 } }, { label: 'Upgrade parts 10 more times', check: { bLvSum: 1, need: 10, since: true } } ], reward: { gold: 1000 }, focus: { tab: 'kingdom', ksub: 'prod', rtab: 'kingdom', el: 'id:prod-grid' } },
     { id: 'y04', chain: 'City', name: 'Proclaim the Kingdom', text: 'The City is complete. Proclaim the Kingdom: your City becomes the Capital — nothing is lost — and the conquest begins.',
       steps: [ { label: 'Kingdom → Keep → Proclaim the Kingdom', check: { proclaimed: 1 } } ], reward: { gold: 500 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:found-btn' } },
-    { id: 'w02', chain: 'The Kingdom', name: 'March on Ashford', text: 'The hero leads the conquest. The army marches with him and multiplies every blow — each land shows the army it recommends. Choose Ashford Vale on the hero screen.',
-      steps: [ { label: 'Hero → Where to fight → Ashford Vale', check: { landPct: 1, need: 1 } }, { label: 'Conquer 10% more of Ashford Vale', check: { landPct: 1, need: 10, since: true, orDone: true } } ], reward: { gold: 1000 }, focus: { tab: 'hero', sub: 'fight', el: 'ground:land1' } },
+    { id: 'w02', chain: 'The Kingdom', name: 'March on Ashford', text: 'Every land is a campaign of 50 battles, and your army does the fighting: each soldier rolls a d20, and the hero is their general — the stronger he is, the higher they roll. Win a battle and Advance opens the next one. Choose Ashford Vale on the hero screen.',
+      steps: [ { label: 'Hero → Where to fight → Ashford Vale · win a battle', check: { landPct: 1, need: 1 } }, { label: 'Win 5 more battles in Ashford Vale (press Advance)', check: { landPct: 1, need: 10, since: true, orDone: true } } ], reward: { gold: 1000 }, focus: { tab: 'hero', sub: 'fight', el: 'ground:land1' } },
+    { id: 'w02b', chain: 'The Kingdom', name: 'Battle Orders', text: 'Before each battle you have 10 seconds. Pick an order and press Strike: Charge rolls two dice per man, Rally adds 3 to every die, Medics bring the wounded home. Each order needs a minute to recover. Choose nothing and the army fights on Defend — slow and safe.',
+      steps: [ { label: 'Pick an order, then Strike', check: { stat: 'orders', need: 1, since: true } } ], reward: { gold: 800 }, focus: { tab: 'hero', sub: 'fight', el: 'id:battle-card' } },
     { id: 'w03', chain: 'The Kingdom', name: 'A Garrison', text: 'A conquered land pays taxes — but only as much as its garrison can hold. Soldiers in a garrison do not march with the hero.',
       steps: [ { label: 'Kingdom → Lands → Ashford Vale → station 2 soldiers', check: { garrison: 1, need: 2 } }, { label: 'Earn 100 gold in taxes', check: { taxed: 100 } } ], reward: { gold: 1000 }, focus: { tab: 'kingdom', ksub: 'lands', rtab: 'kingdom', el: 'id:lands-card' } },
     { id: 'w01', chain: 'The Kingdom', name: 'Go Deeper', text: 'Taxes are flowing, and every building can grow: the Mine digs deeper, the Farm plows new fields, the Forge builds new furnaces. Each new one can grow far bigger than the last.',
       steps: [ { label: 'Production → Mine → Enter → Dig deeper', check: { stat: 'levels:shaft', need: 2 } }, { label: 'Raise Depth 2\'s Dig to Lv 5', check: { partLv: 'shaft:W:2', need: 5 } } ], reward: { gold: 5000 }, focus: { tab: 'kingdom', ksub: 'prod', rtab: 'kingdom', el: 'step:shaft' } },
-    { id: 'w03b', chain: 'The Kingdom', name: 'The Fallen', text: 'Hard fights cost soldiers — the harder the hero is pushed, the more fall. Every new soldier needs lumber, arms and bread, so keep all three chains flowing.',
+    { id: 'w03b', chain: 'The Kingdom', name: 'The Fallen', text: 'Every battle costs soldiers — new battles most of all. On Defend most of the fallen are only wounded and come back. Every new soldier needs lumber, arms and bread, so keep all three chains flowing.',
       steps: [ { label: 'Train 25 more soldiers', check: { stat: 'trained', need: 25, since: true } } ], reward: { gold: 1500 }, focus: { tab: 'kingdom', ksub: 'prod', rtab: 'kingdom', el: 'id:barracks-card' } },
-    { id: 'w04', chain: 'The Kingdom', name: 'Baron Hollin', text: 'At the end of every land waits its Ruler. Beat him and take his crown — Crowns are the power of your dynasty.',
-      steps: [ { label: 'Conquer Ashford Vale (defeat Baron Hollin, stage 50)', check: { landDone: 1 } }, { label: 'Earn 100 more gold in taxes', check: { taxed: 1, need: 100, since: true } } ], reward: { gold: 2000 }, focus: { tab: 'hero', sub: 'fight', el: 'ground:land1' } },
+    { id: 'w04', chain: 'The Kingdom', name: 'Baron Hollin', text: 'Battle 50 is the ruler\'s host. Rout it and the hero duels the ruler himself — beat him and take his crown. Crowns are the power of your dynasty.',
+      steps: [ { label: 'Win battle 50 and beat Baron Hollin in the duel', check: { landDone: 1 } }, { label: 'Earn 100 more gold in taxes', check: { taxed: 1, need: 100, since: true } } ], reward: { gold: 2000 }, focus: { tab: 'hero', sub: 'fight', el: 'ground:land1' } },
     { id: 'w04d', chain: 'The Kingdom', name: 'Timber for the Army', text: 'Every soldier takes a length of lumber — for shields, spears and camp. When the army grows, the Wood chain must grow with it.',
       steps: [ { label: 'Upgrade the Carpenter\'s bottleneck 3 more times', check: { stat: 'limitUps:carpenter', need: 3, since: true } }, { label: 'Train 25 more soldiers', check: { stat: 'trained', need: 25, since: true } } ], reward: { gold: 2000 }, focus: { tab: 'kingdom', ksub: 'prod', rtab: 'kingdom', el: 'step:carpenter' } },
-    { id: 'w04c', chain: 'The Kingdom', name: 'The Endless Battle', text: 'Past the Ruler the fighting never ends. The Endless Battle never runs out of foes, and it is the one place the hero rests instead of retreating. When your army reaches the next land\'s recommended size, the hero marches on by himself (untick it on the hero screen to stay and farm). While he is still conquering a land it pays at most half its taxes; once it is conquered it pays in full.',
-      steps: [ { label: 'Win 50 fights in the Endless Battle', check: { stat: 'endlessKills', need: 50, since: true } } ], reward: { gold: 2500 }, focus: { tab: 'hero', sub: 'fight', el: 'ground:land1' } },
+    { id: 'w04c', chain: 'The Kingdom', name: 'Hold the Field', text: 'A battle you have won can be fought again: only the enemy\'s remnants stand, and your army replays it every 10 seconds for its gold — even while you are away. Only you march on. A conquered land pays its taxes in full.',
+      steps: [ { label: 'Win 10 battles you have already won', check: { stat: 'replays', need: 10, since: true } } ], reward: { gold: 2500 }, focus: { tab: 'hero', sub: 'fight', el: 'id:battle-card' } },
     { id: 'w04b', chain: 'The Kingdom', name: 'The Price of an Army', text: 'Every soldier needs a little more gear than the last — the Barracks shows the next one\'s price. A bigger army needs a bigger Carpenter, Armory and Bakery.',
       steps: [ { label: 'Upgrade the Carpenter, Armory or Bakery 5 times', check: { stat: 'armsFoodUps', need: 5, since: true } }, { label: 'Train 50 more soldiers', check: { stat: 'trained', need: 50, since: true } } ], reward: { gold: 3000 }, focus: { tab: 'kingdom', ksub: 'prod', rtab: 'kingdom', el: 'id:barracks-card' } },
     { id: 'w05', chain: 'The Kingdom', name: 'The Iron Hills', text: 'Every land is harder than the last — and pays more than twice as much in taxes. The hills hold silver, the metal of Hardened gear: garrison them and it flows in every hour.',
