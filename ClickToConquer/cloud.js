@@ -85,7 +85,7 @@
     C.status = 'syncing'; UIhook();
     let cloud; try { cloud = await pull(); } catch (e) { C.status = 'error'; C.error = `Could not read your cloud save. (${(e && (e.code || e.message)) || 'unknown'})`; UIhook(); return; }
     const localStr = Game.saveString(), local = Game.saveMeta(localStr), L = link();
-    if (!cloud) { await push(true); return; }
+    if (!cloud || cloud.saveKey !== Game.SAVE_KEY) { await push(true); return; } // Beta 0.1.0: an Alpha cloud save is replaced by this game (hard restart)
     if (versionNewer(cloud.version, CONFIG.version)) { C.status = 'error'; C.error = 'Your cloud save is from a newer version — tap Reload game.'; UIhook(); return; }
     const cm = Game.saveMeta(cloud.str);
     const localFresh = local.played < 300 && (Game.S.legacy.foundings || 0) === 0 && (Game.S.legacy.knowledge || 0) === 0;
@@ -97,9 +97,9 @@
     if (linked && !localMovedSinceSync) return useCloud(cloud, false);         // only the other device played
     chooseSave(local, cm, cloud);                                              // both have real progress: ask
   }
-  function versionNewer(a, b) { const n = v => (String(v || '').match(/\d+/g) || []).map(Number); const x = n(a), y = n(b); for (let i = 0; i < Math.max(x.length, y.length); i++) { if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0); } return false; }
+  function versionNewer(a, b) { const n = v => { const t = String(v || ''); return [/beta/i.test(t) ? 1 : 0, ...(t.match(/\d+/g) || []).map(Number)]; }; const x = n(a), y = n(b); for (let i = 0; i < Math.max(x.length, y.length); i++) { if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0); } return false; }
   function useCloud(cloud, backupLocal) {
-    if (backupLocal) ls.set(LS.backup, JSON.stringify({ at: Date.now(), save: Game.saveString() }));
+    if (backupLocal) ls.set(LS.backup, JSON.stringify({ at: Date.now(), key: Game.SAVE_KEY, save: Game.saveString() }));
     if (!Game.restoreString(cloud.str)) { C.status = 'error'; C.error = 'That cloud save could not be loaded.'; UIhook(); return; }
     setLink(C.user.uid, cloud.lastTick, (Game.saveMeta(cloud.str) || {}).played || 0); C.lastSync = Date.now(); C.dirty = false; C.status = 'ok'; C.error = '';
     if (typeof UI !== 'undefined' && UI.rebuild) UI.rebuild(); UIhook();
@@ -118,12 +118,12 @@
     $('cloud-modal').classList.remove('hidden'); C.status = 'idle'; UIhook();
   }
   async function showConflict() {
-    let cloud; try { cloud = await pull(); } catch (e) { return; } if (!cloud) return;
+    let cloud; try { cloud = await pull(); } catch (e) { return; } if (!cloud || cloud.saveKey !== Game.SAVE_KEY) return;
     chooseSave(Game.saveMeta(Game.saveString()), Game.saveMeta(cloud.str), cloud);
   }
   async function deleteCloud() { if (!C.user) return; try { await docRef().delete(); ls.del(LS.link); C.status = 'idle'; C.error = 'Cloud save deleted. Signing out.'; await auth.signOut(); } catch (e) { C.error = 'Could not delete the cloud save.'; } UIhook(); }
-  function backupInfo() { try { const b = JSON.parse(ls.get(LS.backup) || 'null'); return b ? { at: b.at, meta: Game.saveMeta(b.save) } : null; } catch (e) { return null; } }
-  function restoreBackup() { try { const b = JSON.parse(ls.get(LS.backup) || 'null'); if (!b) return false; const cur = Game.saveString(); if (Game.restoreString(b.save)) { ls.set(LS.backup, JSON.stringify({ at: Date.now(), save: cur })); C.dirty = true; if (typeof UI !== 'undefined' && UI.rebuild) UI.rebuild(); push(true); return true; } } catch (e) {} return false; }
+  function backupInfo() { try { const b = JSON.parse(ls.get(LS.backup) || 'null'); return b && b.key === Game.SAVE_KEY ? { at: b.at, meta: Game.saveMeta(b.save) } : null; } catch (e) { return null; } }
+  function restoreBackup() { try { const b = JSON.parse(ls.get(LS.backup) || 'null'); if (!b || b.key !== Game.SAVE_KEY) return false; const cur = Game.saveString(); if (Game.restoreString(b.save)) { ls.set(LS.backup, JSON.stringify({ at: Date.now(), key: Game.SAVE_KEY, save: cur })); C.dirty = true; if (typeof UI !== 'undefined' && UI.rebuild) UI.rebuild(); push(true); return true; } } catch (e) {} return false; }
 
   function UIhook() { if (typeof UI !== 'undefined' && UI.renderCloud) UI.renderCloud(); }
   window.Cloud = Object.assign(C, { init, signIn, signOut, push, deleteCloud, backupInfo, restoreBackup, ago });

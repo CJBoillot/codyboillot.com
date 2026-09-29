@@ -2,8 +2,9 @@
 // GAME ENGINE — Character (attributes/gear/skills/talents) / Kingdom / Crafting
 // ============================================================
 
-const SAVE_KEY = 'afk_proto_save_v12';
-const OLD_SAVE_KEY = 'afk_proto_save_v11';
+const SAVE_KEY = 'ctc_beta_save_v1'; // Beta 0.1.0: a hard restart — Alpha saves are not loaded
+const ALPHA_KEYS = ['afk_proto_save_v12', 'afk_proto_save_v11'];
+let hadAlpha = false;
 
 // ---------- Formatting ----------
 const SUFFIXES = ['', 'K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No', 'Dc'];
@@ -826,7 +827,7 @@ function deedOk(type) {
   if (type === 'gear') return phase() === 3;
   if (type === 'army') return barracksBuilt();
   if (type === 'houses') return turnedRecent() > 0 && stepBuilt('carpenter');
-  if (type === 'depth') return digOpen();
+  if (type === 'depth') return digOpen() && allSteps().some(st => stepBuilt(st.id) && digCost(st.id).gold <= 0.5 * resCap('gold'));
   if (type === 'trophy') { const t = trophyNear(); return !!t && t.left <= 300; } // only when a head is within reach
   if (type === 'pass') { const best = Math.max(0, ...(S.legacy.history || []).map(h => h.crowns || 0)); return canPassCrown() && crownsIfPass() > best && crownsIfPass() >= 3; }
   return false;
@@ -841,7 +842,7 @@ function deedGen() {
     if (type === 'gear') d.a = Math.min(...['weapon', 'chest', 'helm'].map(k => (S.hero.gear[k] || { tier: 0 }).tier)) + 1;
     if (type === 'army') d.a = Math.max(10, Math.ceil(recArmy(Math.min(landsHeld() + 1, CONFIG.ages.lands)) * 0.15));
     if (type === 'houses') { d.a = Math.max(5, Math.ceil(turnedRecent() / PC().perHouse)); d.m = turnedRecent(); }
-    if (type === 'depth') { let best = null; for (const lid in KC().lines) { const sl = slowestInLine(lid); if (sl && (!best || stepOutput(sl) < stepOutput(best))) best = sl; } d.b = best || 'shaft'; d.a = depthCount(d.b) + 1; }
+    if (type === 'depth') { let best = null; const ok = id => digCost(id).gold <= 0.5 * resCap('gold'); for (const lid in KC().lines) { const sl = slowestInLine(lid); if (sl && ok(sl) && (!best || stepOutput(sl) < stepOutput(best))) best = sl; } if (!best) best = allSteps().filter(st => stepBuilt(st.id) && ok(st.id)).sort((a, b) => digCost(a.id).gold - digCost(b.id).gold)[0].id; d.b = best; d.a = depthCount(d.b) + 1; }
     if (type === 'pass') d.a = crownsIfPass();
     if (type === 'wonder') d.a = nextWonderEra();
     if (type === 'heir') d.a = ageNo();
@@ -1439,11 +1440,7 @@ function restoreString(str) {
 function load() {
   try {
     let raw = localStorage.getItem(SAVE_KEY);
-    if (!raw) { // pre-0.3 save: keep Legacy only (Crystals, perks, trophies, bestiary kills), start fresh
-      const old = localStorage.getItem(OLD_SAVE_KEY); if (!old) return null;
-      const d = JSON.parse(old), b = freshState(); b.legacy = { ...b.legacy, knowledge: (d.legacy || {}).knowledge || 0, perks: { ...((d.legacy || {}).perks || {}) }, kills: { ...((d.legacy || {}).kills || {}) } };
-      b.settings = { ...b.settings, ...(d.settings || {}) }; b.migrated03 = true; S = b; save(); try { localStorage.removeItem(OLD_SAVE_KEY); } catch (e) {} return S;
-    }
+    if (!raw) { hadAlpha = ALPHA_KEYS.some(k => { try { return !!localStorage.getItem(k); } catch (e) { return false; } }); return null; } // a fresh Beta save; an Alpha save on this device is left alone
     const d = JSON.parse(raw), b = freshState();
     S = { ...b, ...d, res: { ...b.res, ...d.res }, kingdom: { ...b.kingdom, ...(d.kingdom || {}), steps: { ...((d.kingdom || {}).steps || {}) } }, tech: { ...(d.tech || {}) }, quests: { ...b.quests, ...(d.quests || {}) }, stats: { ...b.stats, ...(d.stats || {}) }, settings: { ...b.settings, ...d.settings },
       hero: { ...b.hero, ...d.hero, attr: { ...b.hero.attr, ...(d.hero || {}).attr }, gear: { ...b.hero.gear, ...(d.hero || {}).gear }, tools: { ...b.hero.tools, ...((d.hero || {}).tools || {}) }, grounds: { ...((d.hero || {}).grounds || {}) }, skillLv: { ...b.hero.skillLv, ...(d.hero || {}).skillLv } },
@@ -1555,7 +1552,7 @@ window.Game = {
   repairPosts,
   phase, canProclaim, proclaim,
   stockMode, setStockMode, stockTarget, stockDemand, STOCK_MODES,
-  get S() { return S; }, saveString, saveMeta, restoreString, setSaveHook: f => { saveHook = f; }, SAVE_KEY, fmt, pct, fmtTime, drainEvents: () => EVENTS.splice(0), drainBig: () => BIGS.splice(0), afkEfficiency: () => afkEff(),
+  get S() { return S; }, get hadAlpha() { return hadAlpha; }, saveString, saveMeta, restoreString, setSaveHook: f => { saveHook = f; }, SAVE_KEY, fmt, pct, fmtTime, drainEvents: () => EVENTS.splice(0), drainBig: () => BIGS.splice(0), afkEfficiency: () => afkEff(),
   orderReserve, markViewed, questReached, battlePressure, recruitCost, armyFloor, lossPerMin, spareArms, recruitPerMin, armyHold, swordsLeftMin, tierDefAt, landCurve, fightNet, isEndless, landShare, heroInLand, warIncome, warDemand, warCover, perSoldier, lineSupports, armyEff, demandMult, WAR_KEYS, discXp, discLevel, discProgress, pathNodes, pathNode, pathRank, pathOpen, pathNeedsStar, pathPointsTotal, pathPointsSpent, pathPointsFree, pathPointsMax, starsTotal, starsSpent, starsFree, canRankPath, rankPath, pathMods, resetPaths, techUnlocked, techUnlockMet, techUnlockLabel, techMastery, techLevelOf, techMod, techMods, chooseMod, modPending, techSlots, equipTech, unequipTech, skillDur, skillCdBase, checkTechUnlocks, treeNode, nodeRank, nodeMax, nodeOpen, treePointsTotal, treePointsSpent, treePointsFree, canRankNode, rankNode, nodeQuestLocked, treeMods,
   fistLevel, slotValue, enemyHit, crafting, maxUpgradePlan, upgradeMax, stats, gearStats, itemStatPreview, gearCraftCost, gearUpgradeCost, canTierUp, craftGear, upgradeGear,
   talentPointsFree, talentPointsTotal, talentPointsSpent, respec, respecCost,

@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Alpha 0.12.1',
+  version: 'Beta 0.1.0',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -262,6 +262,7 @@ const CONFIG = {
   ],
   // 0.12: story pop-ups — shown once, as each phase begins
   story: {
+    beta: { kicker: 'A fresh start', title: 'Welcome to the Beta', go: 'Start fresh', text: "Click to Conquer has grown up. Your town now runs on three production chains, your army is made of real people, and every building grows new levels. Old saves don't fit this new world, so everyone starts again in the Beta — your Alpha save is left untouched on this device, but it can't be carried over. Thank you for playing the Alpha. The wilds are waiting." },
     wild: { title: 'The Wilds', go: 'Begin', text: 'You wake in the wet grass with nothing: no blade, no coin, no name anyone remembers. Rats rustle in the reeds, wolves call beyond the ridge, and somewhere past the forest lies an Empire that grants land to anyone who can pay its tribute. Take what the wild gives you. Twist grass into cloth and sharpen a branch into a sword. Every legend in the Chronicle began exactly here: small, cold and stubborn.' },
     charter: { title: 'A Charter in Red Wax', go: 'Raise the camp', text: "The Emperor's envoy turns the Rat King's tooth over in a gloved hand, and nods. You receive a charter, sealed in red wax: a stretch of river forest, yours to hold. It isn't much. There's a clearing, a handful of families who followed you out of the wild, and trees waiting for an axe. But land remembers who works it. Build a camp, then a hamlet, then a village. Your sword got you here; your town will carry you further." },
     capital: { title: 'The Bells of the Capital', go: 'To war', text: "Bells ring from the new stone towers. Your city no longer holds a charter from someone else's Empire. It's a Capital, and you are its sovereign. Beyond the hills lie lands held by barons and warlords who've never heard your name. They will. The houses fill with soldiers' families, the Armory rings day and night, and the bakers are up before dawn. You still ride at the front, but now an army rides behind you." },
@@ -415,7 +416,7 @@ const CONFIG = {
     // ---- 0.9: buildings are one level each ----
     milestones: [10, 25, 50, 100, 200, 300, 400, 500],   // ×2 output at each
     // 0.12.1: every building grows new levels (a grove, a field, a furnace… only the Mine digs). Level d makes yield^(d−1) × the first; digging it costs gold × digGrowth each time; its parts cost partCost^(d−1) × more.
-    depths: { yield: 12, digBase: 20000, digGrowth: 15, partCost: 12 },
+    depths: { yield: 12, digBase: 20000, digGrowth: 12, partCost: 12 },
     lordship: 0.01,                                      // +1% production per hero level
     minLv: 10,                                           // a complete City: every part of every building at this level, and the Barracks built
     // The army (0.9): the Barracks trains soldiers from Food + Supplies; soldiers eat every minute.
@@ -503,6 +504,7 @@ const CONFIG = {
   // jobs (jobs completed by hand or thrall), sold (gold earned at market), stage, boss, founded, thrall (assigned), activity (swings).
   // Shown in Settings → What's new (newest first). Keep each line short.
   changelog: [
+    ['Beta 0.1.0', 'The Beta begins — everyone starts fresh. Old Alpha saves no longer load (yours stays on this device, untouched). Everything from the 0.12 updates is in: three production chains feed the Barracks, your army is made of people housed in your town, and every building grows new levels (groves, fields, furnaces… only the Mine digs). Balance: building a new level now costs ×12 more each time, matching its ×12 output, and the "grow your slowest building" Deed only asks for a level you can afford. If a level costs more than your Storehouse holds, the building tells you to expand it.'],
     ['0.12.1', 'Buildings grow. After you proclaim the Kingdom, every building can add new levels — Logging clears new groves, the Farm plows new fields, the Forge builds new furnaces, the Bakery new ovens, and the Mine digs deeper. Each one can grow far bigger than the last and has its own Work, Cart and Haul. The buttons on each Production card upgrade the newest one. Crowning your heir now starts a fresh town: levels, houses and people begin again, and the Age\'s gold makes the climb quick. Drillmasters became Deep Foundations: each rank starts every building with one more level built. New quest: Go Deeper.'],
     ['0.12.0', 'Kingdom Production. Your town is now three chains that feed the Barracks: People (Logging → Sawmill → Carpenter → houses), Arms (Mine → Forge → Armory) and Food (Farm → Mill → Bakery). Every building has three parts — Work, Cart and Haul — each with its own level; the slowest part glows gold. Tap Enter to go inside. Houses hold people, people pay a little tax, and the Barracks turns a person, arms and bread into a soldier; each soldier costs a little more gear than the last. There is no army limit or upkeep any more, and conquered lands send settlers — if you have houses for them. Armies are smaller and every soldier counts: old armies were rescaled at the same strength. Quartermasters and Rations became Master Builders and Lean Barracks; the Great Granary now triples all production. New art for every building, new quests for the city and the kingdom, and a few words from the Chronicle as each chapter begins.'],
     ['0.11.2', 'Loot cleanup. Drops that did nothing are gone: rat tails, tusks, pelts, claws, fangs, rope, lockboxes, bone dust, grave iron and the boss trinkets (the Rat King\'s Tooth stays: it pays the tribute). Meat, berries, the Butcher\'s Cleaver and Butchery are gone too. The Wilds drop hide, the Roads gold, the Crypts gold and ingots. Anything you were holding was sold for its old price. Trophies are kill milestones per enemy: Bronze at 1,000 kills, Silver 3,000, Gold 10,000, Platinum 30,000, Diamond 100,000 (+2% loot and XP each).'],

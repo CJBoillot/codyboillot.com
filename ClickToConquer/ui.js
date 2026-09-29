@@ -705,7 +705,7 @@ const UI = (() => {
         const bar = dc.querySelector(`[data-f=bar${p}]`); bar.style.width = (100 * Pd[i] / mx) + '%'; bar.parentElement.classList.toggle('lim', p === lim);
         setText(dc.querySelector(`[data-f=d${p}]`), p === lim ? `slowest part · ${Pd[i].toFixed(1)}s of the ${cd.toFixed(1)}s cycle` : p === 'W' ? `${f(Game.stepBatch(id, d))} per load${nm ? ' · ×2 at Lv ' + nm : ''} · ${Pd[i].toFixed(1)}s` : `${Pd[i].toFixed(1)}s`);
         fillPartBtn(dc, id, p, false, d); }); }
-    { const db = box.querySelector('[data-dig]'), open = Game.digOpen(), nd = Game.depthCount(id) + 1; db.disabled = !Game.canDig(id); setHtml(box.querySelector('[data-f=digcost]'), open ? costHtml(Game.digCost(id)) : '<span class="dim">after Proclaim</span>');
+    { const db = box.querySelector('[data-dig]'), open = Game.digOpen(), nd = Game.depthCount(id) + 1; db.disabled = !Game.canDig(id); setHtml(box.querySelector('[data-f=digcost]'), open ? costHtml(Game.digCost(id)) + (Game.digCost(id).gold > Game.resCap('gold') ? '<br><span class="tiny warn">more than your Storehouse holds — expand it in the Keep</span>' : '') : '<span class="dim">after Proclaim</span>');
       setText(box.querySelector('[data-f=digwhy]'), open ? `Starts at Lv 1 but makes ×${f(Game.depthYield(nd))} what the first ${Game.unitName(id).toLowerCase()} makes at the same level. Its own Work, Cart and Haul.` : 'Your town grows new levels once the Kingdom is proclaimed.'); }
     box.querySelectorAll('[data-seg]').forEach(seg => { const i = +seg.dataset.seg; seg.style.flexGrow = (P[i] / cyc).toFixed(4); seg.firstChild.style.width = (i < s.phase ? 100 : i > s.phase ? 0 : 100 * Math.min(1, s.t / P[i])) + '%'; seg.classList.toggle('on', i === s.phase); });
     setText(box.querySelector('[data-f=cyc]'), `${Game.stepBatch(id)} ${R[st.make].name.toLowerCase()} every ${cyc.toFixed(1)}s · now ${[st.from ? 'crafting' : 'working', 'loading the cart', 'hauling'][s.phase]}`);
@@ -1216,9 +1216,9 @@ const UI = (() => {
   let storyOpen = null;
   function checkStory() {
     if (storyOpen || !$('welcome').classList.contains('hidden')) return; const S = Game.S, st = S.settings.story = S.settings.story || {}, q = Game.questCurrent();
-    const due = !st.wild && S.hero.totalKills === 0 && q && q.id === 'f01' ? 'wild' : !st.charter && S.legacy.foundings > 0 ? 'charter' : !st.capital && Game.phase() === 3 ? 'capital' : !st.fallow && q && q.id === 'w05b' ? 'fallow' : null;
+    const due = !st.beta && Game.hadAlpha && S.hero.totalKills === 0 ? 'beta' : !st.wild && S.hero.totalKills === 0 && q && q.id === 'f01' ? 'wild' : !st.charter && S.legacy.foundings > 0 ? 'charter' : !st.capital && Game.phase() === 3 ? 'capital' : !st.fallow && q && q.id === 'w05b' ? 'fallow' : null;
     if (!due) return; const T = CONFIG.story[due]; storyOpen = due;
-    setText($('story-title'), T.title); setText($('story-text'), T.text); setText($('story-go'), T.go); $('story').classList.remove('hidden');
+    setText($('story-kicker'), T.kicker || 'From the Chronicle'); setText($('story-title'), T.title); setText($('story-text'), T.text); setText($('story-go'), T.go); $('story').classList.remove('hidden');
   }
   function render(force) {
     const now = performance.now(); if (!force && now - lastRender < 100) return; lastRender = now;
