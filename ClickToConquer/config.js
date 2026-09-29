@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Beta 0.1.0',
+  version: 'Beta 0.1.1',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -504,6 +504,7 @@ const CONFIG = {
   // jobs (jobs completed by hand or thrall), sold (gold earned at market), stage, boss, founded, thrall (assigned), activity (swings).
   // Shown in Settings → What's new (newest first). Keep each line short.
   changelog: [
+    ['Beta 0.1.1', 'The founding quest now points to the right place: Kingdom → Keep → Pay tribute.'],
     ['Beta 0.1.0', 'The Beta begins — everyone starts fresh. Old Alpha saves no longer load (yours stays on this device, untouched). Everything from the 0.12 updates is in: three production chains feed the Barracks, your army is made of people housed in your town, and every building grows new levels (groves, fields, furnaces… only the Mine digs). Balance: building a new level now costs ×12 more each time, matching its ×12 output, and the "grow your slowest building" Deed only asks for a level you can afford. If a level costs more than your Storehouse holds, the building tells you to expand it.'],
     ['0.12.1', 'Buildings grow. After you proclaim the Kingdom, every building can add new levels — Logging clears new groves, the Farm plows new fields, the Forge builds new furnaces, the Bakery new ovens, and the Mine digs deeper. Each one can grow far bigger than the last and has its own Work, Cart and Haul. The buttons on each Production card upgrade the newest one. Crowning your heir now starts a fresh town: levels, houses and people begin again, and the Age\'s gold makes the climb quick. Drillmasters became Deep Foundations: each rank starts every building with one more level built. New quest: Go Deeper.'],
     ['0.12.0', 'Kingdom Production. Your town is now three chains that feed the Barracks: People (Logging → Sawmill → Carpenter → houses), Arms (Mine → Forge → Armory) and Food (Farm → Mill → Bakery). Every building has three parts — Work, Cart and Haul — each with its own level; the slowest part glows gold. Tap Enter to go inside. Houses hold people, people pay a little tax, and the Barracks turns a person, arms and bread into a soldier; each soldier costs a little more gear than the last. There is no army limit or upkeep any more, and conquered lands send settlers — if you have houses for them. Armies are smaller and every soldier counts: old armies were rescaled at the same strength. Quartermasters and Rations became Master Builders and Lean Barracks; the Great Granary now triples all production. New art for every building, new quests for the city and the kingdom, and a few words from the Chronicle as each chapter begins.'],
@@ -695,7 +696,7 @@ const CONFIG = {
       steps: [ { label: 'Loot → open Trophies', check: { viewed: 'trophies' } } ], reward: { gold: 100 }, focus: { tab: 'inventory', rtab: 'inventory', el: 'id:csub-troph-btn' } },
     { id: 'q17', name: 'A New Kingdom', text: 'You have survived the wild alone. Pay tribute to the Empire — 100 gold and the Rat King\'s Tooth — and it grants you land. Your hero keeps everything he has earned — levels, skills and gear — but the goods in your pack stay behind. This is where the kingdom begins.',
       steps: [
-        { label: 'Kingdom → Throne → Pay tribute (100 gold + Rat King\'s Tooth)', check: { founded: 1 } },
+        { label: 'Kingdom → Keep → Pay tribute (100 gold + Rat King\'s Tooth)', check: { founded: 1 } },
       ], reward: { gold: 100 }, focus: { tab: 'kingdom', ksub: 'throne', rtab: 'kingdom', el: 'id:found-btn' } },
     // ===== A Kingdom: after the first founding =====
     { id: 'k01', chain: 'A Kingdom', name: 'The First Camp', text: 'Kingdom → Production is your town: every building feeds the next, and they all work on their own. Open one to see how it runs.',
