@@ -595,8 +595,8 @@ const UI = (() => {
   const PROD_COLS = ['forest', 'mine', 'farm'], PROD_HEAD = { forest: 'Wood', mine: 'Arms', farm: 'Food' };
   const artOf = st => `assets/buildings/${st.art || st.id}.webp`;
   let prodKey = '', bldOpen = null, bldKey = '';
-  function openBld(id) { bldOpen = id; bldKey = ''; Game.markViewed('bld:' + id); $('prod-view').classList.add('hidden'); $('bld-view').classList.remove('hidden'); render(true); window.scrollTo(0, 0); }
-  function closeBld() { bldOpen = null; $('bld-view').classList.add('hidden'); $('prod-view').classList.remove('hidden'); render(true); }
+  function openBld(id) { dock('barracks-card', 'bld-barracks-host'); bldOpen = id; bldKey = ''; Game.markViewed('bld:' + id); $('prod-view').classList.add('hidden'); $('bld-view').classList.remove('hidden'); render(true); window.scrollTo(0, 0); }
+  function closeBld() { undock('barracks-card'); bldOpen = null; $('bld-view').classList.add('hidden'); $('prod-view').classList.remove('hidden'); render(true); }
   function partBtn(id, p, small, d = 1) { return `<button class="buy pbtn" data-part="${p}" data-id="${id}" data-d="${d}"><span class="${small ? 'tiny' : 'small'}" data-f="pl${p}">${Game.partName(id, p)}</span>${small ? '' : ' <span class="small dim" data-f="plv' + p + '"></span>'}<br><span class="cost" data-f="pc${p}"></span></button>`; }
   function wirePartBtns(root) { root.querySelectorAll('[data-part]').forEach(b => b.addEventListener('click', e => { e.stopPropagation(); if (Game.upgradeStep(b.dataset.id, b.dataset.part, kBuy, +b.dataset.d || 1)) { flash(b); render(true); } })); }
   // Beta 0.1.19: a building short of input isn't its own bottleneck — the building that starves it is
@@ -979,7 +979,7 @@ const UI = (() => {
           <div class="belt-army hidden" data-f="army"></div>
           <div class="belt-head"><div class="belt-title"><div><h3>${{ forest: 'Wood', mine: 'Arms', farm: 'Food' }[lid] || line.name} chain</h3><p>${steps.map(x => R[x.make].name.toLowerCase()).join(' → ')}</p></div></div>
             <div class="belt-hr">${viewToggle('chain')}<div class="belt-out">Out<b><span data-f="outico"></span><span data-f="out"></span></b></div></div></div>
-          <div class="up-bar"><span>Upgrade</span>${buyToggle()}</div>
+          <div class="up-bar"><span class="up-gold" data-f="ugold"></span><span>Upgrade</span>${buyToggle()}</div>
           <div class="chain-stage" id="chain-stage"><canvas id="chain-cv" aria-label="The whole ${line.name} as one belt"></canvas></div>
           <div class="tiny dim belt-note">Tap a building's name to open it on its own. Colours run red to violet along the whole chain.</div>
         </div>`);
@@ -990,9 +990,10 @@ const UI = (() => {
       ab.classList.toggle('hidden', !mine); if (mine) setHtml(ab, `<b>⚔ The army waits on ${R[bl].name.toLowerCase()}</b> — soldiers train as fast as it arrives (+${Game.soldiersPerMin().rate.toFixed(1)}/min). The slowest building here is the <b>${Game.stepDef(slow || st.id).name}</b> — upgrade its weakest part (<b>${Game.partName(slow || st.id, Game.limitPart(slow || st.id))}</b>).`); }
   }
   function armyLimit() { if (!Game.barracksBuilt() || Game.phase() !== 3) return null; const b = Game.soldiersPerMin().by; return b === 'barracks' ? null : b; } // Beta 0.4.4: steady, not the stock left this second
+  function upGold(box) { const e = box.querySelector('[data-f=ugold]'); if (e) setHtml(e, `${ico(R.gold.icon, 15)} <b>${Game.fmt(Game.S.res.gold || 0)}</b>`); } // Beta 0.5.3: your gold, right above the upgrade buttons
   function renderBld() {
     const S = Game.S, f = Game.fmt, id = bldOpen, st = Game.stepDef(id), box = $('bld-view'); if (!st || !Game.stepBuilt(id)) { closeBld(); return; }
-    if (S.settings.chainView === 'chain') { renderChainBld(id, st); return; }
+    if (S.settings.chainView === 'chain') { renderChainBld(id, st); upGold(box); return; }
     const nx = Game.nextStep(id), D = Game.depthOf(id), key = 'one|' + id + '|' + kBuy + '|' + (nx ? nx.id : '');
     if (bldKey !== key) { bldKey = key;
       const stock = nx ? `<div class="kstock"><div class="kstock-head"><span>Keep ${R[st.make].name.toLowerCase()} in stock</span><span class="kstock-n" data-f="stn"></span></div><div class="seg kstock-seg">${Game.STOCK_MODES.map(m => `<button data-stock="${m}">${m === 'auto' ? 'Auto' : m === 0 ? '0' : m === 1 ? 'Full' : m === 0.5 ? '½' : '¼'}</button>`).join('')}</div><div class="tiny kstock-why" data-f="stwhy"></div></div>` : '';
@@ -1002,7 +1003,7 @@ const UI = (() => {
           <div class="belt-head"><div class="belt-title"><img src="${artOf(st)}" srcset="${artOf(st)} 1x, assets/buildings/${st.art || st.id}@2x.webp 2x" alt=""><div><h3>${st.name}</h3><p><span data-f="depth"></span> · makes <b>${R[st.make].name.toLowerCase()}</b></p></div></div>
             <div class="belt-hr">${viewToggle('one')}<div class="belt-out">Output<b><span data-f="outico"></span><span data-f="out"></span></b></div></div></div>
           <canvas id="belt-cv" aria-label="${st.name}: goods move through ${Game.PARTS.map(p => Game.partName(id, p)).join(', ')}"></canvas>
-          <div class="up-bar"><span>Upgrade</span>${buyToggle()}</div>
+          <div class="up-bar"><span class="up-gold" data-f="ugold"></span><span>Upgrade</span>${buyToggle()}</div>
           <div class="belt-ups">${Game.PARTS.map(p => `<button class="belt-up" data-part="${p}" data-id="${id}"><span class="pu-n"><span data-f="pn${p}">${Game.partName(id, p)}</span> <span data-f="pl${p}"></span></span><span class="pu-b" data-f="pc${p}"></span></button>`).join('')}
             <button class="belt-deeper hidden" data-dig><span data-f="dt"></span><small data-f="ds"></small><span class="cost" data-f="dc"></span></button></div>
           <div class="tiny dim belt-note" data-f="note"></div>
@@ -1014,7 +1015,7 @@ const UI = (() => {
       box.querySelectorAll('[data-stock]').forEach(b => b.addEventListener('click', () => { const v = b.dataset.stock; if (Game.setStockMode(st.make, v === 'auto' ? 'auto' : +v)) { Game.save(); render(true); } }));
       setHtml(box.querySelector('[data-f=outico]'), ico(R[st.make].icon, 20)); wireToggle(box);
       BV.id = null; glowKey = ''; }
-    ensureBelt(id);
+    ensureBelt(id); upGold(box);
     const fo = v => v < 10 ? v.toFixed(2) : f(v), gd = R[st.make].name.toLowerCase(), cfo = Game.chainFlow(st.line).find(c => c.id === id), out = cfo ? cfo.out : Game.stepOutput(id); // what it turns out: its slowest part, or what reaches it
     setText(box.querySelector('[data-f=depth]'), `${Game.unitName(id)} ${D}`);
     setText(box.querySelector('[data-f=out]'), `${fo(out)} ${gd}/s`);

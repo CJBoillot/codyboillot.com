@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Beta 0.5.2',
+  version: 'Beta 0.5.3',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -543,6 +543,7 @@ const CONFIG = {
   // jobs (jobs completed by hand or thrall), sold (gold earned at market), stage, boss, founded, thrall (assigned), activity (swings).
   // Shown in Settings → What's new (newest first). Keep each line short.
   changelog: [
+    ['Beta 0.5.3', 'Inside a building (chain or single view), your gold now shows right above the upgrade buttons, and the Barracks card sits at the bottom of the screen so you can see what the army is waiting on while you upgrade.'],
     ['Beta 0.5.2', 'Fix: a Deed from before the War Council that asked for hero gear ("Temper the Arms") or a trophy could no longer be done, since the hero no longer fights in the Kingdom. It is replaced by a new Deed.'],
     ['Beta 0.5.1', 'The Front comes alive. Army → Front now shows the battle in dots — every dot is 1%. Blue is your army at the front, red is the stage\'s defenders: every hit knocks red dots out, front row first, soldiers who fall drop out of the blue, and hit numbers and gold pop from the clash. At a fort the red gives way to a wall of 100 yellow dots under volleys of blue shots, ringed in red. A bar of ten segments under the battle counts down the stages to the next fort.'],
     ['Beta 0.5.0', 'The War Council — the Kingdom phase is rebuilt for a long war. The Hero tab becomes the Army tab, with four screens. Front: the siege, now fought entirely by the army — every 10th stage is a fort it storms itself (3× a stage, easier with Helmets and Fort Breaker); your hero leads from the war tent as the Commander, whose rank rises as the army takes ground (+0.5% soldier worth per rank). Supply: the army\'s standard issue — Blades, Armour, Helmets, Bows, Horses and Banners — paid in arms and gold; arms spent here are arms not turned into soldiers. A soldier\'s worth now comes from Supply, not from the hero (a save already at war keeps its worth, carried over into Blades). Commands: 16 doctrines in four families. Every land conquered in the first Age opens a slot, then each Era Ruler opens one more; unlock a Command once with gold, equip it, and train it one level at a time — minutes at first, then hours, then weeks — even while you are away. Crowns: the Crown Tree now lives in the Army tab, rescaled for months of play (smaller effects, deeper ranks, each rank costs more); every rank you bought is refunded as Crowns. The belts cost more to grow late (30× per depth, going deeper 4×). The Kingdom quests are rewritten to teach Supply and Commands, and Deeds ask for Supply Drives and Doctrine instead of hero gear and trophies. The Loot tab and the hero\'s fighting are hidden in the Kingdom phase. Pacing past Age IV is still being tuned.'],

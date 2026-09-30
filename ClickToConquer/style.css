@@ -1395,3 +1395,6 @@ body.army .army-view { display: flex !important; flex-direction: column; gap: 10
 .fb-segs i.now::after { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: var(--w, 0%); background: linear-gradient(90deg, #8a5a22, #e8c06a); }
 .fb-segs i.fort { outline: 1px solid #d9604c; }
 .fb-segl { display: flex; justify-content: space-between; font-size: 10.5px; color: var(--dim); }
+.up-bar .up-gold { margin-right: auto; display: inline-flex; align-items: center; gap: 4px; font-size: 13px; color: var(--text); font-variant-numeric: tabular-nums; }
+.up-bar .up-gold b { color: #f3cf6b; }
+#bld-barracks-host .bk-card { margin-top: 10px; }
