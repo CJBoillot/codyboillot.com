@@ -934,6 +934,7 @@ function deedCurrent() {
   const Q = S.quests; if (Q.index < CONFIG.quests.length || phase() !== 3) return null;
   if (Q.dq && Q.dq.type === 'trophy' && !deedOk('trophy') && trophyCount() <= ((Q.base || {})[Q.dq.id] || {})['{"stat":"trophies","need":1,"since":true}']) { Q.dn = (Q.dn || 0) + 1; Q.dq = null; } // the hero moved on: hunt something else
   if (Q.dq && Q.dq.type === 'land' && !landDef(Q.dq.a)) Q.dq = null; // 0.11.1: lands past 10 are gone
+  if (Q.dq && armyMode() && (Q.dq.type === 'gear' || Q.dq.type === 'trophy')) { if (Q.base) delete Q.base[Q.dq.id]; Q.dq = null; } // Beta 0.5.2: hero-gear and trophy Deeds from before the War Council can't be done any more — a new Deed takes their place
   if (!Q.dq) { Q.dq = deedGen(); if (!Q.dq) return null; Q.cur = Q.dq.id; if (Q.base) delete Q.base[Q.dq.id]; }
   const d = Q.dq, tail = { id: d.id, dyn: d.n, chain: 'Deeds', focus: null };
   if (d.type === 'land') { const G = landDef(d.a), rn = G.ruler.charAt(0).toUpperCase() + G.ruler.slice(1);
