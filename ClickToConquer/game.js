@@ -617,10 +617,13 @@ function beltTick(dt) { BELT.t += dt; if (BELT.t < 2) return; const r = {}, old 
   for (const st of allSteps()) { const id = st.id, a = BELT.acc[id] || {}, o = old[id] || {}, inst = (a.out || 0) / BELT.t; r[id] = { out: o.out === undefined ? stepOutput(id) : o.out + (inst - o.out) * k }; /* start from capacity so a fresh screen doesn't read low */ for (const p of ['C', 'H']) { const iu = a[p] ? a[p].u / BELT.t : 0, ig = a[p] ? a[p].g / BELT.t : 0, op = o[p] || { u: iu, g: ig }, u = op.u + (iu - op.u) * k, gg = op.g + (ig - op.g) * k; if (u > 1e-9) r[id][p] = { u, g: gg }; } }
   BELT.rate = r; BELT.acc = {}; BELT.t = 0; }
 function beltRate(id) { return BELT.rate[id] || {}; } // {out, C:{u,g}, H:{u,g}} per second over the last few seconds
-function workIn(id) { const st = stepDef(id), w = partCap(id, 'W'); if (!st.from) return w; const cf = chainFlow(st.line).find(c => c.id === id); return cf ? Math.min(w, cf.supply / st.ratio) : w; } // what Work actually does: its capacity, or what reaches it
+function workIn(id) { const st = stepDef(id), w = partCap(id, 'W'); if (!st.from) return w; const CF = chainFlow(st.line), i = CF.findIndex(c => c.id === id); if (i < 1) return i < 0 ? w : Math.min(w, CF[i].supply / st.ratio); return Math.min(w, CF[i - 1].out / st.ratio); } // Beta 0.4.7: everything the last building offers reaches Work (the belt fills its input), not just what the weakest part can finish // what Work actually does: its capacity, or what reaches it
 function bottleneckPart(id) { // Beta 0.4.4: from capacities, so it updates the moment a level is bought — a part is selling when more reaches it than it can move
   if (!stepBuilt(id)) return null; const inW = workIn(id), c = partCap(id, 'C'), h = partCap(id, 'H'), tol = 1.005;
-  if (Math.min(inW, c) > h * tol) return 'H'; if (inW > c * tol) return 'C'; return null; } // the part whose belt is overflowing (goods being sold in front of it)
+  if (Math.min(inW, c) > h * tol) return 'H'; if (inW > c * tol) return 'C';
+  const st = stepDef(id); if (st.from) { const CF = chainFlow(st.line), i = CF.findIndex(x => x.id === id), up = i > 0 ? CF[i - 1] : null, k = up && up.make; // Beta 0.4.7: the last building offers more than Work can take, and the Storehouse is full — it is sold at the door
+    if (up && up.out > partCap(id, 'W') * st.ratio * 1.03 && ((S.res[k] || 0) >= resCap(k) - 1e-6 || overflowRate(k).u > 1e-6)) return 'W'; }
+  return null; } // the part whose belt is overflowing (goods being sold in front of it)
 function digOpen() { return true; }
 function digCost(id) { return { gold: Math.round(stepUpCost(id, 'W', 1, depthOf(id) + 1).gold * DC().digMult) }; }
 function digRoom(id) { return LVMAX * depthOf(id) + 1 <= levelCap(); } // the settlement allows the next depth

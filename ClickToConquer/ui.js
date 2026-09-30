@@ -778,7 +778,7 @@ const UI = (() => {
       ctx.fillStyle = '#0d0a08'; ctx.beginPath(); ctx.arc(x - w * .5, y + h * .9, 1.8 * k, 0, 7); ctx.arc(x + w * .5, y + h * .9, 1.8 * k, 0, 7); ctx.fill();
       ctx.fillStyle = c; ctx.beginPath(); ctx.arc(x - w * .5, y + h * .9, 1.1 * k, 0, 7); ctx.fill(); ctx.beginPath(); ctx.arc(x + w * .5, y + h * .9, 1.1 * k, 0, 7); ctx.fill(); }
     function draw() {
-      ctx.clearRect(0, 0, W, H); const hot = Game.bottleneckPart(id), hotK = hot === 'C' ? 1 : hot === 'H' ? 2 : -1, f = Game.fmt;
+      ctx.clearRect(0, 0, W, H); const hot = Game.bottleneckPart(id), hotK = hot === 'W' ? 0 : hot === 'C' ? 1 : hot === 'H' ? 2 : -1, f = Game.fmt;
       ctx.strokeStyle = '#3a2e24'; ctx.lineWidth = 6; ctx.lineCap = 'round';
       for (let r = 0; r < 2; r++) { const pts = bendPts(rows[r].ltr ? 'r' : 'l', rows[r].y, rows[r + 1].y); ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.stroke(); }
       ctx.lineWidth = 4; ctx.strokeStyle = '#1a1411';
@@ -865,7 +865,7 @@ const UI = (() => {
     function restack(nb) { nb.queue.forEach((q, i) => { q.spot = i; if (q.o.onArrive) return; const want = trAt(nb.tr, qDist(nb, i)); if (Math.abs(q.o.pos.x - want.x) > 0.5 || Math.abs(q.o.pos.y - want.y) > 0.5) q.o.wp = [want]; }); }
     const tally = (key, n, x, y, color, u) => { const a = agg[key] || (agg[key] = { n: 0 }); a.n += n; a.x = x; a.y = y; a.color = color; a.unit = u; };
     function toLane(b, k, o, path) { o.wp = path; o.onArrive = () => { if (b.lanes[k][0]) o.dead = true; else b.lanes[k][0] = o; }; }
-    const hotK = b => { const p = Game.bottleneckPart(b.id); return p === 'C' ? 1 : p === 'H' ? 2 : -1; };
+    const hotK = b => { const p = Game.bottleneckPart(b.id); return p === 'W' ? 0 : p === 'C' ? 1 : p === 'H' ? 2 : -1; };
     function tick(dt) {
       clock += dt;
       for (const o of ores) { let left = SPEED * dt;
