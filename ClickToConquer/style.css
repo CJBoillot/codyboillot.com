@@ -1382,3 +1382,16 @@ body.army .army-view { display: flex !important; flex-direction: column; gap: 10
 .cbtn { font: inherit; min-width: 96px; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 5px 7px; border-radius: 10px; border: 1px solid var(--bronze); background: #211a12; color: var(--text); box-shadow: none; }
 .cbtn .pu-l { font-weight: 700; font-size: 11.5px; color: var(--text); } .cbtn .pu-c { font-size: 10.5px; }
 .cbtn:disabled { opacity: 1; background: #151110; border-color: var(--line2); } .cbtn:disabled .pu-l { color: #b9ad99; }
+/* Beta 0.5.1: the battle at the Front — blue army, red defenders, yellow walls; every dot is 1% */
+.front-battle { border: 1px solid var(--line); border-radius: 12px; background: #120e0b; padding: 8px 10px; display: flex; flex-direction: column; gap: 6px; }
+.fb-head { display: flex; justify-content: space-between; align-items: center; font-size: 13px; } .fb-head b { font-variant-numeric: tabular-nums; }
+.fb-field { position: relative; height: 138px; border-radius: 10px; overflow: hidden; background: linear-gradient(180deg, #1b1510 0%, #171210 60%, #1f1812 100%); border: 1px solid var(--line); }
+.fb-field canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.fb-banner { position: absolute; left: 50%; top: 45%; transform: translate(-50%, -50%) scale(.9); background: #2b2014; border: 1px solid var(--bronze2); color: var(--bronze2); font-family: var(--font-head); font-weight: 700; font-size: 13px; padding: 5px 12px; border-radius: 10px; opacity: 0; transition: opacity .25s, transform .25s; pointer-events: none; white-space: nowrap; }
+.fb-banner.on { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+.fb-segs { display: grid; grid-template-columns: repeat(10, 1fr); gap: 3px; }
+.fb-segs i { height: 10px; border-radius: 3px; background: #211a14; position: relative; overflow: hidden; }
+.fb-segs i.done { background: linear-gradient(90deg, #8a5a22, #e8c06a); }
+.fb-segs i.now::after { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: var(--w, 0%); background: linear-gradient(90deg, #8a5a22, #e8c06a); }
+.fb-segs i.fort { outline: 1px solid #d9604c; }
+.fb-segl { display: flex; justify-content: space-between; font-size: 10.5px; color: var(--dim); }

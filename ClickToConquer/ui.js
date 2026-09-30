@@ -1950,9 +1950,60 @@ const UI = (() => {
     const can = !T && list.some(d => C.un[d.id] && Game.S.res.gold >= Game.cmdTrainCost(d.id).gold) || (n > 0 && C.eq.slice(0, n).some(x => !x) && list.some(d => C.un[d.id] && !Game.cmdEquipped(d.id)));
     $('badge-cmds').classList.toggle('hidden', !can); return can;
   }
+  // ---- Beta 0.5.1: the battle at the Front, in dots (every dot is 1%) ----
+  const FB = { raf: 0, last: 0, t: 0, g: null, stage: 0, ground: '', lastLeft: 100, armyStart: 0, lastBlue: 100, bursts: [], pops: [], shots: [], hitT: 0, goldT: 0, volT: 0 };
+  const WALL_ORDER = (() => { const o = []; for (let c = 0; c < 10; c++) for (let r = 0; r < 10; r++) o.push({ c, r }); return o.sort((a, b) => a.c - b.c || ((a.r * 7) % 10) - ((b.r * 7) % 10)); })();
+  function fbDot(c, x, y, col, r) { if (r <= .2) return; c.fillStyle = col; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill(); }
+  function fbSize() { const cv = $('fb-cv'), r = cv.getBoundingClientRect(), d = devicePixelRatio || 1; if (!r.width) return null; cv.width = r.width * d; cv.height = r.height * d; const c = cv.getContext('2d'); c.setTransform(d, 0, 0, d, 0, 0); return { c, w: r.width, h: r.height }; }
+  function fbBanner(txt) { const b = $('fb-ban'); b.textContent = txt; b.classList.add('on'); clearTimeout(b.__t); b.__t = setTimeout(() => b.classList.remove('on'), 1500); }
+  function fbState() { const h = Game.S.hero, LN = Game.landN(); if (!Game.armyMode() || !LN || Game.isEndless()) return null; const G = Game.ground();
+    return { s: h.stage, prog: h.stage < (h.bestStage || 1) ? 1 : Math.min(1, h.siege || 0), fort: Game.isBoss(h.stage), mar: Game.marching(), worth: Game.soldierWorth(), active: Game.siegeActive(), G, LN }; }
+  function fbTick(now) {
+    const box = $('front-battle'); if (!box || box.offsetParent === null) { FB.raf = 0; return; }
+    const dt = Math.min(0.05, (now - (FB.last || now)) / 1000); FB.last = now; FB.t += dt;
+    const st = fbState(); if (!st) { FB.raf = 0; return; }
+    if (!FB.g || Math.abs(FB.g.w - $('fb-cv').getBoundingClientRect().width) > 2) FB.g = fbSize(); if (!FB.g) { FB.raf = requestAnimationFrame(fbTick); return; }
+    const { c, w, h } = FB.g, f = Game.fmt, key = Game.S.hero.ground;
+    if (FB.ground !== key || FB.stage !== st.s) { if (FB.stage && FB.ground === key && st.s > FB.stage) fbBanner(Game.isBoss(FB.stage) ? `🏰 Fort ${FB.stage} stormed!` : `Stage ${FB.stage} taken`); FB.ground = key; FB.stage = st.s; FB.lastLeft = Math.ceil(100 * (1 - st.prog)); FB.armyStart = Math.max(1, st.mar); FB.lastBlue = 100; }
+    const left = Math.max(0, Math.ceil(100 * (1 - st.prog))), blue = Math.max(st.mar > 0 ? 1 : 0, Math.min(100, Math.round(100 * st.mar / Math.max(1, FB.armyStart))));
+    c.clearRect(0, 0, w, h);
+    const gap = Math.min(11.5, (h - 22) / 10), y0 = (h - gap * 9) / 2;
+    if (st.fort) { // the fort: a wall of 100 yellow dots under volleys
+      const wx = w - gap * 10 - 14; c.strokeStyle = 'rgba(217,96,76,.75)'; c.lineWidth = 1.5; c.strokeRect(wx - gap / 2 - 3, y0 - gap / 2 - 3, gap * 10 + 6, gap * 10 + 6);
+      const gone = new Set(WALL_ORDER.slice(0, 100 - left).map(p => p.c * 10 + p.r));
+      for (let cc = 0; cc < 10; cc++) for (let r = 0; r < 10; r++) { const x = wx + cc * gap, y = y0 + r * gap; if (gone.has(cc * 10 + r)) fbDot(c, x, y, '#2a2217', 1.5); else fbDot(c, x, y, '#f0c24c', 3.8); }
+      if (left < FB.lastLeft) for (let k = 100 - FB.lastLeft; k < 100 - left; k++) { const p = WALL_ORDER[k]; if (p) FB.bursts.push({ x: wx + p.c * gap, y: y0 + p.r * gap, vx: 20 + Math.random() * 20, vy: -10, col: '#e8c06a', t: 0 }); }
+      const bc = Math.ceil(blue / 10); for (let k = 0; k < blue; k++) fbDot(c, 16 + Math.floor(k / 10) * (gap - 1), y0 + (k % 10) * gap, '#6fa3d9', 3.1);
+      if (st.active && (FB.volT += dt) >= 1.5) { FB.volT = 0; const face = WALL_ORDER[Math.min(99, 100 - left)] || { c: 0 }; for (let i = 0; i < 6; i++) FB.shots.push({ x0: 16 + bc * (gap - 1), y0: y0 + Math.random() * 9 * gap, x1: wx + face.c * gap, y1: y0 + Math.random() * 9 * gap, t: -i * .05, T: .6 });
+        const dmg = st.mar * st.worth * 1.5 / 60; setTimeout(() => FB.pops.push({ x: wx + 4.5 * gap, y: y0 - 2, txt: '−' + f(dmg), c: '#e8c06a', t: 0 }), 600); }
+    } else { // a stage: blue army against 100 red defenders
+      const redCols = Math.ceil(left / 10), clash = w / 2 + (10 - redCols) * gap * .5 - 6;
+      for (let k = 0; k < left; k++) { const col = redCols - 1 - Math.floor(k / 10); fbDot(c, clash + 12 + col * gap + Math.sin(FB.t * 3 + k) * .4, y0 + (k % 10) * gap, '#d9604c', 3.3); }
+      for (let k = 0; k < blue; k++) fbDot(c, clash - 12 - Math.floor(k / 10) * gap + Math.sin(FB.t * 3 + k * 1.3) * .4, y0 + (k % 10) * gap, '#6fa3d9', 3.3);
+      if (st.active) { const gr = c.createLinearGradient(clash - 10, 0, clash + 10, 0); gr.addColorStop(0, 'rgba(232,192,106,0)'); gr.addColorStop(.5, 'rgba(232,192,106,.22)'); gr.addColorStop(1, 'rgba(232,192,106,0)'); c.fillStyle = gr; c.fillRect(clash - 10, y0 - 8, 20, gap * 9 + 16); }
+      if (left < FB.lastLeft) for (let k = left; k < FB.lastLeft; k++) FB.bursts.push({ x: clash + 12, y: y0 + (k % 10) * gap, vx: 14 + Math.random() * 10, vy: -16, col: '#d9604c', t: 0 });
+      if (blue < FB.lastBlue) for (let k = blue; k < FB.lastBlue; k++) FB.bursts.push({ x: clash - 12, y: y0 + (k % 10) * gap, vx: -10, vy: -12, col: '#6fa3d9', t: 0 });
+      if (st.active && (FB.hitT += dt) >= 2.5) { FB.hitT = 0; FB.pops.push({ x: clash + 34, y: y0 + 12 + Math.random() * 60, txt: '−' + f(st.mar * st.worth * 2.5 / 60), c: '#e8c06a', t: 0 }); }
+      if (st.active && (FB.goldT += dt) >= 9) { FB.goldT = 0; const g = Game.attritionPerMin() * Game.goldPerFallen() * 9 / 60; if (g > 0) FB.pops.push({ x: clash + 64, y: y0 + gap * 8, txt: '+' + f(g) + ' gold', c: '#f3cf6b', t: 0 }); }
+    }
+    FB.lastLeft = left; FB.lastBlue = blue;
+    FB.shots = FB.shots.filter(o => (o.t += dt) < o.T); for (const o of FB.shots) { if (o.t < 0) continue; const u = o.t / o.T; fbDot(c, o.x0 + (o.x1 - o.x0) * u, o.y0 + (o.y1 - o.y0) * u - Math.sin(u * Math.PI) * 36, '#9cc4ee', 2); }
+    FB.bursts = FB.bursts.filter(b => (b.t += dt) < .6); for (const b of FB.bursts) { const u = b.t / .6; fbDot(c, b.x + b.vx * u, b.y + b.vy * u + 30 * u * u, b.col, 3.3 * (1 - u)); }
+    FB.pops = FB.pops.filter(p => (p.t += dt) < 1.1); c.textAlign = 'center'; for (const p of FB.pops) { c.globalAlpha = 1 - (p.t / 1.1) ** 2; c.font = '800 12px Inter, system-ui, sans-serif'; c.lineWidth = 3; c.strokeStyle = '#0d0a08'; c.strokeText(p.txt, p.x, p.y - 22 * p.t); c.fillStyle = p.c; c.fillText(p.txt, p.x, p.y - 22 * p.t); c.globalAlpha = 1; }
+    if (!st.active && st.mar <= 0) { c.textAlign = 'center'; c.font = '600 12px Inter, system-ui, sans-serif'; c.fillStyle = '#9c8f7c'; c.fillText('No soldiers at the front — the siege waits', w / 2, h - 8); }
+    FB.raf = requestAnimationFrame(fbTick);
+  }
+  function renderBattle() {
+    const st = fbState(), box = $('front-battle'); box.classList.toggle('hidden', !st); if (!st) return;
+    setText($('fb-title'), st.fort ? `🏰 Storming the fort · stage ${st.s}` : `⚔ Siege of stage ${st.s} → ${st.s + 1}${Game.isBoss(st.s + 1) ? ' · 🏰' : ''}`); setText($('fb-pct'), Math.floor(st.prog * 100) + '%');
+    const from = Math.floor((st.s - 1) / 10) * 10 + 1;
+    setHtml($('fb-segs'), Array.from({ length: 10 }, (_, i) => { const s2 = from + i; return `<i class="${s2 < st.s ? 'done' : s2 === st.s ? 'now' : ''}${Game.isBoss(s2) ? ' fort' : ''}"${s2 === st.s ? ` style="--w:${Math.floor(st.prog * 100)}%"` : ''}></i>`; }).join(''));
+    setText($('fb-from'), `stage ${from}`); setText($('fb-fort'), from + 9 >= st.G.stages ? `👑 ${st.G.ruler} · stage ${st.G.stages}` : `🏰 fort at stage ${from + 9}`);
+    if (!FB.raf && box.offsetParent !== null) { FB.last = 0; FB.raf = requestAnimationFrame(fbTick); }
+  }
   function renderWar() {
     const on = Game.armyMode(); setArmyMode(on); if (!on) return false;
-    renderCommander(); const a = renderSupply(), c = renderCmds(); $('badge-hero').classList.toggle('hidden', !(a || c)); return a || c;
+    renderBattle(); renderCommander(); const a = renderSupply(), c = renderCmds(); $('badge-hero').classList.toggle('hidden', !(a || c)); return a || c;
   }
   function goToBld(id) { const t = document.querySelector('[data-tab=kingdom]'); if (t && !t.disabled) t.click(); const k = document.querySelector('[data-ksub=prod]'); if (k && !k.disabled) k.click(); const r = document.querySelector('[data-rtab=kingdom]'); if (r && desktop) r.click(); openBld(id); }
   function fmtEta(sec) { const m = Math.max(1, Math.round(sec / 60)); return m < 60 ? `${m} min` : m < 48 * 60 ? `${Math.floor(m / 60)} h${m % 60 ? ' ' + (m % 60) + ' min' : ''}` : `${Math.round(m / 60)} h`; }

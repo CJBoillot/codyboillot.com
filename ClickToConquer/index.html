@@ -16,7 +16,7 @@
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=b0500">
+  <link rel="stylesheet" href="style.css?v=b0501">
 </head>
 <body>
 
@@ -60,7 +60,7 @@
           <button data-asub="cmds">Commands <span id="badge-cmds" class="dot hidden"></span></button>
           <button data-asub="crowns">Crowns <span id="badge-crowns" class="dot hidden"></span></button>
         </nav>
-        <div id="asub-front" class="asub"><div id="army-front-host"></div><div id="commander-card" class="card commander"></div></div>
+        <div id="asub-front" class="asub"><div id="front-battle" class="front-battle hidden"><div class="fb-head"><span id="fb-title"></span><b id="fb-pct"></b></div><div class="fb-field"><canvas id="fb-cv" aria-label="The battle at the Front: every dot is 1%"></canvas><div class="fb-banner" id="fb-ban"></div></div><div class="fb-segs" id="fb-segs"></div><div class="fb-segl"><span id="fb-from"></span><span id="fb-fort"></span></div></div><div id="army-front-host"></div><div id="commander-card" class="card commander"></div></div>
         <div id="asub-supply" class="asub hidden"><div class="card sup-head" id="sup-head"></div><div id="sup-list" class="sup-list"></div></div>
         <div id="asub-cmds" class="asub hidden"><div id="cmd-root"></div></div>
         <div id="asub-crowns" class="asub hidden"></div>
@@ -504,11 +504,11 @@
 </div>
 
 
-<script src="config.js?v=b0500"></script>
-<script src="cloud-config.js?v=b0500"></script>
-<script src="game.js?v=b0500"></script>
-<script src="ui.js?v=b0500"></script>
-<script src="cloud.js?v=b0500"></script>
+<script src="config.js?v=b0501"></script>
+<script src="cloud-config.js?v=b0501"></script>
+<script src="game.js?v=b0501"></script>
+<script src="ui.js?v=b0501"></script>
+<script src="cloud.js?v=b0501"></script>
 <script>window.addEventListener("error", e => { const d = document.getElementById("err"); if (d) { d.textContent = "Error: " + e.message; d.classList.remove("hidden"); } });</script>
 <div id="celebrate" class="celebrate hidden" role="status" aria-live="polite"><div class="cb-ico" id="cb-ico"></div><div class="cb-txt"><div class="cb-kicker" id="cb-kicker"></div><div class="cb-title" id="cb-title"></div><div class="cb-sub" id="cb-sub"></div></div></div>
 </body>
