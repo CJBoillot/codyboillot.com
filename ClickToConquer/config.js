@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Beta 0.4.2',
+  version: 'Beta 0.4.3',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -506,6 +506,7 @@ const CONFIG = {
   // jobs (jobs completed by hand or thrall), sold (gold earned at market), stage, boss, founded, thrall (assigned), activity (swings).
   // Shown in Settings → What's new (newest first). Keep each line short.
   changelog: [
+    ['Beta 0.4.3', 'The whole chain on one screen. Inside any building, the small Chain | One switch beside Output shows every building of that chain as one snaking belt — the middle building runs the other way so the belt flows straight on, and colours step from red to violet along the whole chain. Every phase has its upgrade button beside its row (glowing red when it is the bottleneck), and a gold button appears beside a building\'s name when it can go deeper. Tap a building\'s name to open it on its own. Also: slots start working as a cart is sent to them, and row labels sit clear of the bottleneck glow.'],
     ['Beta 0.4.2', 'When the Barracks is paused for lack of lumber, arms or bread, every building in that chain now says so at the top: the slowest building tells you which part to upgrade, the others take you to it. The Output box now shows the building\'s steady output instead of a jumpy average.'],
     ['Beta 0.4.1', 'Buildings are belts. Every building now works one depth at a time, and each of its three parts has levels 1 to 10 — one big slot per level. Inside a building you watch mine carts ride a snaking belt through the three parts: they change colour as they are worked, wait on the belt for a free slot, and leave for the next building. If a part can\'t keep up, its belt fills and the goods are sold cheap on the spot: that part pulses red and its upgrade button glows until you fix it. With all three parts at Lv 10 a gold button opens the next depth (a new grove, furnace, oven…): the old one folds away and the new one starts at Lv 1 making what the old one made at Lv 10. A Camp builds up to Lv 10, a Hamlet to depth 2, a Village to depth 3, a City without limit. The Output box shows what the building really turns out per second. Old saves are converted to the same output. In a conquered land the Front box now says the Front is resting and what opens the next land (for the first land: the quest The Iron Hills), so it is clear why no siege is running.'],
     ['Beta 0.4.0', 'The Front. Conquest is now a siege fed by soldiers. In a land, every stage between forts is besieged by your army: the siege bar fills at (soldiers × their worth) and the ground never falls back. Your hero sets that worth — the stronger he is against this land\'s soldiers, the more each soldier counts ("worth ×1.4 each"). Soldiers fall only while the siege gains ground (2% of the army a minute), and each takes foes and their gold with him. Every 10th stage is a fort: the hero duels its captain himself; if he can\'t win yet, the army holds the breached walls, no one falls, and he tries again once stronger (or tap Advance). The pace of conquest is now the pace of your Barracks — lumber, arms and bread. It all runs while you are away, and the welcome-back report says how far the front moved. No more recommended army: after a land falls the hero marches on straight away.'],

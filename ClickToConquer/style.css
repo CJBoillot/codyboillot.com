@@ -1267,3 +1267,24 @@ html, body { max-width: 100%; overflow-x: hidden; }
 .belt-army b { color: var(--bronze2); }
 .belt-go { font: inherit; font-size: 12px; margin-top: 6px; display: block; border: 1px solid var(--bronze); border-radius: 8px; background: #211a12; color: var(--bronze2); padding: 5px 10px; box-shadow: none; }
 .belt-up.army { border-color: var(--bronze2); box-shadow: 0 0 12px #e8c06a66; }
+/* Beta 0.4.3: the whole chain */
+.belt-hr { display: flex; align-items: center; gap: 8px; }
+.vseg { display: flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; flex: none; }
+.vseg button { font: inherit; font-size: 10.5px; color: var(--dim); background: #171210; border: 0; border-radius: 0; padding: 3px 8px; box-shadow: none; min-height: 0; }
+.vseg button + button { border-left: 1px solid var(--line); }
+.vseg button[aria-pressed="true"] { color: #1a1208; background: var(--bronze2); font-weight: 700; }
+.chain-stage { position: relative; }
+#chain-cv { width: 100%; display: block; }
+.pup { position: absolute; font: inherit; font-size: 10.5px; line-height: 1.15; color: var(--bronze2); background: #211a12; border: 1px solid var(--bronze); border-radius: 8px; padding: 3px 2px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: none; min-height: 0; }
+.pup b { color: var(--text); font-size: 10px; white-space: nowrap; letter-spacing: -.2px; } .pup small { font-size: 9.5px; color: var(--bronze2); }
+.pup:disabled { opacity: .45; }
+.pup.alarm { color: #ffd2b0; border-color: #ff7a4a; background: linear-gradient(180deg, #4a1f14, #2e160e); animation: beltAlarm 1.05s ease-in-out infinite; } .pup.alarm b { color: #fff0e0; }
+.pdeep { position: absolute; font: inherit; font-size: 11px; line-height: 1.15; border-radius: 9px; padding: 4px 8px; display: flex; flex-direction: column; align-items: flex-end; border: 1px solid var(--line); background: #171210; color: var(--dim); box-shadow: none; min-height: 0; }
+.pdeep b { font-size: 11.5px; } .pdeep small { font-size: 9.5px; }
+.pdeep.ready { color: #1a1208; background: linear-gradient(180deg, #e8c06a, #c9973f); border-color: var(--bronze2); box-shadow: 0 0 14px #e8c06a55; font-weight: 700; }
+.pname-go { position: absolute; background: transparent; border: 0; box-shadow: none; padding: 0; min-height: 0; cursor: pointer; }
+.pname-go:focus-visible { outline: 2px solid var(--bronze2); border-radius: 8px; }
+@media (prefers-reduced-motion: reduce) { .pup.alarm { animation: none; } }
+.pup[hidden], .pdeep[hidden], .vseg [hidden] { display: none !important; }
+.chain-card .belt-title h3 { font-size: 17px; white-space: nowrap; }
+.chain-card .belt-title p { font-size: 11px; }

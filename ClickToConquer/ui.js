@@ -756,12 +756,12 @@ const UI = (() => {
       else { const cf = Game.chainFlow(st.line).find(c => c.id === id), rate = cf ? cf.supply / st.ratio : 0; inAcc += rate * dt / Math.max(1e-9, unit());
         while (inAcc >= 1) { inAcc -= 1; if (lanes[0].filter(c => !c).length > ores.filter(o => o.incoming).length) { const o = { pos: { x: PAD, y: rows[0].y }, wp: [], c: BELT_COL[0], incoming: true }; ores.push(o); toLane(0, o, [cellC(0, 0)]); const f = o.onArrive; o.onArrive = () => { o.incoming = false; f(); }; } } }
       laneT += dt;
-      if (laneT >= 0.12) { laneT = 0;
+      if (laneT >= 0.06) { laneT = 0;
         for (let k = 0; k < 3; k++) { const L = lanes[k]; if (!rows[k].cells.length) continue;
           for (let i = LANE - 2; i >= 0; i--) if (L[i] && !moving(L[i]) && !L[i + 1]) { L[i + 1] = L[i]; L[i] = null; L[i + 1].wp = [cellC(k, i + 1)]; }
           const f = L[LANE - 1], S = slots[k]; if (f && !moving(f)) { const j = S.findIndex((s, i) => i < lvOf(k) && !s); if (j >= 0) { L[LANE - 1] = null; S[j] = { o: f, p: 0 }; f.wp = [slotC(k, j)]; } } } }
       for (let k = 0; k < 3; k++) { const S = slots[k], row = rows[k];
-        for (let j = 0; j < 10; j++) { const s = S[j]; if (!s || moving(s.o)) continue; if (j >= lvOf(k)) { S[j] = null; s.o.dead = true; continue; } s.p += dt / T;
+        for (let j = 0; j < 10; j++) { const s = S[j]; if (!s) continue; if (j >= lvOf(k)) { S[j] = null; s.o.dead = true; continue; } s.p += dt / T; if (moving(s.o)) { s.p = Math.min(s.p, 0.95); continue; } /* work starts as the cart is sent to the slot */
           if (k === 0 && !feed) s.o.r = 1.2 + 3 * Math.min(1, s.p);
           if (s.p < 1) continue; S[j] = null; const o = s.o, from = slotC(k, j); o.c = colAfter(k);
           if (k < 2) toLane(k + 1, o, [...bendPts(row.ltr ? 'r' : 'l', row.y, rows[k + 1].y), cellC(k + 1, 0)]);
@@ -789,7 +789,7 @@ const UI = (() => {
         ctx.font = '11px Inter, system-ui, sans-serif'; ctx.fillStyle = '#9c8f7c'; ctx.fillText(cf ? `${f(cf.supply)} ${R[st.from].name.toLowerCase()}/s in · uses ${f(cf.use)}/s` : '', PAD + 12 + lw, rows.top);
         ctx.font = '600 11px Inter, system-ui, sans-serif'; ctx.fillStyle = '#e8c06a'; ctx.fillText('› in', PAD, rows[0].y + 22); }
       { const nx = Game.nextStep(id); ctx.textAlign = 'right'; ctx.font = '600 11px Inter, system-ui, sans-serif'; ctx.fillStyle = '#e8c06a'; ctx.fillText(nx ? `to the ${nx.name} ›` : 'to the Storehouse ›', W - PAD - 2, rows[2].y + 26); }
-      rows.forEach((row, k) => { const p = Game.PARTS[k], lv = lvOf(k), lx = rows.x0, ly = row.y - SLOTH / 2 - 8, isHot = k === hotK;
+      rows.forEach((row, k) => { const p = Game.PARTS[k], lv = lvOf(k), lx = rows.x0, ly = row.y - SLOTH / 2 - 13, isHot = k === hotK;
         ctx.textAlign = 'left'; ctx.font = '600 12.5px Inter, system-ui, sans-serif'; ctx.fillStyle = '#ede4d3'; const title = Game.partName(id, p) + (row.ltr ? '  →' : '  ←'); ctx.fillText(title, lx, ly); const tw = ctx.measureText(title).width;
         const busy = slots[k].filter((s, i) => s && i < lv && !moving(s.o)).length, cap = Game.partCap(id, p);
         ctx.font = isHot ? '700 11px Inter, system-ui, sans-serif' : '11px Inter, system-ui, sans-serif'; ctx.fillStyle = isHot ? '#ff8a6a' : '#9c8f7c';
@@ -814,16 +814,155 @@ const UI = (() => {
     BV.v.tick(dt); BV.v.draw(); BV.raf = requestAnimationFrame(beltLoop);
   }
   function ensureBelt(id) { const cv = document.getElementById('belt-cv'); if (!cv) return; if (BV.id !== id || BV.cv !== cv) { BV.id = id; BV.cv = cv; BV.v = beltView(cv, id); BV.v.draw(); } if (!BV.raf) { BV.last = 0; BV.raf = requestAnimationFrame(beltLoop); } }
+  // ===== Beta 0.4.3: the whole chain on one screen — every built building of the line as one snaking belt =====
+  const CV = { lid: null, raf: 0 };
+  const RAIN = ['#e8433c', '#ef6a3a', '#f2923a', '#f2c63a', '#d2dc48', '#86d44a', '#44c98c', '#38c4d0', '#4a92ea', '#8c6aea'];
+  function chainView(cv, stage, lid) {
+    const ctx = cv.getContext('2d'), LANE = 4, SPEED = 170, T = 2.0, PAD = 12, CELL = 10, CG = 3, SLOTH = 24, SG = 3, BEND = 14, ROWH = 58, HEAD = 58, GUT = 62;
+    const B = Game.lineSteps(lid).filter(st => Game.stepBuilt(st.id)).map((st, bi) => { const im = new Image(); im.src = artOf(st); return { st, id: st.id, bi, img: im, feed: !!st.from }; });
+    let W = 0, H = 0, BW = 0, BR = 0, SLOTW = 20, ores = [], pops = [], clock = 0, agg = {}, x0 = 0;
+    const lvOf = (b, k) => Game.partLv(b.id, Game.PARTS[k]);
+    const unit = b => Game.partCap(b.id, 'W') / Math.max(1, lvOf(b, 0)) * T;
+    const bh = HEAD + 3 * ROWH;
+    function layout() {
+      W = cv.clientWidth || 340; BW = W - GUT; BR = BW - PAD; H = B.length * bh + 14;
+      const dpr = devicePixelRatio || 1; cv.width = W * dpr; cv.height = H * dpr; cv.style.height = H + 'px'; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const laneW = LANE * CELL + (LANE - 1) * CG, gap = 6; SLOTW = Math.max(10, Math.min(22, Math.floor((BW - 2 * PAD - 28 - laneW - gap - 9 * SG) / 10)));
+      const inner = laneW + gap + 10 * SLOTW + 9 * SG; x0 = Math.max(PAD + 14, (BW - inner) / 2);
+      B.forEach((b, bi) => { const top = bi * bh; b.top = top; b.mirror = bi % 2 === 1; // the middle building runs the other way, so the belt snakes straight on
+        b.rows = [0, 1, 2].map(k => { const y = top + HEAD + 20 + k * ROWH, ltr = (k % 2 === 0) !== b.mirror, cells = [], slots = [];
+          if (k > 0 || b.feed) for (let i = 0; i < LANE; i++) { const off = i * (CELL + CG); cells.push(ltr ? { x: x0 + off, y: y - CELL / 2 } : { x: x0 + inner - CELL - off, y: y - CELL / 2 }); }
+          for (let i = 0; i < 10; i++) { const off = laneW + gap + i * (SLOTW + SG); slots.push(ltr ? { x: x0 + off, y: y - SLOTH / 2 } : { x: x0 + inner - SLOTW - off, y: y - SLOTH / 2 }); }
+          return { y, ltr, cells, slots }; });
+        b.lanes = [0, 1, 2].map(() => Array(LANE).fill(null)); b.slots = [0, 1, 2].map(() => Array(10).fill(null)); b.laneT = 0; b.inAcc = 0; b.D = Game.depthOf(b.id); });
+      ores = []; placeControls();
+    }
+    const cellC = (b, k, i) => { const c = b.rows[k].cells[i]; return { x: c.x + CELL / 2, y: c.y + CELL / 2 }; };
+    const slotC = (b, k, j) => { const s = b.rows[k].slots[j]; return { x: s.x + SLOTW / 2, y: s.y + SLOTH / 2 }; };
+    function bend(side, y1, y2) { const x = side === 'r' ? BR : PAD, e = side === 'r' ? x - BEND : x + BEND, m = (y1 + y2) / 2, out = [];
+      const q = (a, c, d, t) => ({ x: (1 - t) * (1 - t) * a.x + 2 * (1 - t) * t * c.x + t * t * d.x, y: (1 - t) * (1 - t) * a.y + 2 * (1 - t) * t * c.y + t * t * d.y });
+      for (let i = 0; i <= 10; i++) out.push(q({ x: e, y: y1 }, { x, y: y1 }, { x, y: m }, i / 10)); for (let i = 1; i <= 10; i++) out.push(q({ x, y: m }, { x, y: y2 }, { x: e, y: y2 }, i / 10)); return out; }
+    const moving = o => o.wp.length > 0;
+    const tally = (key, n, x, y, color, u) => { const a = agg[key] || (agg[key] = { n: 0 }); a.n += n; a.x = x; a.y = y; a.color = color; a.unit = u; };
+    function toLane(b, k, o, path) { o.wp = path; o.onArrive = () => { if (b.lanes[k][0]) o.dead = true; else b.lanes[k][0] = o; }; }
+    const hotK = b => { const p = Game.bottleneckPart(b.id); return p === 'C' ? 1 : p === 'H' ? 2 : -1; };
+    function tick(dt) {
+      clock += dt;
+      for (const o of ores) { let left = SPEED * dt;
+        while (left > 0 && o.wp.length) { const t = o.wp[0], dx = t.x - o.pos.x, dy = t.y - o.pos.y, d = Math.hypot(dx, dy);
+          if (d <= left) { o.pos = { x: t.x, y: t.y }; o.wp.shift(); left -= d; } else { o.pos = { x: o.pos.x + dx / d * left, y: o.pos.y + dy / d * left }; left = 0; } }
+        if (!o.wp.length && o.onArrive) { const f = o.onArrive; o.onArrive = null; f(); } }
+      B.forEach((b, bi) => {
+        if (Game.depthOf(b.id) !== b.D) { b.D = Game.depthOf(b.id); b.lanes = [0, 1, 2].map(() => Array(LANE).fill(null)); b.slots = [0, 1, 2].map(() => Array(10).fill(null)); pops.push({ x: BW / 2, y: b.rows[0].y - 4, text: `${Game.unitName(b.id)} ${b.D} opened`, color: '#7fd28f', t: 0 }); }
+        if (!b.feed) { const S = b.slots[0]; for (let j = 0; j < lvOf(b, 0); j++) if (!S[j]) { const p = slotC(b, 0, j), o = { pos: { ...p }, wp: [], r: 1, c: RAIN[0] }; ores.push(o); S[j] = { o, p: 0 }; } }
+        else { const cf = Game.chainFlow(lid).find(c => c.id === b.id), rate = cf ? cf.supply / b.st.ratio : 0; b.inAcc += rate * dt / Math.max(1e-9, unit(b));
+          while (b.inAcc >= 1) { b.inAcc -= 1; const e = cellC(b, 0, 0); if (!b.lanes[0][0]) { const o = { pos: { x: e.x, y: e.y }, wp: [], c: RAIN[bi * 3] }; ores.push(o); b.lanes[0][0] = o; } } }
+        b.laneT += dt;
+        if (b.laneT >= 0.06) { b.laneT = 0;
+          for (let k = 0; k < 3; k++) { const L = b.lanes[k]; if (!b.rows[k].cells.length) continue;
+            for (let i = LANE - 2; i >= 0; i--) if (L[i] && !moving(L[i]) && !L[i + 1]) { L[i + 1] = L[i]; L[i] = null; L[i + 1].wp = [cellC(b, k, i + 1)]; }
+            const f = L[LANE - 1], S = b.slots[k]; if (f && !moving(f)) { const j = S.findIndex((s, i) => i < lvOf(b, k) && !s); if (j >= 0) { L[LANE - 1] = null; S[j] = { o: f, p: 0 }; f.wp = [slotC(b, k, j)]; } } } }
+        for (let k = 0; k < 3; k++) { const S = b.slots[k], row = b.rows[k];
+          for (let j = 0; j < 10; j++) { const s = S[j]; if (!s) continue; if (j >= lvOf(b, k)) { S[j] = null; s.o.dead = true; continue; } s.p += dt / (T * (0.88 + 0.024 * j)); if (moving(s.o)) { s.p = Math.min(s.p, 0.95); continue; }
+            if (k === 0 && !b.feed) s.o.r = 1.2 + 3 * Math.min(1, s.p);
+            if (s.p < 1) continue; S[j] = null; const o = s.o, from = slotC(b, k, j); o.c = RAIN[Math.min(RAIN.length - 1, bi * 3 + k + 1)];
+            if (k < 2) toLane(b, k + 1, o, [...bend(row.ltr ? 'r' : 'l', row.y, b.rows[k + 1].y), cellC(b, k + 1, 0)]);
+            else { tally(b.id + 'm', unit(b), from.x, from.y + 2, o.c, R[b.st.make].name.toLowerCase());
+              const nb = B[bi + 1]; if (nb) { o.wp = [...bend(row.ltr ? 'r' : 'l', row.y, nb.rows[0].y)]; o.onArrive = () => { o.dead = true; }; } // it rolls into the next building, whose own arrivals carry on from there
+              else { o.wp = [{ x: BR, y: row.y }]; o.onArrive = () => { o.dead = true; }; } } } } });
+      ores = ores.filter(o => !o.dead);
+      if ((agg.t = (agg.t || 0) + dt) >= 0.8) { B.forEach(b => { const r = Game.beltRate(b.id); for (const [p, k] of [['C', 1], ['H', 2]]) if (r[p] && r[p].g > 0) { const c = b.rows[k].cells[0]; if (c) tally(b.id + p, r[p].g * 0.8, c.x, c.y - 10, '#e8c06a', 'gold'); } });
+        for (const key in agg) { const a = agg[key]; if (key !== 't' && a.n > 0) pops.push({ x: a.x, y: a.y, text: `+${Game.fmt(a.n)} ${a.unit}`, color: a.color, t: 0 }); } agg = {}; }
+      for (const p of pops) p.t += dt; pops = pops.filter(p => p.t < 1.2);
+    }
+    function rr(x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+    function cart(x, y, r, c) { const k = r / 4.2 * 0.75, w = 8 * k, h = 4.5 * k; ctx.fillStyle = c; ctx.shadowColor = c + 'cc'; ctx.shadowBlur = 6;
+      ctx.beginPath(); ctx.moveTo(x - w, y - h); ctx.lineTo(x + w, y - h); ctx.lineTo(x + w * .8, y + h * .6); ctx.lineTo(x - w * .8, y + h * .6); ctx.closePath(); ctx.fill(); ctx.shadowBlur = 0;
+      ctx.fillStyle = '#0d0a08'; ctx.beginPath(); ctx.arc(x - w * .5, y + h * .9, 1.7 * k, 0, 7); ctx.arc(x + w * .5, y + h * .9, 1.7 * k, 0, 7); ctx.fill(); }
+    function draw() {
+      ctx.clearRect(0, 0, W, H); const f = Game.fmt, CF = Game.chainFlow(lid);
+      B.forEach((b, bi) => { const cf = CF.find(c => c.id === b.id), hk = hotK(b);
+        if (bi) { ctx.strokeStyle = '#2a211a'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(PAD, b.top + 2); ctx.lineTo(W - PAD, b.top + 2); ctx.stroke(); }
+        if (b.img.complete && b.img.naturalWidth) ctx.drawImage(b.img, PAD + 20, b.top + 6, 40, 30);
+        ctx.textAlign = 'left'; ctx.font = '700 15px Cinzel, Georgia, serif'; ctx.fillStyle = '#e8c06a'; ctx.fillText(b.st.name, PAD + 66, b.top + 22);
+        ctx.font = '11px Inter, system-ui, sans-serif'; ctx.fillStyle = '#9c8f7c'; ctx.fillText(`${Game.unitName(b.id)} ${Game.depthOf(b.id)} · ${f(cf ? cf.out : Game.stepOutput(b.id))} ${R[b.st.make].name.toLowerCase()}/s`, PAD + 66, b.top + 36);
+        ctx.strokeStyle = '#3a2e24'; ctx.lineWidth = 5; ctx.lineCap = 'round';
+        for (let r = 0; r < 2; r++) { const pts = bend(b.rows[r].ltr ? 'r' : 'l', b.rows[r].y, b.rows[r + 1].y); ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.stroke(); }
+        if (B[bi + 1]) { const pts = bend(b.rows[2].ltr ? 'r' : 'l', b.rows[2].y, B[bi + 1].rows[0].y); ctx.strokeStyle = '#4a3a2a'; ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.stroke(); }
+        ctx.lineWidth = 3; ctx.strokeStyle = '#1a1411';
+        for (let r = 0; r < 3; r++) { const y = b.rows[r].y; ctx.beginPath(); ctx.moveTo(PAD + BEND, y); ctx.lineTo(BR - BEND, y); ctx.stroke(); }
+        b.rows.forEach((row, k) => { const lv = lvOf(b, k), isHot = k === hk, lx = x0, ly = row.y - SLOTH / 2 - 11;
+          ctx.textAlign = 'left'; ctx.font = '600 11.5px Inter, system-ui, sans-serif'; ctx.fillStyle = '#ede4d3'; const t = Game.partName(b.id, Game.PARTS[k]) + (row.ltr ? ' →' : ' ←'); ctx.fillText(t, lx, ly); const tw = ctx.measureText(t).width;
+          ctx.font = isHot ? '700 10.5px Inter, system-ui, sans-serif' : '10.5px Inter, system-ui, sans-serif'; ctx.fillStyle = isHot ? '#ff8a6a' : '#9c8f7c'; ctx.fillText(isHot ? `Lv ${lv} · bottleneck, selling` : `Lv ${lv} / 10 · ${f(Game.partCap(b.id, Game.PARTS[k]))}/s`, lx + tw + 6, ly);
+          if (isHot) { const p = 0.35 + 0.35 * Math.sin(clock * 6), a = row.slots[0], z = row.slots[lv - 1], x1 = Math.min(a.x, z.x) - 3, x2 = Math.max(a.x, z.x) + SLOTW + 3;
+            ctx.save(); ctx.shadowColor = '#ff5a3c'; ctx.shadowBlur = 14 * p; ctx.strokeStyle = `rgba(255,90,60,${0.45 + p})`; ctx.lineWidth = 2; rr(x1, a.y - 3, x2 - x1, SLOTH + 6, 6); ctx.stroke(); ctx.restore(); }
+          row.cells.forEach(c => { rr(c.x, c.y, CELL, CELL, 3); ctx.fillStyle = '#211a14'; ctx.fill(); ctx.strokeStyle = '#3a2e24'; ctx.lineWidth = 1; ctx.stroke(); });
+          row.slots.forEach((s, i) => { rr(s.x, s.y, SLOTW, SLOTH, 4);
+            if (i < lv) { ctx.fillStyle = '#2b2014'; ctx.fill(); ctx.strokeStyle = '#c9973f'; ctx.lineWidth = 1.1; ctx.stroke(); } else { ctx.fillStyle = '#120e0b'; ctx.fill(); ctx.setLineDash([3, 3]); ctx.strokeStyle = '#3a2e24'; ctx.lineWidth = 1; ctx.stroke(); ctx.setLineDash([]); }
+            const sl = b.slots[k][i]; if (sl && !moving(sl.o)) { const h = (SLOTH - 4) * Math.min(1, sl.p); rr(s.x + 2, s.y + SLOTH - 2 - h, SLOTW - 4, h, 2); ctx.fillStyle = '#8a5a22'; ctx.fill(); } }); }); });
+      { const last = B[B.length - 1]; if (last) { const nx = Game.nextStep(last.id); ctx.textAlign = 'right'; ctx.font = '600 11px Inter, system-ui, sans-serif'; ctx.fillStyle = '#e8c06a'; ctx.fillText(nx ? `to the ${nx.name} ›` : 'to the Storehouse ›', BR, last.rows[2].y + 24); } }
+      for (const o of ores) cart(o.pos.x, o.pos.y, o.r && o.r < 4.2 ? o.r : 4.2, o.c);
+      ctx.textAlign = 'center';
+      for (const p of pops) { const u = p.t / 1.2; ctx.globalAlpha = 1 - u * u; ctx.font = '700 11.5px Inter, system-ui, sans-serif'; ctx.fillStyle = p.color; ctx.strokeStyle = '#0d0a08'; ctx.lineWidth = 3; ctx.strokeText(p.text, p.x, p.y - 20 * u); ctx.fillText(p.text, p.x, p.y - 20 * u); ctx.globalAlpha = 1; }
+    }
+    // upgrade buttons beside each row; the next-depth button beside the building's name once all three are Lv 10
+    function placeControls() {
+      stage.querySelectorAll('.pup,.pdeep,.pname-go').forEach(e => e.remove());
+      B.forEach(b => {
+        b.ups = b.rows.map((row, k) => { const el = document.createElement('button'), p = Game.PARTS[k]; el.className = 'pup'; el.style.left = (BW + 2) + 'px'; el.style.width = (GUT - 6) + 'px'; el.style.top = (row.y - 17) + 'px'; el.style.height = '34px';
+          el.setAttribute('aria-label', `Upgrade ${b.st.name} ${Game.partName(b.id, p)}`); el.addEventListener('click', () => { if (Game.upgradeStep(b.id, p, 1)) { flash(el); render(true); } }); stage.appendChild(el); return el; });
+        const d = document.createElement('button'); d.className = 'pdeep'; d.style.right = '4px'; d.style.top = (b.top + 6) + 'px'; d.addEventListener('click', () => { if (Game.dig(b.id)) { prodKey = ''; render(true); } }); b.deep = d; stage.appendChild(d);
+        const go = document.createElement('button'); go.className = 'pname-go'; go.style.left = (PAD + 16) + 'px'; go.style.top = (b.top + 4) + 'px'; go.style.width = '160px'; go.style.height = '38px'; go.setAttribute('aria-label', `Open the ${b.st.name} on its own`);
+        go.addEventListener('click', () => { Game.S.settings.chainView = 'one'; bldKey = ''; openBld(b.id); }); stage.appendChild(go); });
+      sync();
+    }
+    function sync() { const f = Game.fmt; B.forEach(b => { if (!b.ups) return; const maxed = Game.depthMaxed(b.id), hk = hotK(b);
+      b.ups.forEach((el, k) => { const p = Game.PARTS[k], lv = Game.partLv(b.id, p), plan = Game.stepUpPlan(b.id, p, 1), capped = lv < 10 && !plan.n && Game.effLv(b.id, p) >= Game.levelCap();
+        el.hidden = maxed; el.disabled = !plan.n; el.classList.toggle('alarm', k === hk && lv < 10);
+        const html = lv >= 10 ? '<b>Lv 10</b><small>max</small>' : capped ? `<b>Lv ${lv}</b><small>settlement</small>` : `<b>Lv ${lv}→${lv + 1}</b><small>${f(Game.stepUpCost(b.id, p).gold)} g</small>`; if (el.__h !== html) { el.innerHTML = html; el.__h = html; } });
+      const room = Game.digRoom(b.id), dh = room ? `<b>${b.st.dig || 'Go deeper'}</b><small>${Game.unitName(b.id)} ${Game.depthOf(b.id) + 1} · ${f(Game.digCost(b.id).gold)} g</small>` : `<b>${Game.unitName(b.id)} ${Game.depthOf(b.id) + 1}</b><small>needs a bigger settlement</small>`;
+      b.deep.hidden = !maxed; b.deep.disabled = !Game.canDig(b.id); b.deep.classList.toggle('ready', room); if (b.deep.__h !== dh) { b.deep.innerHTML = dh; b.deep.__h = dh; } }); }
+    layout(); for (let i = 0; i < 60 * 30; i++) tick(1 / 60); pops = []; agg = {};
+    return { tick, draw, layout, sync, get w() { return W; }, get n() { return B.length; }, get dbg() { return { ores: ores.length, lanes: B.map(b => b.lanes.map(l => l.filter(Boolean).length).join('/')), slots: B.map(b => b.slots.map(l => l.filter(Boolean).length).join('/')) }; } };
+  }
+  function chainLoop(t) {
+    const cv = document.getElementById('chain-cv'); if (!CV.v || !cv || !cv.isConnected || cv.offsetParent === null) { CV.raf = 0; return; }
+    const dt = Math.min(0.05, (t - (CV.last || t)) / 1000); CV.last = t;
+    if (cv.clientWidth && Math.abs(cv.clientWidth - CV.v.w) > 2) CV.v.layout();
+    CV.v.tick(dt); CV.v.draw(); if ((CV.st = (CV.st || 0) + dt) > 0.25) { CV.st = 0; CV.v.sync(); } CV.raf = requestAnimationFrame(chainLoop);
+  }
+  function ensureChain(lid) { const cv = document.getElementById('chain-cv'), stage = document.getElementById('chain-stage'); if (!cv) return;
+    const n = Game.lineSteps(lid).filter(st => Game.stepBuilt(st.id)).length;
+    if (CV.lid !== lid || CV.cv !== cv || !CV.v || CV.v.n !== n) { CV.lid = lid; CV.cv = cv; CV.v = chainView(cv, stage, lid); CV.v.draw(); } if (!CV.raf) { CV.last = 0; CV.raf = requestAnimationFrame(chainLoop); } }
+  const viewToggle = mode => `<div class="vseg" role="group" aria-label="View"><button data-view="chain" aria-pressed="${mode === 'chain'}" title="The whole chain">Chain</button><button data-view="one" aria-pressed="${mode !== 'chain'}" title="One building">One</button></div>`;
+  function wireToggle(box) { box.querySelectorAll('[data-view]').forEach(b => b.addEventListener('click', () => { Game.S.settings.chainView = b.dataset.view; bldKey = ''; render(true); })); }
+  function renderChainBld(id, st) {
+    const S = Game.S, f = Game.fmt, box = $('bld-view'), lid = st.line, line = CONFIG.kingdom.lines[lid], steps = Game.lineSteps(lid), last = steps.filter(x => Game.stepBuilt(x.id)).pop() || st, key = 'chain|' + lid;
+    if (bldKey !== key) { bldKey = key;
+      setHtml(box, `<div class="card belt-card chain-card">
+          <div class="belt-army hidden" data-f="army"></div>
+          <div class="belt-head"><div class="belt-title"><div><h3>${{ forest: 'Wood', mine: 'Arms', farm: 'Food' }[lid] || line.name} chain</h3><p>${steps.map(x => R[x.make].name.toLowerCase()).join(' → ')}</p></div></div>
+            <div class="belt-hr">${viewToggle('chain')}<div class="belt-out">Out<b><span data-f="outico"></span><span data-f="out"></span></b></div></div></div>
+          <div class="chain-stage" id="chain-stage"><canvas id="chain-cv" aria-label="The whole ${line.name} as one belt"></canvas></div>
+          <div class="tiny dim belt-note">Tap a building's name to open it on its own. Colours run red to violet along the whole chain.</div>
+        </div>`);
+      wireToggle(box); setHtml(box.querySelector('[data-f=outico]'), ico(R[last.make].icon, 20)); CV.lid = null; glowKey = ''; }
+    ensureChain(lid);
+    { const cf = Game.chainFlow(lid).find(c => c.id === last.id), out = cf ? cf.out : 0; setText(box.querySelector('[data-f=out]'), `${out < 10 ? out.toFixed(2) : f(out)} ${R[last.make].name.toLowerCase()}/s`); }
+    { const ab = box.querySelector('[data-f=army]'), bl = Game.barracksBuilt() ? Game.trainBlocker() : null, W = bl && Object.values(CONFIG.kingdom.army.lines).find(x => x.good === bl), mine = W && W.line === lid, slow = mine ? Game.slowestInLine(lid) : null;
+      ab.classList.toggle('hidden', !mine); if (mine) setHtml(ab, `<b>Training paused: short of ${R[bl].name.toLowerCase()}.</b> The slowest building here is the <b>${Game.stepDef(slow || st.id).name}</b> — upgrade its weakest part (<b>${Game.partName(slow || st.id, Game.limitPart(slow || st.id))}</b>).`); }
+  }
   function renderBld() {
     const S = Game.S, f = Game.fmt, id = bldOpen, st = Game.stepDef(id), box = $('bld-view'); if (!st || !Game.stepBuilt(id)) { closeBld(); return; }
-    const nx = Game.nextStep(id), D = Game.depthOf(id), key = id + '|' + kBuy + '|' + (nx ? nx.id : '');
+    if (S.settings.chainView === 'chain') { renderChainBld(id, st); return; }
+    const nx = Game.nextStep(id), D = Game.depthOf(id), key = 'one|' + id + '|' + kBuy + '|' + (nx ? nx.id : '');
     if (bldKey !== key) { bldKey = key;
       const stock = nx ? `<div class="kstock"><div class="kstock-head"><span>Keep ${R[st.make].name.toLowerCase()} in stock</span><span class="kstock-n" data-f="stn"></span></div><div class="seg kstock-seg">${Game.STOCK_MODES.map(m => `<button data-stock="${m}">${m === 'auto' ? 'Auto' : m === 0 ? '0' : m === 1 ? 'Full' : m === 0.5 ? '½' : '¼'}</button>`).join('')}</div><div class="tiny kstock-why" data-f="stwhy"></div></div>` : '';
       setHtml(box, `<div class="card supply-card"><div class="chain-strip" data-f="chain"></div><div class="tiny oflow hidden" data-f="oflow"></div></div>
         <div class="card belt-card">
           <div class="belt-army hidden" data-f="army"></div>
           <div class="belt-head"><div class="belt-title"><img src="${artOf(st)}" srcset="${artOf(st)} 1x, assets/buildings/${st.art || st.id}@2x.webp 2x" alt=""><div><h3>${st.name}</h3><p><span data-f="depth"></span> · makes <b>${R[st.make].name.toLowerCase()}</b></p></div></div>
-            <div class="belt-out">Output<b><span data-f="outico"></span><span data-f="out"></span></b></div></div>
+            <div class="belt-hr">${viewToggle('one')}<div class="belt-out">Output<b><span data-f="outico"></span><span data-f="out"></span></b></div></div></div>
           <canvas id="belt-cv" aria-label="${st.name}: goods move through ${Game.PARTS.map(p => Game.partName(id, p)).join(', ')}"></canvas>
           <div class="kbar" id="bld-kbar"></div>
           <div class="belt-ups">${Game.PARTS.map(p => `<button class="belt-up" data-part="${p}" data-id="${id}"><span data-f="pn${p}">${Game.partName(id, p)}</span><b data-f="pl${p}"></b><span class="cost" data-f="pc${p}"></span></button>`).join('')}
@@ -836,7 +975,7 @@ const UI = (() => {
       box.querySelector('[data-dig]').addEventListener('click', () => { if (Game.dig(id)) { prodKey = ''; render(true); } });
       box.querySelectorAll('[data-stock]').forEach(b => b.addEventListener('click', () => { const v = b.dataset.stock; if (Game.setStockMode(st.make, v === 'auto' ? 'auto' : +v)) { Game.save(); render(true); } }));
       $('bld-kbar').innerHTML = kbarHtml(); $('bld-kbar').querySelectorAll('[data-kbuy]').forEach(b => b.addEventListener('click', () => { kBuy = b.dataset.kbuy === 'max' ? 'max' : +b.dataset.kbuy; prodKey = ''; bldKey = ''; render(true); }));
-      setHtml(box.querySelector('[data-f=outico]'), ico(R[st.make].icon, 20));
+      setHtml(box.querySelector('[data-f=outico]'), ico(R[st.make].icon, 20)); wireToggle(box);
       BV.id = null; glowKey = ''; }
     ensureBelt(id);
     const fo = v => v < 10 ? v.toFixed(2) : f(v), gd = R[st.make].name.toLowerCase(), cfo = Game.chainFlow(st.line).find(c => c.id === id), out = cfo ? cfo.out : Game.stepOutput(id); // what it turns out: its slowest part, or what reaches it
