@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Beta 0.4.5',
+  version: 'Beta 0.4.6',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -208,31 +208,36 @@ const CONFIG = {
   // ---------- Paths of War (passive). 3 branches × 13 nodes, every node has 10 ranks. Never reset (kept through Pass the Crown). ----------
   // Points: 1 per Combat level. ★ tokens: 1 per boss ever slain (first kill of each boss stage) + quest rewards.
   // A node opens when a connected node one tier closer to the centre is maxed (10/10). Notables and keystones cost 1 point + 1 ★ per rank.
-  paths: { // 0.11.1: the Crown Tree — permanent, bought with Crowns; few ranks, big effects; an endless node at the bottom of each branch
-    rowCost: [1, 3, 8, 30, 40, 80, 300], endlessBase: 40, endlessGrowth: 1.15, levelBonus: 0.03, ranks: 3,
-    branches: [ { id: 'M', name: 'Might', desc: 'attack · crit · bosses', color: '#d9604c' }, { id: 'G', name: 'Guard', desc: 'HP · armor · healing', color: '#6fa3d9' }, { id: 'C', name: 'Command', desc: 'army · taxes · realm', color: '#7fd28f' } ],
-    plan: [[1],[0,2],[0,1,2],[1],[0,2],[0,1,2],[1],[1]], // row → column positions; the last row is the endless node
-    // [name, per-rank mods, kind, max ranks, perk id (effect handled by the engine)]
+  paths: { // Beta 0.4.6: the Crown Tree rebuilt around the Front — Hero (worth per soldier), Army (how big it gets), Realm (goods that feed it). Permanent, bought with Crowns.
+    rowCost: [1, 3, 8, 25], endlessBase: 40, endlessGrowth: 1.15, levelBonus: 0.03, ranks: 3,
+    branches: [ { id: 'H', name: 'Hero', desc: 'worth per soldier', color: '#d9604c' }, { id: 'A', name: 'Army', desc: 'how big it gets', color: '#6fa3d9' }, { id: 'R', name: 'Realm', desc: 'goods that feed it', color: '#7fd28f' } ],
+    plan: [[1],[0,2],[1],[1],[1]], // tier I · a pair · tier III · keystone (pick one of the three) · endless
+    // [name, per-rank mods, kind, max ranks, perk id (effect handled by the engine), short effect]
     nodes: {
-      M: [ ['Sharpened Edge', { attackPct: 0.10 }, 'small', 3], ['Quick Hands', { speedPct: 0.05 }, 'small', 3], ['Keen Eye', { crit: 0.03 }, 'small', 3],
-           ['Heavy Blows', { attackPct: 0.15 }, 'small', 3], ['Brutality', { critDmg: 0.25 }, 'small', 3], ['Giant Slayer', { bossDmg: 0.20 }, 'small', 3],
-           ['Headhunter', { bossDmg: 0.5, attackPct: 0.1 }, 'notable', 1], ['Fury', { speedPct: 0.08 }, 'small', 2], ['Deadly Aim', { crit: 0.05 }, 'small', 2],
-           ['Weapon Master', { attackPct: 0.25 }, 'small', 2], ['Savagery', { critDmg: 0.5 }, 'small', 2], ["Tyrant's Bane", { bossDmg: 0.4 }, 'small', 2],
-           ['Berserker', { attackX: 1.5, hpPct: -0.1 }, 'key', 1], ['Bloodline of Kings', {}, 'endless', 0, 'bloodline'] ],
-      G: [ ['Thick Skin', { hpPct: 0.10 }, 'small', 3], ['Second Breath', { regenPct: 0.15 }, 'small', 3], ['Iron Hide', { dr: 0.02 }, 'small', 3],
-           ['Stout Heart', { hpPct: 0.15 }, 'small', 3], ['Field Rations', { restSpeed: 0.25 }, 'small', 3], ['Hardened', { dr: 0.03 }, 'small', 3],
-           ['Bulwark', { hpPct: 0.30, dr: 0.05 }, 'notable', 1], ['Vigor', { regenPct: 0.25 }, 'small', 2], ['Endurance', { hpPct: 0.20 }, 'small', 2],
-           ['Stone Skin', { dr: 0.05 }, 'small', 2], ['Troll Blood', { regenPct: 0.40 }, 'small', 2], ['Colossus', { hpPct: 0.30 }, 'small', 2],
-           ['Unbreakable', { hpX: 1.5, dr: 0.10, speedPct: -0.05 }, 'key', 1], ['Iron Lineage', {}, 'endless', 0, 'lineage'] ],
-      C: [ ['Master Builders', {}, 'small', 3, 'charter'], ['Lean Barracks', {}, 'small', 3, 'rations'], ['Plunderer', { goldPct: 0.2, dropPct: 0.2 }, 'small', 3],
-           ['Deep Foundations', {}, 'small', 3, 'foundations'], ['Tax Collectors', {}, 'small', 3, 'tax'], ['Plunder', {}, 'small', 3, 'spoils'],
-           ['Warlord', { armyPct: 0.5 }, 'notable', 1], ['Victory Lap', {}, 'small', 2, 'lap'], ['Deep Cellar', {}, 'small', 2, 'cellar'],
-           ['Long Memory', {}, 'small', 3, 'memory'], ['War Banners', {}, 'small', 3, 'warcollege'], ["Founder's Cache", {}, 'small', 2, 'cache'],
-           ['Conqueror', { armyX: 1.5, attackPct: -0.05 }, 'key', 1], ['Dynastic Treasury', {}, 'endless', 0, 'treasury'] ],
+      H: [ ['Sharpened Steel', { attackX: 1.1 }, 'small', 3, null, 'Hero attack ×1.1 per rank'],
+           ["Captain's Presence", {}, 'small', 3, 'presence', 'Soldier worth +8% per rank'],
+           ['Iron Guard', { hpX: 1.1 }, 'small', 3, null, 'Hero HP and healing ×1.1 per rank'],
+           ['Fort Breaker', { bossDmg: 1.0 }, 'notable', 1, null, 'Double damage to captains and rulers'],
+           ['Champion', {}, 'key', 1, 'champion', 'Soldier worth grows freely up to ×40, not ×25'],
+           ['Bloodline of Kings', {}, 'endless', 0, 'worthline', 'Soldier worth ×1.05 per rank'] ],
+      A: [ ['Field Surgeons', {}, 'small', 3, 'surgeons', 'Losses at the Front −8% per rank'],
+           ['Lean Rations', {}, 'small', 3, 'leanRations', 'Soldiers cost −6% goods per rank'],
+           ['Drill Masters', {}, 'small', 3, 'drill', 'Barracks trains +25% per rank'],
+           ['Standing Army', {}, 'notable', 1, 'standing', 'Losses at the Front −20%'],
+           ['Levy', {}, 'key', 1, 'levy', 'Soldiers cost −20% goods'],
+           ['Endless Legion', {}, 'endless', 0, 'legion', 'Losses ×0.97 per rank'] ],
+      R: [ ['Master Builders', {}, 'small', 3, 'charter', 'Every building +10% output per rank'],
+           ['Guild Charters', {}, 'small', 3, 'guild', "Each chain's slowest building +25% per rank"],
+           ['Deep Foundations', {}, 'small', 3, 'foundations', 'Buildings start 1 depth deeper per rank after passing the Crown or a new Age'],
+           ['Royal Treasury', { goldPct: 0.3 }, 'notable', 1, 'royal', 'Gold +30% (kills and taxes)'],
+           ['Golden Age', {}, 'key', 1, 'golden', 'Every building ×1.4 output'],
+           ['Dynastic Workshops', {}, 'endless', 0, 'dynasty', 'Every building ×1.05 output per rank'] ],
     },
-    perkDesc: { charter: '+15% production in every building', rations: '−10% arms and bread per soldier', foundations: 'Each new Age, every building starts with one more level already built', tax: '+25% taxes', spoils: '+25% spoils', lap: '+1× damage in lands you know', cellar: 'AFK cap +2 h and Storehouse +25%',
-      memory: '+2 h of time away counted', warcollege: 'Army boost to the hero +10%', cache: 'Start each dynasty with 15 min of your last taxes', bloodline: 'Attack ×1.08', lineage: 'HP and healing ×1.08', treasury: 'Taxes and production +10%' },
+    perkDesc: {},
+    // the old tree (0.11.1–Beta 0.4.5), kept only to refund it
+    oldPlan: [[1],[0,2],[0,1,2],[1],[0,2],[0,1,2],[1],[1]], oldRowCost: [1, 3, 8, 30, 40, 80, 300],
   },
+
 
   // ---------- 0.11.1: Ages — ten lands per Age; beating the Emperor (land 10) lets you crown your heir into the next Age ----------
   ages: { lands: 10, hp: 150, hit: 15, gold: 12, spoil: 2.5, names: ['Age of Iron', 'Age of Kings', 'Age of Storms', 'Age of Ash', 'Age of Crowns', 'Age of Dragons', 'Age of Legends'],
@@ -431,12 +436,8 @@ const CONFIG = {
     people: { perHouse: 5, houseBase: 2.5, houseGrowth: 1.03, birthMin: 4, birthPct: 0.03, birthFill: 0.75,   // births fill houses to 75%; the rest is room for settlers
       headTax: 15, waveBase: 25, waveGrowth: 1.5, trickleBase: 8, trickleGrowth: 1.3 },
     // Hero buildings in the city (0.9)
-    halls: [
-      { id: 'yard',       name: 'Training Yard', icon: 'assets/gear/weapon_t1.webp', tier: 1, build: { gold: 300, planks: 30 },  per: 0.10, effect: 'xpPct',    desc: 'Hero XP +10% per level' },
-      { id: 'smithy',     name: 'Smithy',        icon: 'assets/gear/weapon_t2.webp', tier: 1, build: { gold: 400, ingot: 20 },   per: 0.03, effect: 'gearCost', desc: 'Gear and tool costs −3% per level (up to −60%)' },
-      { id: 'apothecary', name: 'Apothecary',    icon: 'assets/res/berries.webp',    tier: 2, build: { gold: 800, flour: 60 },   per: 0.10, effect: 'regenPct', desc: 'Hero healing +10% per level' },
-      { id: 'stables',    name: 'Stables',       icon: 'assets/gear/boots_t2.webp',  tier: 2, build: { gold: 800, lumber: 20 },  per: 0.03, effect: 'speedPct', desc: 'Hero attack speed +3% per level' },
-    ],
+    halls: [], // Beta 0.4.6: the Halls are gone (refunded as gold) — gold goes to the chains, the Barracks and gear
+    oldHalls: { yard: 300, smithy: 400, apothecary: 800, stables: 800 },
     hallCost: { base: 100, exp: 1.7 },
     // Lands (0.9): conquered from the hero screen; taxes grow ×4 per land
     lands: { taxBase: 1000, taxGrowth: 2.6, garrisonPer: 10, cofferHours: 8, shortStages: 50, longStages: 100, shortLands: 3, offsetStart: 6, offsetStep: 3, spoilPerHour: 30, victoryLap: 3, heroHereCap: 0.5, endlessDepth: { winsPer: 50, hp: 1.12, hit: 1.10, drop: 1.05, dropCap: 4, spoilBase: 0.03, perLand: 0.2 },
@@ -444,7 +445,7 @@ const CONFIG = {
       curve: { hp: 105, hit: 11.5, landHp: 2.8, landHit: 1.9, spanHp: 2.0, spanHit: 1.6, captainHp: 9, captainHit: 0.47, rulerHp: 12, rulerHit: 0.47, /* Beta 0.1.16: bosses take ~3× longer and hit ~3× softer — same total danger, a real fight */ endless: 1.15 },
       // Beta 0.4.0 The Front: soldiers are the fuel of conquest. A stage between forts is a siege of cost(n, s) soldier-minutes of worth;
       // the marching army fills it at (soldiers × worth) per minute and loses `attrition` of itself per minute while it does. Forts (every 10th stage) are the hero's duel.
-      siege: { p0: 300, landG: 1.65, span: 4, attrition: 0.02, worthK: 2, worthExp: 0.35, worthMin: 0.25, worthMax: 1e9, worthKnee: 25, worthSoft: 0.5, /* Beta 0.4.5: no hard cap — past ×25 worth grows as the square root, so a stronger hero always helps */ refLog: 0.3, refSlope: 0.64, refAge: 0.3,
+      siege: { p0: 300, landG: 1.65, span: 4, attrition: 0.02, worthK: 2, worthExp: 0.35, worthMin: 0.25, worthMax: 1e9, worthKnee: 25, worthSoft: 0.5, /* Beta 0.4.5: no hard cap — past ×25 worth grows as the square root, so a stronger hero always helps */ refLog: 0.3, refSlope: 0.64, refAge: 0.68, /* Beta 0.4.6: was 0.3 — the Halls no longer carry the hero through later Ages */
         goldPer: 1, sortie: 30, retry: 90, ageExp: 0.4 } },
     // Settlement tiers inside one land. Raising a tier costs `cap` of every good made so far (pay in as you go) and loses nothing.
     tiers: [
@@ -506,6 +507,7 @@ const CONFIG = {
   // jobs (jobs completed by hand or thrall), sold (gold earned at market), stage, boss, founded, thrall (assigned), activity (swings).
   // Shown in Settings → What's new (newest first). Keep each line short.
   changelog: [
+    ['Beta 0.4.6', 'The Crown Tree is rebuilt, and the Halls are gone. The tree now has three branches that match how a land falls: the Hero (what each soldier is worth), the Army (how big it gets: fewer losses, cheaper soldiers, faster training) and the Realm (the goods that feed it). Each branch has a Tier I node, a pair to choose from, a bigger node, a keystone (take one of the three: Champion, Levy or Golden Age) and an endless node. Every node now shows how much faster one more rank makes the land you are fighting fall. All Crowns spent in the old tree are refunded. The Training Yard, Smithy, Apothecary and Stables are gone and refunded as gold (up to a full treasury); gear now costs half from the Hamlet on, as the Smithy used to do, and later Ages were retuned so your hero still carries the Front without them.'],
     ['Beta 0.4.5', 'Your hero always matters at the Front. A soldier\'s worth used to stop at ×40, so by the middle lands a stronger hero no longer sped up the siege. Now there is no ceiling: past ×25 worth grows more slowly (with the square root of your hero\'s edge), but every upgrade, level and Crown still makes each soldier count for more. The Front no longer shows a gold line in lands that pay no spoils.'],
     ['Beta 0.4.4', 'Army economy audit. A soldier now costs the same however big your army is — the old price rose 1% with every soldier you had, so doubling your goods barely grew the army and invasions never caught up. The price is now set per land (3 of each good in the first land, doubling each land after, more in later Ages), and the army boost to your hero is a little softer to match. The Front now tells you how long the land will take at your current pace, how big your army will settle, what is holding it back and how much faster fixing it would make you, with a button straight to that building. The Barracks says what it is training as fast as, instead of "paused". Bottleneck alarms on the belts now update the moment you upgrade. Going deeper costs half as much.'],
     ['Beta 0.4.3', 'The whole chain on one screen. Inside any building, the small Chain | One switch beside Output shows every building of that chain as one snaking belt — the middle building runs the other way so the belt flows straight on, and colours step from red to violet along the whole chain. Every phase has its upgrade button beside its row (glowing red when it is the bottleneck), and a gold button appears beside a building\'s name when it can go deeper. Tap a building\'s name to open it on its own. Also: slots start working as a cart is sent to them, and row labels sit clear of the bottleneck glow.'],
@@ -642,8 +644,8 @@ const CONFIG = {
     { id: 'q02b', name: 'Growing Stronger', text: 'Kills give Combat XP, and every Combat level makes your hero 3% stronger. Your Crown from the Rat King buys a node in the Crown Tree on the Skills tab — permanent, and never reset.',
       steps: [
         { label: 'Reach Combat level 2', check: { disc: 'combat', need: 2 } },
-        { label: 'Skills → Crown Tree → buy Sharpened Edge (1 👑)', check: { path: 'M0', need: 1 } },
-      ], reward: { fiber: 15 }, focus: { tab: 'hero', sub: 'skills', rtab: 'skills', el: 'path:M0' } },
+        { label: 'Skills → Crown Tree → buy Sharpened Steel (1 👑)', check: { path: 'H0', need: 1 } },
+      ], reward: { fiber: 15 }, focus: { tab: 'hero', sub: 'skills', rtab: 'skills', el: 'path:H0' } },
     { id: 'q03', name: 'An Axe of Your Own', text: 'You have wood enough for an axe, and the axe will cut the rest. Tools are the row under your armor on the Equipment panel — click a slot to make or upgrade it.',
       steps: [
         { label: 'Click the Axe slot on your Equipment → Make (Wooden)', check: { tool: 'axe' } },
@@ -714,7 +716,7 @@ const CONFIG = {
       ], reward: { ore: 20 } },
     { id: 'q13c', name: 'A Second Blow', text: 'Every boss gives a Crown, and every rank in the Crown Tree opens the nodes below it — deeper nodes cost more and hit harder. Techniques are your active moves — Power Strike is unlocked. Equip it and it fires by itself; tap it in a fight for a harder hit.',
       steps: [
-        { label: 'Crown Tree → Sharpened Edge 3/3', check: { path: 'M0', need: 3 }, focus: { tab: 'hero', sub: 'skills', rtab: 'skills', el: 'path:M0' } },
+        { label: 'Crown Tree → Sharpened Steel 3/3', check: { path: 'H0', need: 3 }, focus: { tab: 'hero', sub: 'skills', rtab: 'skills', el: 'path:H0' } },
         { label: 'Techniques → equip Power Strike', check: { skillEquipped: 'strike' }, focus: { tab: 'hero', sub: 'skills', rtab: 'skills', el: 'technique:strike' } },
         { label: 'Use Power Strike 5 times', check: { casts: 'strike', need: 5, since: true } },
       ], reward: { gold: 80 }, focus: { tab: 'hero', sub: 'skills', rtab: 'skills', el: 'technique:strike' } },
@@ -765,8 +767,8 @@ const CONFIG = {
       steps: [ { label: 'Make 30 more ingots', check: { made: 'ingot', need: 30, since: true } }, { label: 'Kingdom → Tech → Iron Gear → Research', check: { tech: 'irongear' } } ], reward: { gold: 300 }, focus: { tab: 'kingdom', ksub: 'tech', rtab: 'kingdom', el: 'tech:irongear' } },
     { id: 'h03c', chain: 'Hamlet', name: 'An Iron Blade', text: 'Stone has done its work. Max the Stone blade to Lv 9, then forge Iron: ingots from the Forge, hide from the Wilds or the Market. The Bone Lord waits in the Crypts.',
       steps: [ { label: 'Gear → Weapon → max Stone to Lv 9, then forge Iron', check: { gearTier: 'weapon', need: 2 } }, { label: 'Slay 100 enemies with the new blade', check: { counter: 'kills', need: 100, since: true } } ], reward: { gold: 400, talent: 1 }, focus: { tab: 'hero', sub: 'gear', el: 'gear:weapon' } },
-    { id: 'h04', chain: 'Hamlet', name: 'The Hero\'s Halls', text: 'The city can make the hero stronger. The Training Yard speeds his levels; the Smithy makes gear cheaper.',
-      steps: [ { label: 'Kingdom → Halls → Training Yard → Build', check: { hall: 'yard' } }, { label: 'Halls → Smithy → Build', check: { hall: 'smithy' } } ], reward: { gold: 300 }, focus: { tab: 'kingdom', ksub: 'halls', rtab: 'kingdom', el: 'hall:yard' } },
+    { id: 'h04', chain: 'Hamlet', name: 'The Crown\'s Favour', text: 'Crowns build the realm too. The Crown Tree has three branches: the Hero, the Army and the Realm. Master Builders (Realm) makes every building faster, forever.',
+      steps: [ { label: 'Skills → Crown Tree → open the Realm branch', check: { stat: 'realmViews', need: 1, since: true } } ], reward: { gold: 300, talent: 1 }, focus: { tab: 'hero', sub: 'skills', rtab: 'skills', el: 'path:R0' } },
     { id: 'h05', chain: 'Hamlet', name: 'Room to Store', text: 'Goods that do not fit the Storehouse are sold off cheap. A bigger Storehouse holds more goods — and more gold.',
       steps: [ { label: 'Kingdom → Keep → Storehouse → Expand it once', check: { storeLv: 1, need: 1, since: true } } ], reward: { gold: 200 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:store-up' } },
     { id: 'h06', chain: 'Hamlet', name: 'The Slowest Link', text: 'Production shows your three chains side by side. In every chain one building is the slowest — it glows gold and holds back everything after it. Fix it.',
@@ -786,8 +788,8 @@ const CONFIG = {
         { label: 'Gear → Boots → forge Iron', check: { gearTier: 'boots', need: 2 } }, { label: 'Gear → Trinket → forge Iron', check: { gearTier: 'trinket', need: 2 } }, { label: 'Slay 150 enemies in your new armor', check: { counter: 'kills', need: 150, since: true } } ], reward: { gold: 800, talent: 1 }, focus: { tab: 'hero', sub: 'gear', el: 'gear:chest' } },
     { id: 'v04', chain: 'Village', name: 'Baron', text: 'Renown comes from Orders. At 200 Renown you become a Baron, and your Storehouse doubles.',
       steps: [ { label: 'Earn 200 Renown from Orders', check: { renown: 200 } }, { label: 'Deliver 3 more Orders', check: { orders: 1, need: 3, since: true } } ], reward: { gold: 300 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:order-list' } },
-    { id: 'v05', chain: 'Village', name: 'Healers and Horses', text: 'The Apothecary heals the hero faster; the Stables make him strike faster.',
-      steps: [ { label: 'Kingdom → Halls → Apothecary → Build', check: { hall: 'apothecary' } }, { label: 'Halls → Stables → Build', check: { hall: 'stables' } }, { label: 'Upgrade any of your Halls 3 times', check: { hallSum: 1, need: 3, since: true } } ], reward: { gold: 500 }, focus: { tab: 'kingdom', ksub: 'halls', rtab: 'kingdom', el: 'hall:apothecary' } },
+    { id: 'v05', chain: 'Village', name: 'Busy Hands', text: 'Every level adds a slot to a belt. Keep your chains growing — the slowest building in each is marked.',
+      steps: [ { label: 'Upgrade any building parts 10 times', check: { stat: 'partUps', need: 10, since: true } } ], reward: { gold: 500 }, focus: { tab: 'kingdom', ksub: 'prod', rtab: 'kingdom' } },
     { id: 'v07', chain: 'Village', name: 'Raise a City', text: 'A cult gathers in the deep Crypts — a City will not rise under the Cult Priest\'s shadow. A City is paid in your finest goods: lumber, bread and arms (the Keep shows how much). The last stretch.',
       steps: [ { label: 'Hero → The Crypts → slay the Cult Priest (stage 20)', check: { bossKey: 'crypts:20' }, focus: { tab: 'hero', sub: 'fight', el: 'ground:crypts' } }, { label: 'Kingdom → Keep → Settlement → Contribute everything asked', check: { tierPaid: 3 } }, { label: 'Keep → Raise to City', check: { tier: 3 } } ], reward: { gold: 600 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:settle-card' } },
     { id: 'y00', chain: 'City', name: 'The Barracks', text: 'A soldier is 1 lumber, 1 arms and 1 bread — one from each chain. Build the Barracks, the tenth building, and your army begins before the kingdom does.',

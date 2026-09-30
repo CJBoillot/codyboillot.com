@@ -16,7 +16,7 @@
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=b0405">
+  <link rel="stylesheet" href="style.css?v=b0406">
 </head>
 <body>
 
@@ -172,13 +172,12 @@
               <button id="path-stars-box" class="pts-btn" type="button"><b id="path-stars">0 👑</b><span>Crowns · where they come from ⓘ</span></button>
             </div>
             <div class="bar xp disc-xp"><div id="path-xpbar"></div><span id="path-xptext"></span></div>
-            <p class="small dim" style="margin:4px 0 0">Every Combat level: +3% attack and HP. The Crown Tree is bought with Crowns and never resets: few ranks, big effects. A node opens once a node above it has a rank; the endless node at the bottom of each branch never runs out.</p>
+            <p class="small dim" style="margin:4px 0 0">Every Combat level: +3% attack and HP. The Crown Tree is bought with Crowns and never resets. Three branches pull the three levers of the Front: the <b>Hero</b> (what each soldier is worth), the <b>Army</b> (how big it gets) and the <b>Realm</b> (the goods that feed it). A tier opens once you own a rank in the tier above; you may take one keystone of the three.</p>
           </div>
-          <div class="card path-pop" id="path-pop"></div>
-          <div class="path-heads" id="path-heads"></div>
-          <div class="path-web-wrap"><svg id="path-web" viewBox="0 0 368 610" preserveAspectRatio="xMidYMid meet"></svg></div>
-          <div class="path-legend"><span><i class="lg taken"></i>taken</span><span><i class="lg can"></i>can take</span><span><i class="lg lock"></i>locked</span><span><i class="lg notable"></i>notable</span><span><i class="lg key"></i>keystone</span><span>∞ endless</span></div>
-          <div class="card" id="path-sum-card"><div class="card-title" style="margin:0 0 4px">Your Paths give</div><div id="path-sum" class="small"></div></div>
+          <div class="card ct-front" id="ct-front"></div>
+          <div class="ct-tabs" id="ct-tabs"></div>
+          <div class="ct-tree" id="ct-tree"></div>
+          <div class="card" id="path-sum-card"><div class="card-title" style="margin:0 0 4px">Your Crown Tree gives</div><div id="path-sum" class="small"></div></div>
           <button id="path-reset" class="wide" style="margin-top:4px">Reset Paths (<span id="path-reset-cost"></span> 🪙)</button>
         </div>
 
@@ -207,7 +206,6 @@
         </div><div class="subrow">
         <button data-ksub="tech" class="active">Tech <span id="badge-tech" class="dot hidden"></span></button>
         <button data-ksub="keep">Keep <span id="badge-throne" class="dot hidden"></span></button>
-        <button data-ksub="halls">Halls <span id="badge-halls" class="dot hidden"></span></button>
         <button data-ksub="lands">Lands <span id="badge-lands" class="dot hidden"></span></button>
         <button data-ksub="legacy" class="hidden" aria-hidden="true">Legacy <span id="badge-legacy" class="dot hidden"></span></button>
         </div>
@@ -493,11 +491,11 @@
 </div>
 
 
-<script src="config.js?v=b0405"></script>
-<script src="cloud-config.js?v=b0405"></script>
-<script src="game.js?v=b0405"></script>
-<script src="ui.js?v=b0405"></script>
-<script src="cloud.js?v=b0405"></script>
+<script src="config.js?v=b0406"></script>
+<script src="cloud-config.js?v=b0406"></script>
+<script src="game.js?v=b0406"></script>
+<script src="ui.js?v=b0406"></script>
+<script src="cloud.js?v=b0406"></script>
 <script>window.addEventListener("error", e => { const d = document.getElementById("err"); if (d) { d.textContent = "Error: " + e.message; d.classList.remove("hidden"); } });</script>
 <div id="celebrate" class="celebrate hidden" role="status" aria-live="polite"><div class="cb-ico" id="cb-ico"></div><div class="cb-txt"><div class="cb-kicker" id="cb-kicker"></div><div class="cb-title" id="cb-title"></div><div class="cb-sub" id="cb-sub"></div></div></div>
 </body>

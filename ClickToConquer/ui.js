@@ -291,7 +291,7 @@ const UI = (() => {
       case 'forest': case 'farm': case 'mine': return Game.lineUnlocked(key);
       case 'prod': return Game.kingdomNo() > 0;
       case 'war': case 'lands': return Game.phase() === 3;
-      case 'halls': return reached('h04') || (Game.kingdomNo() > 0 && Game.kTier() >= 2);
+      case 'halls': return false; // Beta 0.4.6: the Halls are gone
       case 'tavern': return false;
       case 'keep': return reached('q17') || S.legacy.foundings > 0;
       case 'legacy': return false; // 0.11.1: Legacy lives in the Crown Tree now
@@ -341,7 +341,7 @@ const UI = (() => {
     if (isQuest && q.steps && pr && pr.parts) { stepIdx = pr.parts.findIndex(st => !st.done); if (stepIdx >= 0 && q.steps[stepIdx].focus) stepF = q.steps[stepIdx].focus; }
     const key = q ? (isQuest ? q.id + ':' + stepIdx + (pr.done ? ':done' : '') : 'goal:' + q.name) : '';
     if (key === glowKey) return; glowKey = key;
-    document.querySelectorAll('.quest-glow').forEach(e => e.classList.remove('quest-glow'));
+    document.querySelectorAll('.quest-glow').forEach(e => e.classList.remove('quest-glow')); ctGlow = null; ctKey = '';
     if (!q || !(q.focus || stepF) || (isQuest && pr.done)) { if (isQuest && q && pr.done) $('quest-claim').classList.add('quest-glow'); return; }
     const F = stepF || q.focus, add = e => e && e.classList.add('quest-glow');
     if (F.tab && !desktop) add(document.querySelector(`[data-tab=${F.tab}]`));
@@ -357,7 +357,7 @@ const UI = (() => {
       else if (kind === 'market') add($('market-list'));
       else if (kind === 'ground') { add(rows.ground[id]); add(rows.act.fight); }
       else if (kind === 'perk') add(rows.perk[id]);
-      else if (kind === 'path') { if (skView !== 'paths') setSkillView('paths'); add(pathEls[id] && pathEls[id].g); add(document.querySelector('#skill-seg [data-sk=paths]')); }
+      else if (kind === 'path') { if (skView !== 'paths') setSkillView('paths'); ctGlow = id; ctTab = id[0]; ctKey = ''; add(document.querySelector('#skill-seg [data-sk=paths]')); add(document.querySelector(`#ct-tabs [data-b=${id[0]}]`)); }
       else if (kind === 'technique') { if (skView !== 'tech') setSkillView('tech'); add(techEls[id] && techEls[id].card); add(document.querySelector('#skill-seg [data-sk=tech]')); }
       else if (kind === 'node') { if (skView !== 'gather') setSkillView('gather'); const [d, nid] = id.split(':'); if (curDisc !== d) { curDisc = d; buildTree(); } add(rows.node[nid]); add(rows.disc[d]); }
       else if (kind === 'hand') add(rows.hand[id]);
@@ -1253,63 +1253,64 @@ const UI = (() => {
   function fmtMods(m) { return Object.entries(m).filter(([, v]) => v).map(([k, v]) => fmtMod(k, v)).join(' · '); }
   const PCOL = { M: [20, 61, 102], G: [143, 184, 225], C: [266, 307, 348] }, PY = t => 50 + t * 72, ROOT = { x: 184, y: 16 }, NS = 'http://www.w3.org/2000/svg';
   const svgEl = (tag, attrs, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
+  // Beta 0.4.6: the Crown Tree — three branches (Hero · Army · Realm) as tiers of cards; every node says what one more rank does to the land you are fighting
+  let ctTab = 'H', ctGlow = null, ctKey = '';
+  const CT_TIER = ['Tier I', 'Tier II', 'Tier III', 'Keystone', 'Endless'];
   function buildPaths() {
-    const svg = $('path-web'); svg.innerHTML = ''; const nodes = Game.pathNodes(), col = {}; for (const b of CONFIG.paths.branches) col[b.id] = b.color;
-    setHtml($('path-heads'), CONFIG.paths.branches.map(b => `<div><b style="color:${b.color}">${b.name}</b><span>${b.desc}</span></div>`).join(''));
-    const defs = svgEl('defs', {}, svg); const rg = svgEl('radialGradient', { id: 'pglow' }, defs); svgEl('stop', { offset: '0', 'stop-color': '#e8c06a', 'stop-opacity': '.55' }, rg); svgEl('stop', { offset: '1', 'stop-color': '#e8c06a', 'stop-opacity': '0' }, rg);
-    const edgeG = svgEl('g', {}, svg), nodeG = svgEl('g', {}, svg);
-    const pos = n => ({ x: PCOL[n.b][n.c], y: PY(n.t) });
-    for (const n of nodes) { pathEls[n.id] = { n, edges: [] }; const p = pos(n);
-      const froms = n.parents.length ? n.parents.map(id => ({ id, ...pos(Game.pathNode(id)) })) : [{ id: null, ...ROOT }];
-      for (const f of froms) pathEls[n.id].edges.push({ from: f.id, line: svgEl('line', { x1: f.x, y1: f.y, x2: p.x, y2: p.y, 'stroke-width': 2 }, edgeG) }); }
-    svgEl('circle', { cx: ROOT.x, cy: ROOT.y, r: 12, fill: '#1f1810', stroke: '#e8c06a', 'stroke-width': 2 }, nodeG); const rt = svgEl('text', { x: ROOT.x, y: ROOT.y + 4, 'text-anchor': 'middle', 'font-size': 11, fill: '#e8c06a' }, nodeG); rt.textContent = '⚔';
-    for (const n of nodes) {
-      const p = pos(n), R = n.kind === 'small' ? 11 : 14, g = svgEl('g', { class: 'pnode', tabindex: 0, role: 'button' }, nodeG), E = pathEls[n.id];
-      E.glow = svgEl('circle', { cx: p.x, cy: p.y, r: R + 9, fill: 'url(#pglow)' }, g);
-      E.arc = svgEl('circle', { cx: p.x, cy: p.y, r: R + 3.5, fill: 'none', stroke: col[n.b], 'stroke-width': 2.5, transform: `rotate(-90 ${p.x} ${p.y})` }, g); E.circ = 2 * Math.PI * (R + 3.5);
-      E.shape = n.kind === 'key' ? svgEl('rect', { x: p.x - R + 1, y: p.y - R + 1, width: 2 * R - 2, height: 2 * R - 2, rx: 3, transform: `rotate(45 ${p.x} ${p.y})` }, g) : svgEl('circle', { cx: p.x, cy: p.y, r: R }, g);
-      E.txt = svgEl('text', { x: p.x, y: p.y + 3.5, 'text-anchor': 'middle', 'font-size': n.kind === 'small' ? 10 : 11, 'font-weight': 700 }, g);
-      E.sel = svgEl('circle', { cx: p.x, cy: p.y, r: R + 7, fill: 'none', stroke: '#e8c06a', 'stroke-width': 1.5, 'stroke-dasharray': '3 3' }, g);
-      if (n.kind !== 'small') { const lb = svgEl('text', { x: p.x, y: p.y + R + (n.kind === 'key' ? 16 : 14), 'text-anchor': 'middle', 'font-size': 10, 'font-weight': 600, fill: '#ede4d3', stroke: '#120e0b', 'stroke-width': 3, 'paint-order': 'stroke' }, g); lb.textContent = n.name; }
-      svgEl('circle', { cx: p.x, cy: p.y, r: 20, fill: 'transparent' }, g);
-      const pick = () => { pathSel = n.id; render(true); }; g.addEventListener('click', pick); g.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } });
-      E.g = g;
-    }
-    const pop = $('path-pop'); pop.innerHTML = `<div class="row-between"><b class="pp-name" data-f="name"></b><span class="pp-tag" data-f="tag"></span></div>
-      <div class="small" data-f="now"></div><div class="small dim" data-f="each"></div>
-      <div class="bar pp-bar"><div data-f="bar"></div><span data-f="rank"></span></div>
-      <div class="small dim" data-f="cost"></div>
-      <div class="pp-btns"><button class="buy" data-f="one">+1 rank</button><button class="buy maxbtn" data-f="max">+10 ranks</button></div>`;
-    pop.querySelector('[data-f=one]').addEventListener('click', () => { if (pathSel && Game.rankPath(pathSel, 1)) { flash(pop); render(true); } });
-    pop.querySelector('[data-f=max]').addEventListener('click', () => { if (pathSel && Game.rankPath(pathSel, 999)) { flash(pop); render(true); } });
+    $('ct-tabs').addEventListener('click', e => { const b = e.target.closest('[data-b]'); if (b) { if (b.dataset.b === 'R') Game.noteStat('realmViews'); ctTab = b.dataset.b; pathSel = null; ctKey = ''; render(true); } });
+    $('ct-tree').addEventListener('click', e => {
+      const buy = e.target.closest('[data-buy]'); if (buy) { if (Game.rankPath(buy.dataset.buy, buy.dataset.n === 'max' ? 999 : 1)) { flash(buy); ctKey = ''; render(true); } return; }
+      const nd = e.target.closest('[data-node]'); if (nd) { pathSel = pathSel === nd.dataset.node ? null : nd.dataset.node; ctKey = ''; render(true); } });
+  }
+  function ctSpecial(n) {
+    const p3 = Game.phase() === 3 && Game.barracksBuilt();
+    if (n.perk === 'drill') return p3 && Game.soldiersPerMin().by !== 'barracks' ? '0% now: goods are your limit, not the Barracks' : null;
+    if (n.perk === 'foundations') return 'Pays off after you pass the Crown or start a new Age';
+    if (n.perk === 'royal') return 'More gold for upgrades';
+    if (n.id === 'H3') return 'Forts fall faster · the siege between them is unchanged';
+    return null;
+  }
+  function ctStatus(n) {
+    const sp = ctSpecial(n); if (sp) return `<span class="ct-sp zero">${sp}</span>`;
+    if (Game.pathMaxed(n.id)) return '<span class="ct-sp zero">Maxed</span>';
+    const g = Game.pathGain(n.id); if (!g) return '';
+    return g.pct >= 0.5 ? `<span class="ct-sp">Lands ${g.pct.toFixed(g.pct < 10 ? 1 : 0)}% faster</span>` : '<span class="ct-sp zero">Little change now</span>';
   }
   function renderPaths() {
-    const S = Game.S, f = Game.fmt, nodes = Game.pathNodes(), RK = CONFIG.paths.ranks, col = {}; for (const b of CONFIG.paths.branches) col[b.id] = b.color;
-    const pr = Game.discProgress('combat'), cr = Game.crowns(), PD = CONFIG.paths.perkDesc;
+    const S = Game.S, f = Game.fmt, nodes = Game.pathNodes(), cr = Game.crowns(), P = CONFIG.paths;
+    const pr = Game.discProgress('combat');
     setText($('path-lv'), `Combat Lv ${pr.level}`); setText($('path-free'), `+${Math.round(Game.combatLevelBonus() * 100)}%`); setText($('path-free-lab'), 'attack & HP from Combat levels');
     setText($('path-spent'), f(Game.pathPointsSpent())); setText($('path-spent-of'), 'ranks bought');
     setText($('path-stars'), `${f(cr)} 👑`); $('path-xpbar').style.width = (100 * pr.have / pr.need) + '%'; setText($('path-xptext'), `${f(pr.have)} / ${f(pr.need)} XP to Combat Lv ${pr.level + 1}`);
-    let anyCan = false; if (!pathSel || !Game.pathNode(pathSel)) pathSel = nodes[0].id;
-    const nodeDesc = n => n.perk ? PD[n.perk] : fmtMods(Object.fromEntries(Object.entries(n.per).filter(([k]) => !k.endsWith('X')))) + Object.entries(n.per).filter(([k]) => k.endsWith('X')).map(([k, v]) => ` ${k === 'attackX' ? 'attack' : k === 'hpX' ? 'HP' : 'army boost'} ×${v}`).join('');
-    for (const n of nodes) {
-      const E = pathEls[n.id]; if (!E) continue; const r = Game.pathRank(n.id), open = Game.pathOpen(n.id), can = Game.canRankPath(n.id), maxed = Game.pathMaxed(n.id); if (can && r === 0) anyCan = true;
-      const full = n.kind === 'endless' ? r > 0 : maxed;
-      E.shape.setAttribute('fill', full ? col[n.b] : r > 0 ? '#2a1f16' : '#15110e');
-      E.shape.setAttribute('stroke', can ? '#e8c06a' : open ? '#8a6a33' : '#4a3a2a'); E.shape.setAttribute('stroke-width', n.kind === 'small' ? 2 : 3);
-      E.arc.setAttribute('stroke-dasharray', `${E.circ * (n.max ? Math.min(1, r / n.max) : 0)} ${E.circ}`); E.arc.style.display = r > 0 && !full ? '' : 'none';
-      E.txt.textContent = n.kind === 'endless' ? (r ? r : '∞') : r > 0 ? `${r}/${n.max}` : n.kind === 'small' ? '' : '★'; E.txt.setAttribute('fill', full ? '#120e0b' : r > 0 ? col[n.b] : open ? '#e8c06a' : '#5d5245');
-      E.glow.style.display = can && r === 0 ? '' : 'none'; E.sel.style.display = pathSel === n.id ? '' : 'none'; E.g.classList.toggle('locked', !open);
-      for (const ed of E.edges) { const on = r > 0; ed.line.setAttribute('stroke', on ? '#c9973f' : '#3a2e24'); ed.line.setAttribute('stroke-width', on ? 3 : 2); }
+    const canB = {}; let anyCan = false; for (const n of nodes) if (Game.canRankPath(n.id)) { canB[n.b] = true; if (!Game.pathRank(n.id)) anyCan = true; }
+    const LN = Game.landN(), front = Game.phase() === 3 && Game.barracksBuilt() && LN && !Game.landDone(LN), fc = front ? Game.invasionForecast(LN) : null;
+    const key = [ctTab, pathSel, ctGlow, JSON.stringify(S.hero.paths || {}), Math.floor(cr), front ? LN + ':' + S.hero.stage + ':' + Math.round((fc.eta || 0) / 60) : '-', Math.floor((S.hero.time || 0) / 5)].join('|');
+    if (ctKey !== key) { ctKey = key;
+      setHtml($('ct-front'), front && fc.rate > 0 ? `<div class="row-between"><span class="small dim">${Game.landDef(LN).name}</span><b>${fmtEta(fc.eta)}</b></div>
+        <div class="ct-mults"><div class="h">Soldier worth<b>×${Game.soldierWorth().toFixed(1)}</b></div><div class="a">Army settles near<b>${f(fc.army)}</b></div><div class="r">Soldiers / min<b>${fc.rate.toFixed(1)}</b></div></div>
+        <div class="small dim ct-note">Land time = siege ÷ (army × worth). Each node below shows how much faster one more rank makes this land fall.</div>`
+        : `<div class="small dim">${Game.phase() === 3 ? 'Once your army besieges a land, every node shows how much faster it makes that land fall.' : 'Until you march on the lands, <b>Hero</b> nodes make your hero stronger and <b>Realm</b> nodes speed up every building. The Army branch pays off at the Front.'}</div>`);
+      setHtml($('ct-tabs'), P.branches.map(b => `<button data-b="${b.id}" class="${ctTab === b.id ? 'on' : ''}" style="--c:${b.color}"><span>${b.name}</span><small>${b.desc}</small>${canB[b.id] ? '<i class="dot"></i>' : ''}</button>`).join(''));
+      const br = P.branches.find(b => b.id === ctTab), mine = nodes.filter(n => n.b === ctTab), tiers = [];
+      for (const n of mine) (tiers[n.t] = tiers[n.t] || []).push(n);
+      const kt = Game.keyTaken();
+      $('ct-tree').style.setProperty('--c', br.color);
+      setHtml($('ct-tree'), tiers.map((row, t) => {
+        const endless = row[0].kind === 'endless', cost = endless ? `${P.endlessBase}+` : P.rowCost[Math.min(t, P.rowCost.length - 1)];
+        const cards = row.map(n => { const r = Game.pathRank(n.id), open = Game.pathOpen(n.id), lockK = n.kind === 'key' && kt && kt !== n.id, maxed = Game.pathMaxed(n.id), d = P.nodes[n.b][mine.indexOf(n)];
+          const pips = n.max ? `<span class="ct-pips">${Array.from({ length: n.max }, (_, k) => `<i class="${k < r ? 'f' : ''}"></i>`).join('')}</span>` : `<span class="small dim">Rank ${r}</span>`;
+          return `<button class="ct-node${!open || lockK ? ' lock' : ''}${pathSel === n.id ? ' sel' : ''}${n.kind === 'key' ? ' key' : ''}${maxed ? ' maxed' : ''}${Game.canRankPath(n.id) ? ' can' : ''}${ctGlow === n.id ? ' quest-glow' : ''}" data-node="${n.id}">${n.kind === 'key' ? '<span class="ct-kb">pick 1</span>' : ''}<span class="ct-nm">${n.name}</span><span class="ct-ef">${d[5] || ''}</span>${open && !lockK ? ctStatus(n) : ''}${pips}</button>`; }).join('');
+        const s = row.find(n => n.id === pathSel); let det = '';
+        if (s) { const r = Game.pathRank(s.id), open = Game.pathOpen(s.id), lockK = s.kind === 'key' && kt && kt !== s.id, c = Game.pathCost(s.id), g = Game.pathGain(s.id), can = Game.canRankPath(s.id), maxed = Game.pathMaxed(s.id);
+          const why = !open ? `🔒 Opens when you own a rank in ${CT_TIER[t - 1]}.` : lockK ? `You chose ${Game.pathNode(kt).name} — one keystone per tree.` : s.kind === 'key' ? 'Keystone: you may take only one of the three, and it is permanent.' : s.kind === 'endless' ? 'Never maxes · each rank costs 15% more.' : '';
+          det = `<div class="ct-det"><div class="row-between"><b>${s.name}</b><span class="small dim">${s.max ? `Rank ${r} / ${s.max}` : `Rank ${r}`}</span></div>
+            ${why ? `<div class="small dim">${why}</div>` : ''}${g && !maxed ? `<div class="ct-prev"><span>${Game.landDef(LN).name}</span><span>${fmtEta(g.t0)} → <b>${fmtEta(g.t1)}</b></span></div>` : ''}
+            <div class="ct-btns"><button class="buy" data-buy="${s.id}" data-n="1" ${can ? '' : 'disabled'}>${maxed ? 'Maxed' : `Buy rank ${r + 1} · ${f(c)} 👑`}</button>${s.kind === 'endless' ? `<button class="buy" data-buy="${s.id}" data-n="max" ${can ? '' : 'disabled'}>Buy max</button>` : ''}</div></div>`; }
+        return `<div class="ct-tier"><div class="ct-tl">${CT_TIER[t]}<b>${cost} 👑</b></div><div class="ct-nodes" style="--n:${row.length}">${cards}</div></div>${det}`; }).join(''));
     }
-    const n = Game.pathNode(pathSel), pop = $('path-pop'), r = Game.pathRank(n.id), open = Game.pathOpen(n.id), br = CONFIG.paths.branches.find(b => b.id === n.b), maxed = Game.pathMaxed(n.id);
-    setText(pop.querySelector('[data-f=name]'), n.name); pop.querySelector('[data-f=name]').style.color = br.color;
-    setText(pop.querySelector('[data-f=tag]'), `${n.kind === 'key' ? 'Keystone' : n.kind === 'notable' ? 'Notable' : n.kind === 'endless' ? 'Endless' : 'Node'} · ${br.name}`);
-    setText(pop.querySelector('[data-f=now]'), r ? `Rank ${r}${n.max ? ' / ' + n.max : ''}` : 'Not taken yet'); setText(pop.querySelector('[data-f=each]'), 'Each rank: ' + nodeDesc(n));
-    pop.querySelector('[data-f=bar]').style.width = (n.max ? 100 * Math.min(1, r / n.max) : (r ? 100 : 0)) + '%'; setText(pop.querySelector('[data-f=rank]'), n.max ? `Rank ${r} / ${n.max}` : `Rank ${r}`);
-    const c = Game.pathCost(n.id), par = n.parents.map(id => Game.pathNode(id).name);
-    setHtml(pop.querySelector('[data-f=cost]'), maxed ? 'Maxed.' : !open ? `🔒 Opens once ${par.join(' or ')} has a rank.` : `Next rank: <b class="${cr >= c ? 'good' : 'warn'}">${f(c)} 👑</b> · you have ${f(cr)}${n.kind === 'endless' ? ' · each rank costs 15% more' : ''}`);
-    const can = Game.canRankPath(n.id); pop.querySelector('[data-f=one]').disabled = !can; pop.querySelector('[data-f=max]').disabled = !can; pop.querySelector('[data-f=max]').textContent = 'Buy max';
-    { const m = Game.pathMods(), t = fmtMods(m); setText($('path-sum'), t || 'Nothing yet — beat a boss for a Crown and spend it on Sharpened Edge.'); }
+    { const m = Game.pathMods(), parts = [fmtMods(Object.fromEntries(Object.entries(m).filter(([k]) => !k.endsWith('X'))))].filter(Boolean);
+      for (const n of nodes) { const r = Game.pathRank(n.id); if (r && (n.perk || Object.keys(n.per).some(k => k.endsWith('X')))) parts.push(`${n.name} ${n.max ? r + '/' + n.max : 'rank ' + r}`); }
+      setText($('path-sum'), parts.join(' · ') || 'Nothing yet — beat a boss for a Crown and spend it on Sharpened Steel.'); }
     $('path-reset').classList.add('hidden');
     $('dot-sk-paths').classList.toggle('hidden', !anyCan); return anyCan;
   }
@@ -1662,7 +1663,7 @@ const UI = (() => {
     $('badge-hero').classList.toggle('hidden', !(anyGear || anySkill));
 
     // Kingdom
-    { const anyP = renderProd(); $('badge-prod').classList.toggle('hidden', !anyP); setText($('klsub-prod'), Game.barracksBuilt() ? `${Game.fmt(Game.soldiers())} ⚔` : ''); } $('badge-lands').classList.toggle('hidden', !renderLands()); renderWonders(); $('badge-halls').classList.toggle('hidden', !renderHalls());
+    { const anyP = renderProd(); $('badge-prod').classList.toggle('hidden', !anyP); setText($('klsub-prod'), Game.barracksBuilt() ? `${Game.fmt(Game.soldiers())} ⚔` : ''); } $('badge-lands').classList.toggle('hidden', !renderLands()); renderWonders();
     const keepAct = renderKeep();
     renderThrone();
 
@@ -1852,7 +1853,7 @@ const UI = (() => {
     const lname = { forest: 'Wood', mine: 'Arms', farm: 'Food' }[fc.line] || '';
     const tip = fc.by === 'barracks' ? `<b>Faster:</b> upgrade the <b>Barracks</b> — your goods arrive faster than it trains${faster}.`
       : `<b>Faster:</b> the army waits on <b>${R[fc.by].name.toLowerCase()}</b>. Upgrade the ${lname} chain's slowest building, the <b>${Game.stepDef(fc.slow).name}</b>${faster}. <button class="belt-go" data-go-bld="${fc.slow}">Go to the ${Game.stepDef(fc.slow).name} ›</button>`;
-    return `<div class="fr-fc"><div>⏱ <b>${G.name}</b> falls in about <b>${fmtEta(fc.eta)}</b> at this pace <span class="dim">(plus the forts)</span>. Your army settles near <b>${f(fc.army)}</b>: +${fc.rate.toFixed(1)} trained / min, ${Math.round(100 * Game.siegeAttrition())}% fall each minute.</div>
+    return `<div class="fr-fc"><div>⏱ <b>${G.name}</b> falls in about <b>${fmtEta(fc.eta)}</b> at this pace <span class="dim">(plus the forts)</span>. Your army settles near <b>${f(fc.army)}</b>: +${fc.rate.toFixed(1)} trained / min, ${(100 * Game.siegeAttrition()).toFixed(1).replace(/\.0$/, "")}% fall each minute.</div>
       <div class="fr-tip">${tip} <span class="dim">A stronger hero also makes every soldier count for more.</span></div></div>`;
   }
   function renderFront(LN) {
@@ -1925,6 +1926,7 @@ const UI = (() => {
     else if (ms.length > 1) CBQ.push({ small: 1, ico: '⚒', kicker: 'Ready to go deeper', title: `${ms.length} buildings`, sub: ms.map(m => m.name).slice(0, 3).join(' · ') });
     for (const e of evs) {
       if (e.who === 'crown') { const G = Game.landDef(e.n); CBQ.push({ ico: '👑', kicker: 'Land conquered', title: G ? G.name : 'Conquered', sub: `You take ${G ? G.crown : 'a crown'} · +${e.v} Crown${e.v === 1 ? '' : 's'} when the crown passes${e.first ? ' · new in the Vault' : ''}` }); }
+      else if (e.who === 'refund046') CBQ.push({ ico: '👑', kicker: 'The Crown Tree is rebuilt', title: `+${e.crowns} Crowns refunded`, sub: `${e.gold ? '+' + Game.fmt(e.gold) + ' gold from the Halls · ' : ''}Spend them in Skills → Crown Tree: Hero, Army and Realm` });
       else if (e.who === 'crownpass') CBQ.push({ ico: '👑', kicker: 'Long live the heir', title: `Dynasty ${Game.S.legacy.dynasty}`, sub: `+${e.gain} Crowns to spend in the Crown Tree · lands you know fall ${3 + Game.perkRank('lap')}× faster` });
       else if (e.who === 'dig') CBQ.push({ small: 1, ico: '⛏', kicker: 'Your town grows', title: `${e.name} · ${e.unit} ${e.d}`, sub: 'It starts small but can grow far bigger than the last — upgrade its three steps inside.' });
       else if (e.who === 'depth' && e.first && e.depth % 5 === 0) { const G = Game.landDef(e.n); CBQ.push({ small: 1, ico: '∞', kicker: 'Deeper than ever', title: `${G ? G.name : ''} · depth ${e.depth}`, sub: `Tougher foes, +10% ${G && R[G.spoil] ? R[G.spoil].name.toLowerCase() : 'spoils'}` }); }

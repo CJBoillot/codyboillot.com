@@ -1290,3 +1290,40 @@ html, body { max-width: 100%; overflow-x: hidden; }
 .pup[hidden], .pdeep[hidden], .vseg [hidden] { display: none !important; }
 .chain-card .belt-title h3 { font-size: 17px; white-space: nowrap; }
 .chain-card .belt-title p { font-size: 11px; }
+/* Beta 0.4.6: the Crown Tree — Hero · Army · Realm */
+.ct-front { display: flex; flex-direction: column; gap: 6px; }
+.ct-front > .row-between b { font-size: 17px; font-variant-numeric: tabular-nums; }
+.ct-mults { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.ct-mults div { background: #15110e; border: 1px solid var(--line); border-radius: 8px; padding: 5px 7px; font-size: 10.5px; color: var(--dim); }
+.ct-mults b { display: block; font-size: 15px; color: var(--text); font-variant-numeric: tabular-nums; }
+.ct-mults .h b { color: #d9604c; } .ct-mults .a b { color: #6fa3d9; } .ct-mults .r b { color: #7fd28f; }
+.ct-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin: 8px 0; padding-inline: 3px; }
+.ct-tabs button { min-width: 0; }
+.ct-node .small, .ct-det .small { font-size: 11.5px; }
+.ct-tabs button { position: relative; display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 7px 4px; color: var(--dim); }
+.ct-tabs button span { font-family: var(--font-head); font-size: 15px; }
+.ct-tabs button small { font-size: 10.5px; }
+.ct-tabs button.on { color: var(--text); border-color: var(--c); box-shadow: inset 0 -3px 0 var(--c); }
+.ct-tabs button .dot { position: absolute; top: 5px; right: 6px; }
+.ct-tree { display: flex; flex-direction: column; gap: 14px; margin-bottom: 10px; padding-inline: 3px; }
+.ct-note { font-size: 11.5px; }
+.ct-tier { position: relative; display: grid; grid-template-columns: 58px minmax(0, 1fr); gap: 8px; align-items: start; }
+.ct-tier:not(:first-child)::before { content: ''; position: absolute; left: 28px; top: -13px; width: 2px; height: 11px; background: var(--line2); }
+.ct-tl { font-size: 10px; color: var(--dim); text-transform: uppercase; letter-spacing: .8px; text-align: right; padding-top: 7px; }
+.ct-tl b { display: block; color: var(--bronze2); font-size: 12.5px; letter-spacing: 0; }
+.ct-nodes { display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); gap: 6px; }
+.ct-node { position: relative; text-align: left; display: flex; flex-direction: column; gap: 2px; min-width: 0; padding: 7px 9px; border-radius: 10px; border-color: var(--line2); }
+.ct-node .ct-nm { font-weight: 600; font-size: 13px; }
+.ct-node .ct-ef { font-size: 11px; color: var(--dim); }
+.ct-node .ct-sp { font-size: 11.5px; font-weight: 600; color: var(--good, #7fd28f); font-variant-numeric: tabular-nums; }
+.ct-node .ct-sp.zero { color: var(--dim); font-weight: 400; }
+.ct-node .ct-kb { position: absolute; top: 5px; right: 7px; font-size: 9.5px; text-transform: uppercase; letter-spacing: .8px; color: var(--c); }
+.ct-pips { display: flex; gap: 3px; margin-top: 3px; } .ct-pips i { width: 14px; height: 4px; border-radius: 2px; background: #211a14; } .ct-pips i.f { background: var(--c); }
+.ct-node.lock { opacity: .45; } .ct-node.key { border-style: double; border-width: 3px; } .ct-node.maxed { border-color: var(--c); }
+.ct-node.can { border-color: var(--bronze2); } .ct-node.sel { outline: 2px solid var(--c); outline-offset: 1px; }
+.ct-det { margin-left: 66px; border: 1px solid var(--c); border-radius: 10px; background: #1f1810; padding: 8px 10px; display: flex; flex-direction: column; gap: 5px; }
+.ct-det b { font-family: var(--font-head); color: var(--c); }
+.ct-prev { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; background: #15110e; border: 1px solid var(--line); border-radius: 8px; padding: 5px 8px; font-variant-numeric: tabular-nums; }
+.ct-prev b { color: var(--good, #7fd28f); font-family: inherit; }
+.ct-btns { display: flex; gap: 6px; } .ct-btns .buy { flex: 1; min-width: 0; }
+@media (max-width: 380px) { .ct-det { margin-left: 0; } }
