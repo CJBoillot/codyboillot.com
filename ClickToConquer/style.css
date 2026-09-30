@@ -1338,3 +1338,4 @@ html, body { max-width: 100%; overflow-x: hidden; }
 .pup:disabled, .belt-up:disabled { opacity: 1; background: #171210; border-color: var(--line2); }
 .pup:disabled .pu-l, .belt-up:disabled .pu-l { color: #b9ad99; }
 .belt-up { gap: 3px; } .belt-up .pu-n { font-size: 11px; color: var(--dim); } .belt-up .pu-b { display: flex; flex-direction: column; align-items: center; gap: 1px; }
+.gap-note { display: inline-block; font-size: 10.5px; color: var(--bronze2); margin-top: 2px; } .gap-note.bad { color: #ff8a6a; }

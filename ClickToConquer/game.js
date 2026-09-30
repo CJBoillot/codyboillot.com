@@ -92,7 +92,7 @@ function canTierUp(slot) { const it = S.hero.gear[slot], next = it ? it.tier + 1
 function crafting() { return S.hero.crafting || null; }
 function craftGear(slot) {
   if (crafting() || !canTierUp(slot)) return false;
-  const c = gearCraftCost(slot); if (!c || !canAfford(c)) return false;
+  const c = gearCraftCost(slot); if (!c || !coverCost(c)) return false;
   pay(c);
   const it = S.hero.gear[slot];
   S.hero.crafting = { kind: 'gear', slot, t: 0, total: CONFIG.craftSeconds, name: `${tierName(slot, it ? it.tier + 1 : 0)} ${CONFIG.slots[slot].name}` };
@@ -108,7 +108,7 @@ function finishCraft() {
 }
 function tickCraft(dt) { const cr = crafting(); if (!cr) return; cr.t += dt; if (cr.t >= cr.total) finishCraft(); }
 function upgradeGear(slot) {
-  if (crafting()) return false; const c = gearUpgradeCost(slot); if (!c || !canAfford(c)) return false;
+  if (crafting()) return false; const c = gearUpgradeCost(slot); if (!c || !coverCost(c)) return false;
   pay(c); const it = S.hero.gear[slot]; S.hero.crafting = { kind: 'gearUp', slot, t: 0, total: CONFIG.upgradeSeconds, name: `${tierName(slot, it.tier)} ${CONFIG.slots[slot].name} Lv${it.level + 1}` }; return true;
 }
 
@@ -622,7 +622,7 @@ function bottleneckPart(id) { // Beta 0.4.4: from capacities, so it updates the 
   if (!stepBuilt(id)) return null; const inW = workIn(id), c = partCap(id, 'C'), h = partCap(id, 'H'), tol = 1.005;
   if (Math.min(inW, c) > h * tol) return 'H'; if (inW > c * tol) return 'C';
   const st = stepDef(id); if (st.from) { const CF = chainFlow(st.line), i = CF.findIndex(x => x.id === id), up = i > 0 ? CF[i - 1] : null, k = up && up.make; // Beta 0.4.7: the last building offers more than Work can take, and the Storehouse is full — it is sold at the door
-    if (up && up.out > partCap(id, 'W') * st.ratio * 1.03 && ((S.res[k] || 0) >= resCap(k) - 1e-6 || overflowRate(k).u > 1e-6)) return 'W'; }
+    if (up && up.out > partCap(id, 'W') * st.ratio * 1.03 && (S.res[k] || 0) >= resCap(k) * 0.999) return 'W'; } // the Storehouse is full right now
   return null; } // the part whose belt is overflowing (goods being sold in front of it)
 function digOpen() { return true; }
 function digCost(id) { return { gold: Math.round(stepUpCost(id, 'W', 1, depthOf(id) + 1).gold * DC().digMult) }; }
@@ -672,6 +672,7 @@ function stockDemand(k, noOrders) {
   let allBuilt = true; for (const lid in KC().lines) for (const d of KC().lines[lid].steps) if (stepAvailable(d.id) && !stepBuilt(d.id)) allBuilt = false;
   const need = allBuilt ? tierNeed() : null; if (need && need[k]) { const left = Math.max(0, need[k] - (tierPaid()[k] || 0)); if (left > 0) { n += left; why.push(tierDef(kTier() + 1).name); } }
   let o = 0; if (!noOrders) for (const ord of (S.kingdom.orders || [])) o += (ord.wants || {})[k] || 0; if (o) { n += o; why.push('orders'); }
+  { const q = questCurrent(); if (q && q.steps) { let g = 0; for (const st of q.steps) { const c = st.check || {}; if (!c.gearTier) continue; const it = S.hero.gear[c.gearTier]; if (it && it.tier >= c.need) continue; const cost = canTierUp(c.gearTier) ? gearCraftCost(c.gearTier) : gearUpgradeCost(c.gearTier); g += (cost && cost[k]) || 0; } if (g) { n += g; why.push('your quest gear'); } } } // Beta 0.4.7: goods the quest's gear needs are set aside
   return { n, why };
 }
 function stockTarget(k) { const m = stockMode(k), cap = resCap(k); if (m === 'auto') { const d = stockDemand(k); return { target: Math.min(cap, d.n), why: d.why, mode: m, share: 0.5 }; } return { target: Math.floor(cap * m), why: [], mode: m, share: 1 }; }
@@ -1093,6 +1094,10 @@ function questClaim() {
 
 // ---------- Market ----------
 function sellPrice(k) { const kp = kingdomPath(); return CONFIG.resources[k].sell * (1 + 0.10 * perkRank('haggler')) * (kp && kp.sellMult ? kp.sellMult : 1); }
+// Beta 0.4.7: goods a cost is short of can be bought at the Market on the spot, so gear never waits on a good your chains pass straight along
+function costGap(c) { const g = {}; let gold = 0, ok = true; for (const k in (c || {})) { if (k === 'gold') continue; const need = c[k] - (S.res[k] || 0); if (need > 0) { if (!canBuyRes(k) || buyRoom(k) < Math.ceil(need)) ok = false; g[k] = Math.ceil(need); gold += Math.ceil(need) * buyPrice(k); } } return { goods: g, gold, ok: ok && (S.res.gold || 0) >= gold + ((c && c.gold) || 0) }; }
+function canCover(c) { return !!c && (canAfford(c) || costGap(c).ok); }
+function coverCost(c) { if (!c) return false; if (canAfford(c)) return true; const gap = costGap(c); if (!gap.ok) return false; for (const k in gap.goods) buyRes(k, gap.goods[k]); return canAfford(c); }
 function buyPrice(k) { return (CONFIG.resources[k] && CONFIG.resources[k].buy) || 0; }
 function canBuyRes(k) { return buyPrice(k) > 0 && (S.lifetime[k] || 0) > 0; }
 function buyRoom(k) { const c = resCap(k); return Math.max(0, Math.floor((c === Infinity ? 1e9 : c) - (S.res[k] || 0))); }
@@ -1783,7 +1788,7 @@ function boot() {
 window.Game = {
   stepLv, stepName, milestoneCount, nextMilestone, levelCap, cityComplete, minBuildingLv, tierThreat,
   hallDef, hallLv, hallAvailable, hallCost, canHall, upgradeHall,
-  PARTS, PART_NAME, partName, partLv, effLv, depthOf, depthMaxed, digRoom, LVMAX, pileCap, beltRate, bottleneckPart, limitPart, partCap, tripTime, tripLoad, pipe, depthCount, depthYield, depthOutput, deepOutput, unitName, digOpen, digCost, canDig, dig, newAgeTown, slowestInLine, housesOn, houses, houseCap, people, townsfolk, houseRoom, birthRoom, houseCost, birthsPerMin, headTaxPerHour, settlersPerHour, settlerWave, turnedRecent, setHousesOn, barracksAvailable, nextSoldierCost, trainBlocker, recArmy, soldierCostMult, garrisonNeed,
+  costGap, canCover, coverCost, PARTS, PART_NAME, partName, partLv, effLv, depthOf, depthMaxed, digRoom, LVMAX, pileCap, beltRate, bottleneckPart, limitPart, partCap, tripTime, tripLoad, pipe, depthCount, depthYield, depthOutput, deepOutput, unitName, digOpen, digCost, canDig, dig, newAgeTown, slowestInLine, housesOn, houses, houseCap, people, townsfolk, houseRoom, birthRoom, houseCost, birthsPerMin, headTaxPerHour, settlersPerHour, settlerWave, turnedRecent, setHousesOn, barracksAvailable, nextSoldierCost, trainBlocker, recArmy, soldierCostMult, garrisonNeed,
   barracksLv, barracksBuilt, barracksCost, canUpBarracks, upgradeBarracks, trainPerMin, housing, foodPerMin, suppliesPerMin, upkeepPerMin, armyLimit, armyLimitBy, soldiers, garrisoned, marching, armyMult, armyHpMult,
   landId, landN, landDef, landState, landDone, landPct, landsHeld, landOpen, landsTouched, garrisonNeed, garrisonFill, taxFull, taxPerHour, spoilPerHour, cofferCap, cofferTotal, taxTotalPerHour, collectTaxes, setGarrison,
   rulerCrowns, ageNo, ageName, gEra, crowns, pathMaxed, crownHeir, titheShare, eraOf, isEraRuler, landTrait, wonderFor, wonderState, wonderUnlocked, wonderBuilt, wonderCost, wonderProgress, contributeWonder, wonderMult, nextWonderEra, gatherOn, bgFactor, pathCost, rowOpen, rowProgress, pathRow, combatLevelBonus, endlessDepth, farming, farmLand, starsSpare, starDemand, vaultCount, canPassCrown, landReqText, landQuestOk, passKeep, infoOn, questStat, crownsIfPass, passCrown, lapActive,

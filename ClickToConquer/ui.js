@@ -464,9 +464,9 @@ const UI = (() => {
   function gearAdvice(s) {
     const S = Game.S, it = S.hero.gear[s], nm = s === 'weapon' ? 'Sword' : CONFIG.slots[s].name;
     if (Game.crafting() && Game.crafting().slot === s) return { txt: 'Forging now…', ready: false };
-    if (!it) return Game.canTierUp(s) ? { txt: `Forge ${Game.tierName(s, 0)} ${nm}`, ready: Game.canAfford(Game.gearCraftCost(s)) } : { txt: `Research a ${nm.toLowerCase()} in Tech`, ready: false, locked: true };
+    if (!it) return Game.canTierUp(s) ? { txt: `Forge ${Game.tierName(s, 0)} ${nm}`, ready: Game.canCover(Game.gearCraftCost(s)) } : { txt: `Research a ${nm.toLowerCase()} in Tech`, ready: false, locked: true };
     if (it.level < CONFIG.tierUpAt) return { txt: `Upgrade ${nm} (Lv ${it.level} → ${CONFIG.tierUpAt})`, ready: Game.canAfford(Game.gearUpgradeCost(s)) };
-    if (Game.canTierUp(s)) return { txt: `Forge ${Game.tierName(s, it.tier + 1)} ${nm}`, ready: Game.canAfford(Game.gearCraftCost(s)) };
+    if (Game.canTierUp(s)) return { txt: `Forge ${Game.tierName(s, it.tier + 1)} ${nm}`, ready: Game.canCover(Game.gearCraftCost(s)) };
     return { txt: `Maxed for now — research the next tier`, ready: false, locked: true };
   }
   function renderStats() {
@@ -818,7 +818,7 @@ const UI = (() => {
   const CV = { lid: null, raf: 0 };
   const RAIN = ['#e8433c', '#ef6a3a', '#f2923a', '#f2c63a', '#d2dc48', '#86d44a', '#44c98c', '#38c4d0', '#4a92ea', '#8c6aea'];
   // Beta 0.4.7: upgrade buttons read "Upgrade" and the gold it costs; a ×1 / Max toggle sits at the top of the column
-  const storeFull = k => Game.overflowRate(k).u > 1e-6 || (Game.S.res[k] || 0) >= Game.resCap(k) - 1e-6; // nowhere left to go: sold where it waits
+  const storeFull = k => (Game.S.res[k] || 0) >= Game.resCap(k) * 0.999; // nowhere left to go: sold where it waits (read from the Storehouse now, not a running average)
   const upMode = () => Game.S.settings.upBuy === 'max' ? 'max' : 1;
   const buyToggle = () => `<div class="vseg upseg" role="group" aria-label="Upgrade amount"><button data-upbuy="1" aria-pressed="${upMode() === 1}">×1</button><button data-upbuy="max" aria-pressed="${upMode() === 'max'}">Max</button></div>`;
   function wireBuyToggle(root) { root.querySelectorAll('[data-upbuy]').forEach(b => b.addEventListener('click', () => { Game.S.settings.upBuy = b.dataset.upbuy === 'max' ? 'max' : '1'; root.querySelectorAll('[data-upbuy]').forEach(x => x.setAttribute('aria-pressed', String(x === b))); render(true); })); }
@@ -866,14 +866,17 @@ const UI = (() => {
     const tally = (key, n, x, y, color, u) => { const a = agg[key] || (agg[key] = { n: 0 }); a.n += n; a.x = x; a.y = y; a.color = color; a.unit = u; };
     function toLane(b, k, o, path) { o.wp = path; o.onArrive = () => { if (b.lanes[k][0]) o.dead = true; else b.lanes[k][0] = o; }; }
     const hotK = b => { const p = Game.bottleneckPart(b.id); return p === 'W' ? 0 : p === 'C' ? 1 : p === 'H' ? 2 : -1; };
+    let fitT = 0;
     function tick(dt) {
       clock += dt;
+      { const grown = B.find(b => Game.depthOf(b.id) !== b.D); if (grown) { const D = Game.depthOf(grown.id); layout(); for (let i = 0; i < 60 * 20; i++) tick(1 / 60); pops = []; agg = {}; pops.push({ x: BW / 2, y: grown.rows[0].y - 4, text: `${Game.unitName(grown.id)} ${D} opened`, color: '#7fd28f', t: 0 }); } } /* Beta 0.4.7: a new depth rebuilds the belt, so no cart is left stranded */
+      if ((fitT += dt) >= 0.25) { fitT = 0; const CF = Game.chainFlow(lid); /* the waiting line follows the numbers at once: once the next building can take everything, the backlog clears */
+        B.forEach((b, bi) => { if (!b.tr || !b.queue.length) return; const up = CF.find(c => c.id === B[bi - 1].id); if (up && up.out > 1e-9 && up.spare / up.out <= 0.03) { if (b.queue.length > 1) { if (!b.debt) b.debt = unit(b) * b.st.ratio; b.queue.splice(1).forEach(q => { q.o.dead = true; b.debt = Math.max(1e-9, b.debt - q.left); }); restack(b); } } }); } /* their goods go straight in */
       for (const o of ores) { let left = SPEED * dt;
         while (left > 0 && o.wp.length) { const t = o.wp[0], dx = t.x - o.pos.x, dy = t.y - o.pos.y, d = Math.hypot(dx, dy);
           if (d <= left) { o.pos = { x: t.x, y: t.y }; o.wp.shift(); left -= d; } else { o.pos = { x: o.pos.x + dx / d * left, y: o.pos.y + dy / d * left }; left = 0; } }
         if (!o.wp.length && o.onArrive) { const f = o.onArrive; o.onArrive = null; f(); } }
       B.forEach((b, bi) => {
-        if (Game.depthOf(b.id) !== b.D) { b.D = Game.depthOf(b.id); b.lanes = [0, 1, 2].map(() => Array(LANE).fill(null)); b.slots = [0, 1, 2].map(() => Array(10).fill(null)); pops.push({ x: BW / 2, y: b.rows[0].y - 4, text: `${Game.unitName(b.id)} ${b.D} opened`, color: '#7fd28f', t: 0 }); }
         if (!b.feed) { const S = b.slots[0]; for (let j = 0; j < lvOf(b, 0); j++) if (!S[j]) { const p = slotC(b, 0, j), o = { pos: { ...p }, wp: [], r: 1, c: RAIN[0] }; ores.push(o); S[j] = { o, p: 0 }; } }
         else if (b.tr && !b.lanes[0][0]) { /* the next cart in takes what it needs from the carts waiting on the transfer belt */
           if (!b.debt) b.debt = unit(b) * b.st.ratio;
@@ -1024,14 +1027,13 @@ const UI = (() => {
         setHtml(db.querySelector('[data-f=dc]'), room ? costHtml(Game.digCost(id)).replace(/<span class="cost-name">[^<]*<\/span>/g, '') : ''); }
       const cfN = Game.chainFlow(st.line).find(c => c.id === id), nxN = Game.nextStep(id), spill = cfN && nxN && Game.stepBuilt(nxN.id) && cfN.out > 1e-9 && cfN.spare / cfN.out > 0.03;
       setHtml(box.querySelector('[data-f=note]'), spill ? `<b class="warn">The ${nxN.name} takes only ${fo(cfN.out - cfN.spare)} of your ${fo(cfN.out)} ${gd}/s.</b> The rest goes to the Storehouse — upgrade the ${nxN.name} to use it. <button class="belt-go" data-go-next="${nxN.id}">Go to the ${nxN.name} ›</button>` : hot ? `<b class="warn">${Game.partName(id, hot)} can't keep up</b> — goods are sold cheap at its belt. Upgrade it.` : maxed ? '' : `Each level adds a slot. With all three at Lv 10, ${Game.unitName(id)} ${D + 1} opens and starts where this one ends.`);
-      { const gn = box.querySelector('[data-go-next]'); if (gn) gn.onclick = () => openBld(gn.dataset.goNext); } }
+      }
     { // the army's bottleneck, told where it can be fixed: in the chain that is short
       const ab = box.querySelector('[data-f=army]'), bl = armyLimit(), A = CONFIG.kingdom.army.lines, W = bl && Object.values(A).find(x => x.good === bl);
       const mine = W && W.line === st.line, slow = mine ? Game.slowestInLine(st.line) : null, lname = W ? { forest: 'Wood', mine: 'Arms', farm: 'Food' }[W.line] : '';
       ab.classList.toggle('hidden', !mine);
       if (mine) { const weak = Game.limitPart(id), me = slow === id || !slow;
         setHtml(ab, `<b>⚔ The army waits on ${R[bl].name.toLowerCase()}</b> — soldiers train as fast as it arrives (+${Game.soldiersPerMin().rate.toFixed(1)}/min). ${me ? `This is the slowest building in the ${lname} chain — upgrade <b>${Game.partName(id, weak)}</b> (its weakest part).` : `The ${lname} chain's slowest building is the <b>${Game.stepDef(slow).name}</b>.`}${me ? '' : ` <button class="belt-go" data-go-slow="${slow}">Go to the ${Game.stepDef(slow).name} ›</button>`}`);
-        const go = ab.querySelector('[data-go-slow]'); if (go) go.onclick = () => openBld(go.dataset.goSlow);
         box.querySelectorAll('.belt-up').forEach(b => b.classList.toggle('army', me && b.dataset.part === weak && !b.classList.contains('alarm'))); }
       else box.querySelectorAll('.belt-up').forEach(b => b.classList.remove('army')); }
     { const o = Game.overflowRate(st.make), oe = box.querySelector('[data-f=oflow]'), su = o.u, sg = o.g; oe.classList.toggle('hidden', !(su > 1e-6));
@@ -1672,7 +1674,7 @@ const UI = (() => {
         setText(row.querySelector('[data-f=stats]'), Object.entries(cur).map(([k, v]) => `${STAT_LABEL[k]} ${fs(k, v)}`).join(' · '));
         setText(row.querySelector('[data-f=next]'), it.level < CONFIG.tierUpAt ? 'Next: ' + Object.entries(nxt).map(([k, v]) => fs(k, v)).join(' · ') : `Lv${it.level} — forge the next tier to go higher`);
         up.classList.remove('hidden');
-        if (!forgeState(up, 'gearUp', slot, 'Upgrade')) { const uc = Game.gearUpgradeCost(slot); up.classList.toggle('hidden', !uc); setHtml(up.querySelector('[data-f=upcost]'), costHtml(uc)); up.disabled = !uc || !Game.canAfford(uc) || !!Game.crafting(); if (!up.disabled) anyGear = true; }
+        if (!forgeState(up, 'gearUp', slot, 'Upgrade')) { const uc = Game.gearUpgradeCost(slot); up.classList.toggle('hidden', !uc); setHtml(up.querySelector('[data-f=upcost]'), costHtml(uc) + gapHtml(uc)); up.disabled = !uc || !Game.canCover(uc) || !!Game.crafting(); if (!up.disabled) anyGear = true; }
         { const mx = row.querySelector('[data-f=max]'), plan = Game.maxUpgradePlan('gear', slot); mx.classList.toggle('hidden', !it || !plan || plan.levels < 2); setText(mx.querySelector('[data-f=maxn]'), plan ? `+${plan.levels} → Lv${it.level + plan.levels}` : '—'); mx.disabled = !plan || plan.levels < 2 || !!Game.crafting(); }
       }
       const fc = Game.gearCraftCost(slot), can = Game.canTierUp(slot);
@@ -1683,8 +1685,8 @@ const UI = (() => {
         const nt0 = it ? it.tier + 1 : 0;
         setText(row.querySelector('[data-f=forgelbl]'), it ? `Forge ${Game.tierName(slot, nt0)}` : `Forge ${Game.tierName(slot, 0)}`);
         const nt = it ? it.tier + 1 : 0, techOk = Game.gearTierUnlocked(nt, slot);
-        setHtml(forge.querySelector('[data-f=forgecost]'), can ? costHtml(fc) : techOk ? `<span class="dim">needs Lv${CONFIG.tierUpAt}</span>` : `<span class="dim">needs tech</span>`);
-        forge.disabled = !can || !Game.canAfford(fc) || !!Game.crafting(); if (!forge.disabled) anyGear = true;
+        setHtml(forge.querySelector('[data-f=forgecost]'), can ? costHtml(fc) + gapHtml(fc) : techOk ? `<span class="dim">needs Lv${CONFIG.tierUpAt}</span>` : `<span class="dim">needs tech</span>`);
+        forge.disabled = !can || !Game.canCover(fc) || !!Game.crafting(); if (!forge.disabled) anyGear = true;
       }
     }
 
@@ -1876,6 +1878,14 @@ const UI = (() => {
   // "visible" = the full card's bars are actually inside the viewport, not just on the current tab
 
   // ===== Beta 0.4.0: The Front — the siege between forts, fed by soldiers =====
+  const GO_SEL = '[data-go-bld],[data-go-slow],[data-go-next]', goKey = g => g.dataset.goBld ? 'b:' + g.dataset.goBld : g.dataset.goSlow ? 's:' + g.dataset.goSlow : 'n:' + g.dataset.goNext;
+  let goDown = null; // Beta 0.4.7: live text around these buttons redraws them several times a second — match press and release by what they point at, not by the element
+  function goAct(k) { const i = k.indexOf(':'), t = k.slice(0, i), id = k.slice(i + 1); if (t === 'b') goToBld(id); else openBld(id); }
+  document.addEventListener('pointerdown', e => { const g = e.target.closest && e.target.closest(GO_SEL); goDown = g ? { k: goKey(g), x: e.clientX, y: e.clientY } : null; }, true);
+  document.addEventListener('pointerup', e => { const d = goDown; goDown = null; if (!d) return; const g = e.target.closest && e.target.closest(GO_SEL); if (!g || goKey(g) !== d.k || Math.hypot(e.clientX - d.x, e.clientY - d.y) > 14) return; e.preventDefault(); goAct(d.k); }, true);
+  document.addEventListener('click', e => { if (e.detail !== 0) return; const g = e.target.closest && e.target.closest(GO_SEL); if (g) goAct(goKey(g)); }, true); // keyboard
+  function gapHtml(c) { if (!c || Game.canAfford(c)) return ''; const g = Game.costGap(c), ks = Object.keys(g.goods); if (!ks.length) return ''; // Beta 0.4.7: short goods are bought at the Market when you press
+    return `<br><span class="gap-note ${g.ok ? '' : 'bad'}">${g.ok ? 'buys' : 'short'} ${ks.map(k => `${g.goods[k]} ${R[k].name.toLowerCase()}`).join(', ')}${g.ok ? ` · ${Game.fmt(g.gold)} g` : ''}</span>`; }
   function goToBld(id) { const t = document.querySelector('[data-tab=kingdom]'); if (t && !t.disabled) t.click(); const k = document.querySelector('[data-ksub=prod]'); if (k && !k.disabled) k.click(); const r = document.querySelector('[data-rtab=kingdom]'); if (r && desktop) r.click(); openBld(id); }
   function fmtEta(sec) { const m = Math.max(1, Math.round(sec / 60)); return m < 60 ? `${m} min` : m < 48 * 60 ? `${Math.floor(m / 60)} h${m % 60 ? ' ' + (m % 60) + ' min' : ''}` : `${Math.round(m / 60)} h`; }
   // Beta 0.4.4: the invasion forecast — how long this land takes at today's pace, and what one change would make it faster
@@ -1910,7 +1920,6 @@ const UI = (() => {
     const fcH = held ? '' : forecastHtml(LN, G);
     setHtml(box, `<div class="row-between small"><span>${head}</span><b>${Math.floor(100 * pct)}%</b></div><div class="fr-bar"><i style="width:${(100 * pct).toFixed(1)}%"></i></div>${chips}${note ? `<div class="fr-note">${note}</div>` : ''}${fcH}${last}
       <div class="fr-help dim">Your hero leads: each soldier is worth ×${w.toFixed(w < 10 ? 2 : 1)} here — a stronger hero makes every soldier count for more${w > (Game.LC_siege().worthKnee || 1e9) ? ' (past ×' + Game.LC_siege().worthKnee + ' it grows more slowly, but it never stops)' : ''}.</div>`);
-    box.onclick = e => { const g = e.target.closest('[data-go-bld]'); if (g) goToBld(g.dataset.goBld); };
   }
   function heroScreenVisible() {
     const c = $('fight-card').offsetParent ? $('fight-card') : (!Game.heroFighting() && $('harvest-card').offsetParent) ? $('harvest-card') : null; if (!c) return false; // 0.10.12: on a gathering screen the fight shows in the dock
