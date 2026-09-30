@@ -4,7 +4,7 @@
 
 const SAVE_KEY = 'ctc_beta_save_v1'; // Beta 0.1.0: a hard restart — Alpha saves are not loaded
 const ALPHA_KEYS = ['afk_proto_save_v12', 'afk_proto_save_v11'];
-const SCHEMA = 3; // 3: Beta 0.3.4 — back from the 0.3.x battle campaign (archive/battles-0.3.3). 2 was the 0.3.x save. // Beta 0.1.15: save schema. Every save under SAVE_KEY was born in the Beta, so the Alpha migrations below never apply to it.
+const SCHEMA = 4; // 4: Beta 0.5.0 — buildings work one depth at a time, levels 1–10. 3: Beta 0.3.4 — back from the 0.3.x battle campaign (archive/battles-0.3.3). 2 was the 0.3.x save. // Beta 0.1.15: save schema. Every save under SAVE_KEY was born in the Beta, so the Alpha migrations below never apply to it.
 function markAlphaMigrated(st) { const L = st.legacy = st.legacy || {}, K = st.kingdom = st.kingdom || {}; L.v111 = L.v112 = L.v120 = L.v121 = true; K.cr104 = true; K.v09 = true; st.schema = SCHEMA; }
 let hadAlpha = false;
 
@@ -563,37 +563,56 @@ function stepState(id) { const K = S.kingdom; K.steps = K.steps || {}; if (!K.st
 // 0.12: every building has three parts — Work makes the goods, Cart loads them, Haul brings them home. Each has its own level.
 const PARTS = ['W', 'C', 'H'], PART_NAME = { W: 'Work', C: 'Cart', H: 'Haul' };
 function partName(id, p) { const d = stepDef(id), n = d && d.parts; return n ? n[PARTS.indexOf(p)] : PART_NAME[p]; } // each building names its own steps
-function partLv(id, p, d = 1) { const s = stepState(id); if (d <= 1) return s['lv' + p] || 1; return (((s.deep || [])[d - 2]) || {})[p] || 1; }
+// Beta 0.5.0: a building works one depth at a time. Each part (Dig/Extract/Haul…) has levels 1–10 at that depth; with all three at 10 the next depth opens,
+// the old one folds away, and the new depth starts where it ended (Lv 1 of depth D+1 = Lv 10 of depth D: capacity = base × level × 10^(D−1)).
+const LVMAX = 10;
+function depthOf(id) { return stepState(id).D || 1; }
+function partLv(id, p) { return Math.min(LVMAX, stepState(id)['lv' + p] || 1); }
+function effLv(id, p) { return LVMAX * (depthOf(id) - 1) + partLv(id, p); } // the old "level" scale: depth and level in one number
+function depthMaxed(id) { return PARTS.every(p => partLv(id, p) >= LVMAX); }
+function setEffLevels(st, E) { const mn = Math.max(1, Math.min(...E)), D = Math.floor((mn - 1) / LVMAX) + 1; st.D = D; PARTS.forEach((p, i) => { st['lv' + p] = Math.max(1, Math.min(LVMAX, Math.round(E[i]) - LVMAX * (D - 1))); }); st.lv = LVMAX * (D - 1) + Math.min(st.lvW, st.lvC, st.lvH); st.deep = []; st.pipes = []; }
 // 0.12.1: every building grows levels (groves, fields, furnaces… the Mine's depths). Level 1 keeps the animated cycle; deeper levels produce steadily.
 const DC = () => KC().depths;
-function depthCount(id) { return 1 + ((stepState(id).deep || []).length); }
+function depthCount(id) { return depthOf(id); }
 function depthYield(d) { return Math.pow(DC().yield, d - 1); }
 function unitName(id, plural) { const u = (stepDef(id) || {}).unit || ['Level', 'levels']; return plural ? u[1] : u[0]; }
 // Beta 0.1.3: Work, Cart and Haul run side by side like a conveyor — each has a capacity per second, and the slowest one sets the output (Idle Miner rules).
 function baseOut(id) { const d = stepDef(id); return d.batch / (d.batch / d.base + KC().loadBase + KC().haulBase); } // at equal levels this matches the old cycle
-function partCap(id, p, d = 1, lvAt) { const L = lvAt || partLv(id, p, d); /* lvAt: the cap this part would have at another level */ return baseOut(id) * trackGrow(L) * Math.pow(2, milestoneCount(L)) * depthYield(d) * stepMods(id).rate; }
-function depthOutput(id, d) { return Math.min(...PARTS.map(p => partCap(id, p, d))); }
+function partCap(id, p, d, lvAt) { const L = lvAt || partLv(id, p); /* lvAt: the cap this part would have at another level */ return baseOut(id) * L * depthYield(depthOf(id)) * stepMods(id).rate; }
+function depthOutput(id) { return Math.min(...PARTS.map(p => partCap(id, p))); }
 // Beta 0.1.5: goods move through the parts one after another. Each part makes trips: a trip takes tripTime and carries up to tripLoad.
 // Work → pile → Cart → pile → Haul → Storehouse. A slow part leaves the pile before it growing: that's the bottleneck you can see.
 const TRIP = { W: 6, C: 5, H: 8 };
-function tripTime(id, p, d = 1) { return TRIP[p] / (1 + 0.02 * (partLv(id, p, d) - 1)); }
-function tripLoad(id, p, d = 1) { return partCap(id, p, d) * tripTime(id, p, d); }
+function tripTime(id, p) { return TRIP[p]; }
+function tripLoad(id, p) { return partCap(id, p) * tripTime(id, p); }
 function pipe(id, d = 1) { const s = stepState(id); s.pipes = s.pipes || []; while (s.pipes.length < d) s.pipes.push({ a: 0, b: 0, w: 0, c: 0, h: 0, tw: 0, tc: 0, th: 0 }); return s.pipes[d - 1]; }
 function runStage(P, carry, t, T, left, take, done) { // one trip at a time: pick up (take), travel T seconds, then done(load)
   let guard = 0; while (left > 1e-9 && guard++ < 50) { if (P[carry] <= 1e-9) { const x = take(); if (x <= 1e-9) { P[t] = 0; return; } P[carry] = x; P[t] = 0; }
     const need = T - P[t]; if (left >= need) { left -= need; const x = P[carry]; P[carry] = 0; P[t] = 0; done(x); } else { P[t] += left; left = 0; } } }
 function tickPipe(st, s, d, nx, dt) {
   const id = st.id, P = pipe(id, d), Lw = tripLoad(id, 'W', d), Lc = tripLoad(id, 'C', d), Lh = tripLoad(id, 'H', d);
-  runStage(P, 'w', 'tw', tripTime(id, 'W', d), dt, () => { if (P.a > Lw * 40) return 0; let x = Lw; if (st.from) { x = Math.min(x, s.inBuf / st.ratio); s.inBuf -= x * st.ratio; } return x; }, x => { P.a += x; });
-  runStage(P, 'c', 'tc', tripTime(id, 'C', d), dt, () => { const x = Math.min(P.a, Lc); P.a -= x; return x; }, x => { P.b += x; });
-  runStage(P, 'h', 'th', tripTime(id, 'H', d), dt, () => { const x = Math.min(P.b, Lh); P.b -= x; return x; }, x => routeOut(st, nx, x));
+  runStage(P, 'w', 'tw', tripTime(id, 'W', d), dt, () => { let x = Lw; if (st.from) { x = Math.min(x, s.inBuf / st.ratio); s.inBuf -= x * st.ratio; } return x; }, x => { P.a += x; const cap = pileCap(id, 'C'); if (P.a > cap) { beltSell(st, 'C', P.a - cap); P.a = cap; } });
+  runStage(P, 'c', 'tc', tripTime(id, 'C', d), dt, () => { const x = Math.min(P.a, Lc); P.a -= x; return x; }, x => { P.b += x; const cap = pileCap(id, 'H'); if (P.b > cap) { beltSell(st, 'H', P.b - cap); P.b = cap; } });
+  runStage(P, 'h', 'th', tripTime(id, 'H', d), dt, () => { const x = Math.min(P.b, Lh); P.b -= x; return x; }, x => { beltOut(st, x); routeOut(st, nx, x); });
 }
-function deepOutput(id) { let o = 0; for (let d = 2; d <= depthCount(id); d++) o += depthOutput(id, d); return o; }
-function digOpen() { return phase() === 3; }
-function digCost(id) { return { gold: Math.round(DC().digBase * Math.pow(DC().digGrowth, depthCount(id) - 1) * ageMult('gold')) }; }
-function canDig(id) { return digOpen() && stepBuilt(id) && canAfford(digCost(id)); }
-function dig(id) { if (!canDig(id)) return false; pay(digCost(id)); const s = stepState(id); s.deep = s.deep || []; s.deep.push({ W: 1, C: 1, H: 1 }); const d = depthCount(id); S.stats.digs = (S.stats.digs || 0) + 1;
-  log(`${stepDef(id).name}: ${unitName(id)} ${d} is ready — it can grow ×${fmt(depthYield(d))} bigger than the first.`); pushEvent({ who: 'dig', id, d, name: stepDef(id).name, unit: unitName(id) }); return d; }
+function deepOutput() { return 0; }
+// Beta 0.5.0: the belt between two parts holds a few seconds of the next part's work; what arrives at a full belt is sold on the spot (the bottleneck alarm)
+const BELT_S = 4;
+function pileCap(id, p) { return partCap(id, p) * BELT_S + tripLoad(id, p); }
+const BELT = { acc: {}, rate: {}, t: 0 };
+function beltSell(st, p, n) { if (!(n > 0)) return; const R_ = CONFIG.resources[st.make], g = R_ && R_.sell ? n * R_.sell * KC().autoSell : 0; if (g > 0) { add('gold', g); S.kingdom.autoSold = (S.kingdom.autoSold || 0) + g; } const a = (BELT.acc[st.id] = BELT.acc[st.id] || {}); const b = a[p] = a[p] || { u: 0, g: 0 }; b.u += n; b.g += g; S.stats.beltSold = (S.stats.beltSold || 0) + g; }
+function beltOut(st, n) { const a = (BELT.acc[st.id] = BELT.acc[st.id] || {}); a.out = (a.out || 0) + n; }
+function beltTick(dt) { BELT.t += dt; if (BELT.t < 2) return; const r = {}, old = BELT.rate, k = Math.min(1, BELT.t / 12); // output and belt sales: 12-second running averages (trips arrive in bursts)
+  for (const st of allSteps()) { const id = st.id, a = BELT.acc[id] || {}, o = old[id] || {}, inst = (a.out || 0) / BELT.t; r[id] = { out: o.out === undefined ? inst : o.out + (inst - o.out) * k }; for (const p of ['C', 'H']) { const iu = a[p] ? a[p].u / BELT.t : 0, ig = a[p] ? a[p].g / BELT.t : 0, op = o[p] || { u: iu, g: ig }, u = op.u + (iu - op.u) * k, gg = op.g + (ig - op.g) * k; if (u > 1e-9) r[id][p] = { u, g: gg }; } }
+  BELT.rate = r; BELT.acc = {}; BELT.t = 0; }
+function beltRate(id) { return BELT.rate[id] || {}; } // {out, C:{u,g}, H:{u,g}} per second over the last few seconds
+function bottleneckPart(id) { const r = beltRate(id), min = 0.02 * stepOutput(id); const h = r.H && r.H.u > min ? 'H' : null, c = r.C && r.C.u > min ? 'C' : null; return h || c; } // the part whose belt is overflowing (goods being sold in front of it)
+function digOpen() { return true; }
+function digCost(id) { return { gold: Math.round(stepUpCost(id, 'W', 1, depthOf(id) + 1).gold * DC().digMult) }; }
+function digRoom(id) { return LVMAX * depthOf(id) + 1 <= levelCap(); } // the settlement allows the next depth
+function canDig(id) { return stepBuilt(id) && depthMaxed(id) && digRoom(id) && canAfford(digCost(id)); }
+function dig(id) { if (!canDig(id)) return false; pay(digCost(id)); const s = stepState(id); s.D = depthOf(id) + 1; s.lvW = s.lvC = s.lvH = 1; s.lv = stepLv(id); s.pipes = []; const d = s.D; S.stats.digs = (S.stats.digs || 0) + 1;
+  log(`${stepDef(id).name}: ${unitName(id)} ${d} is open — it starts where ${unitName(id)} ${d - 1} finished.`); pushEvent({ who: 'dig', id, d, name: stepDef(id).name, unit: unitName(id) }); return d; }
 // Beta 0.1.24: parts within 0.5% of the slowest are tied — all of them hold the level back, and raising just one gains nothing
 function limitParts(id, d = 1) { const c = PARTS.map(p => partCap(id, p, d)), mn = Math.min(...c); return PARTS.filter((p, i) => c[i] <= mn * 1.005); }
 function limitPart(id, d = 1) { const t = limitParts(id, d); return t[t.length - 1]; } // with a tie, the furthest one along (goods wait in front of it)
@@ -610,7 +629,7 @@ function stepMods(id) {
   const lord = 1 + KC().lordship * (S.hero.level - 1), kp = kingdomPath(), km = kp ? (kp.jobSpeed || 1) * (((kp.outputMult || {})[lineOf(id)]) || 1) : 1; // 0.10.5: the kingdom's path really changes its buildings
   return { rate: lord * km * (1 + 0.15 * perkRank('charter')) * (1 + 0.1 * perkRank('treasury')) * wonderMult('supply'), haul: 1, cart: 1, working: stepBuilt(id) }; // 0.12: Master Builders, Dynastic Treasury and the Great Granary raise production
 }
-function stepLv(id) { const s = stepState(id); return Math.min(s.lvW, s.lvC, s.lvH) || 1; } // 0.12: a building's level is its lowest part
+function stepLv(id) { return LVMAX * (depthOf(id) - 1) + Math.min(...PARTS.map(p => partLv(id, p))); } // Beta 0.5.0: depth and lowest part in one number (Depth 2 Lv 3 = 13)
 function milestoneCount(lv) { return KC().milestones.filter(m => lv >= m).length; }
 function nextMilestone(lv) { return KC().milestones.find(m => m > lv) || null; }
 function levelCap() { return tierDef().lvCap || 1e9; }
@@ -632,27 +651,27 @@ function stockDemand(k, noOrders) {
   return { n, why };
 }
 function stockTarget(k) { const m = stockMode(k), cap = resCap(k); if (m === 'auto') { const d = stockDemand(k); return { target: Math.min(cap, d.n), why: d.why, mode: m, share: 0.5 }; } return { target: Math.floor(cap * m), why: [], mode: m, share: 1 }; }
-function nextBufCap(nx) { let l = 0; for (let d = 1; d <= depthCount(nx.id); d++) l += tripLoad(nx.id, 'W', d); return nx.ratio * (l * 3 + stepOutput(nx.id) * 20 + 10); }
+function nextBufCap(nx) { return nx.ratio * (tripLoad(nx.id, 'W') * 3 + stepOutput(nx.id) * 20 + 10); }
 function stepBatch(id, d = 1) { return stepDef(id).batch * Math.pow(2, milestoneCount(partLv(id, 'W', d))) * depthYield(d); }
 function stepRate(id, dd = 1) { const d = stepDef(id), w = partLv(id, 'W', dd); return d.base * Math.pow(2, milestoneCount(w)) * trackGrow(w) * stepMods(id).rate * depthYield(dd); }
 function stepPhases(id, d = 1) { return PARTS.map(p => 1 / Math.max(1e-12, partCap(id, p, d))); } // seconds per unit, per part
 function stepCycle(id, d = 1) { return 1 / Math.max(1e-12, depthOutput(id, d)); }
-function stepOutput(id) { if (!stepMods(id).working) return 0; return depthOutput(id, 1) + deepOutput(id); }
+function stepOutput(id) { if (!stepMods(id).working) return 0; return depthOutput(id); }
 function stepLimit(id) { // what holds the step back — shown only when an Overseer is present
   const s = stepState(id), d = stepDef(id);
   if (!stepMods(id).working) return 'idle';
   if (d.from && s.phase === 0 && s.inBuf < d.ratio * 0.5) return 'starved';
   const p = stepPhases(id), mx = Math.max(...p); return ['rate', 'cart', 'haul'][p.indexOf(mx)];
 }
-function stepUpCost(id, part, level, d = 1) { const l = level || partLv(id, part || limitPart(id, d), d), kp = kingdomPath(); return { gold: Math.round(KC().costBase * Math.pow(l, KC().costExp) * ((kp && kp.costMult) || 1) * Math.pow(DC().partCost, d - 1)) }; }
-function stepUpPlan(id, part, n, d = 1) { d = Math.max(1, Math.min(d, depthCount(id))); part = PARTS.includes(part) ? part : limitPart(id, d); let g = 0, k = 0; const l = partLv(id, part, d), room = Math.max(0, levelCap() - l), lim = Math.min(room, n === 'max' ? 999 : n); while (k < lim) { const c = stepUpCost(id, part, l + k, d).gold; if ((S.res.gold || 0) < g + c) break; g += c; k++; } return { n: k, cost: { gold: g }, part, d }; }
-function upgradeStep(id, part, n = 1, d = 1) {
-  if (!stepUnlocked(id)) return false; const p = stepUpPlan(id, part, n, d); if (!p.n) return false; part = p.part; d = p.d;
+function stepUpCost(id, part, level, d) { d = d || depthOf(id); const l = level || partLv(id, part || limitPart(id)), kp = kingdomPath(); return { gold: Math.round(KC().costBase * Math.pow(l, KC().costExp) * ((kp && kp.costMult) || 1) * Math.pow(DC().partCost, d - 1)) }; }
+function stepUpPlan(id, part, n) { const d = depthOf(id); part = PARTS.includes(part) ? part : limitPart(id); let g = 0, k = 0; const l = partLv(id, part), room = Math.max(0, Math.min(LVMAX - l, levelCap() - effLv(id, part))), lim = Math.min(room, n === 'max' ? 999 : n); while (k < lim) { const c = stepUpCost(id, part, l + k).gold; if ((S.res.gold || 0) < g + c) break; g += c; k++; } return { n: k, cost: { gold: g }, part, d }; }
+function upgradeStep(id, part, n = 1) {
+  if (!stepUnlocked(id)) return false; const p = stepUpPlan(id, part, n); if (!p.n) return false; part = p.part; const d = p.d;
   const lims = limitParts(id, d), slow = slowestInLine(stepDef(id).line) === id, s = stepState(id), before = partLv(id, part, d);
-  pay(p.cost); if (d <= 1) s['lv' + part] += p.n; else s.deep[d - 2][part] += p.n; s.lv = stepLv(id);
+  pay(p.cost); s['lv' + part] = partLv(id, part) + p.n; s.lv = stepLv(id);
   const St = S.stats; St.partUps = (St.partUps || 0) + p.n; if (lims.includes(part)) { St.limitUps = St.limitUps || {}; St.limitUps[id] = (St.limitUps[id] || 0) + p.n; } if (slow) St.slowUps = (St.slowUps || 0) + p.n;
   if (id === 'forge' || id === 'baker' || id === 'carpenter') St.armsFoodUps = (St.armsFoodUps || 0) + p.n;
-  { const now = partLv(id, part, d); if (milestoneCount(now) > milestoneCount(before)) { log(`${stepDef(id).name}${d > 1 ? ' ' + unitName(id) + ' ' + d : ''}: ${partName(id, part)} reached Lv ${now} — its capacity doubled!`); pushEvent({ who: 'milestone', id, name: stepName(id), lv: now }); } }
+  if (depthMaxed(id)) { log(`${stepDef(id).name}: every part is at Lv 10 — ${digRoom(id) ? `${unitName(id)} ${d + 1} can be opened` : 'the settlement must grow before it can go deeper'}.`); pushEvent({ who: 'milestone', id, name: stepName(id), lv: LVMAX * d }); }
   return p.n;
 }
 // the chain's slowest building: its output in final-good terms is the lowest
@@ -661,7 +680,7 @@ function slowestInLine(lid) {
   steps.forEach((st, i) => { let cap = stepOutput(st.id); for (let j = i + 1; j < steps.length; j++) cap /= steps[j].ratio; if (cap < min - 1e-9) { min = cap; best = st.id; } });
   return best;
 }
-function stepName(id) { const d = stepDef(id), m = milestoneCount(partLv(id, 'W')), names = d.names || []; return m && names[m - 1] ? names[m - 1] : d.name; }
+function stepName(id) { const d = stepDef(id), m = depthOf(id) - 1, names = d.names || []; return m && names[Math.min(m, names.length) - 1] ? names[Math.min(m, names.length) - 1] : d.name; }
 function assignWorker(id, i) { if (!stepUnlocked(id) || !thrall(i)) return false; unassign(i); const s = stepState(id); if (s.workers.length >= stepWorkerSlots(id)) return false; s.workers.push(i); return true; }
 function assignOverseer(id, i) { if (!stepUnlocked(id) || !thrall(i)) return false; unassign(i); const s = stepState(id); if (s.overseer !== null) s.overseer = null; s.overseer = i; return true; }
 function unassign(i) { for (const id in (S.kingdom.steps || {})) { const s = S.kingdom.steps[id]; s.workers = s.workers.filter(x => x !== i); if (s.overseer === i) s.overseer = null; if (s.accountant === i) s.accountant = null; } }
@@ -729,7 +748,7 @@ function routeOut(st, nx, rest) {
 }
 // Live tick: each step fills its cart; the cart delivers to the next step's input, or to the Storehouse.
 function tickKingdom(dt) {
-  if (kingdomNo() < 1) return; overflowTick(dt);
+  if (kingdomNo() < 1) return; overflowTick(dt); beltTick(dt);
   const K = S.kingdom;
   K.offerTimer = (K.offerTimer || KC().offerRefresh) - dt; if (K.offerTimer <= 0) refreshOffers();
   K.ordCheck = (K.ordCheck || 0) - dt; if (K.ordCheck <= 0) { K.ordCheck = 20; const g = orderGoods(); (K.orders || []).forEach((o, i) => { if (Object.keys(o.wants).some(k => !g.includes(k) && (S.res[k] || 0) < o.wants[k])) K.orders.splice(i, 1, makeOrder(i)); }); // an Order for a good you no longer have spare is replaced
@@ -740,7 +759,7 @@ function tickKingdom(dt) {
       if (st.pull) { const g = KC().war.soldierGold, room = Math.max(0, nextBufCap(st) - s.inBuf), take = Math.floor(Math.min(room, S.res[st.from] || 0, (S.res.gold || 0) / g));
         if (take > 0) { S.res[st.from] -= take; S.res.gold -= take * g; s.inBuf += take; } }
       const nx = nextStep(st.id); // every level produces steadily at the pace of its slowest part
-      for (let d = 1; d <= depthCount(st.id); d++) tickPipe(st, s, d, nx, dt);
+      tickPipe(st, s, depthOf(st.id), nx, dt);
       s.t = (s.t || 0) + dt;
     }
   }
@@ -992,8 +1011,8 @@ function questCheckRaw(c) {
   if (c.bossKey) { const ok = !!S.hero.bossesKilled[c.bossKey]; return { done: ok, have: ok ? 1 : 0, need: 1 }; }
   if (c.hallLv) { const n = hallLv(c.hallLv); return { done: n >= c.need, have: n, need: c.need }; }
   if (c.gearUps) { const n = gearUps(c.gearUps); return { done: n >= c.need, have: n, need: c.need }; }
-  if (c.bLvSum) { let n = 0; for (const st of allSteps()) if (stepBuilt(st.id)) { const s = stepState(st.id); n += s.lvW + s.lvC + s.lvH; } return { done: n >= c.need, have: n, need: c.need }; }
-  if (c.partLv) { const [id, pt, dd] = c.partLv.split(':'), d = +dd || 1, n = stepBuilt(id) && depthCount(id) >= d ? partLv(id, pt, d) : 0; return { done: n >= c.need, have: n, need: c.need }; }
+  if (c.bLvSum) { let n = 0; for (const st of allSteps()) if (stepBuilt(st.id)) n += PARTS.reduce((a, p) => a + effLv(st.id, p), 0); return { done: n >= c.need, have: n, need: c.need }; }
+  if (c.partLv) { const [id, pt, dd] = c.partLv.split(':'), d = +dd || 1, D = stepBuilt(id) ? depthOf(id) : 0, n = !D || D < d ? 0 : D > d ? c.need : partLv(id, pt); return { done: n >= c.need, have: Math.min(n, c.need), need: c.need }; } // Beta 0.5.0: a deeper depth counts as done
   if (c.hallSum) { let n = 0; for (const h of KC().halls) n += hallLv(h.id); return { done: n >= c.need, have: n, need: c.need }; }
   if (c.hall) { const n = hallLv(c.hall); return { done: n >= 1, have: Math.min(1, n), need: 1 }; }
   if (c.allLv) { const n = Math.max(0, minBuildingLv()); return { done: n >= c.allLv, have: n, need: c.allLv }; }
@@ -1243,6 +1262,8 @@ function offlineChains(secs, gains) {
     for (let i = 0; i < steps.length; i++) {
       const st = steps[i]; if (!stepMods(st.id).working) break;
       const out = i === 0 ? stepOutput(st.id) * secs : Math.min(stepOutput(st.id) * secs, supply / st.ratio);
+      { const work = i === 0 ? partCap(st.id, 'W') * secs : Math.min(partCap(st.id, 'W') * secs, supply / st.ratio), extra = Math.max(0, work - out); // Beta 0.5.0: what a slow part can't take is sold at its belt, away too
+        if (extra > 0 && CONFIG.resources[st.make] && CONFIG.resources[st.make].sell) gains.gold = (gains.gold || 0) + extra * CONFIG.resources[st.make].sell * KC().autoSell; }
       const nx = steps[i + 1] && stepMods(steps[i + 1].id).working && !steps[i + 1].pull ? steps[i + 1] : null;
       if (!nx) { if (out > 0) gains[st.make] = (gains[st.make] || 0) + out; break; }
       const T = stockTarget(st.make), short = Math.max(0, T.target - (S.res[st.make] || 0) - (gains[st.make] || 0)), keep = Math.min(out * T.share, short);
@@ -1498,7 +1519,7 @@ function crownsIfPass() { return S.kingdom.crownsRun || 0; }
 // 0.12.1: a new Age begins with a fresh town — building levels, parts, houses and people start again; Deep Foundations gives a head start
 function newAgeTown() {
   const K = S.kingdom, f = perkRank('foundations');
-  for (const id in (K.steps || {})) { const st = K.steps[id]; st.lv = st.lvW = st.lvC = st.lvH = 1; st.deep = []; for (let i = 0; i < f; i++) st.deep.push({ W: 1, C: 1, H: 1 }); st.pipes = []; st.inBuf = 0; st.phase = 0; st.t = 0; }
+  for (const id in (K.steps || {})) { const st = K.steps[id]; st.lvW = st.lvC = st.lvH = 1; st.D = 1 + f; st.lv = LVMAX * f + 1; st.deep = []; st.pipes = []; st.inBuf = 0; st.phase = 0; st.t = 0; } // Deep Foundations: each rank starts one depth deeper
   K.houses = 0; K.houseProg = 0; K.houseFree = 0; K.solFree = 0; K.birthAcc = 0; K.settleAcc = 0; if (K.barracks) { K.barracks.lv = 1; K.barracks.train = 0; }
 }
 function crownHeir() { // 0.11.1: after the Emperor falls — the heir begins the next Age
@@ -1519,7 +1540,7 @@ function passCrown(noSave) {
   // The Capital stands: settlement, buildings, halls and Barracks are kept — their levels start over. Lands, taxes, the army and stores reset.
   const K = S.kingdom;
   const keep = passKeep(); // 0.10.4: the Capital keeps half its levels (Blueprints: more)
-  for (const id in (K.steps || {})) { const st = K.steps[id]; for (const pt of ['lvW', 'lvC', 'lvH']) st[pt] = Math.max(1, Math.floor((st[pt] || st.lv) * keep)); st.lv = Math.min(st.lvW, st.lvC, st.lvH); st.pipes = []; st.inBuf = 0; st.phase = 0; st.t = 0; }
+  for (const id in (K.steps || {})) { const st = K.steps[id], D = st.D || 1; setEffLevels(st, PARTS.map(p => Math.max(1, Math.floor((LVMAX * (D - 1) + Math.min(LVMAX, st['lv' + p] || 1)) * keep)))); st.inBuf = 0; st.phase = 0; st.t = 0; }
   for (const id in (K.halls || {})) if (K.halls[id] > 0) K.halls[id] = Math.max(1, Math.floor(K.halls[id] * keep));
   if (K.barracks) { K.barracks.lv = Math.max(1, Math.floor(K.barracks.lv * keep)); K.barracks.train = 0; }
   K.lands = {}; K.crownsRun = 0; K.ageDone = false; K.orders = []; K.deserting = false; K.tierPaid = {};
@@ -1571,6 +1592,13 @@ function load() {
     S = { ...b, ...d, res: { ...b.res, ...d.res }, kingdom: { ...b.kingdom, ...(d.kingdom || {}), steps: { ...((d.kingdom || {}).steps || {}) } }, tech: { ...(d.tech || {}) }, quests: { ...b.quests, ...(d.quests || {}) }, stats: { ...b.stats, ...(d.stats || {}) }, settings: { ...b.settings, ...d.settings },
       hero: { ...b.hero, ...d.hero, attr: { ...b.hero.attr, ...(d.hero || {}).attr }, gear: { ...b.hero.gear, ...(d.hero || {}).gear }, tools: { ...b.hero.tools, ...((d.hero || {}).tools || {}) }, grounds: { ...((d.hero || {}).grounds || {}) }, skillLv: { ...b.hero.skillLv, ...(d.hero || {}).skillLv } },
       legacy: { ...b.legacy, ...(d.legacy || {}), perks: { ...((d.legacy || {}).perks || {}) }, kills: { ...((d.legacy || {}).kills || {}) } } };
+    if ((d.schema || 1) < 4) { // Beta 0.5.0: old part levels (unbounded, milestones ×2, extra depths ×12 running side by side) → one depth with levels 1–10 of the same capacity
+      const oldGrow = L => (1 + 0.12 * (L - 1)) * Math.pow(2, [10, 25, 50, 100, 200, 300, 400, 500].filter(m => L >= m).length);
+      for (const id in ((S.kingdom || {}).steps || {})) { const st = S.kingdom.steps[id]; if (st.D) continue;
+        const x = PARTS.map(p => oldGrow(st['lv' + p] || st.lv || 1) + (st.deep || []).reduce((a, dp, i) => a + oldGrow(dp[p] || 1) * Math.pow(12, i + 1), 0));
+        const D = Math.max(1, Math.floor(Math.log10(Math.max(1, Math.min(...x)))) + 1), E = x.map(v => LVMAX * (D - 1) + Math.max(1, Math.min(LVMAX, Math.round(v / Math.pow(10, D - 1)))));
+        setEffLevels(st, E); st.inBuf = 0; st.phase = 0; st.t = 0; }
+      S.schema = SCHEMA; }
     if (d.schema === 2) { // Beta 0.3.4: undo the 0.3.x battle campaign — long lands (4+) had been halved to 50 battles, their boss keys halved, auto-march switched off
       const h = S.hero, short = LC().shortLands, bk = {};
       for (const k in (h.bossesKilled || {})) { const m = /^land(\d+):(\d+)$/.exec(k); if (!m || +m[1] <= short) bk[k] = h.bossesKilled[k]; else bk['land' + m[1] + ':' + (2 * +m[2])] = true; }
@@ -1696,7 +1724,7 @@ function boot() {
 window.Game = {
   stepLv, stepName, milestoneCount, nextMilestone, levelCap, cityComplete, minBuildingLv, tierThreat,
   hallDef, hallLv, hallAvailable, hallCost, canHall, upgradeHall,
-  PARTS, PART_NAME, partName, partLv, limitPart, partCap, tripTime, tripLoad, pipe, depthCount, depthYield, depthOutput, deepOutput, unitName, digOpen, digCost, canDig, dig, newAgeTown, slowestInLine, housesOn, houses, houseCap, people, townsfolk, houseRoom, birthRoom, houseCost, birthsPerMin, headTaxPerHour, settlersPerHour, settlerWave, turnedRecent, setHousesOn, barracksAvailable, nextSoldierCost, trainBlocker, recArmy, soldierCostMult, garrisonNeed,
+  PARTS, PART_NAME, partName, partLv, effLv, depthOf, depthMaxed, digRoom, LVMAX, pileCap, beltRate, bottleneckPart, limitPart, partCap, tripTime, tripLoad, pipe, depthCount, depthYield, depthOutput, deepOutput, unitName, digOpen, digCost, canDig, dig, newAgeTown, slowestInLine, housesOn, houses, houseCap, people, townsfolk, houseRoom, birthRoom, houseCost, birthsPerMin, headTaxPerHour, settlersPerHour, settlerWave, turnedRecent, setHousesOn, barracksAvailable, nextSoldierCost, trainBlocker, recArmy, soldierCostMult, garrisonNeed,
   barracksLv, barracksBuilt, barracksCost, canUpBarracks, upgradeBarracks, trainPerMin, housing, foodPerMin, suppliesPerMin, upkeepPerMin, armyLimit, armyLimitBy, soldiers, garrisoned, marching, armyMult, armyHpMult,
   landId, landN, landDef, landState, landDone, landPct, landsHeld, landOpen, landsTouched, garrisonNeed, garrisonFill, taxFull, taxPerHour, spoilPerHour, cofferCap, cofferTotal, taxTotalPerHour, collectTaxes, setGarrison,
   rulerCrowns, ageNo, ageName, gEra, crowns, pathMaxed, crownHeir, titheShare, eraOf, isEraRuler, landTrait, wonderFor, wonderState, wonderUnlocked, wonderBuilt, wonderCost, wonderProgress, contributeWonder, wonderMult, nextWonderEra, gatherOn, bgFactor, pathCost, rowOpen, rowProgress, pathRow, combatLevelBonus, endlessDepth, farming, farmLand, starsSpare, starDemand, vaultCount, canPassCrown, landReqText, landQuestOk, passKeep, infoOn, questStat, crownsIfPass, passCrown, lapActive,

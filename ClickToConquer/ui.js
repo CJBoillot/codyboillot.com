@@ -353,7 +353,7 @@ const UI = (() => {
       if (!sel) continue; const ci = sel.indexOf(':'), kind = sel.slice(0, ci), id = sel.slice(ci + 1);
       if (kind === 'tech') add(rows.tech[id]); else if (kind === 'tool') { add(rows.tool[id]); add(document.querySelector(`.doll-slot[data-slot=${id}]`)); } else if (kind === 'gear') { add(rows.gear[id]); add(document.querySelector(`.doll-slot[data-slot=${id}]`)); }
       else if (kind === 'act') add(rows.act[id]); else if (kind === 'id') add($(id));
-      else if (kind === 'step') { add(document.querySelector(`#prod-grid [data-card="${id}"]`)); if (bldOpen === id) add($('bld-view').querySelector('.depth-card')); }
+      else if (kind === 'step') { add(document.querySelector(`#prod-grid [data-card="${id}"]`)); if (bldOpen === id) add($('bld-view').querySelector('.belt-ups')); }
       else if (kind === 'market') add($('market-list'));
       else if (kind === 'ground') { add(rows.ground[id]); add(rows.act.fight); }
       else if (kind === 'perk') add(rows.perk[id]);
@@ -567,7 +567,7 @@ const UI = (() => {
       setHtml(card.querySelector('[data-f=lim]'), lim === 'starved' ? `<span class="warn">Waiting for ${R[st.from].name.toLowerCase()}</span>` : '');
       setText(card.querySelector('[data-f=lv]'), lv);
       const cap = Game.levelCap();
-      setText(card.querySelector('[data-f=ms]'), lv >= cap ? `max for a ${Game.tierDef().name}` : nm ? `×2 output at Lv ${nm}` : '');
+      setText(card.querySelector('[data-f=ms]'), lv >= cap ? `max for a ${Game.tierDef().name}` : '');
       card.querySelector('[data-f=msbar]').style.width = (nm ? 100 * (lv - prev) / (nm - prev) : 100) + '%';
       const p = Game.stepUpPlan(st.id, null, kBuy), btn = card.querySelector('[data-f=up]');
       setText(card.querySelector('[data-f=uplab]'), lv >= cap ? 'Max level' : p.n > 1 ? `Upgrade +${p.n}` : 'Upgrade');
@@ -603,10 +603,10 @@ const UI = (() => {
   function fillPartBtn(root, id, p, small, d = 1) {
     const b = root.querySelector(`[data-part="${p}"][data-id="${id}"][data-d="${d}"]`); if (!b) return false;
     const cap = Game.levelCap(), lv = Game.partLv(id, p, d), plan = Game.stepUpPlan(id, p, kBuy, d), lim = Game.limitParts(id, d).includes(p) && !starvedBy(id);
-    b.classList.toggle('hot', lim); b.disabled = !plan.n;
+    b.classList.toggle('hot', lim); b.classList.toggle('alarm', Game.bottleneckPart(id) === p && lv < 10); b.disabled = !plan.n;
     if (!small) setText(b.querySelector(`[data-f=plv${p}]`), `Lv ${lv}${plan.n > 1 ? ' → ' + (lv + plan.n) : ''}`);
     else setText(b.querySelector(`[data-f=pl${p}]`), `${Game.partName(id, p)} ${lv}`);
-    setHtml(b.querySelector(`[data-f=pc${p}]`), lv >= cap ? '<span class="dim tiny">max</span>' : costHtml(plan.n ? plan.cost : Game.stepUpCost(id, p, null, d)).replace(/<span class="cost-name">[^<]*<\/span>/g, ''));
+    setHtml(b.querySelector(`[data-f=pc${p}]`), lv >= 10 || Game.effLv(id, p) >= cap ? '<span class="dim tiny">max</span>' : costHtml(plan.n ? plan.cost : Game.stepUpCost(id, p, null, d)).replace(/<span class="cost-name">[^<]*<\/span>/g, ''));
     return !!plan.n;
   }
   function buildProd() {
@@ -637,7 +637,7 @@ const UI = (() => {
     for (const lid of PROD_COLS) for (const st of CONFIG.kingdom.lines[lid].steps) { const card = $('prod-grid').querySelector(`[data-card="${st.id}"]`); if (!card) continue;
       if (card.classList.contains('pbuild')) { setHtml(card.querySelector('[data-f=bcost]'), costHtml(st.build)); const cb = Game.canBuild(st.id); card.querySelector('[data-build]').disabled = !cb; if (cb) any = true; continue; }
       { const P = Game.pipe(st.id, 1), T = Game.tripTime(st.id, 'H', 1); card.querySelector('[data-f=load]').style.width = (P.h > 1e-9 ? 100 * Math.min(1, P.th / T) : 0) + '%'; }
-      { const dc = Game.depthCount(st.id); setText(card.querySelector('[data-f=lv]'), dc > 1 ? `${dc} ${Game.unitName(st.id, true)}` : 'Lv ' + Game.stepLv(st.id)); } setHtml(card.querySelector('[data-f=rate]'), rateTxt(st));
+      { const dc = Game.depthOf(st.id); setText(card.querySelector('[data-f=lv]'), `${Game.unitName(st.id)} ${dc}`); } setHtml(card.querySelector('[data-f=rate]'), rateTxt(st));
       const sl = !!slow[st.id]; card.classList.toggle('slowest', sl); card.querySelector('[data-f=slow]').classList.toggle('hidden', !sl);
       for (const p of Game.PARTS) if (fillPartBtn(card, st.id, p, true, Game.depthCount(st.id))) any = true; }
     renderTown(); renderBarracks(); renderProdTip();
@@ -713,41 +713,148 @@ const UI = (() => {
       setText(pc.querySelector('[data-f=why]'), even ? `${Game.partName(id, down).toLowerCase()} keeps pace` : net > 0 ? 'building up' : `limited by ${Game.partName(id, lim === 'H' ? up : (Game.PARTS.indexOf(lim) < n ? lim : up)).toLowerCase()}`);
       pc.classList.toggle('jam', net > 0 && !even && !starved); });
   }
+  // ===== Beta 0.5.0: the building as a belt — one big slot per level in each part, belt cells between them, a mine cart per load =====
+  const BV = { id: null, raf: 0 };
+  const BELT_COL = ['#e8603c', '#f2a33a', '#bcd44a', '#38c9b4'];
+  function beltView(cv, id) {
+    const ctx = cv.getContext('2d'), st = Game.stepDef(id), feed = !!st.from, LANE = 5, SPEED = 170, T = 2.0;
+    const PAD = 12, CELL = 11, CG = 3, SLOTH = 30, SG = 3, BEND = 16, ROWH = 78;
+    let W = 0, H = 0, rows = [], SLOTW = 22, ores = [], lanes, slots, pops = [], laneT = 0, clock = 0, inAcc = 0, popT = 0, agg = {}, lastD = Game.depthOf(id);
+    const lvOf = k => Game.partLv(id, Game.PARTS[k]);
+    const unit = () => Game.partCap(id, 'W') / Math.max(1, lvOf(0)) * T; // what one cart carries: a slot's work for one turn
+    const colAfter = k => feed ? BELT_COL[k + 1] : [BELT_COL[0], BELT_COL[1], BELT_COL[2]][k];
+    function layout() {
+      W = cv.clientWidth || 340; const Y1 = feed ? 30 + 44 : 34; H = Y1 + 2 * ROWH + 38;
+      const dpr = devicePixelRatio || 1; cv.width = W * dpr; cv.height = H * dpr; cv.style.height = H + 'px'; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const laneW = LANE * CELL + (LANE - 1) * CG, gap = 8;
+      SLOTW = Math.max(12, Math.min(24, Math.floor((W - 2 * PAD - 30 - laneW - gap - 9 * SG) / 10)));
+      const inner = laneW + gap + 10 * SLOTW + 9 * SG, x0 = Math.max(PAD + 15, (W - inner) / 2);
+      rows = []; rows.x0 = x0; rows.top = 30;
+      for (let k = 0; k < 3; k++) { const y = Y1 + k * ROWH, ltr = k % 2 === 0, cells = [], sl = [];
+        if (k > 0 || feed) for (let i = 0; i < LANE; i++) { const off = i * (CELL + CG); cells.push(ltr ? { x: x0 + off, y: y - CELL / 2 } : { x: x0 + inner - CELL - off, y: y - CELL / 2 }); }
+        for (let i = 0; i < 10; i++) { const off = laneW + gap + i * (SLOTW + SG); sl.push(ltr ? { x: x0 + off, y: y - SLOTH / 2 } : { x: x0 + inner - SLOTW - off, y: y - SLOTH / 2 }); }
+        rows.push({ y, ltr, cells, slots: sl }); }
+      ores = []; lanes = [0, 1, 2].map(() => Array(LANE).fill(null)); slots = [0, 1, 2].map(() => Array(10).fill(null));
+    }
+    const cellC = (k, i) => { const c = rows[k].cells[i]; return { x: c.x + CELL / 2, y: c.y + CELL / 2 }; };
+    const slotC = (k, j) => { const s = rows[k].slots[j]; return { x: s.x + SLOTW / 2, y: s.y + SLOTH / 2 }; };
+    function bendPts(side, y1, y2) { const x = side === 'r' ? W - PAD : PAD, e = side === 'r' ? x - BEND : x + BEND, m = (y1 + y2) / 2, out = [];
+      const q = (a, c, b, t) => ({ x: (1 - t) * (1 - t) * a.x + 2 * (1 - t) * t * c.x + t * t * b.x, y: (1 - t) * (1 - t) * a.y + 2 * (1 - t) * t * c.y + t * t * b.y });
+      for (let i = 0; i <= 10; i++) out.push(q({ x: e, y: y1 }, { x, y: y1 }, { x, y: m }, i / 10)); for (let i = 1; i <= 10; i++) out.push(q({ x, y: m }, { x, y: y2 }, { x: e, y: y2 }, i / 10)); return out; }
+    const moving = o => o.wp.length > 0;
+    const pop = (x, y, text, color) => pops.push({ x, y, text, color, t: 0 });
+    const tally = (key, n, x, y, color, unitTxt) => { const a = agg[key] || (agg[key] = { n: 0 }); a.n += n; a.x = x; a.y = y; a.color = color; a.unit = unitTxt; };
+    function toLane(k, o, path) { o.wp = path; o.onArrive = () => { if (lanes[k][0]) o.dead = true; else lanes[k][0] = o; }; } // the real sale is counted by the game; the picture just drops the cart
+    function tick(dt) {
+      clock += dt;
+      if (Game.depthOf(id) !== lastD) { lastD = Game.depthOf(id); layout(); pop(W / 2, rows[0].y - 4, `${Game.unitName(id)} ${lastD} opened`, '#7fd28f'); }
+      for (const o of ores) { let left = SPEED * dt;
+        while (left > 0 && o.wp.length) { const t = o.wp[0], dx = t.x - o.pos.x, dy = t.y - o.pos.y, d = Math.hypot(dx, dy);
+          if (d <= left) { o.pos = { x: t.x, y: t.y }; o.wp.shift(); left -= d; } else { o.pos = { x: o.pos.x + dx / d * left, y: o.pos.y + dy / d * left }; left = 0; } }
+        if (!o.wp.length && o.onArrive) { const f = o.onArrive; o.onArrive = null; f(); } }
+      if (!feed) { const S = slots[0]; for (let j = 0; j < lvOf(0); j++) if (!S[j]) { const p = slotC(0, j), o = { pos: { x: p.x, y: p.y }, wp: [], r: 1, c: BELT_COL[0] }; ores.push(o); S[j] = { o, p: 0 }; } }
+      else { const cf = Game.chainFlow(st.line).find(c => c.id === id), rate = cf ? cf.supply / st.ratio : 0; inAcc += rate * dt / Math.max(1e-9, unit());
+        while (inAcc >= 1) { inAcc -= 1; if (lanes[0].filter(c => !c).length > ores.filter(o => o.incoming).length) { const o = { pos: { x: PAD, y: rows[0].y }, wp: [], c: BELT_COL[0], incoming: true }; ores.push(o); toLane(0, o, [cellC(0, 0)]); const f = o.onArrive; o.onArrive = () => { o.incoming = false; f(); }; } } }
+      laneT += dt;
+      if (laneT >= 0.12) { laneT = 0;
+        for (let k = 0; k < 3; k++) { const L = lanes[k]; if (!rows[k].cells.length) continue;
+          for (let i = LANE - 2; i >= 0; i--) if (L[i] && !moving(L[i]) && !L[i + 1]) { L[i + 1] = L[i]; L[i] = null; L[i + 1].wp = [cellC(k, i + 1)]; }
+          const f = L[LANE - 1], S = slots[k]; if (f && !moving(f)) { const j = S.findIndex((s, i) => i < lvOf(k) && !s); if (j >= 0) { L[LANE - 1] = null; S[j] = { o: f, p: 0 }; f.wp = [slotC(k, j)]; } } } }
+      for (let k = 0; k < 3; k++) { const S = slots[k], row = rows[k];
+        for (let j = 0; j < 10; j++) { const s = S[j]; if (!s || moving(s.o)) continue; if (j >= lvOf(k)) { S[j] = null; s.o.dead = true; continue; } s.p += dt / T;
+          if (k === 0 && !feed) s.o.r = 1.2 + 3 * Math.min(1, s.p);
+          if (s.p < 1) continue; S[j] = null; const o = s.o, from = slotC(k, j); o.c = colAfter(k);
+          if (k < 2) toLane(k + 1, o, [...bendPts(row.ltr ? 'r' : 'l', row.y, rows[k + 1].y), cellC(k + 1, 0)]);
+          else { tally('made', unit(), from.x, from.y + 2, o.c, R[st.make].name.toLowerCase()); o.wp = [{ x: W - PAD - 2, y: row.y }]; o.onArrive = () => { o.dead = true; }; } } }
+      ores = ores.filter(o => !o.dead);
+      // the game's own sales at a full belt pop up where the goods pile up
+      popT += dt; if (popT >= 1) { popT = 0; const r = Game.beltRate(id); for (const [p, k] of [['C', 1], ['H', 2]]) if (r[p] && r[p].g > 0) { const c = cellC(k, 0); tally('sold' + p, r[p].g, c.x, c.y - 12, '#e8c06a', 'gold'); } }
+      if ((agg.t = (agg.t || 0) + dt) >= 0.6) { for (const key in agg) { const a = agg[key]; if (key !== 't' && a.n > 0) pop(a.x, a.y, `+${Game.fmt(a.n)} ${a.unit}`, a.color); } agg = {}; }
+      for (const p of pops) p.t += dt; pops = pops.filter(p => p.t < 1.2);
+    }
+    function rr(x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+    function cart(x, y, r, c) { const k = r / 4.2 * 0.8, w = 8 * k, h = 4.5 * k; ctx.fillStyle = c; ctx.shadowColor = c + 'cc'; ctx.shadowBlur = 7;
+      ctx.beginPath(); ctx.moveTo(x - w, y - h); ctx.lineTo(x + w, y - h); ctx.lineTo(x + w * .8, y + h * .6); ctx.lineTo(x - w * .8, y + h * .6); ctx.closePath(); ctx.fill(); ctx.shadowBlur = 0;
+      ctx.fillStyle = '#0d0a08'; ctx.beginPath(); ctx.arc(x - w * .5, y + h * .9, 1.8 * k, 0, 7); ctx.arc(x + w * .5, y + h * .9, 1.8 * k, 0, 7); ctx.fill();
+      ctx.fillStyle = c; ctx.beginPath(); ctx.arc(x - w * .5, y + h * .9, 1.1 * k, 0, 7); ctx.fill(); ctx.beginPath(); ctx.arc(x + w * .5, y + h * .9, 1.1 * k, 0, 7); ctx.fill(); }
+    function draw() {
+      ctx.clearRect(0, 0, W, H); const hot = Game.bottleneckPart(id), hotK = hot === 'C' ? 1 : hot === 'H' ? 2 : -1, f = Game.fmt;
+      ctx.strokeStyle = '#3a2e24'; ctx.lineWidth = 6; ctx.lineCap = 'round';
+      for (let r = 0; r < 2; r++) { const pts = bendPts(rows[r].ltr ? 'r' : 'l', rows[r].y, rows[r + 1].y); ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.stroke(); }
+      ctx.lineWidth = 4; ctx.strokeStyle = '#1a1411';
+      for (let r = 0; r < 3; r++) { const y = rows[r].y; ctx.beginPath(); ctx.moveTo(r === 0 && feed ? PAD : PAD + BEND, y); ctx.lineTo(r === 2 ? W - PAD : W - PAD - BEND, y); ctx.stroke(); }
+      ctx.textAlign = 'left';
+      if (feed) { const cf = Game.chainFlow(st.line).find(c => c.id === id), prev = Game.stepDef(Game.lineSteps(st.line)[Game.lineSteps(st.line).findIndex(x => x.id === id) - 1].id);
+        ctx.font = '600 12px Inter, system-ui, sans-serif'; ctx.fillStyle = '#e8c06a'; const lab = `From the ${prev.name}`; ctx.fillText(lab, PAD + 4, rows.top); const lw = ctx.measureText(lab).width;
+        ctx.font = '11px Inter, system-ui, sans-serif'; ctx.fillStyle = '#9c8f7c'; ctx.fillText(cf ? `${f(cf.supply)} ${R[st.from].name.toLowerCase()}/s in · uses ${f(cf.use)}/s` : '', PAD + 12 + lw, rows.top);
+        ctx.font = '600 11px Inter, system-ui, sans-serif'; ctx.fillStyle = '#e8c06a'; ctx.fillText('› in', PAD, rows[0].y + 22); }
+      { const nx = Game.nextStep(id); ctx.textAlign = 'right'; ctx.font = '600 11px Inter, system-ui, sans-serif'; ctx.fillStyle = '#e8c06a'; ctx.fillText(nx ? `to the ${nx.name} ›` : 'to the Storehouse ›', W - PAD - 2, rows[2].y + 26); }
+      rows.forEach((row, k) => { const p = Game.PARTS[k], lv = lvOf(k), lx = rows.x0, ly = row.y - SLOTH / 2 - 8, isHot = k === hotK;
+        ctx.textAlign = 'left'; ctx.font = '600 12.5px Inter, system-ui, sans-serif'; ctx.fillStyle = '#ede4d3'; const title = Game.partName(id, p) + (row.ltr ? '  →' : '  ←'); ctx.fillText(title, lx, ly); const tw = ctx.measureText(title).width;
+        const busy = slots[k].filter((s, i) => s && i < lv && !moving(s.o)).length, cap = Game.partCap(id, p);
+        ctx.font = isHot ? '700 11px Inter, system-ui, sans-serif' : '11px Inter, system-ui, sans-serif'; ctx.fillStyle = isHot ? '#ff8a6a' : '#9c8f7c';
+        ctx.fillText(isHot ? `Lv ${lv} / 10 · ${f(cap)}/s · bottleneck, selling` : `Lv ${lv} / 10 · ${f(cap)}/s · ${busy}/${lv} busy`, lx + tw + 8, ly);
+        if (isHot) { const pulse = 0.35 + 0.35 * Math.sin(clock * 6), a = row.slots[0], z = row.slots[lv - 1], x1 = Math.min(a.x, z.x) - 4, x2 = Math.max(a.x, z.x) + SLOTW + 4;
+          ctx.save(); ctx.shadowColor = '#ff5a3c'; ctx.shadowBlur = 16 * pulse; ctx.strokeStyle = `rgba(255,90,60,${0.45 + pulse})`; ctx.lineWidth = 2; rr(x1, a.y - 4, x2 - x1, SLOTH + 8, 7); ctx.stroke(); ctx.restore(); }
+        row.cells.forEach(c => { rr(c.x, c.y, CELL, CELL, 3); ctx.fillStyle = '#211a14'; ctx.fill(); ctx.strokeStyle = '#3a2e24'; ctx.lineWidth = 1; ctx.stroke(); });
+        row.slots.forEach((s, i) => { rr(s.x, s.y, SLOTW, SLOTH, 4);
+          if (i < lv) { ctx.fillStyle = '#2b2014'; ctx.fill(); ctx.strokeStyle = '#c9973f'; ctx.lineWidth = 1.2; ctx.stroke(); } else { ctx.fillStyle = '#120e0b'; ctx.fill(); ctx.setLineDash([3, 3]); ctx.strokeStyle = '#3a2e24'; ctx.lineWidth = 1; ctx.stroke(); ctx.setLineDash([]); }
+          const sl = slots[k][i]; if (sl && !moving(sl.o)) { const h = (SLOTH - 4) * Math.min(1, sl.p); rr(s.x + 2, s.y + SLOTH - 2 - h, SLOTW - 4, h, 2); ctx.fillStyle = '#8a5a22'; ctx.fill(); } }); });
+      for (const o of ores) cart(o.pos.x, o.pos.y, o.r && o.r < 4.2 ? o.r : 4.2, o.c);
+      ctx.textAlign = 'center';
+      for (const p of pops) { const u = p.t / 1.2; ctx.globalAlpha = 1 - u * u; ctx.font = '700 12px Inter, system-ui, sans-serif'; ctx.fillStyle = p.color; ctx.strokeStyle = '#0d0a08'; ctx.lineWidth = 3; ctx.strokeText(p.text, p.x, p.y - 22 * u); ctx.fillText(p.text, p.x, p.y - 22 * u); ctx.globalAlpha = 1; }
+    }
+    layout(); for (let i = 0; i < 60 * 20; i++) tick(1 / 60); pops = []; agg = {};
+    return { tick, draw, layout, get w() { return W; } };
+  }
+  function beltLoop(t) {
+    const cv = document.getElementById('belt-cv'); if (!BV.v || !cv || !cv.isConnected || !bldOpen || cv.offsetParent === null) { BV.raf = 0; return; }
+    const dt = Math.min(0.05, (t - (BV.last || t)) / 1000); BV.last = t;
+    if (cv.clientWidth && Math.abs(cv.clientWidth - BV.v.w) > 2) BV.v.layout();
+    BV.v.tick(dt); BV.v.draw(); BV.raf = requestAnimationFrame(beltLoop);
+  }
+  function ensureBelt(id) { const cv = document.getElementById('belt-cv'); if (!cv) return; if (BV.id !== id || BV.cv !== cv) { BV.id = id; BV.cv = cv; BV.v = beltView(cv, id); BV.v.draw(); } if (!BV.raf) { BV.last = 0; BV.raf = requestAnimationFrame(beltLoop); } }
   function renderBld() {
     const S = Game.S, f = Game.fmt, id = bldOpen, st = Game.stepDef(id), box = $('bld-view'); if (!st || !Game.stepBuilt(id)) { closeBld(); return; }
-    const L = CONFIG.kingdom.lines[st.line], nx = Game.nextStep(id), key = id + '|' + kBuy + '|' + (nx ? nx.id : '') + '|' + Game.housesOn() + '|' + Game.depthCount(id);
+    const nx = Game.nextStep(id), D = Game.depthOf(id), key = id + '|' + kBuy + '|' + (nx ? nx.id : '');
     if (bldKey !== key) { bldKey = key;
       const stock = nx ? `<div class="kstock"><div class="kstock-head"><span>Keep ${R[st.make].name.toLowerCase()} in stock</span><span class="kstock-n" data-f="stn"></span></div><div class="seg kstock-seg">${Game.STOCK_MODES.map(m => `<button data-stock="${m}">${m === 'auto' ? 'Auto' : m === 0 ? '0' : m === 1 ? 'Full' : m === 0.5 ? '½' : '¼'}</button>`).join('')}</div><div class="tiny kstock-why" data-f="stwhy"></div></div>` : '';
-      const houseBox = '';
-      setHtml(box, `        <div class="bld-hero"><img src="${artOf(st)}" srcset="${artOf(st)} 1x, assets/buildings/${st.art || st.id}@2x.webp 2x" alt=""><div class="bld-title">${st.name}<small>${st.desc || ''}</small></div><div class="bld-out" data-f="out"></div></div>
-        <div class="kbar" id="bld-kbar"></div>
-        <div class="card supply-card"><div class="chain-strip" data-f="chain"></div><div class="tiny oflow hidden" data-f="oflow"></div>${st.from ? `<div class="sup-row"><div><span class="tiny dim">${R[st.from].name} in</span><b data-f="supin"></b></div><div class="sup-r"><span class="tiny dim">${st.name} can use</span><b data-f="supuse"></b></div></div><div class="bar sup-bar"><div data-f="supbar"></div><span data-f="suplab"></span></div><div class="tiny sup-why" data-f="supwhy"></div>` : ''}</div>
-        ${Array.from({ length: Game.depthCount(id) }, (_, i) => i + 1).map(d => levelHtml(st, d)).join('')}
-        <div class="card dig-card"><div class="dig-t">${st.dig} · ${Game.unitName(id)} ${Game.depthCount(id) + 1}</div><div class="tiny dim" data-f="digwhy"></div><button class="buy wide" data-dig><span class="small">${st.dig}</span><br><span class="cost" data-f="digcost"></span></button></div>
-        ${houseBox}${stock}`);
+      setHtml(box, `<div class="card supply-card"><div class="chain-strip" data-f="chain"></div><div class="tiny oflow hidden" data-f="oflow"></div></div>
+        <div class="card belt-card">
+          <div class="belt-head"><div class="belt-title"><img src="${artOf(st)}" srcset="${artOf(st)} 1x, assets/buildings/${st.art || st.id}@2x.webp 2x" alt=""><div><h3>${st.name}</h3><p><span data-f="depth"></span> · makes <b>${R[st.make].name.toLowerCase()}</b></p></div></div>
+            <div class="belt-out">Output<b><span data-f="outico"></span><span data-f="out"></span></b></div></div>
+          <canvas id="belt-cv" aria-label="${st.name}: goods move through ${Game.PARTS.map(p => Game.partName(id, p)).join(', ')}"></canvas>
+          <div class="kbar" id="bld-kbar"></div>
+          <div class="belt-ups">${Game.PARTS.map(p => `<button class="belt-up" data-part="${p}" data-id="${id}"><span data-f="pn${p}">${Game.partName(id, p)}</span><b data-f="pl${p}"></b><span class="cost" data-f="pc${p}"></span></button>`).join('')}
+            <button class="belt-deeper hidden" data-dig><span data-f="dt"></span><small data-f="ds"></small><span class="cost" data-f="dc"></span></button></div>
+          <div class="tiny dim belt-note" data-f="note"></div>
+        </div>${stock}`);
       { const ch = box.querySelector('[data-f=chain]'); ch.addEventListener('click', e => { const g = e.target.closest('[data-go]'); if (g) openBld(g.dataset.go); });
         ch.addEventListener('keydown', e => { if (e.key !== 'Enter' && e.key !== ' ') return; const g = e.target.closest('[data-go]'); if (g) { e.preventDefault(); openBld(g.dataset.go); } }); }
-      wirePartBtns(box); box.querySelector('[data-dig]').addEventListener('click', () => { if (Game.dig(id)) { bldKey = ''; prodKey = ''; render(true); } });
+      box.querySelectorAll('.belt-up').forEach(b => b.addEventListener('click', () => { if (Game.upgradeStep(id, b.dataset.part, kBuy)) { flash(b); render(true); } }));
+      box.querySelector('[data-dig]').addEventListener('click', () => { if (Game.dig(id)) { prodKey = ''; render(true); } });
       box.querySelectorAll('[data-stock]').forEach(b => b.addEventListener('click', () => { const v = b.dataset.stock; if (Game.setStockMode(st.make, v === 'auto' ? 'auto' : +v)) { Game.save(); render(true); } }));
       $('bld-kbar').innerHTML = kbarHtml(); $('bld-kbar').querySelectorAll('[data-kbuy]').forEach(b => b.addEventListener('click', () => { kBuy = b.dataset.kbuy === 'max' ? 'max' : +b.dataset.kbuy; prodKey = ''; bldKey = ''; render(true); }));
-      glowKey = ''; }
-    const s = Game.stepState(id), cfMe = Game.chainFlow(st.line).find(c => c.id === id), out = cfMe ? cfMe.out : Game.stepOutput(id), fo = v => v < 10 ? v.toFixed(2) : f(v);
-    const dest = nx ? `To the ${nx.name}` : 'To the Storehouse', use = nx ? Game.stepOutput(nx.id) * nx.ratio : 0;
-    setHtml(box.querySelector('[data-f=out]'), `${dest}<b>${fo(out)}/s</b>${nx ? `${nx.name} uses ${fo(use)}/s` : ''}`);
-
-    for (let d = 1; d <= Game.depthCount(id); d++) { const dc = box.querySelector(`[data-depth="${d}"]`); if (dc) renderLevel(dc, st, d, dest); }
-    { const db = box.querySelector('[data-dig]'), open = Game.digOpen(), nd = Game.depthCount(id) + 1; db.disabled = !Game.canDig(id); setHtml(box.querySelector('[data-f=digcost]'), open ? costHtml(Game.digCost(id)) + (Game.digCost(id).gold > Game.resCap('gold') ? '<br><span class="tiny warn">more than your Storehouse holds — expand it in the Keep</span>' : '') : '<span class="dim">after Proclaim</span>');
-      setText(box.querySelector('[data-f=digwhy]'), open ? `Starts at Lv 1 but makes ×${f(Game.depthYield(nd))} what the first ${Game.unitName(id).toLowerCase()} makes at the same level. Its own Work, Cart and Haul.` : 'Your town grows new levels once the Kingdom is proclaimed.'); }
-    { const o = Game.overflowRate(st.make), oe = box.querySelector('[data-f=oflow]'); oe.classList.toggle('hidden', !(o.u > 1e-6));
-      if (o.u > 1e-6) setHtml(oe, `<b>Storehouse full.</b> ${fo(o.u)} ${R[st.make].name.toLowerCase()}/s is sold off cheap at ${fo(o.g / o.u)} gold each <b class="good">(+${fo(o.g)} gold/s)</b> — expand the Storehouse in the Keep to keep it.`); }
+      setHtml(box.querySelector('[data-f=outico]'), ico(R[st.make].icon, 20));
+      BV.id = null; glowKey = ''; }
+    ensureBelt(id);
+    const fo = v => v < 10 ? v.toFixed(2) : f(v), gd = R[st.make].name.toLowerCase(), br = Game.beltRate(id), out = br.out !== undefined ? br.out : Game.stepOutput(id);
+    setText(box.querySelector('[data-f=depth]'), `${Game.unitName(id)} ${D}`);
+    setText(box.querySelector('[data-f=out]'), `${fo(out)} ${gd}/s`);
+    { const maxed = Game.depthMaxed(id), hot = Game.bottleneckPart(id);
+      Game.PARTS.forEach(p => { const b = box.querySelector(`.belt-up[data-part="${p}"]`), lv = Game.partLv(id, p), plan = Game.stepUpPlan(id, p, kBuy), capped = lv < 10 && !plan.n && Game.effLv(id, p) >= Game.levelCap();
+        b.classList.toggle('hidden', maxed); b.disabled = !plan.n; b.classList.toggle('alarm', hot === p && lv < 10);
+        setText(b.querySelector(`[data-f=pl${p}]`), lv >= 10 ? 'Lv 10 · max' : `Lv ${lv} → ${lv + Math.max(1, plan.n)}`);
+        setHtml(b.querySelector(`[data-f=pc${p}]`), lv >= 10 ? '' : capped ? '<span class="tiny">raise the settlement</span>' : costHtml(plan.n ? plan.cost : Game.stepUpCost(id, p)).replace(/<span class="cost-name">[^<]*<\/span>/g, '')); });
+      const db = box.querySelector('[data-dig]'), room = Game.digRoom(id); db.classList.toggle('hidden', !maxed); db.disabled = !Game.canDig(id);
+      if (maxed) { setText(db.querySelector('[data-f=dt]'), `${st.dig || 'Go deeper'} · ${Game.unitName(id)} ${D + 1}`);
+        setText(db.querySelector('[data-f=ds]'), room ? `${Game.unitName(id)} ${D} folds away · ${Game.unitName(id)} ${D + 1} starts at Lv 1 making ${fo(Game.stepOutput(id))} ${gd}/s` : `A bigger settlement is needed before ${Game.unitName(id)} ${D + 1}`);
+        setHtml(db.querySelector('[data-f=dc]'), room ? costHtml(Game.digCost(id)).replace(/<span class="cost-name">[^<]*<\/span>/g, '') : ''); }
+      setHtml(box.querySelector('[data-f=note]'), hot ? `<b class="warn">${Game.partName(id, hot)} can't keep up</b> — goods are sold cheap at its belt. Upgrade it.` : maxed ? '' : `Each level adds a slot. With all three at Lv 10, ${Game.unitName(id)} ${D + 1} opens and starts where this one ends.`); }
+    { const o = Game.overflowRate(st.make), oe = box.querySelector('[data-f=oflow]'), su = o.u, sg = o.g; oe.classList.toggle('hidden', !(su > 1e-6));
+      if (su > 1e-6) setHtml(oe, `<b>Storehouse full.</b> ${fo(su)} ${gd}/s is sold off cheap <b class="good">(+${fo(sg)} gold/s)</b> — expand the Storehouse in the Keep to keep it.`); }
     { const CF = Game.chainFlow(st.line), me = CF.findIndex(c => c.id === id), rn = k => R[k].name.toLowerCase();
-      setHtml(box.querySelector('[data-f=chain]'), CF.map((c, i) => `${i ? '<span class="cs-ar">→</span>' : ''}<div class="cs-b${i === me ? ' me' : ' go'}"${i === me ? ' aria-current="true"' : ` data-go="${c.id}" role="button" tabindex="0" aria-label="Open the ${c.name}"`}><span class="tiny dim">${c.name}${i === me ? '' : ' ›'}</span><b>${fo(c.out)}</b><span class="tiny dim">${rn(c.make)}/s</span></div>`).join(''));
-      if (st.from && me > 0) { let root = me - 1; while (root > 0 && CF[root].out < CF[root].cap - 1e-6) root--; const c = CF[me], p = CF[me - 1], pct = c.use > 0 ? Math.min(1, c.supply / c.use) : 0, pn = Game.stepDef(p.id).name, stP = Game.stockTarget(st.from), filling = stP.target > (S.res[st.from] || 0) && stP.share < 1;
-        setText(box.querySelector('[data-f=supin]'), `${fo(c.supply)}/s`); setText(box.querySelector('[data-f=supuse]'), `${fo(c.use)}/s`);
-        const sb = box.querySelector('[data-f=supbar]'); sb.style.width = (100 * pct) + '%'; sb.parentElement.classList.toggle('short', pct < 0.999);
-        setText(box.querySelector('[data-f=suplab]'), `running at ${Math.round(100 * pct)}% · ${f(Math.floor(s.inBuf))} ${rn(st.from)} waiting`);
-        setHtml(box.querySelector('[data-f=supwhy]'), (pct < 0.999 ? `<b>The ${pn} is the limit.</b> It sends ${fo(c.supply)} ${rn(st.from)}/s; the ${st.name} could use ${fo(c.use)}/s. ${root === me - 1 ? `Upgrade the ${pn} to feed it.` : `But the ${pn} is starved too — upgrade the <b>${CF[root].name}</b> first.`}` : `<b>The ${st.name} is the limit.</b> The ${pn} makes more than it can use${p.spare > 1e-6 ? ` — ${fo(p.spare)} ${rn(st.from)}/s spare goes to the Storehouse` : ''}.`) + (filling ? `<br><span class="dim">Right now half the ${rn(st.from)} goes to the Storehouse until it holds ${f(stP.target)}, so less reaches the ${st.name}.</span>` : '')); }
-      else if (st.from) { ['supin', 'supuse'].forEach(k => setText(box.querySelector(`[data-f=${k}]`), '—')); setText(box.querySelector('[data-f=supwhy]'), `Build the ${R[st.from].name.toLowerCase()} building first.`); } }
+      setHtml(box.querySelector('[data-f=chain]'), CF.map((c, i) => `${i ? '<span class="cs-ar">→</span>' : ''}<div class="cs-b${i === me ? ' me' : ' go'}"${i === me ? ' aria-current="true"' : ` data-go="${c.id}" role="button" tabindex="0" aria-label="Open the ${c.name}"`}><span class="tiny dim">${c.name}${i === me ? '' : ' ›'}</span><b>${fo(c.out)}</b><span class="tiny dim">${rn(c.make)}/s</span></div>`).join('')); }
     if (box.querySelector('[data-f=stn]')) { const k = st.make, T = Game.stockTarget(k), have = Math.floor(S.res[k] || 0), nxn = nx ? nx.name : 'next building';
       box.querySelectorAll('[data-stock]').forEach(b => b.classList.toggle('active', String(T.mode) === b.dataset.stock));
       setText(box.querySelector('[data-f=stn]'), `${f(Math.min(have, T.target))} / ${f(T.target)}`);
@@ -1649,8 +1756,8 @@ const UI = (() => {
     const lv = evs.filter(e => e.who === 'levelup').pop();
     if (lv) { const a = $('mini-hero') && $('mini-hero').offsetParent ? $('mini-hero') : document.querySelector('.top'); if (a) { const r = a.getBoundingClientRect(); const p = el('div', 'pop lvl', `▲ Level ${lv.lv}`); p.style.left = (r.left + r.width / 2) + 'px'; p.style.top = (r.top + 10) + 'px'; document.body.appendChild(p); setTimeout(() => p.remove(), 900); } }
     const ms = evs.filter(e => e.who === 'milestone');
-    if (ms.length === 1) CBQ.push({ small: 1, ico: '⚒', kicker: 'Output doubled', title: `${ms[0].name} · Lv ${ms[0].lv}`, sub: 'Every 10, 25, 50 and 100 levels it doubles.' });
-    else if (ms.length > 1) CBQ.push({ small: 1, ico: '⚒', kicker: 'Output doubled', title: `${ms.length} buildings doubled`, sub: ms.map(m => m.name).slice(0, 3).join(' · ') });
+    if (ms.length === 1) CBQ.push({ small: 1, ico: '⚒', kicker: 'All three parts at Lv 10', title: ms[0].name, sub: 'It can now open its next depth — see the gold button inside.' });
+    else if (ms.length > 1) CBQ.push({ small: 1, ico: '⚒', kicker: 'Ready to go deeper', title: `${ms.length} buildings`, sub: ms.map(m => m.name).slice(0, 3).join(' · ') });
     for (const e of evs) {
       if (e.who === 'crown') { const G = Game.landDef(e.n); CBQ.push({ ico: '👑', kicker: 'Land conquered', title: G ? G.name : 'Conquered', sub: `You take ${G ? G.crown : 'a crown'} · +${e.v} Crown${e.v === 1 ? '' : 's'} when the crown passes${e.first ? ' · new in the Vault' : ''}` }); }
       else if (e.who === 'crownpass') CBQ.push({ ico: '👑', kicker: 'Long live the heir', title: `Dynasty ${Game.S.legacy.dynasty}`, sub: `+${e.gain} Crowns to spend in the Crown Tree · lands you know fall ${3 + Game.perkRank('lap')}× faster` });

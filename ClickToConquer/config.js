@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Beta 0.4.1',
+  version: 'Beta 0.5.0',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -412,9 +412,9 @@ const CONFIG = {
     startGold: 50, foundRenown: 500, swapCooldown: 120,
     war: { thrallBonus: 10, supplyCapMult: 2, soldierCapBase: 50, soldierCapPerTier: 25, soldierGold: 2, quartermaster: { bread: 'food', swords: 'supplies', lumber: 'supplies' } },
     // ---- 0.9: buildings are one level each ----
-    milestones: [10, 25, 50, 100, 200, 300, 400, 500],   // ×2 output at each
+    milestones: [],   // Beta 0.5.0: no milestones — growth comes from levels 1–10 and depths
     // 0.12.1: every building grows new levels (a grove, a field, a furnace… only the Mine digs). Level d makes yield^(d−1) × the first; digging it costs gold × digGrowth each time; its parts cost partCost^(d−1) × more.
-    depths: { yield: 12, digBase: 20000, digGrowth: 12, partCost: 12 },
+    depths: { yield: 10, partCost: 22, digMult: 4 },   // Beta 0.5.0: capacity = base × level × 10^(depth−1); a level at depth D costs 22^(D−1) more; opening the next depth costs 4 of its first levels
     lordship: 0.01,                                      // +1% production per hero level
     minLv: 10,                                           // a complete City: every part of every building at this level, and the Barracks built
     // The army (0.9): the Barracks trains soldiers from Food + Supplies; soldiers eat every minute.
@@ -448,9 +448,9 @@ const CONFIG = {
         goldPer: 1, sortie: 30, retry: 90, ageExp: 0.4 } },
     // Settlement tiers inside one land. Raising a tier costs `cap` of every good made so far (pay in as you go) and loses nothing.
     tiers: [
-      { name: 'Camp',    cap: 300, slots: 1, thralls: 6,  lvCap: 25,  threat: 'roads:20',  need: 'Build Logging, the Farm and the Mine.' },
-      { name: 'Hamlet',  cap: 600, slots: 2, thralls: 12, lvCap: 50,  threat: 'crypts:10', need: 'Build the Sawmill, the Mill and the Forge.' },
-      { name: 'Village', cap: 1000, slots: 3, thralls: 30, lvCap: 100, threat: 'crypts:20', need: 'Build the Carpenter, the Bakery and the Armory.' },
+      { name: 'Camp',    cap: 300, slots: 1, thralls: 6,  lvCap: 10,  threat: 'roads:20',  need: 'Build Logging, the Farm and the Mine.' },
+      { name: 'Hamlet',  cap: 600, slots: 2, thralls: 12, lvCap: 20,  threat: 'crypts:10', need: 'Build the Sawmill, the Mill and the Forge.' },
+      { name: 'Village', cap: 1000, slots: 3, thralls: 30, lvCap: 30, threat: 'crypts:20', need: 'Build the Carpenter, the Bakery and the Armory.' },
       { name: 'City',    cap: 1000, slots: 3, thralls: 42, lvCap: 1e9, need: 'Build the Barracks, and raise every part of every building to Lv 10.' },
     ],
     statPct: 0.05,                  // each point of a worker's Speed / Strength: 5% faster Work / Cart
@@ -460,7 +460,7 @@ const CONFIG = {
     // A cycle: Work (batch ÷ rate) → Cart (loadBase) → Haul (haulBase). Every track level shortens its phase by trackGrowth (hyperbolic: never zero, never ends).
     trackGrowth: 0.12, loadBase: 6, haulBase: 12, autoSell: 0.25,
     thrallCapBase: 2, thrallXpDiv: 4, thrallLvBonus: 0.1,
-    costBase: 20, costExp: 1.7, haulCostMult: 0.8,   // 0.12: each of a building's three parts (Work, Cart, Haul) costs a third of the old building level
+    costBase: 120, costExp: 1.5, haulCostMult: 0.8,   // 0.12: each of a building's three parts (Work, Cart, Haul) costs a third of the old building level
     bufferCap: 200,                          // most input a refiner can hold waiting
     workerMilestones: [10, 25, 50],          // +1 worker slot at these step levels (highest track)
     extraWorker: 0.25,                       // each worker after the first: +25% rate
@@ -506,6 +506,7 @@ const CONFIG = {
   // jobs (jobs completed by hand or thrall), sold (gold earned at market), stage, boss, founded, thrall (assigned), activity (swings).
   // Shown in Settings → What's new (newest first). Keep each line short.
   changelog: [
+    ['Beta 0.5.0', 'Buildings are belts. Every building now works one depth at a time, and each of its three parts has levels 1 to 10 — one big slot per level. Inside a building you watch mine carts ride a snaking belt through the three parts: they change colour as they are worked, wait on the belt for a free slot, and leave for the next building. If a part can\'t keep up, its belt fills and the goods are sold cheap on the spot: that part pulses red and its upgrade button glows until you fix it. With all three parts at Lv 10 a gold button opens the next depth (a new grove, furnace, oven…): the old one folds away and the new one starts at Lv 1 making what the old one made at Lv 10. A Camp builds up to Lv 10, a Hamlet to depth 2, a Village to depth 3, a City without limit. The Output box shows what the building really turns out per second. Old saves are converted to the same output.'],
     ['Beta 0.4.1', 'In a conquered land the Front box now says the Front is resting and what opens the next land (for the first land: the quest The Iron Hills), so it is clear why no siege is running.'],
     ['Beta 0.4.0', 'The Front. Conquest is now a siege fed by soldiers. In a land, every stage between forts is besieged by your army: the siege bar fills at (soldiers × their worth) and the ground never falls back. Your hero sets that worth — the stronger he is against this land\'s soldiers, the more each soldier counts ("worth ×1.4 each"). Soldiers fall only while the siege gains ground (2% of the army a minute), and each takes foes and their gold with him. Every 10th stage is a fort: the hero duels its captain himself; if he can\'t win yet, the army holds the breached walls, no one falls, and he tries again once stronger (or tap Advance). The pace of conquest is now the pace of your Barracks — lumber, arms and bread. It all runs while you are away, and the welcome-back report says how far the front moved. No more recommended army: after a land falls the hero marches on straight away.'],
     ['Beta 0.3.4', 'Back to the old battles. The army-vs-army dice campaign (0.3.0–0.3.3) was a misfire and is shelved for now: lands are fought stage by stage again with the hero leading the army, as in 0.2.0, with the Endless Battle and auto-march back. Saves from 0.3.x get their land progress, captains and quest back.'],
@@ -790,7 +791,7 @@ const CONFIG = {
       steps: [ { label: 'Production → Barracks → Build', check: { barracks: 1 } }, { label: 'Train 10 soldiers', check: { stat: 'trained', need: 10, since: true } } ], reward: { gold: 800 }, focus: { tab: 'kingdom', ksub: 'prod', rtab: 'kingdom', el: 'id:barracks-card' } },
     { id: 'y02', chain: 'City', name: 'An Army in Waiting', text: 'The Barracks trains on its own for as long as lumber, arms and bread keep coming. A bigger Barracks trains faster — build up the army so the first march has men behind it.',
       steps: [ { label: 'Have 40 soldiers', check: { have: 'soldiers', need: 40 } }, { label: 'Upgrade the Barracks to Lv 3', check: { barracks: 3 } } ], reward: { gold: 1000 }, focus: { tab: 'kingdom', ksub: 'prod', rtab: 'kingdom', el: 'id:barracks-card' } },
-    { id: 'y01', chain: 'City', name: 'A Worthy Capital', text: 'A Capital needs strong foundations. Raise every part of every building to Lv 10 — Work doubles its load when it gets there.',
+    { id: 'y01', chain: 'City', name: 'A Worthy Capital', text: 'A Capital needs strong foundations. Raise every part of every building to Lv 10. From there each building can open its next depth, which starts where the last one ended.',
       steps: [ { label: 'Every part of every building at Lv 10', check: { allLv: 10 } }, { label: 'Upgrade parts 10 more times', check: { bLvSum: 1, need: 10, since: true } } ], reward: { gold: 1000 }, focus: { tab: 'kingdom', ksub: 'prod', rtab: 'kingdom', el: 'id:prod-grid' } },
     { id: 'y04', chain: 'City', name: 'Proclaim the Kingdom', text: 'The City is complete. Proclaim the Kingdom: your City becomes the Capital — nothing is lost — and the conquest begins.',
       steps: [ { label: 'Kingdom → Keep → Proclaim the Kingdom', check: { proclaimed: 1 } } ], reward: { gold: 500 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:found-btn' } },
@@ -798,8 +799,8 @@ const CONFIG = {
       steps: [ { label: 'Hero → Where to fight → Ashford Vale', check: { landPct: 1, need: 1 } }, { label: 'Conquer 10% more of Ashford Vale', check: { landPct: 1, need: 10, since: true, orDone: true } } ], reward: { gold: 1000 }, focus: { tab: 'hero', sub: 'fight', el: 'ground:land1' } },
     { id: 'w03', chain: 'The Kingdom', name: 'A Garrison', text: 'A conquered land pays taxes — but only as much as its garrison can hold. Soldiers in a garrison do not march with the hero.',
       steps: [ { label: 'Kingdom → Lands → Ashford Vale → station 2 soldiers', check: { garrison: 1, need: 2 } }, { label: 'Earn 100 gold in taxes', check: { taxed: 100 } } ], reward: { gold: 1000 }, focus: { tab: 'kingdom', ksub: 'lands', rtab: 'kingdom', el: 'id:lands-card' } },
-    { id: 'w01', chain: 'The Kingdom', name: 'Go Deeper', text: 'Taxes are flowing, and every building can grow: the Mine digs deeper, the Farm plows new fields, the Forge builds new furnaces. Each new one can grow far bigger than the last.',
-      steps: [ { label: 'Production → Mine → Enter → Dig deeper', check: { stat: 'levels:shaft', need: 2 } }, { label: 'Raise Depth 2\'s Dig to Lv 5', check: { partLv: 'shaft:W:2', need: 5 } } ], reward: { gold: 5000 }, focus: { tab: 'kingdom', ksub: 'prod', rtab: 'kingdom', el: 'step:shaft' } },
+    { id: 'w01', chain: 'The Kingdom', name: 'Go Deeper', text: 'Taxes are flowing, and every building can keep growing. When all three of a building\'s parts reach Lv 10, it opens its next depth — the Mine digs deeper, the Farm plows a new field, the Forge builds a new furnace. The old one folds away and the new one starts where it ended, with ten more levels to fill.',
+      steps: [ { label: 'Open a new depth in any building (all three parts at Lv 10)', check: { stat: 'digs', need: 1, since: true } }, { label: 'Upgrade parts 5 more times', check: { stat: 'partUps', need: 5, since: true } } ], reward: { gold: 5000 }, focus: { tab: 'kingdom', ksub: 'prod', rtab: 'kingdom', el: 'step:shaft' } },
     { id: 'w03b', chain: 'The Kingdom', name: 'The Fallen', text: 'Soldiers fall only while the siege is gaining ground, and each one takes foes (and their gold) with him. Every new soldier needs lumber, arms and bread — keep all three chains flowing and the front never stops.',
       steps: [ { label: 'Train 25 more soldiers', check: { stat: 'trained', need: 25, since: true } } ], reward: { gold: 1500 }, focus: { tab: 'kingdom', ksub: 'prod', rtab: 'kingdom', el: 'id:barracks-card' } },
     { id: 'w04', chain: 'The Kingdom', name: 'Baron Hollin', text: 'At the end of every land waits its Ruler. Beat him and take his crown — Crowns are the power of your dynasty.',
