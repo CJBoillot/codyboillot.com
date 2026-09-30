@@ -1238,6 +1238,8 @@ html, body { max-width: 100%; overflow-x: hidden; }
 .fr-bar { height: 10px; border-radius: 6px; background: #0b0908; overflow: hidden; } .fr-bar i { display: block; height: 100%; background: linear-gradient(90deg, #8a5a22, #e8c06a); transition: width .4s; }
 .fr-chips { display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 11.5px; color: var(--dim); } .fr-chips b { color: var(--text); } .fr-chips .bad { color: #ff8a8a; } .fr-chips .gold { color: var(--bronze2); }
 .fr-note { font-size: 12px; line-height: 1.4; } .fr-note .bad { color: #ff8a8a; }
+.fr-fc { font-size: 12px; line-height: 1.45; border-top: 1px solid var(--line); padding-top: 6px; display: flex; flex-direction: column; gap: 4px; } .fr-fc b { color: var(--text); } .fr-tip { font-size: 11.5px; color: var(--dim); } .fr-tip .belt-go { margin-top: 4px; }
+.bk-why { margin-top: -2px; }
 .fr-last { font-size: 11px; color: var(--dim); } .fr-help { font-size: 10.5px; }
 
 /* Beta 0.4.1: the building as a belt */

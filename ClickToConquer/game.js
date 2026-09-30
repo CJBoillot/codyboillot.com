@@ -606,7 +606,10 @@ function beltTick(dt) { BELT.t += dt; if (BELT.t < 2) return; const r = {}, old 
   for (const st of allSteps()) { const id = st.id, a = BELT.acc[id] || {}, o = old[id] || {}, inst = (a.out || 0) / BELT.t; r[id] = { out: o.out === undefined ? stepOutput(id) : o.out + (inst - o.out) * k }; /* start from capacity so a fresh screen doesn't read low */ for (const p of ['C', 'H']) { const iu = a[p] ? a[p].u / BELT.t : 0, ig = a[p] ? a[p].g / BELT.t : 0, op = o[p] || { u: iu, g: ig }, u = op.u + (iu - op.u) * k, gg = op.g + (ig - op.g) * k; if (u > 1e-9) r[id][p] = { u, g: gg }; } }
   BELT.rate = r; BELT.acc = {}; BELT.t = 0; }
 function beltRate(id) { return BELT.rate[id] || {}; } // {out, C:{u,g}, H:{u,g}} per second over the last few seconds
-function bottleneckPart(id) { const r = beltRate(id), min = 0.02 * stepOutput(id); const h = r.H && r.H.u > min ? 'H' : null, c = r.C && r.C.u > min ? 'C' : null; return h || c; } // the part whose belt is overflowing (goods being sold in front of it)
+function workIn(id) { const st = stepDef(id), w = partCap(id, 'W'); if (!st.from) return w; const cf = chainFlow(st.line).find(c => c.id === id); return cf ? Math.min(w, cf.supply / st.ratio) : w; } // what Work actually does: its capacity, or what reaches it
+function bottleneckPart(id) { // Beta 0.4.4: from capacities, so it updates the moment a level is bought — a part is selling when more reaches it than it can move
+  if (!stepBuilt(id)) return null; const inW = workIn(id), c = partCap(id, 'C'), h = partCap(id, 'H'), tol = 1.005;
+  if (Math.min(inW, c) > h * tol) return 'H'; if (inW > c * tol) return 'C'; return null; } // the part whose belt is overflowing (goods being sold in front of it)
 function digOpen() { return true; }
 function digCost(id) { return { gold: Math.round(stepUpCost(id, 'W', 1, depthOf(id) + 1).gold * DC().digMult) }; }
 function digRoom(id) { return LVMAX * depthOf(id) + 1 <= levelCap(); } // the settlement allows the next depth
@@ -1189,6 +1192,26 @@ function frontHold() { // why the army waits at a breached fort: null | 'rest' |
   const h = S.hero, nx = h.stage + 1; if (!siegeOn() || (h.siege || 0) < 1 || !isBoss(nx)) return null;
   if ((h.bossWait || 0) > h.time) return 'rest'; return commanderReady(nx) ? null : 'weak';
 }
+function soldiersPerMin() { // what the Barracks can keep up: its own pace, or the scarcest good
+  if (!barracksBuilt()) return { rate: 0, by: 'barracks' }; const R = kingdomRates(), c = nextSoldierCost(); let rate = trainPerMin(), by = 'barracks';
+  for (const k of SOLDIER_GOODS) { const r = (R[k] || 0) * 60 / Math.max(1e-9, c[k]); if (r < rate) { rate = r; by = k; } }
+  return { rate, by };
+}
+function steadyArmy() { const sp = soldiersPerMin(); return { army: sp.rate / Math.max(1e-9, SG().attrition), ...sp }; } // soldiers fall at 2%/min while sieging: the army settles where training matches it
+function landEta(n = landN(), army) { // seconds to take the rest of this land at a steady army (forts assumed won)
+  const G = landDef(n); if (!G || landDone(n)) return 0; const h = S.hero, here = landN() === n, from = here ? h.stage : Math.max(1, landBest(n)); const A = army ?? Math.max(1, steadyArmy().army);
+  const st = stats('sustained'); let t = 0;
+  for (let s = from; s <= G.stages; s++) { if (isBoss(s)) continue; const left = s === from && here ? 1 - Math.min(1, h.siege || 0) : 1; t += left * siegeCost(n, s) / Math.max(1e-9, A * soldierWorth(n, s, st)) * 60; }
+  return t;
+}
+function invasionForecast(n = landN()) { // Beta 0.4.4: how long this land takes at today's pace, and what would speed it up
+  const sp = soldiersPerMin(), A = Math.max(1, sp.rate / Math.max(1e-9, SG().attrition)), eta = landEta(n, A), lines = KC().army.lines;
+  const W = Object.values(lines).find(x => x.good === sp.by), line = W ? W.line : null, slow = line ? slowestInLine(line) : null;
+  let next = trainPerMin(), nextBy = 'barracks'; const R = kingdomRates(), c = nextSoldierCost();
+  for (const k of SOLDIER_GOODS) { if (k === sp.by) continue; const r = (R[k] || 0) * 60 / Math.max(1e-9, c[k]); if (r < next) { next = r; nextBy = k; } }
+  const room = sp.rate > 0 ? Math.min(2, next / sp.rate) : 1; // how much faster if the limit were lifted (capped at 2x)
+  return { eta, army: A, rate: sp.rate, by: sp.by, line, slow, room, nextBy };
+}
 function siegeEta() { const r = siegePerMin(); return r > 0 ? (1 - (S.hero.siege || 0)) / r * 60 : Infinity; } // seconds
 function tickSiege(dt) {
   const h = S.hero; if (!siegeOn()) return; const n = landN(), s = h.stage, F = frontState();
@@ -1389,7 +1412,8 @@ function canUpBarracks() { return barracksAvailable() && barracksLv() < levelCap
 function upgradeBarracks() { if (!canUpBarracks()) return false; pay(barracksCost()); S.kingdom.barracks = S.kingdom.barracks || { lv: 0, train: 0 }; S.kingdom.barracks.lv++; if (S.kingdom.barracks.lv === 1) log('Built the Barracks.'); return true; }
 function trainPerMin() { return barracksBuilt() ? AC().trainPerMin * barracksLv() * wonderMult('recruit') : 0; }
 function upkeepMult() { return Math.max(0.5, 1 - 0.1 * perkRank('rations')); } // Lean Barracks: less gear per soldier
-function soldierCostMult(n = soldiers()) { return Math.pow(AC().costGrowth, Math.max(0, n - ((S.kingdom && S.kingdom.solFree) || 0))) * upkeepMult(); } // solFree: veterans from a 0.11 army
+function soldierLand() { return phase() === 3 ? Math.min(landsHeld() + 1, CONFIG.ages.lands) : 1; }
+function soldierCostMult() { const A = AC(); return A.costLand0 * Math.pow(A.costLandGrowth, soldierLand() - 1) * Math.pow(ageMult('gold'), A.costAge || 0) * upkeepMult(); } // Beta 0.4.4: flat per land — twice the goods, twice the army
 function nextSoldierCost() { const m = soldierCostMult(), c = AC().soldierCost; return { lumber: c.lumber * m, swords: c.swords * m, bread: c.bread * m }; }
 const SOLDIER_GOODS = ['lumber', 'swords', 'bread']; // Beta 0.2.0: a soldier is 1 lumber + 1 arms + 1 bread (×1.01 per soldier you have)
 function recruitCost() { return nextSoldierCost().swords; }
@@ -1407,8 +1431,8 @@ function recArmy(n) { return Math.max(10, AC().recBase * n + AC().recOffset); } 
 function soldiers() { return Math.floor(S.res.soldiers || 0); }
 function garrisoned() { let n = 0; for (const k in (S.kingdom.lands || {})) n += S.kingdom.lands[k].garrison || 0; return n; }
 function marching() { return Math.max(0, soldiers() - garrisoned()); }
-function armyMult() { return phase() === 3 ? 1 + marching() / AC().bonusDiv : 1; }
-function armyHpMult() { return phase() === 3 ? 1 + marching() / AC().hpDiv : 1; }
+function armyMult() { return phase() === 3 ? 1 + Math.pow(marching() / AC().bonusDiv, AC().armyExp || 1) : 1; } // Beta 0.4.4: bigger armies still help the hero, with diminishing returns
+function armyHpMult() { return phase() === 3 ? 1 + Math.pow(marching() / AC().hpDiv, AC().armyExp || 1) : 1; }
 let _press = null, _pressAt = -1;
 function battlePressure() { // share of the hero's HP one fight takes before healing, 0..1 — how hard the army is fighting
   if (phase() < 3 || !heroFighting() || S.hero.resting || marching() <= 0) return 0;
@@ -1741,7 +1765,7 @@ window.Game = {
   toolTierUnlocked, toolPower, toolCraftCost, toolUpgradeCost, canToolTierUp, craftTool, upgradeTool, activityDef, activityAvailable, setActivity, masteryLevel, harvestTime, harvestYield, harvestRates,
   questCurrent, questProgress, questClaim, suggestGoal, ground, setGround, groundUnlocked, dropToolMult, bestStageAll, groundDrops, toolSlotUnlocked,
   techDef, hasTech, techProgress, canResearch, research, researching, buildingUnlocked, gearTierUnlocked, dropUnlocked, counter,
-  landQuestId, siegeOn, siegeCost, soldierWorth, siegePerMin, siegeActive, attritionPerMin, goldPerFallen, commanderReady, frontHold, siegeEta, frontState, generalEdge, worthRef,
+  soldiersPerMin, steadyArmy, landEta, invasionForecast, siegeAttrition: () => SG().attrition, LC_siege: () => SG(), soldierLand, workIn, landQuestId, siegeOn, siegeCost, soldierWorth, siegePerMin, siegeActive, attritionPerMin, goldPerFallen, commanderReady, frontHold, siegeEta, frontState, generalEdge, worthRef,
   kingdomRates, chainFlow, marchReady, autoMarch, limitParts, overflowRate, kingdomNo, allSteps, stepDef, stepUnlocked, lineUnlocked, lineSteps, stepState, nextStep, stepMods, kTier, tierDef, stepAvailable, stepBuilt, canBuild, buildStep, tierGoods, tierNeed, tierPaid, tierPaidDone, tierStepsReady, contribute, canRaise, raiseTier, accountantSteps, assignAccountant, cityChecks, cityComplete, stepRate, stepPhases, stepCycle, stepBatch, stepOutput, thrallLevel, thrallCap, dismiss, stepLimit, stepUpCost, stepUpPlan, upgradeStep, stepWorkerSlots,
   assignWorker, assignOverseer, unassign, thrallPost, useAbility, refreshOffers, hire, maxStars, storeUpCost, upgradeStore, orderGoods, foundRenownNeed, canDeliver, deliver, swapOrder, swapReady, rankIndex, rankInfo, heroFighting, thrallCount, sellPrice, sell, buyPrice, buyRes, buyMax, canBuyRes,
   canAdvance, advance, stageSustainable, autoAdvanceBlock, autoKillsNeeded, killHeal, retreat, canAfford, add, simulate, applyOffline, claimOffline, offlineStages,

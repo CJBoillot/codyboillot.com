@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Beta 0.4.3',
+  version: 'Beta 0.4.4',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -414,18 +414,18 @@ const CONFIG = {
     // ---- 0.9: buildings are one level each ----
     milestones: [],   // Beta 0.4.1: no milestones — growth comes from levels 1–10 and depths
     // 0.12.1: every building grows new levels (a grove, a field, a furnace… only the Mine digs). Level d makes yield^(d−1) × the first; digging it costs gold × digGrowth each time; its parts cost partCost^(d−1) × more.
-    depths: { yield: 10, partCost: 22, digMult: 4 },   // Beta 0.4.1: capacity = base × level × 10^(depth−1); a level at depth D costs 22^(D−1) more; opening the next depth costs 4 of its first levels
+    depths: { yield: 10, partCost: 22, digMult: 2 },   // Beta 0.4.1: capacity = base × level × 10^(depth−1); a level at depth D costs 22^(D−1) more; opening the next depth costs 2 of its first levels
     lordship: 0.01,                                      // +1% production per hero level
     minLv: 10,                                           // a complete City: every part of every building at this level, and the Barracks built
     // The army (0.9): the Barracks trains soldiers from Food + Supplies; soldiers eat every minute.
     // 0.10 war economy (income, not stockpiles): Forest's treated lumber = Housing, Mine's swords = Arms, Farm's bread = Food.
     // Each soldier draws `upkeep` of each per minute (× (1 + demandPerLand × lands held)). The army fights at the strength of its weakest line.
-    // 0.12 the army: the Barracks turns 1 person + arms + bread into a soldier. Each soldier costs a little more gear than the last (×growth per soldier you have).
-    army: { build: { lumber: 150, swords: 60, gold: 600 }, trainPerMin: 2, soldierCost: { lumber: 1, swords: 1, bread: 1 }, costGrowth: 1.01,
+    // 0.12 the army: the Barracks turns 1 person + arms + bread into a soldier. Beta 0.4.4: the price is flat per land (see costLand0).
+    army: { build: { lumber: 150, swords: 60, gold: 600 }, trainPerMin: 2, soldierCost: { lumber: 1, swords: 1, bread: 1 }, costLand0: 3, costLandGrowth: 2.0, costAge: 0.5,   // Beta 0.4.4: a soldier costs 3 × 2^(land−1) of each good (× the Age), however big the army already is
       lines: { housing: { good: 'lumber', line: 'forest', name: 'Housing', verb: 'Houses the army' }, arms: { good: 'swords', line: 'mine', name: 'Arms', verb: 'Arms the army' }, food: { good: 'bread', line: 'farm', name: 'Food', verb: 'Feeds the army' } },
       // casualties: marching soldiers fall at lossRate × pressure per minute (pressure = share of the hero's HP one fight takes, 0..1)
       lossRate: 0.01, recruitArms: 1,
-      bonusDiv: 25, hpDiv: 15, costBase: 60, costExp: 1.6,   // hero attack ×(1 + soldiers/25), HP ×(1 + soldiers/15): 700 soldiers fight like a 0.11 army of 20,000
+      bonusDiv: 7.9, hpDiv: 4.0, armyExp: 0.75, costBase: 60, costExp: 1.6,   // hero attack ×(1 + soldiers/25), HP ×(1 + soldiers/15): 700 soldiers fight like a 0.11 army of 20,000
       recBase: 80, recOffset: -20, garrisonShare: 0.02 },     // recommended army for land n (of an Age) = 80n − 20; a garrison needs 2% of that
     // 0.12 people: houses hold people; people become soldiers. Births fill the houses; conquered lands send settlers.
     people: { perHouse: 5, houseBase: 2.5, houseGrowth: 1.03, birthMin: 4, birthPct: 0.03, birthFill: 0.75,   // births fill houses to 75%; the rest is room for settlers
@@ -506,6 +506,7 @@ const CONFIG = {
   // jobs (jobs completed by hand or thrall), sold (gold earned at market), stage, boss, founded, thrall (assigned), activity (swings).
   // Shown in Settings → What's new (newest first). Keep each line short.
   changelog: [
+    ['Beta 0.4.4', 'Army economy audit. A soldier now costs the same however big your army is — the old price rose 1% with every soldier you had, so doubling your goods barely grew the army and invasions never caught up. The price is now set per land (3 of each good in the first land, doubling each land after, more in later Ages), and the army boost to your hero is a little softer to match. The Front now tells you how long the land will take at your current pace, how big your army will settle, what is holding it back and how much faster fixing it would make you, with a button straight to that building. The Barracks says what it is training as fast as, instead of "paused". Bottleneck alarms on the belts now update the moment you upgrade. Going deeper costs half as much.'],
     ['Beta 0.4.3', 'The whole chain on one screen. Inside any building, the small Chain | One switch beside Output shows every building of that chain as one snaking belt — the middle building runs the other way so the belt flows straight on, and colours step from red to violet along the whole chain. Every phase has its upgrade button beside its row (glowing red when it is the bottleneck), and a gold button appears beside a building\'s name when it can go deeper. Tap a building\'s name to open it on its own. Also: slots start working as a cart is sent to them, and row labels sit clear of the bottleneck glow.'],
     ['Beta 0.4.2', 'When the Barracks is paused for lack of lumber, arms or bread, every building in that chain now says so at the top: the slowest building tells you which part to upgrade, the others take you to it. The Output box now shows the building\'s steady output instead of a jumpy average.'],
     ['Beta 0.4.1', 'Buildings are belts. Every building now works one depth at a time, and each of its three parts has levels 1 to 10 — one big slot per level. Inside a building you watch mine carts ride a snaking belt through the three parts: they change colour as they are worked, wait on the belt for a free slot, and leave for the next building. If a part can\'t keep up, its belt fills and the goods are sold cheap on the spot: that part pulses red and its upgrade button glows until you fix it. With all three parts at Lv 10 a gold button opens the next depth (a new grove, furnace, oven…): the old one folds away and the new one starts at Lv 1 making what the old one made at Lv 10. A Camp builds up to Lv 10, a Hamlet to depth 2, a Village to depth 3, a City without limit. The Output box shows what the building really turns out per second. Old saves are converted to the same output. In a conquered land the Front box now says the Front is resting and what opens the next land (for the first land: the quest The Iron Hills), so it is clear why no siege is running.'],
@@ -810,7 +811,7 @@ const CONFIG = {
       steps: [ { label: 'Upgrade the Carpenter\'s bottleneck 3 more times', check: { stat: 'limitUps:carpenter', need: 3, since: true } }, { label: 'Train 25 more soldiers', check: { stat: 'trained', need: 25, since: true } } ], reward: { gold: 2000 }, focus: { tab: 'kingdom', ksub: 'prod', rtab: 'kingdom', el: 'step:carpenter' } },
     { id: 'w04c', chain: 'The Kingdom', name: 'The Endless Battle', text: 'Past the Ruler the fighting never ends. The Endless Battle never runs out of foes, and it is the one place the hero rests instead of retreating. Once a land is conquered, the hero marches on to the next by himself (untick it on the hero screen to stay and farm). While he is still conquering a land it pays at most half its taxes; once it is conquered it pays in full.',
       steps: [ { label: 'Win 50 fights in the Endless Battle', check: { stat: 'endlessKills', need: 50, since: true } } ], reward: { gold: 2500 }, focus: { tab: 'hero', sub: 'fight', el: 'ground:land1' } },
-    { id: 'w04b', chain: 'The Kingdom', name: 'The Price of an Army', text: 'Every soldier needs a little more gear than the last — the Barracks shows the next one\'s price. A bigger army needs a bigger Carpenter, Armory and Bakery.',
+    { id: 'w04b', chain: 'The Kingdom', name: 'The Price of an Army', text: 'Soldiers fall at the Front, so the army is only as big as the Barracks can keep refilling it. Every soldier takes lumber, arms and bread — and each new land asks more of each. A bigger army needs a bigger Carpenter, Armory and Bakery.',
       steps: [ { label: 'Upgrade the Carpenter, Armory or Bakery 5 times', check: { stat: 'armsFoodUps', need: 5, since: true } }, { label: 'Train 50 more soldiers', check: { stat: 'trained', need: 50, since: true } } ], reward: { gold: 3000 }, focus: { tab: 'kingdom', ksub: 'prod', rtab: 'kingdom', el: 'id:barracks-card' } },
     { id: 'w05', chain: 'The Kingdom', name: 'The Iron Hills', text: 'Every land is harder than the last — and pays more than twice as much in taxes. The hills hold silver, the metal of Hardened gear: garrison them and it flows in every hour.',
       steps: [ { label: 'Conquer the Iron Hills', check: { landDone: 2 } } ], reward: { gold: 5000 }, focus: { tab: 'hero', sub: 'fight', el: 'ground:land2' } },

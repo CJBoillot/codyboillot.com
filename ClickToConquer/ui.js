@@ -648,14 +648,14 @@ const UI = (() => {
   function renderBarracks() {
     const S = Game.S, f = Game.fmt, card = $('barracks-card'), av = Game.barracksAvailable(), built = Game.barracksBuilt();
     const c = Game.nextSoldierCost(), bl = Game.trainBlocker(), rate = Game.trainPerMin(), p3 = Game.phase() === 3, held = Game.landsHeld(), nx = Math.min(held + 1, CONFIG.ages.lands), rec = Game.recArmy(nx), sol = Game.soldiers();
-    const why = { lumber: 'short of lumber — grow the Wood chain', swords: 'short of arms — grow the Mine chain', bread: 'short of bread — grow the Farm chain' }[bl];
-    const k = [av, built, Game.barracksLv(), bl, sol, Math.ceil(c.lumber), Math.ceil(c.swords), Math.ceil(c.bread), rate.toFixed(1), p3, held, S.res.gold > 0 && Game.canUpBarracks()].join('|');
+    const sp = Game.soldiersPerMin(), why = { lumber: 'as fast as lumber arrives — grow the Wood chain', swords: 'as fast as arms arrive — grow the Mine chain', bread: 'as fast as bread arrives — grow the Farm chain', barracks: 'at the Barracks\' full pace — upgrade it to go faster' }[sp.by];
+    const k = [av, built, Game.barracksLv(), bl, sol, Math.ceil(c.lumber), Math.ceil(c.swords), Math.ceil(c.bread), sp.rate.toFixed(1), sp.by, p3, held, S.res.gold > 0 && Game.canUpBarracks()].join('|');
     if (card.__k !== k) { card.__k = k;
       setHtml(card, `<div class="bk-top"><img src="assets/buildings/barracks.webp" alt=""><div><div class="pname pname-lg">Barracks ${built ? '<span class="dim small">Lv ' + Game.barracksLv() + '</span>' : ''}</div><div class="tiny dim">lumber + arms + bread → 1 soldier</div></div><div class="bk-sol"><b>${f(sol)}</b><span class="tiny dim">soldiers</span></div></div>
         ${!av ? `<div class="small dim">🔒 The Barracks is built in a City.</div>` : `
         ${built ? `<div class="bk-row"><span>Next soldier</span><span>${costHtml({ lumber: Math.ceil(c.lumber), swords: Math.ceil(c.swords), bread: Math.ceil(c.bread) }).replace(/<span class="cost-name">[^<]*<\/span>/g, '')}</span></div>
-        <div class="bk-row"><span>Training</span><span class="${bl ? 'warn' : 'good'}">${bl ? 'paused: ' + why : `+${rate.toFixed(1)} / min`}</span></div>
-        <div class="tiny dim">Each soldier costs a little more than the last; losses in battle bring the price back down. Goods kept for building are never used.</div>` : ''}
+        <div class="bk-row"><span>Training</span><span class="${sp.rate > 0 ? 'good' : 'warn'}">+${sp.rate.toFixed(1)} / min</span></div><div class="tiny dim bk-why">Training ${why}.</div>
+        <div class="tiny dim">A soldier costs the same however big your army is; each new land costs more. Goods kept for building are never used.</div>` : ''}
         ${p3 ? `<div class="bk-rec small"><b>${f(Game.marching())}</b> soldiers at the front${Game.attritionPerMin() > 0 ? ` · <span class="bad">${Game.attritionPerMin().toFixed(1)}/min fall</span> as the siege gains ground` : ''}. <span class="dim">Soldiers are the fuel of conquest: the faster you train them, the faster the front moves.</span></div>` : ''}
         <button class="buy wide" id="barracks-up"><span class="small">${built ? 'Upgrade the Barracks (faster training)' : 'Build the Barracks'}</span><br><span class="cost">${costHtml(Game.barracksCost())}</span></button>`}`);
       const b = $('barracks-up'); if (b) { b.disabled = !Game.canUpBarracks(); b.addEventListener('click', () => { if (Game.upgradeBarracks()) { card.__k = ''; render(true); } }); } }
@@ -949,9 +949,10 @@ const UI = (() => {
       wireToggle(box); setHtml(box.querySelector('[data-f=outico]'), ico(R[last.make].icon, 20)); CV.lid = null; glowKey = ''; }
     ensureChain(lid);
     { const cf = Game.chainFlow(lid).find(c => c.id === last.id), out = cf ? cf.out : 0; setText(box.querySelector('[data-f=out]'), `${out < 10 ? out.toFixed(2) : f(out)} ${R[last.make].name.toLowerCase()}/s`); }
-    { const ab = box.querySelector('[data-f=army]'), bl = Game.barracksBuilt() ? Game.trainBlocker() : null, W = bl && Object.values(CONFIG.kingdom.army.lines).find(x => x.good === bl), mine = W && W.line === lid, slow = mine ? Game.slowestInLine(lid) : null;
-      ab.classList.toggle('hidden', !mine); if (mine) setHtml(ab, `<b>Training paused: short of ${R[bl].name.toLowerCase()}.</b> The slowest building here is the <b>${Game.stepDef(slow || st.id).name}</b> — upgrade its weakest part (<b>${Game.partName(slow || st.id, Game.limitPart(slow || st.id))}</b>).`); }
+    { const ab = box.querySelector('[data-f=army]'), bl = armyLimit(), W = bl && Object.values(CONFIG.kingdom.army.lines).find(x => x.good === bl), mine = W && W.line === lid, slow = mine ? Game.slowestInLine(lid) : null;
+      ab.classList.toggle('hidden', !mine); if (mine) setHtml(ab, `<b>⚔ The army waits on ${R[bl].name.toLowerCase()}</b> — soldiers train as fast as it arrives (+${Game.soldiersPerMin().rate.toFixed(1)}/min). The slowest building here is the <b>${Game.stepDef(slow || st.id).name}</b> — upgrade its weakest part (<b>${Game.partName(slow || st.id, Game.limitPart(slow || st.id))}</b>).`); }
   }
+  function armyLimit() { if (!Game.barracksBuilt() || Game.phase() !== 3) return null; const b = Game.soldiersPerMin().by; return b === 'barracks' ? null : b; } // Beta 0.4.4: steady, not the stock left this second
   function renderBld() {
     const S = Game.S, f = Game.fmt, id = bldOpen, st = Game.stepDef(id), box = $('bld-view'); if (!st || !Game.stepBuilt(id)) { closeBld(); return; }
     if (S.settings.chainView === 'chain') { renderChainBld(id, st); return; }
@@ -992,11 +993,11 @@ const UI = (() => {
         setHtml(db.querySelector('[data-f=dc]'), room ? costHtml(Game.digCost(id)).replace(/<span class="cost-name">[^<]*<\/span>/g, '') : ''); }
       setHtml(box.querySelector('[data-f=note]'), hot ? `<b class="warn">${Game.partName(id, hot)} can't keep up</b> — goods are sold cheap at its belt. Upgrade it.` : maxed ? '' : `Each level adds a slot. With all three at Lv 10, ${Game.unitName(id)} ${D + 1} opens and starts where this one ends.`); }
     { // the army's bottleneck, told where it can be fixed: in the chain that is short
-      const ab = box.querySelector('[data-f=army]'), bl = Game.barracksBuilt() ? Game.trainBlocker() : null, A = CONFIG.kingdom.army.lines, W = bl && Object.values(A).find(x => x.good === bl);
+      const ab = box.querySelector('[data-f=army]'), bl = armyLimit(), A = CONFIG.kingdom.army.lines, W = bl && Object.values(A).find(x => x.good === bl);
       const mine = W && W.line === st.line, slow = mine ? Game.slowestInLine(st.line) : null, lname = W ? { forest: 'Wood', mine: 'Arms', farm: 'Food' }[W.line] : '';
       ab.classList.toggle('hidden', !mine);
       if (mine) { const weak = Game.limitPart(id), me = slow === id || !slow;
-        setHtml(ab, `<b>Training paused: short of ${R[bl].name.toLowerCase()}.</b> ${me ? `This is the slowest building in the ${lname} chain — upgrade <b>${Game.partName(id, weak)}</b> (its weakest part).` : `The ${lname} chain's slowest building is the <b>${Game.stepDef(slow).name}</b>.`}${me ? '' : ` <button class="belt-go" data-go-slow="${slow}">Go to the ${Game.stepDef(slow).name} ›</button>`}`);
+        setHtml(ab, `<b>⚔ The army waits on ${R[bl].name.toLowerCase()}</b> — soldiers train as fast as it arrives (+${Game.soldiersPerMin().rate.toFixed(1)}/min). ${me ? `This is the slowest building in the ${lname} chain — upgrade <b>${Game.partName(id, weak)}</b> (its weakest part).` : `The ${lname} chain's slowest building is the <b>${Game.stepDef(slow).name}</b>.`}${me ? '' : ` <button class="belt-go" data-go-slow="${slow}">Go to the ${Game.stepDef(slow).name} ›</button>`}`);
         const go = ab.querySelector('[data-go-slow]'); if (go) go.onclick = () => openBld(go.dataset.goSlow);
         box.querySelectorAll('.belt-up').forEach(b => b.classList.toggle('army', me && b.dataset.part === weak && !b.classList.contains('alarm'))); }
       else box.querySelectorAll('.belt-up').forEach(b => b.classList.remove('army')); }
@@ -1841,6 +1842,19 @@ const UI = (() => {
   // "visible" = the full card's bars are actually inside the viewport, not just on the current tab
 
   // ===== Beta 0.4.0: The Front — the siege between forts, fed by soldiers =====
+  function goToBld(id) { const t = document.querySelector('[data-tab=kingdom]'); if (t && !t.disabled) t.click(); const k = document.querySelector('[data-ksub=prod]'); if (k && !k.disabled) k.click(); const r = document.querySelector('[data-rtab=kingdom]'); if (r && desktop) r.click(); openBld(id); }
+  function fmtEta(sec) { const m = Math.max(1, Math.round(sec / 60)); return m < 60 ? `${m} min` : m < 48 * 60 ? `${Math.floor(m / 60)} h${m % 60 ? ' ' + (m % 60) + ' min' : ''}` : `${Math.round(m / 60)} h`; }
+  // Beta 0.4.4: the invasion forecast — how long this land takes at today's pace, and what one change would make it faster
+  function forecastHtml(LN, G) {
+    const fc = Game.invasionForecast(LN), f = Game.fmt; if (!Game.barracksBuilt()) return '';
+    if (!(fc.rate > 0)) return `<div class="fr-fc"><div>⏱ <b>No soldiers are training</b>, so ${G.name} can't be taken yet. The Barracks needs lumber, arms and bread coming in.</div></div>`;
+    const faster = fc.room >= 1.15 ? ` — up to <b>×${fc.room.toFixed(1)}</b> faster before ${fc.nextBy === 'barracks' ? 'the Barracks' : R[fc.nextBy].name.toLowerCase()} becomes the limit` : ` — ${fc.nextBy === 'barracks' ? 'the Barracks' : R[fc.nextBy].name.toLowerCase()} is right behind it, so raise both`;
+    const lname = { forest: 'Wood', mine: 'Arms', farm: 'Food' }[fc.line] || '';
+    const tip = fc.by === 'barracks' ? `<b>Faster:</b> upgrade the <b>Barracks</b> — your goods arrive faster than it trains${faster}.`
+      : `<b>Faster:</b> the army waits on <b>${R[fc.by].name.toLowerCase()}</b>. Upgrade the ${lname} chain's slowest building, the <b>${Game.stepDef(fc.slow).name}</b>${faster}. <button class="belt-go" data-go-bld="${fc.slow}">Go to the ${Game.stepDef(fc.slow).name} ›</button>`;
+    return `<div class="fr-fc"><div>⏱ <b>${G.name}</b> falls in about <b>${fmtEta(fc.eta)}</b> at this pace <span class="dim">(plus the forts)</span>. Your army settles near <b>${f(fc.army)}</b>: +${fc.rate.toFixed(1)} trained / min, ${Math.round(100 * Game.siegeAttrition())}% fall each minute.</div>
+      <div class="fr-tip">${tip} ${Game.soldierWorth(LN) < Game.LC_siege().worthMax * 0.98 ? '<span class="dim">A stronger hero also makes every soldier count for more.</span>' : ''}</div></div>`;
+  }
   function renderFront(LN) {
     const box = $('front-box'), S = Game.S, h = S.hero, f = Game.fmt, G = Game.ground(), won = !!LN && Game.isEndless() && Game.landDone(LN), show = !!LN && Game.heroFighting() && (!Game.isEndless() || won);
     box.classList.toggle('hidden', !show); if (!show) return;
@@ -1859,8 +1873,10 @@ const UI = (() => {
     else head = `⚔ Siege of stage ${s} → ${nx}${Game.isBoss(nx) ? ' · 🏰 fort' : ''}`;
     const chips = boss || held || hold ? '' : `<div class="fr-chips"><span><b>${f(mar)}</b> at the front</span><span>worth <b>×${w.toFixed(w < 10 ? 2 : 1)}</b> each</span><span class="bad">−${fall.toFixed(1)}/min</span><span class="gold">+${f(fall * gp)}/min gold</span>${eta < 1e6 ? `<span>next stage ${Game.fmtTime(eta)}</span>` : ''}</div>`;
     const last = F.last && h.time - F.last.t < 120 ? `<div class="fr-last">Last sortie: ${f(F.last.fell)} fell, +${f(F.last.gold)} gold · siege ${Math.floor(100 * F.last.pct)}%</div>` : '';
-    setHtml(box, `<div class="row-between small"><span>${head}</span><b>${Math.floor(100 * pct)}%</b></div><div class="fr-bar"><i style="width:${(100 * pct).toFixed(1)}%"></i></div>${chips}${note ? `<div class="fr-note">${note}</div>` : ''}${last}
-      <div class="fr-help dim">Your hero leads: each soldier is worth ×${w.toFixed(2)} here — a stronger hero makes every soldier count for more.</div>`);
+    const fcH = held ? '' : forecastHtml(LN, G);
+    setHtml(box, `<div class="row-between small"><span>${head}</span><b>${Math.floor(100 * pct)}%</b></div><div class="fr-bar"><i style="width:${(100 * pct).toFixed(1)}%"></i></div>${chips}${note ? `<div class="fr-note">${note}</div>` : ''}${fcH}${last}
+      <div class="fr-help dim">${w >= Game.LC_siege().worthMax * 0.98 ? `Your hero leads: each soldier is worth ×${w.toFixed(0)} here, the most a soldier can be worth — only more soldiers make this land fall faster.` : `Your hero leads: each soldier is worth ×${w.toFixed(2)} here — a stronger hero makes every soldier count for more.`}</div>`);
+    box.onclick = e => { const g = e.target.closest('[data-go-bld]'); if (g) goToBld(g.dataset.goBld); };
   }
   function heroScreenVisible() {
     const c = $('fight-card').offsetParent ? $('fight-card') : (!Game.heroFighting() && $('harvest-card').offsetParent) ? $('harvest-card') : null; if (!c) return false; // 0.10.12: on a gathering screen the fight shows in the dock
