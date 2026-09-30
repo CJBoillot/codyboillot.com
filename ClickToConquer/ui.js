@@ -821,6 +821,7 @@ const UI = (() => {
       const stock = nx ? `<div class="kstock"><div class="kstock-head"><span>Keep ${R[st.make].name.toLowerCase()} in stock</span><span class="kstock-n" data-f="stn"></span></div><div class="seg kstock-seg">${Game.STOCK_MODES.map(m => `<button data-stock="${m}">${m === 'auto' ? 'Auto' : m === 0 ? '0' : m === 1 ? 'Full' : m === 0.5 ? '½' : '¼'}</button>`).join('')}</div><div class="tiny kstock-why" data-f="stwhy"></div></div>` : '';
       setHtml(box, `<div class="card supply-card"><div class="chain-strip" data-f="chain"></div><div class="tiny oflow hidden" data-f="oflow"></div></div>
         <div class="card belt-card">
+          <div class="belt-army hidden" data-f="army"></div>
           <div class="belt-head"><div class="belt-title"><img src="${artOf(st)}" srcset="${artOf(st)} 1x, assets/buildings/${st.art || st.id}@2x.webp 2x" alt=""><div><h3>${st.name}</h3><p><span data-f="depth"></span> · makes <b>${R[st.make].name.toLowerCase()}</b></p></div></div>
             <div class="belt-out">Output<b><span data-f="outico"></span><span data-f="out"></span></b></div></div>
           <canvas id="belt-cv" aria-label="${st.name}: goods move through ${Game.PARTS.map(p => Game.partName(id, p)).join(', ')}"></canvas>
@@ -838,7 +839,7 @@ const UI = (() => {
       setHtml(box.querySelector('[data-f=outico]'), ico(R[st.make].icon, 20));
       BV.id = null; glowKey = ''; }
     ensureBelt(id);
-    const fo = v => v < 10 ? v.toFixed(2) : f(v), gd = R[st.make].name.toLowerCase(), br = Game.beltRate(id), out = br.out !== undefined ? br.out : Game.stepOutput(id);
+    const fo = v => v < 10 ? v.toFixed(2) : f(v), gd = R[st.make].name.toLowerCase(), cfo = Game.chainFlow(st.line).find(c => c.id === id), out = cfo ? cfo.out : Game.stepOutput(id); // what it turns out: its slowest part, or what reaches it
     setText(box.querySelector('[data-f=depth]'), `${Game.unitName(id)} ${D}`);
     setText(box.querySelector('[data-f=out]'), `${fo(out)} ${gd}/s`);
     { const maxed = Game.depthMaxed(id), hot = Game.bottleneckPart(id);
@@ -851,6 +852,15 @@ const UI = (() => {
         setText(db.querySelector('[data-f=ds]'), room ? `${Game.unitName(id)} ${D} folds away · ${Game.unitName(id)} ${D + 1} starts at Lv 1 making ${fo(Game.stepOutput(id))} ${gd}/s` : `A bigger settlement is needed before ${Game.unitName(id)} ${D + 1}`);
         setHtml(db.querySelector('[data-f=dc]'), room ? costHtml(Game.digCost(id)).replace(/<span class="cost-name">[^<]*<\/span>/g, '') : ''); }
       setHtml(box.querySelector('[data-f=note]'), hot ? `<b class="warn">${Game.partName(id, hot)} can't keep up</b> — goods are sold cheap at its belt. Upgrade it.` : maxed ? '' : `Each level adds a slot. With all three at Lv 10, ${Game.unitName(id)} ${D + 1} opens and starts where this one ends.`); }
+    { // the army's bottleneck, told where it can be fixed: in the chain that is short
+      const ab = box.querySelector('[data-f=army]'), bl = Game.barracksBuilt() ? Game.trainBlocker() : null, A = CONFIG.kingdom.army.lines, W = bl && Object.values(A).find(x => x.good === bl);
+      const mine = W && W.line === st.line, slow = mine ? Game.slowestInLine(st.line) : null, lname = W ? { forest: 'Wood', mine: 'Arms', farm: 'Food' }[W.line] : '';
+      ab.classList.toggle('hidden', !mine);
+      if (mine) { const weak = Game.limitPart(id), me = slow === id || !slow;
+        setHtml(ab, `<b>Training paused: short of ${R[bl].name.toLowerCase()}.</b> ${me ? `This is the slowest building in the ${lname} chain — upgrade <b>${Game.partName(id, weak)}</b> (its weakest part).` : `The ${lname} chain's slowest building is the <b>${Game.stepDef(slow).name}</b>.`}${me ? '' : ` <button class="belt-go" data-go-slow="${slow}">Go to the ${Game.stepDef(slow).name} ›</button>`}`);
+        const go = ab.querySelector('[data-go-slow]'); if (go) go.onclick = () => openBld(go.dataset.goSlow);
+        box.querySelectorAll('.belt-up').forEach(b => b.classList.toggle('army', me && b.dataset.part === weak && !b.classList.contains('alarm'))); }
+      else box.querySelectorAll('.belt-up').forEach(b => b.classList.remove('army')); }
     { const o = Game.overflowRate(st.make), oe = box.querySelector('[data-f=oflow]'), su = o.u, sg = o.g; oe.classList.toggle('hidden', !(su > 1e-6));
       if (su > 1e-6) setHtml(oe, `<b>Storehouse full.</b> ${fo(su)} ${gd}/s is sold off cheap <b class="good">(+${fo(sg)} gold/s)</b> — expand the Storehouse in the Keep to keep it.`); }
     { const CF = Game.chainFlow(st.line), me = CF.findIndex(c => c.id === id), rn = k => R[k].name.toLowerCase();
