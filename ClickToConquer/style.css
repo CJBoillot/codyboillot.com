@@ -1240,7 +1240,7 @@ html, body { max-width: 100%; overflow-x: hidden; }
 .fr-note { font-size: 12px; line-height: 1.4; } .fr-note .bad { color: #ff8a8a; }
 .fr-last { font-size: 11px; color: var(--dim); } .fr-help { font-size: 10.5px; }
 
-/* Beta 0.5.0: the building as a belt */
+/* Beta 0.4.1: the building as a belt */
 .belt-card { display: flex; flex-direction: column; gap: 10px; }
 .belt-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; }
 .belt-title { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 10px; min-width: 0; }

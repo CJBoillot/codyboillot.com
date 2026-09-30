@@ -4,7 +4,7 @@
 
 const SAVE_KEY = 'ctc_beta_save_v1'; // Beta 0.1.0: a hard restart — Alpha saves are not loaded
 const ALPHA_KEYS = ['afk_proto_save_v12', 'afk_proto_save_v11'];
-const SCHEMA = 4; // 4: Beta 0.5.0 — buildings work one depth at a time, levels 1–10. 3: Beta 0.3.4 — back from the 0.3.x battle campaign (archive/battles-0.3.3). 2 was the 0.3.x save. // Beta 0.1.15: save schema. Every save under SAVE_KEY was born in the Beta, so the Alpha migrations below never apply to it.
+const SCHEMA = 4; // 4: Beta 0.4.1 — buildings work one depth at a time, levels 1–10. 3: Beta 0.3.4 — back from the 0.3.x battle campaign (archive/battles-0.3.3). 2 was the 0.3.x save. // Beta 0.1.15: save schema. Every save under SAVE_KEY was born in the Beta, so the Alpha migrations below never apply to it.
 function markAlphaMigrated(st) { const L = st.legacy = st.legacy || {}, K = st.kingdom = st.kingdom || {}; L.v111 = L.v112 = L.v120 = L.v121 = true; K.cr104 = true; K.v09 = true; st.schema = SCHEMA; }
 let hadAlpha = false;
 
@@ -563,7 +563,7 @@ function stepState(id) { const K = S.kingdom; K.steps = K.steps || {}; if (!K.st
 // 0.12: every building has three parts — Work makes the goods, Cart loads them, Haul brings them home. Each has its own level.
 const PARTS = ['W', 'C', 'H'], PART_NAME = { W: 'Work', C: 'Cart', H: 'Haul' };
 function partName(id, p) { const d = stepDef(id), n = d && d.parts; return n ? n[PARTS.indexOf(p)] : PART_NAME[p]; } // each building names its own steps
-// Beta 0.5.0: a building works one depth at a time. Each part (Dig/Extract/Haul…) has levels 1–10 at that depth; with all three at 10 the next depth opens,
+// Beta 0.4.1: a building works one depth at a time. Each part (Dig/Extract/Haul…) has levels 1–10 at that depth; with all three at 10 the next depth opens,
 // the old one folds away, and the new depth starts where it ended (Lv 1 of depth D+1 = Lv 10 of depth D: capacity = base × level × 10^(D−1)).
 const LVMAX = 10;
 function depthOf(id) { return stepState(id).D || 1; }
@@ -596,7 +596,7 @@ function tickPipe(st, s, d, nx, dt) {
   runStage(P, 'h', 'th', tripTime(id, 'H', d), dt, () => { const x = Math.min(P.b, Lh); P.b -= x; return x; }, x => { beltOut(st, x); routeOut(st, nx, x); });
 }
 function deepOutput() { return 0; }
-// Beta 0.5.0: the belt between two parts holds a few seconds of the next part's work; what arrives at a full belt is sold on the spot (the bottleneck alarm)
+// Beta 0.4.1: the belt between two parts holds a few seconds of the next part's work; what arrives at a full belt is sold on the spot (the bottleneck alarm)
 const BELT_S = 4;
 function pileCap(id, p) { return partCap(id, p) * BELT_S + tripLoad(id, p); }
 const BELT = { acc: {}, rate: {}, t: 0 };
@@ -629,7 +629,7 @@ function stepMods(id) {
   const lord = 1 + KC().lordship * (S.hero.level - 1), kp = kingdomPath(), km = kp ? (kp.jobSpeed || 1) * (((kp.outputMult || {})[lineOf(id)]) || 1) : 1; // 0.10.5: the kingdom's path really changes its buildings
   return { rate: lord * km * (1 + 0.15 * perkRank('charter')) * (1 + 0.1 * perkRank('treasury')) * wonderMult('supply'), haul: 1, cart: 1, working: stepBuilt(id) }; // 0.12: Master Builders, Dynastic Treasury and the Great Granary raise production
 }
-function stepLv(id) { return LVMAX * (depthOf(id) - 1) + Math.min(...PARTS.map(p => partLv(id, p))); } // Beta 0.5.0: depth and lowest part in one number (Depth 2 Lv 3 = 13)
+function stepLv(id) { return LVMAX * (depthOf(id) - 1) + Math.min(...PARTS.map(p => partLv(id, p))); } // Beta 0.4.1: depth and lowest part in one number (Depth 2 Lv 3 = 13)
 function milestoneCount(lv) { return KC().milestones.filter(m => lv >= m).length; }
 function nextMilestone(lv) { return KC().milestones.find(m => m > lv) || null; }
 function levelCap() { return tierDef().lvCap || 1e9; }
@@ -1012,7 +1012,7 @@ function questCheckRaw(c) {
   if (c.hallLv) { const n = hallLv(c.hallLv); return { done: n >= c.need, have: n, need: c.need }; }
   if (c.gearUps) { const n = gearUps(c.gearUps); return { done: n >= c.need, have: n, need: c.need }; }
   if (c.bLvSum) { let n = 0; for (const st of allSteps()) if (stepBuilt(st.id)) n += PARTS.reduce((a, p) => a + effLv(st.id, p), 0); return { done: n >= c.need, have: n, need: c.need }; }
-  if (c.partLv) { const [id, pt, dd] = c.partLv.split(':'), d = +dd || 1, D = stepBuilt(id) ? depthOf(id) : 0, n = !D || D < d ? 0 : D > d ? c.need : partLv(id, pt); return { done: n >= c.need, have: Math.min(n, c.need), need: c.need }; } // Beta 0.5.0: a deeper depth counts as done
+  if (c.partLv) { const [id, pt, dd] = c.partLv.split(':'), d = +dd || 1, D = stepBuilt(id) ? depthOf(id) : 0, n = !D || D < d ? 0 : D > d ? c.need : partLv(id, pt); return { done: n >= c.need, have: Math.min(n, c.need), need: c.need }; } // Beta 0.4.1: a deeper depth counts as done
   if (c.hallSum) { let n = 0; for (const h of KC().halls) n += hallLv(h.id); return { done: n >= c.need, have: n, need: c.need }; }
   if (c.hall) { const n = hallLv(c.hall); return { done: n >= 1, have: Math.min(1, n), need: 1 }; }
   if (c.allLv) { const n = Math.max(0, minBuildingLv()); return { done: n >= c.allLv, have: n, need: c.allLv }; }
@@ -1262,7 +1262,7 @@ function offlineChains(secs, gains) {
     for (let i = 0; i < steps.length; i++) {
       const st = steps[i]; if (!stepMods(st.id).working) break;
       const out = i === 0 ? stepOutput(st.id) * secs : Math.min(stepOutput(st.id) * secs, supply / st.ratio);
-      { const work = i === 0 ? partCap(st.id, 'W') * secs : Math.min(partCap(st.id, 'W') * secs, supply / st.ratio), extra = Math.max(0, work - out); // Beta 0.5.0: what a slow part can't take is sold at its belt, away too
+      { const work = i === 0 ? partCap(st.id, 'W') * secs : Math.min(partCap(st.id, 'W') * secs, supply / st.ratio), extra = Math.max(0, work - out); // Beta 0.4.1: what a slow part can't take is sold at its belt, away too
         if (extra > 0 && CONFIG.resources[st.make] && CONFIG.resources[st.make].sell) gains.gold = (gains.gold || 0) + extra * CONFIG.resources[st.make].sell * KC().autoSell; }
       const nx = steps[i + 1] && stepMods(steps[i + 1].id).working && !steps[i + 1].pull ? steps[i + 1] : null;
       if (!nx) { if (out > 0) gains[st.make] = (gains[st.make] || 0) + out; break; }
@@ -1592,7 +1592,7 @@ function load() {
     S = { ...b, ...d, res: { ...b.res, ...d.res }, kingdom: { ...b.kingdom, ...(d.kingdom || {}), steps: { ...((d.kingdom || {}).steps || {}) } }, tech: { ...(d.tech || {}) }, quests: { ...b.quests, ...(d.quests || {}) }, stats: { ...b.stats, ...(d.stats || {}) }, settings: { ...b.settings, ...d.settings },
       hero: { ...b.hero, ...d.hero, attr: { ...b.hero.attr, ...(d.hero || {}).attr }, gear: { ...b.hero.gear, ...(d.hero || {}).gear }, tools: { ...b.hero.tools, ...((d.hero || {}).tools || {}) }, grounds: { ...((d.hero || {}).grounds || {}) }, skillLv: { ...b.hero.skillLv, ...(d.hero || {}).skillLv } },
       legacy: { ...b.legacy, ...(d.legacy || {}), perks: { ...((d.legacy || {}).perks || {}) }, kills: { ...((d.legacy || {}).kills || {}) } } };
-    if ((d.schema || 1) < 4) { // Beta 0.5.0: old part levels (unbounded, milestones ×2, extra depths ×12 running side by side) → one depth with levels 1–10 of the same capacity
+    if ((d.schema || 1) < 4) { // Beta 0.4.1: old part levels (unbounded, milestones ×2, extra depths ×12 running side by side) → one depth with levels 1–10 of the same capacity
       const oldGrow = L => (1 + 0.12 * (L - 1)) * Math.pow(2, [10, 25, 50, 100, 200, 300, 400, 500].filter(m => L >= m).length);
       for (const id in ((S.kingdom || {}).steps || {})) { const st = S.kingdom.steps[id]; if (st.D) continue;
         const x = PARTS.map(p => oldGrow(st['lv' + p] || st.lv || 1) + (st.deep || []).reduce((a, dp, i) => a + oldGrow(dp[p] || 1) * Math.pow(12, i + 1), 0));

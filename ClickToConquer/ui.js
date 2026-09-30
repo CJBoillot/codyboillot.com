@@ -713,7 +713,7 @@ const UI = (() => {
       setText(pc.querySelector('[data-f=why]'), even ? `${Game.partName(id, down).toLowerCase()} keeps pace` : net > 0 ? 'building up' : `limited by ${Game.partName(id, lim === 'H' ? up : (Game.PARTS.indexOf(lim) < n ? lim : up)).toLowerCase()}`);
       pc.classList.toggle('jam', net > 0 && !even && !starved); });
   }
-  // ===== Beta 0.5.0: the building as a belt — one big slot per level in each part, belt cells between them, a mine cart per load =====
+  // ===== Beta 0.4.1: the building as a belt — one big slot per level in each part, belt cells between them, a mine cart per load =====
   const BV = { id: null, raf: 0 };
   const BELT_COL = ['#e8603c', '#f2a33a', '#bcd44a', '#38c9b4'];
   function beltView(cv, id) {

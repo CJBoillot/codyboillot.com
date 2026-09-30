@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Beta 0.5.0',
+  version: 'Beta 0.4.1',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -412,9 +412,9 @@ const CONFIG = {
     startGold: 50, foundRenown: 500, swapCooldown: 120,
     war: { thrallBonus: 10, supplyCapMult: 2, soldierCapBase: 50, soldierCapPerTier: 25, soldierGold: 2, quartermaster: { bread: 'food', swords: 'supplies', lumber: 'supplies' } },
     // ---- 0.9: buildings are one level each ----
-    milestones: [],   // Beta 0.5.0: no milestones — growth comes from levels 1–10 and depths
+    milestones: [],   // Beta 0.4.1: no milestones — growth comes from levels 1–10 and depths
     // 0.12.1: every building grows new levels (a grove, a field, a furnace… only the Mine digs). Level d makes yield^(d−1) × the first; digging it costs gold × digGrowth each time; its parts cost partCost^(d−1) × more.
-    depths: { yield: 10, partCost: 22, digMult: 4 },   // Beta 0.5.0: capacity = base × level × 10^(depth−1); a level at depth D costs 22^(D−1) more; opening the next depth costs 4 of its first levels
+    depths: { yield: 10, partCost: 22, digMult: 4 },   // Beta 0.4.1: capacity = base × level × 10^(depth−1); a level at depth D costs 22^(D−1) more; opening the next depth costs 4 of its first levels
     lordship: 0.01,                                      // +1% production per hero level
     minLv: 10,                                           // a complete City: every part of every building at this level, and the Barracks built
     // The army (0.9): the Barracks trains soldiers from Food + Supplies; soldiers eat every minute.
@@ -506,8 +506,7 @@ const CONFIG = {
   // jobs (jobs completed by hand or thrall), sold (gold earned at market), stage, boss, founded, thrall (assigned), activity (swings).
   // Shown in Settings → What's new (newest first). Keep each line short.
   changelog: [
-    ['Beta 0.5.0', 'Buildings are belts. Every building now works one depth at a time, and each of its three parts has levels 1 to 10 — one big slot per level. Inside a building you watch mine carts ride a snaking belt through the three parts: they change colour as they are worked, wait on the belt for a free slot, and leave for the next building. If a part can\'t keep up, its belt fills and the goods are sold cheap on the spot: that part pulses red and its upgrade button glows until you fix it. With all three parts at Lv 10 a gold button opens the next depth (a new grove, furnace, oven…): the old one folds away and the new one starts at Lv 1 making what the old one made at Lv 10. A Camp builds up to Lv 10, a Hamlet to depth 2, a Village to depth 3, a City without limit. The Output box shows what the building really turns out per second. Old saves are converted to the same output.'],
-    ['Beta 0.4.1', 'In a conquered land the Front box now says the Front is resting and what opens the next land (for the first land: the quest The Iron Hills), so it is clear why no siege is running.'],
+    ['Beta 0.4.1', 'Buildings are belts. Every building now works one depth at a time, and each of its three parts has levels 1 to 10 — one big slot per level. Inside a building you watch mine carts ride a snaking belt through the three parts: they change colour as they are worked, wait on the belt for a free slot, and leave for the next building. If a part can\'t keep up, its belt fills and the goods are sold cheap on the spot: that part pulses red and its upgrade button glows until you fix it. With all three parts at Lv 10 a gold button opens the next depth (a new grove, furnace, oven…): the old one folds away and the new one starts at Lv 1 making what the old one made at Lv 10. A Camp builds up to Lv 10, a Hamlet to depth 2, a Village to depth 3, a City without limit. The Output box shows what the building really turns out per second. Old saves are converted to the same output. In a conquered land the Front box now says the Front is resting and what opens the next land (for the first land: the quest The Iron Hills), so it is clear why no siege is running.'],
     ['Beta 0.4.0', 'The Front. Conquest is now a siege fed by soldiers. In a land, every stage between forts is besieged by your army: the siege bar fills at (soldiers × their worth) and the ground never falls back. Your hero sets that worth — the stronger he is against this land\'s soldiers, the more each soldier counts ("worth ×1.4 each"). Soldiers fall only while the siege gains ground (2% of the army a minute), and each takes foes and their gold with him. Every 10th stage is a fort: the hero duels its captain himself; if he can\'t win yet, the army holds the breached walls, no one falls, and he tries again once stronger (or tap Advance). The pace of conquest is now the pace of your Barracks — lumber, arms and bread. It all runs while you are away, and the welcome-back report says how far the front moved. No more recommended army: after a land falls the hero marches on straight away.'],
     ['Beta 0.3.4', 'Back to the old battles. The army-vs-army dice campaign (0.3.0–0.3.3) was a misfire and is shelved for now: lands are fought stage by stage again with the hero leading the army, as in 0.2.0, with the Endless Battle and auto-march back. Saves from 0.3.x get their land progress, captains and quest back.'],
     ['Beta 0.3.3', 'AFK battles are safe. Replaying a battle you have already won, in Defend, costs no soldiers — the fallen are only wounded — so the army can farm all night and still be there in the morning. Soldiers are only lost when you push forward. Your hero\'s bonus is recalibrated: a new kingdom starts near 0 ("hero −1 on every die") and it grows as the hero does; enemy armies are larger to match. A crit while pushing now takes a prisoner, who joins you only if you win. On a conquered land, Advance becomes "March to (next land)". The welcome-back report says where the army fought, what it lost and why it stopped.'],
