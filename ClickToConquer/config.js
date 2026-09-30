@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Beta 0.4.8',
+  version: 'Beta 0.5.0',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -209,33 +209,33 @@ const CONFIG = {
   // Points: 1 per Combat level. ★ tokens: 1 per boss ever slain (first kill of each boss stage) + quest rewards.
   // A node opens when a connected node one tier closer to the centre is maxed (10/10). Notables and keystones cost 1 point + 1 ★ per rank.
   paths: { // Beta 0.4.6: the Crown Tree rebuilt around the Front — Hero (worth per soldier), Army (how big it gets), Realm (goods that feed it). Permanent, bought with Crowns.
-    rowCost: [1, 3, 8, 25], endlessBase: 40, endlessGrowth: 1.15, levelBonus: 0.03, ranks: 3,
+    rowCost: [3, 12, 40, 150], rankGrowth: 1.3, endlessBase: 200, endlessGrowth: 1.15, levelBonus: 0.03, ranks: 5, // Beta 0.5: effects about a quarter of 0.4.6, more ranks, each rank ×1.3
     branches: [ { id: 'H', name: 'Hero', desc: 'worth per soldier', color: '#d9604c' }, { id: 'A', name: 'Army', desc: 'how big it gets', color: '#6fa3d9' }, { id: 'R', name: 'Realm', desc: 'goods that feed it', color: '#7fd28f' } ],
     plan: [[1],[0,2],[1],[1],[1]], // tier I · a pair · tier III · keystone (pick one of the three) · endless
     // [name, per-rank mods, kind, max ranks, perk id (effect handled by the engine), short effect]
     nodes: {
-      H: [ ['Sharpened Steel', { attackX: 1.1 }, 'small', 3, null, 'Hero attack ×1.1 per rank'],
-           ["Captain's Presence", {}, 'small', 3, 'presence', 'Soldier worth +8% per rank'],
-           ['Iron Guard', { hpX: 1.1 }, 'small', 3, null, 'Hero HP and healing ×1.1 per rank'],
-           ['Fort Breaker', { bossDmg: 1.0 }, 'notable', 1, null, 'Double damage to captains and rulers'],
-           ['Champion', {}, 'key', 1, 'champion', 'Soldier worth grows freely up to ×40, not ×25'],
-           ['Bloodline of Kings', {}, 'endless', 0, 'worthline', 'Soldier worth ×1.05 per rank'] ],
-      A: [ ['Field Surgeons', {}, 'small', 3, 'surgeons', 'Losses at the Front −8% per rank'],
-           ['Lean Rations', {}, 'small', 3, 'leanRations', 'Soldiers cost −6% goods per rank'],
-           ['Drill Masters', {}, 'small', 3, 'drill', 'Barracks trains +25% per rank'],
-           ['Standing Army', {}, 'notable', 1, 'standing', 'Losses at the Front −20%'],
-           ['Levy', {}, 'key', 1, 'levy', 'Soldiers cost −20% goods'],
-           ['Endless Legion', {}, 'endless', 0, 'legion', 'Losses ×0.97 per rank'] ],
-      R: [ ['Master Builders', {}, 'small', 3, 'charter', 'Every building +10% output per rank'],
-           ['Guild Charters', {}, 'small', 3, 'guild', "Each chain's slowest building +25% per rank"],
+      H: [ ['Sharpened Steel', { attackX: 1.1 }, 'small', 3, null, 'Hero attack ×1.1 per rank (before the Kingdom)'],
+           ["Captain's Presence", {}, 'small', 5, 'presence', 'Soldier worth +2% per rank'],
+           ['Iron Guard', { hpX: 1.1 }, 'small', 3, null, 'Hero HP and healing ×1.1 per rank (before the Kingdom)'],
+           ['Fort Breaker', { bossDmg: 0.5 }, 'notable', 1, null, 'Forts ×1.5 easier to storm'],
+           ['Champion', {}, 'key', 1, 'champion', 'Soldier worth ×1.15'],
+           ['Bloodline of Kings', {}, 'endless', 0, 'worthline', 'Soldier worth ×1.01 per rank'] ],
+      A: [ ['Field Surgeons', {}, 'small', 5, 'surgeons', 'Losses at the Front −2% per rank'],
+           ['Lean Rations', {}, 'small', 5, 'leanRations', 'Soldiers cost −1.5% goods per rank'],
+           ['Drill Masters', {}, 'small', 5, 'drill', 'Barracks trains +6% per rank'],
+           ['Standing Army', {}, 'notable', 1, 'standing', 'Losses at the Front −6%'],
+           ['Levy', {}, 'key', 1, 'levy', 'Soldiers cost −8% goods'],
+           ['Endless Legion', {}, 'endless', 0, 'legion', 'Losses ×0.995 per rank'] ],
+      R: [ ['Master Builders', {}, 'small', 5, 'charter', 'Every building +3% output per rank'],
+           ['Guild Charters', {}, 'small', 5, 'guild', "Each chain's slowest building +8% per rank"],
            ['Deep Foundations', {}, 'small', 3, 'foundations', 'Buildings start 1 depth deeper per rank after passing the Crown or a new Age'],
-           ['Royal Treasury', { goldPct: 0.3 }, 'notable', 1, 'royal', 'Gold +30% (kills and taxes)'],
-           ['Golden Age', {}, 'key', 1, 'golden', 'Every building ×1.4 output'],
-           ['Dynastic Workshops', {}, 'endless', 0, 'dynasty', 'Every building ×1.05 output per rank'] ],
+           ['Royal Treasury', { goldPct: 0.1 }, 'notable', 1, 'royal', 'Gold +10% (kills and taxes)'],
+           ['Golden Age', {}, 'key', 1, 'golden', 'Every building ×1.12 output'],
+           ['Dynastic Workshops', {}, 'endless', 0, 'dynasty', 'Every building ×1.01 output per rank'] ],
     },
     perkDesc: {},
     // the old tree (0.11.1–Beta 0.4.5), kept only to refund it
-    oldPlan: [[1],[0,2],[0,1,2],[1],[0,2],[0,1,2],[1],[1]], oldRowCost: [1, 3, 8, 30, 40, 80, 300],
+    oldPlan: [[1],[0,2],[0,1,2],[1],[0,2],[0,1,2],[1],[1]], oldRowCost: [1, 3, 8, 30, 40, 80, 300], v046RowCost: [1, 3, 8, 25], v046Endless: 40,
   },
 
 
@@ -399,6 +399,42 @@ const CONFIG = {
   // Each line is a chain: gather → refine → craft. Kingdom N (the Nth founding) unlocks the steps with unlock ≤ N.
   // A step: Rate (units/s) = base × (1 + rateGrowth × (Lv−1)); RoundTrip = max(haulMin, haulBase − haulStep × (Lv−1)) s; Cart = cartBase + cartStep × Lv.
   // Output = min(Rate, Cart / RoundTrip). Carts deliver to the next step's input, or to the Storehouse for the last unlocked step.
+  // ---------- Beta 0.5: the War Council — in the Kingdom phase the Army tab replaces the Hero tab ----------
+  war: {
+    worth0: 4,            // a soldier's worth before Supply, Commander, Commands and Crowns
+    fortMult: 3,          // a fort is a siege this many times the stage before it, divided by fort power (Helmets, Siege Engines, Fort Breaker)
+    rankPct: 0.005,       // Commander: +0.5% soldier worth per rank
+    rankXp: 50, rankGrow: 1.03, stageXp: 10, // rank r → r+1 costs rankXp × rankGrow^r XP; every stage taken gives stageXp × Age
+    costAge: 0.5,         // Supply costs × ageMult('gold')^costAge
+    // Beta 0.5: Commands — unlocked once with gold, equipped in slots (one per land conquered in Age I, then one per Era Ruler), trained one at a time over hours to weeks
+    cmdTime: 1200, cmdTimeGrow: 1.3, cmdGold: 2000, cmdGoldGrow: 1.25, unlockHours: 1, slotsAgeOne: 10,
+    commands: [
+      { id: 'wagons',   fam: 'Logistics', icon: '🛒', name: 'Supply Wagons',   eff: 'soldierCost', per: 0.98, mode: 'mul', desc: 'Soldiers cost −2% goods per level' },
+      { id: 'foragers', fam: 'Logistics', icon: '🌾', name: 'Foragers',        eff: 'bread',       per: 0.96, mode: 'mul', desc: 'Soldiers need −4% bread per level' },
+      { id: 'timber',   fam: 'Logistics', icon: '🪵', name: 'Timber Yards',    eff: 'lumber',      per: 0.96, mode: 'mul', desc: 'Soldiers need −4% lumber per level' },
+      { id: 'armorers', fam: 'Logistics', icon: '⚒',  name: 'Armorers',        eff: 'swordsCost',  per: 0.96, mode: 'mul', desc: 'Soldiers need −4% arms per level' },
+      { id: 'quarter',  fam: 'Logistics', icon: '📦', name: 'Quartermaster',   eff: 'prod',        per: 0.02, mode: 'add', desc: 'Every building +2% output per level' },
+      { id: 'drill',    fam: 'Command',   icon: '📯', name: 'Drill Sergeants', eff: 'train',       per: 0.03, mode: 'add', desc: 'Barracks trains +3% per level' },
+      { id: 'hospital', fam: 'Command',   icon: '⛺', name: 'Field Hospital',  eff: 'loss',        per: 0.98, mode: 'mul', desc: 'Losses at the Front −2% per level' },
+      { id: 'banners',  fam: 'Command',   icon: '🚩', name: 'War Banners',     eff: 'worth',       per: 0.02, mode: 'add', desc: 'Soldier worth +2% per level' },
+      { id: 'levy',     fam: 'Command',   icon: '📜', name: 'Levy',            eff: 'levy',        per: 25,   mode: 'add', desc: 'Each land conquered sends 25 × Age soldiers per level' },
+      { id: 'surveyor', fam: 'Command',   icon: '🗺', name: 'Surveyors',       eff: 'xp',          per: 0.1,  mode: 'add', desc: 'Commander XP +10% per level' },
+      { id: 'sappers',  fam: 'Siege',     icon: '⛏', name: 'Sappers',         eff: 'cost',        per: 0.98, mode: 'mul', desc: 'Siege cost −2% per level' },
+      { id: 'engines',  fam: 'Siege',     icon: '🏗', name: 'Siege Engines',   eff: 'fort',        per: 0.04, mode: 'add', desc: 'Fort storming +4% per level' },
+      { id: 'night',    fam: 'Siege',     icon: '🌙', name: 'Night Raids',     eff: 'away',        per: 0.03, mode: 'add', desc: 'The siege runs +3% faster while you are away, per level' },
+      { id: 'tax',      fam: 'Realm',     icon: '💰', name: 'Tax Collectors',  eff: 'tax',         per: 0.03, mode: 'add', desc: 'Taxes +3% per level' },
+      { id: 'plunder',  fam: 'Realm',     icon: '🪙', name: 'Plunder',         eff: 'plunder',     per: 0.05, mode: 'add', desc: 'Gold from the fallen +5% per level' },
+      { id: 'smiths',   fam: 'Realm',     icon: '🔨', name: 'Royal Smiths',    eff: 'supplyCost',  per: 0.98, mode: 'mul', desc: 'Supply costs −2% per level' },
+    ],
+    supply: {
+      blades:  { name: 'Blades',  icon: '🗡', slot: 'weapon',  eff: 'worth', per: 1.02,  arms: 20,  gold: 1500,  grow: 1.08, desc: 'Soldier worth ×1.02 per level' },
+      armour:  { name: 'Armour',  icon: '🛡', slot: 'chest',   eff: 'loss',  per: 0.99,  arms: 20,  gold: 1500,  grow: 1.08, floor: 0.05, desc: 'Losses at the Front ×0.99 per level' },
+      helmets: { name: 'Helmets', icon: '⛑', slot: 'helm',    eff: 'fort',  per: 1.02,  arms: 15,  gold: 1200,  grow: 1.08, desc: 'Fort storming ×1.02 per level' },
+      bows:    { name: 'Bows',    icon: '🏹', slot: 'gloves',  eff: 'cost',  per: 0.99,  arms: 30,  gold: 1000,  grow: 1.09, floor: 0.1, desc: 'Siege cost ×0.99 per level' },
+      horses:  { name: 'Horses',  icon: '🐎', slot: 'boots',   eff: 'train', per: 1.015, arms: 10,  gold: 2000,  grow: 1.08, desc: 'Barracks training ×1.015 per level' },
+      banners: { name: 'Banners', icon: '🚩', slot: 'trinket', eff: 'all',   per: 1.01,  arms: 200, gold: 15000, grow: 1.12, desc: 'Every Supply effect ×1.01 per level' },
+    },
+  },
   kingdom: {
     lines: {
       forest: { name: 'Wood', chain: 'lumber', icon: [4,6], steps: [
@@ -419,7 +455,7 @@ const CONFIG = {
     // ---- 0.9: buildings are one level each ----
     milestones: [],   // Beta 0.4.1: no milestones — growth comes from levels 1–10 and depths
     // 0.12.1: every building grows new levels (a grove, a field, a furnace… only the Mine digs). Level d makes yield^(d−1) × the first; digging it costs gold × digGrowth each time; its parts cost partCost^(d−1) × more.
-    depths: { yield: 10, partCost: 22, digMult: 2 },   // Beta 0.4.1: capacity = base × level × 10^(depth−1); a level at depth D costs 22^(D−1) more; opening the next depth costs 2 of its first levels
+    depths: { yield: 10, partCost: 30, digMult: 4 }, // Beta 0.5: was 22 and 2 — the belts cost more in the long war   // Beta 0.4.1: capacity = base × level × 10^(depth−1); a level at depth D costs 22^(D−1) more; opening the next depth costs 2 of its first levels
     lordship: 0.01,                                      // +1% production per hero level
     minLv: 10,                                           // a complete City: every part of every building at this level, and the Barracks built
     // The army (0.9): the Barracks trains soldiers from Food + Supplies; soldiers eat every minute.
@@ -507,6 +543,7 @@ const CONFIG = {
   // jobs (jobs completed by hand or thrall), sold (gold earned at market), stage, boss, founded, thrall (assigned), activity (swings).
   // Shown in Settings → What's new (newest first). Keep each line short.
   changelog: [
+    ['Beta 0.5.0', 'The War Council — the Kingdom phase is rebuilt for a long war. The Hero tab becomes the Army tab, with four screens. Front: the siege, now fought entirely by the army — every 10th stage is a fort it storms itself (3× a stage, easier with Helmets and Fort Breaker); your hero leads from the war tent as the Commander, whose rank rises as the army takes ground (+0.5% soldier worth per rank). Supply: the army\'s standard issue — Blades, Armour, Helmets, Bows, Horses and Banners — paid in arms and gold; arms spent here are arms not turned into soldiers. A soldier\'s worth now comes from Supply, not from the hero (a save already at war keeps its worth, carried over into Blades). Commands: 16 doctrines in four families. Every land conquered in the first Age opens a slot, then each Era Ruler opens one more; unlock a Command once with gold, equip it, and train it one level at a time — minutes at first, then hours, then weeks — even while you are away. Crowns: the Crown Tree now lives in the Army tab, rescaled for months of play (smaller effects, deeper ranks, each rank costs more); every rank you bought is refunded as Crowns. The belts cost more to grow late (30× per depth, going deeper 4×). The Kingdom quests are rewritten to teach Supply and Commands, and Deeds ask for Supply Drives and Doctrine instead of hero gear and trophies. The Loot tab and the hero\'s fighting are hidden in the Kingdom phase. Pacing past Age IV is still being tuned.'],
     ['Beta 0.4.8', 'Fixes. Opening a new depth no longer leaves carts stuck on the belt: the chain redraws itself at once and keeps flowing into the new level. The belt between two buildings follows your upgrades right away — once the next building can take everything, the waiting carts go straight in. Bottleneck alarms read the Storehouse as it is now, not a five-second average, so they switch the moment things change. The "Go to the …" buttons (on the Front, and on the army banner inside buildings) work every time — the live numbers around them were redrawing them mid-tap. Gear that needs goods your chains pass straight along (ingots, lumber…) can now be forged anyway: the button buys the missing goods at the Market as you press it and says how much that costs, and when a quest asks for gear, the Storehouse sets aside the goods it needs.'],
     ['Beta 0.4.7', 'The chain view now shows when one building makes more than the next can use. Carts queue up on the belt between them, and when the queue is full the extra carts go to the Storehouse (or are sold if it is full). A line over the belt says how much the next building takes, e.g. "Mill takes 8.6 of 67 grain/s", and the chain\'s slowest building is marked. When a building runs short, its empty slots now show it waiting. On its own screen, a building that makes more than the next one uses says so, with a button to go upgrade it. The stray "+0.0 gold" pop-ups are gone. Carts that can go nowhere — the next building is full and so is the Storehouse — are sold right where they back up, with the gold shown there. Upgrade buttons are easier to read: each says Upgrade with its gold cost, and a ×1 / Max toggle sits above them. The red bottleneck alarm is back where it belongs: it now counts everything the last building sends in (not just what the weakest part can finish), and when the next building can\'t take all its input and the Storehouse is full, its Work part pulses red.'],
     ['Beta 0.4.6', 'The Crown Tree is rebuilt, and the Halls are gone. The tree now has three branches that match how a land falls: the Hero (what each soldier is worth), the Army (how big it gets: fewer losses, cheaper soldiers, faster training) and the Realm (the goods that feed it). Each branch has a Tier I node, a pair to choose from, a bigger node, a keystone (take one of the three: Champion, Levy or Golden Age) and an endless node. Every node now shows how much faster one more rank makes the land you are fighting fall. All Crowns spent in the old tree are refunded. The Training Yard, Smithy, Apothecary and Stables are gone and refunded as gold (up to a full treasury); gear now costs half from the Hamlet on, as the Smithy used to do, and later Ages were retuned so your hero still carries the Front without them.'],
@@ -802,28 +839,28 @@ const CONFIG = {
       steps: [ { label: 'Every part of every building at Lv 10', check: { allLv: 10 } }, { label: 'Upgrade parts 10 more times', check: { bLvSum: 1, need: 10, since: true } } ], reward: { gold: 1000 }, focus: { tab: 'kingdom', ksub: 'prod', rtab: 'kingdom', el: 'id:prod-grid' } },
     { id: 'y04', chain: 'City', name: 'Proclaim the Kingdom', text: 'The City is complete. Proclaim the Kingdom: your City becomes the Capital — nothing is lost — and the conquest begins.',
       steps: [ { label: 'Kingdom → Keep → Proclaim the Kingdom', check: { proclaimed: 1 } } ], reward: { gold: 500 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:found-btn' } },
-    { id: 'w02', chain: 'The Kingdom', name: 'March on Ashford', text: 'Conquest is a siege, and soldiers are its fuel. The army besieges each stage of a land and the ground falls as fast as your soldiers arrive — the stronger your hero, the more each soldier is worth. Every 10th stage is a fort: there the hero duels its captain himself. Choose Ashford Vale on the hero screen.',
-      steps: [ { label: 'Hero → Where to fight → Ashford Vale', check: { landPct: 1, need: 1 } }, { label: 'Conquer 10% more of Ashford Vale', check: { landPct: 1, need: 10, since: true, orDone: true } } ], reward: { gold: 1000 }, focus: { tab: 'hero', sub: 'fight', el: 'ground:land1' } },
-    { id: 'w03', chain: 'The Kingdom', name: 'A Garrison', text: 'A conquered land pays taxes — but only as much as its garrison can hold. Soldiers in a garrison do not march with the hero.',
+    { id: 'w02', chain: 'The Kingdom', name: 'March on Ashford', text: 'The hero now leads from the war tent: this tab is your Army. Conquest is a siege, and soldiers are its fuel — the army besieges each stage of a land, and the ground falls as fast as your soldiers arrive. Every 10th stage is a fort, stormed by the army itself.',
+      steps: [ { label: 'Army → Front: the siege of Ashford Vale begins', check: { landPct: 1, need: 1 } }, { label: 'Conquer 10% more of Ashford Vale', check: { landPct: 1, need: 10, since: true, orDone: true } } ], reward: { gold: 1000 }, focus: { tab: 'hero', el: 'asub:front' } },
+    { id: 'w03', chain: 'The Kingdom', name: 'A Garrison', text: 'A conquered land pays taxes — but only as much as its garrison can hold. Soldiers in a garrison do not march with the army.',
       steps: [ { label: 'Kingdom → Lands → Ashford Vale → station 2 soldiers', check: { garrison: 1, need: 2 } }, { label: 'Earn 100 gold in taxes', check: { taxed: 100 } } ], reward: { gold: 1000 }, focus: { tab: 'kingdom', ksub: 'lands', rtab: 'kingdom', el: 'id:lands-card' } },
     { id: 'w01', chain: 'The Kingdom', name: 'Go Deeper', text: 'Taxes are flowing, and every building can keep growing. When all three of a building\'s parts reach Lv 10, it opens its next depth — the Mine digs deeper, the Farm plows a new field, the Forge builds a new furnace. The old one folds away and the new one starts where it ended, with ten more levels to fill.',
       steps: [ { label: 'Open a new depth in any building (all three parts at Lv 10)', check: { stat: 'digs', need: 1, since: true } }, { label: 'Upgrade parts 5 more times', check: { stat: 'partUps', need: 5, since: true } } ], reward: { gold: 5000 }, focus: { tab: 'kingdom', ksub: 'prod', rtab: 'kingdom', el: 'step:shaft' } },
     { id: 'w03b', chain: 'The Kingdom', name: 'The Fallen', text: 'Soldiers fall only while the siege is gaining ground, and each one takes foes (and their gold) with him. Every new soldier needs lumber, arms and bread — keep all three chains flowing and the front never stops.',
       steps: [ { label: 'Train 25 more soldiers', check: { stat: 'trained', need: 25, since: true } } ], reward: { gold: 1500 }, focus: { tab: 'kingdom', ksub: 'prod', rtab: 'kingdom', el: 'id:barracks-card' } },
-    { id: 'w04', chain: 'The Kingdom', name: 'Baron Hollin', text: 'At the end of every land waits its Ruler. Beat him and take his crown — Crowns are the power of your dynasty.',
-      steps: [ { label: 'Conquer Ashford Vale (defeat Baron Hollin, stage 50)', check: { landDone: 1 } }, { label: 'Earn 100 more gold in taxes', check: { taxed: 1, need: 100, since: true } } ], reward: { gold: 2000 }, focus: { tab: 'hero', sub: 'fight', el: 'ground:land1' } },
-    { id: 'w04d', chain: 'The Kingdom', name: 'Timber for the Army', text: 'Every soldier takes a length of lumber — for shields, spears and camp. When the army grows, the Wood chain must grow with it.',
-      steps: [ { label: 'Upgrade the Carpenter\'s bottleneck 3 more times', check: { stat: 'limitUps:carpenter', need: 3, since: true } }, { label: 'Train 25 more soldiers', check: { stat: 'trained', need: 25, since: true } } ], reward: { gold: 2000 }, focus: { tab: 'kingdom', ksub: 'prod', rtab: 'kingdom', el: 'step:carpenter' } },
-    { id: 'w04c', chain: 'The Kingdom', name: 'The Endless Battle', text: 'Past the Ruler the fighting never ends. The Endless Battle never runs out of foes, and it is the one place the hero rests instead of retreating. Once a land is conquered, the hero marches on to the next by himself (untick it on the hero screen to stay and farm). While he is still conquering a land it pays at most half its taxes; once it is conquered it pays in full.',
-      steps: [ { label: 'Win 50 fights in the Endless Battle', check: { stat: 'endlessKills', need: 50, since: true } } ], reward: { gold: 2500 }, focus: { tab: 'hero', sub: 'fight', el: 'ground:land1' } },
+    { id: 'w04', chain: 'The Kingdom', name: 'Baron Hollin', text: 'At the end of every land waits its Ruler behind his last fort. Storm it and take his crown — Crowns are the power of your dynasty, and every land you conquer in this first Age opens a Command slot.',
+      steps: [ { label: 'Conquer Ashford Vale (storm Baron Hollin\'s fort, stage 50)', check: { landDone: 1 } }, { label: 'Earn 100 more gold in taxes', check: { taxed: 1, need: 100, since: true } } ], reward: { gold: 2000 }, focus: { tab: 'hero', el: 'asub:front' } },
+    { id: 'w04d', chain: 'The Kingdom', name: 'Your First Command', text: 'Ashford Vale opened a Command slot. Commands are the army\'s doctrine: unlock one with gold, equip it in a slot, and it works for as long as it sits there — and they are yours forever.',
+      steps: [ { label: 'Army → Commands → unlock a Command and equip it', check: { stat: 'cmdEquips', need: 1 } }, { label: 'Train a Command one level', check: { stat: 'cmdLevels', need: 1, since: true } } ], reward: { gold: 3000 }, focus: { tab: 'hero', el: 'asub:cmds' } },
+    { id: 'w04c', chain: 'The Kingdom', name: 'Arm the Levy', text: 'Every soldier marches with standard issue: blades, armour, helmets, bows, horses and banners. Supply is paid in arms and gold — and arms spent here are arms not turned into soldiers. Once a land is conquered the army marches on to the next by itself.',
+      steps: [ { label: 'Army → Supply → upgrade any Supply 3 times', check: { stat: 'supplyUps', need: 3, since: true } } ], reward: { gold: 2500 }, focus: { tab: 'hero', el: 'asub:supply' } },
     { id: 'w04b', chain: 'The Kingdom', name: 'The Price of an Army', text: 'Soldiers fall at the Front, so the army is only as big as the Barracks can keep refilling it. Every soldier takes lumber, arms and bread — and each new land asks more of each. A bigger army needs a bigger Carpenter, Armory and Bakery.',
       steps: [ { label: 'Upgrade the Carpenter, Armory or Bakery 5 times', check: { stat: 'armsFoodUps', need: 5, since: true } }, { label: 'Train 50 more soldiers', check: { stat: 'trained', need: 50, since: true } } ], reward: { gold: 3000 }, focus: { tab: 'kingdom', ksub: 'prod', rtab: 'kingdom', el: 'id:barracks-card' } },
-    { id: 'w05', chain: 'The Kingdom', name: 'The Iron Hills', text: 'Every land is harder than the last — and pays more than twice as much in taxes. The hills hold silver, the metal of Hardened gear: garrison them and it flows in every hour.',
-      steps: [ { label: 'Conquer the Iron Hills', check: { landDone: 2 } } ], reward: { gold: 5000 }, focus: { tab: 'hero', sub: 'fight', el: 'ground:land2' } },
-    { id: 'w05b', chain: 'The Kingdom', name: 'Pass the Crown', text: 'Two lands are yours, and the next ones only get harder. Time to think in dynasties. When you Pass the Crown your heir takes the throne: the lands, their taxes, the army and your stores are gone, and the hero starts again at level 1. Everything else stays: his gear, Paths and Techniques, the Capital and every building level, Wonders, the Crown Tree and trophies. Lands you have conquered before fall three times faster for the heir, and the Crowns you took from their rulers become yours to spend. Then spend your new Crowns in the Crown Tree (Skills → Crown Tree) — it lasts forever. After this, each Age runs to land 10, where the Emperor waits.',
-      steps: [ { label: 'Kingdom → Keep → Pass the Crown', check: { stat: 'passed', need: 1 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:found-btn' } }, { label: 'Skills → Crown Tree → spend your new Crowns', check: { stat: 'perksBought', need: 1, since: true }, focus: { tab: 'hero', sub: 'skills', rtab: 'skills', el: 'path:M0' } } ], reward: { crystal: 20 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:found-btn' } },
-    { id: 'w06', chain: 'The Kingdom', name: 'Blackwood March', text: 'Past the hills lies the old forest: heartwood for Hardened gear, and the first land your heir has never seen.',
-      steps: [ { label: 'Conquer Blackwood March', check: { landDone: 3 } } ], reward: { gold: 20000 }, focus: { tab: 'hero', sub: 'fight', el: 'ground:land3' } },
+    { id: 'w05', chain: 'The Kingdom', name: 'The Iron Hills', text: 'Every land is harder than the last — and pays more than twice as much in taxes. The hills are yours for the taking, and with them a second Command slot.',
+      steps: [ { label: 'Conquer the Iron Hills', check: { landDone: 2 } } ], reward: { gold: 5000 }, focus: { tab: 'hero', el: 'asub:front' } },
+    { id: 'w05b', chain: 'The Kingdom', name: 'Pass the Crown', text: 'Two lands are yours, and the next ones only get harder. Time to think in dynasties. When you Pass the Crown your heir takes the throne: the lands, their taxes, the army and your stores are gone, Everything else stays: Supply, Commands and the Commander, the Capital and every building level, Wonders, the Crown Tree and trophies. Lands you have conquered before fall three times faster for the heir, and the Crowns you took from their rulers become yours to spend. Then spend your new Crowns in the Crown Tree (Army → Crowns) — it lasts forever. After this, each Age runs to land 10, where the Emperor waits.',
+      steps: [ { label: 'Kingdom → Keep → Pass the Crown', check: { stat: 'passed', need: 1 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:found-btn' } }, { label: 'Army → Crowns → spend your new Crowns', check: { stat: 'perksBought', need: 1, since: true }, focus: { tab: 'hero', el: 'asub:crowns' } } ], reward: { crystal: 20 }, focus: { tab: 'kingdom', ksub: 'keep', rtab: 'kingdom', el: 'id:found-btn' } },
+    { id: 'w06', chain: 'The Kingdom', name: 'Blackwood March', text: 'Past the hills lies the old forest, the first land your heir has never seen. Commands grow slowly — minutes at first, then hours, then days. Keep one in training at all times.',
+      steps: [ { label: 'Conquer Blackwood March', check: { landDone: 3 } }, { label: 'Army → Commands → train Commands 2 levels', check: { stat: 'cmdLevels', need: 2, since: true } } ], reward: { gold: 20000 }, focus: { tab: 'hero', el: 'asub:front' } },
   ],
 
   // ---------- Tech tree ----------

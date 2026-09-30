@@ -16,7 +16,7 @@
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=b0408">
+  <link rel="stylesheet" href="style.css?v=b0500">
 </head>
 <body>
 
@@ -26,7 +26,7 @@
     <div id="res-bar" class="res-bar"></div>
   </header>
   <nav class="tabs" id="main-tabs">
-    <button data-tab="hero" class="active">Hero <span id="badge-hero" class="badge hidden">!</span></button>
+    <button data-tab="hero" class="active"><span id="tab-hero-label">Hero</span> <span id="badge-hero" class="badge hidden">!</span></button>
     <button data-tab="kingdom">Kingdom <span id="badge-kingdom" class="badge hidden">!</span></button>
     <button data-tab="inventory">Loot <span id="badge-inventory" class="badge hidden">!</span></button>
     <button data-tab="market">Market <span id="badge-market" class="badge hidden">!</span></button>
@@ -52,6 +52,19 @@
     <div id="quest-done" class="card quest dim small center hidden">Nothing left to research — the rest is yours to find.</div>
     <!-- CHARACTER -->
     <div id="tab-hero" class="tab">
+      <!-- Beta 0.5: in the Kingdom phase this tab is the Army -->
+      <div id="army-view" class="army-view hidden">
+        <nav class="subtabs" id="army-subtabs">
+          <button data-asub="front" class="active">Front</button>
+          <button data-asub="supply">Supply <span id="badge-supply" class="dot hidden"></span></button>
+          <button data-asub="cmds">Commands <span id="badge-cmds" class="dot hidden"></span></button>
+          <button data-asub="crowns">Crowns <span id="badge-crowns" class="dot hidden"></span></button>
+        </nav>
+        <div id="asub-front" class="asub"><div id="army-front-host"></div><div id="commander-card" class="card commander"></div></div>
+        <div id="asub-supply" class="asub hidden"><div class="card sup-head" id="sup-head"></div><div id="sup-list" class="sup-list"></div></div>
+        <div id="asub-cmds" class="asub hidden"><div id="cmd-root"></div></div>
+        <div id="asub-crowns" class="asub hidden"></div>
+      </div>
       <nav class="subtabs" id="hero-subtabs">
         <button data-sub="fight" class="active">Activity</button>
         <button data-sub="gear">Gear <span id="badge-gear" class="dot hidden"></span></button>
@@ -491,11 +504,11 @@
 </div>
 
 
-<script src="config.js?v=b0408"></script>
-<script src="cloud-config.js?v=b0408"></script>
-<script src="game.js?v=b0408"></script>
-<script src="ui.js?v=b0408"></script>
-<script src="cloud.js?v=b0408"></script>
+<script src="config.js?v=b0500"></script>
+<script src="cloud-config.js?v=b0500"></script>
+<script src="game.js?v=b0500"></script>
+<script src="ui.js?v=b0500"></script>
+<script src="cloud.js?v=b0500"></script>
 <script>window.addEventListener("error", e => { const d = document.getElementById("err"); if (d) { d.textContent = "Error: " + e.message; d.classList.remove("hidden"); } });</script>
 <div id="celebrate" class="celebrate hidden" role="status" aria-live="polite"><div class="cb-ico" id="cb-ico"></div><div class="cb-txt"><div class="cb-kicker" id="cb-kicker"></div><div class="cb-title" id="cb-title"></div><div class="cb-sub" id="cb-sub"></div></div></div>
 </body>

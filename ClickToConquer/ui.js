@@ -60,6 +60,7 @@ const UI = (() => {
       document.querySelectorAll('.tab').forEach(t => t.classList.toggle('hidden', t.id !== 'tab-' + b.dataset.tab));
       placeSubtabs();
     }));
+    document.querySelectorAll('[data-asub]').forEach(b => b.addEventListener('click', () => setAsub(b.dataset.asub)));
     document.querySelectorAll('[data-sub]').forEach(b => b.addEventListener('click', () => {
       document.querySelectorAll('[data-sub]').forEach(x => x.classList.toggle('active', x === b));
       const subs = desktop ? document.querySelectorAll('#tab-hero > .sub') : document.querySelectorAll('.sub');
@@ -361,6 +362,7 @@ const UI = (() => {
       else if (kind === 'technique') { if (skView !== 'tech') setSkillView('tech'); add(techEls[id] && techEls[id].card); add(document.querySelector('#skill-seg [data-sk=tech]')); }
       else if (kind === 'node') { if (skView !== 'gather') setSkillView('gather'); const [d, nid] = id.split(':'); if (curDisc !== d) { curDisc = d; buildTree(); } add(rows.node[nid]); add(rows.disc[d]); }
       else if (kind === 'hand') add(rows.hand[id]);
+      else if (kind === 'asub') add(document.querySelector(`[data-asub=${id}]`));
     }
   }
   // plots are rebuilt often; re-apply glow after rebuild
@@ -375,9 +377,9 @@ const UI = (() => {
   // Mobile: the active tab's sub-tab strip sits directly under the main tabs (in the sticky header)
   const SUBNAV = { hero: 'hero-subtabs', kingdom: 'kingdom-subtabs', inventory: 'csub-tabs', market: 'market-subtabs' };
   function placeSubtabs() {
-    for (const k in SUBNAV) undock(SUBNAV[k]);
+    for (const k in SUBNAV) undock(SUBNAV[k]); undock('army-subtabs');
     if (desktop) return;
-    const t = document.querySelector('[data-tab].active'); const id = t && SUBNAV[t.dataset.tab];
+    const t = document.querySelector('[data-tab].active'); const id = t && (t.dataset.tab === 'hero' && document.body.classList.contains('army') ? 'army-subtabs' : SUBNAV[t.dataset.tab]);
     if (id) { $(id).classList.remove('hidden'); dock(id, 'subtab-dock'); }
     document.documentElement.style.setProperty('--headh', document.querySelector('.sticky-head').offsetHeight + 'px');
   }
@@ -1590,7 +1592,7 @@ const UI = (() => {
           $('strain-card').classList.add('hidden'); }
         { const sn = S.kingdom.settleNote, show = false && !!sn; // Beta 0.2.0: no settlers $('demand-note').classList.toggle('hidden', !show);
           if (show) { setHtml($('demand-note'), `<b class="dh">${sn.name} conquered 👑</b><br>${f(sn.moved)} settlers moved to your Capital${sn.turned ? ` — <b class="bad">${f(sn.turned)} found no home</b> and turned back. Build houses (People chain) so the next wave stays.` : '.'} Every land you hold keeps sending more.<button class="retreat-x" aria-label="Dismiss" data-dn>×</button>`); const x = $('demand-note').querySelector('[data-dn]'); if (x) x.onclick = () => { sn.seen = true; }; } } }
-      $('conquest-box').classList.toggle('hidden', !LN); renderFront(LN);
+      $('conquest-box').classList.toggle('hidden', !LN); renderFront(LN); renderWar();
       { const sg = !!LN && Game.siegeOn(); $('kills-bar').closest('.progress-row').classList.toggle('hidden', sg); $('auto-barbox').closest('.progress-row').classList.toggle('hidden', sg); if (sg) $('auto-why').classList.add('hidden'); }
       if (LN) { const pct = Game.landPct(LN); setText($('cq-name'), `Conquest of ${G.name}`); setText($('cq-pct'), pct + '%'); $('cq-bar').style.width = pct + '%'; setText($('cq-text'), Game.isEndless() ? `∞ Endless Battle · 👑 ${G.crown}` : Game.landDone(LN) ? `Conquered · 👑 ${G.crown}` : `Stage ${h.stage} / ${G.stages}`);
         const ck = LN + '|' + G.stages; if ($('cq-ticks').__k !== ck) { $('cq-ticks').__k = ck; setHtml($('cq-ticks'), `<span>Captains every 10 stages</span><span>👑 ${G.ruler} · stage ${G.stages}</span>`); } }
@@ -1886,6 +1888,72 @@ const UI = (() => {
   document.addEventListener('click', e => { if (e.detail !== 0) return; const g = e.target.closest && e.target.closest(GO_SEL); if (g) goAct(goKey(g)); }, true); // keyboard
   function gapHtml(c) { if (!c || Game.canAfford(c)) return ''; const g = Game.costGap(c), ks = Object.keys(g.goods); if (!ks.length) return ''; // Beta 0.4.7: short goods are bought at the Market when you press
     return `<br><span class="gap-note ${g.ok ? '' : 'bad'}">${g.ok ? 'buys' : 'short'} ${ks.map(k => `${g.goods[k]} ${R[k].name.toLowerCase()}`).join(', ')}${g.ok ? ` · ${Game.fmt(g.gold)} g` : ''}</span>`; }
+  // ======= Beta 0.5: the Army tab (Kingdom phase) =======
+  let armyOn = null, asub = 'front', supKey = '';
+  function setArmyMode(on) {
+    if (armyOn === on) return; armyOn = on; document.body.classList.toggle('army', on);
+    setText($('tab-hero-label'), on ? 'Army' : 'Hero'); $('army-view').classList.toggle('hidden', !on);
+    if (on) { dock('conquest-box', 'army-front-host'); dock('front-box', 'army-front-host'); dock('sk-paths', 'asub-crowns'); $('sk-paths').classList.remove('hidden'); }
+    else { undock('conquest-box'); undock('front-box'); undock('sk-paths'); }
+    if (on && document.querySelector('[data-tab].active') && document.querySelector('[data-tab].active').dataset.tab === 'inventory') document.querySelector('[data-tab=hero]').click();
+    placeSubtabs(); glowKey = '';
+  }
+  function setAsub(k) { asub = k; document.querySelectorAll('[data-asub]').forEach(b => b.classList.toggle('active', b.dataset.asub === k)); document.querySelectorAll('.asub').forEach(x => x.classList.toggle('hidden', x.id !== 'asub-' + k)); supKey = ''; }
+  function renderCommander() { const f = Game.fmt, r = Game.commanderRank(), W = Game.warState(), need = Game.rankNeed(r);
+    setHtml($('commander-card'), `<div class="face">👑</div><div class="cm-body"><div class="row-between"><b>Commander</b><span class="dim small">rank ${r}</span></div>
+      <div class="bar"><div style="width:${(100 * Math.min(1, (W.xp || 0) / need)).toFixed(1)}%"></div></div>
+      <div class="small dim">Your hero leads from the war tent: <b>+${Math.round(100 * (Game.commanderMult() - 1))}%</b> soldier worth (+0.5% per rank). Each stage the army takes gives ${10 * Game.ageNo()} XP · ${f(W.xp || 0)} / ${f(need)} to rank ${r + 1}.</div></div>`); }
+  const SUP_EFF = { worth: v => `Soldier worth <b>×${v.toFixed(2)}</b>`, loss: v => `Losses <b>×${v.toFixed(2)}</b>`, fort: v => `Fort storming <b>×${v.toFixed(2)}</b>`, cost: v => `Siege cost <b>×${v.toFixed(2)}</b>`, train: v => `Training <b>×${v.toFixed(2)}</b>`, all: v => `All Supply <b>×${v.toFixed(2)}</b>` };
+  function renderSupply() {
+    const S = Game.S, f = Game.fmt, SUP = CONFIG.war.supply, rate = (Game.kingdomRates().swords || 0);
+    if (supKey !== 'sup') { supKey = 'sup';
+      setHtml($('sup-list'), Object.keys(SUP).map(k => `<div class="card sup" data-sup="${k}"><div class="ic">${SUP[k].icon}</div><div style="min-width:0"><div class="nm">${SUP[k].name} <span class="lv" data-f="lv"></span></div><div class="ef" data-f="ef"></div><div class="small dim">${SUP[k].desc}</div></div><button class="sbtn" data-f="b"></button></div>`).join(''));
+      $('sup-list').querySelectorAll('[data-sup]').forEach(c => c.querySelector('[data-f=b]').addEventListener('click', () => { if (Game.upgradeSupply(c.dataset.sup, upMode())) { flash(c); render(true); } })); }
+    setHtml($('sup-head'), `<div class="row-between"><span>${ico(R.swords.icon, 16)} Arms <b>${f(S.res.swords || 0)}</b> <span class="dim">+${f(rate)}/s</span></span>${buyToggle()}</div>
+      <div class="small dim">Standard issue for every soldier, paid in <b>arms</b> and gold. Arms spent here are arms not turned into soldiers, so balance the two — the Front's forecast shows which is faster.</div>`);
+    wireBuyToggle($('sup-head'));
+    let any = false;
+    for (const k in SUP) { const c = $('sup-list').querySelector(`[data-sup="${k}"]`), d = SUP[k], L = Game.supLv(k), p = Game.supPlan(k, upMode()), v = d.eff === 'all' ? Game.bannerX() : Math.pow(d.per, L);
+      setText(c.querySelector('[data-f=lv]'), `Lv ${L}`); setHtml(c.querySelector('[data-f=ef]'), SUP_EFF[d.eff](v));
+      const cost = p.n ? p.cost : Game.supCost(k), b = c.querySelector('[data-f=b]'); b.disabled = !p.n; if (p.n) any = true;
+      setHtml(b, `<span class="pu-l">${upMode() === 'max' && p.n > 1 ? 'Upgrade ×' + p.n : 'Upgrade'}</span><span class="pu-c${p.n ? '' : ' poor'}">${ico(R.swords.icon, 12)}${f(cost.swords)}</span><span class="pu-c${p.n ? '' : ' poor'}">${ico(R.gold.icon, 12)}${f(cost.gold)}</span>`); }
+    $('badge-supply').classList.toggle('hidden', !any); return any;
+  }
+  let cmdSel = 0, cmdKey = '';
+  const fmtDur = sec => { sec = Math.max(0, Math.round(sec)); const d = Math.floor(sec / 86400), h = Math.floor(sec % 86400 / 3600), m = Math.floor(sec % 3600 / 60); return d ? `${d} d ${h} h` : h ? `${h} h ${m} min` : m ? `${m} min` : `${sec} s`; };
+  function cmdEffect(d, L) { if (d.mode === 'mul') return `×${Math.pow(d.per, L).toFixed(2)}`; if (d.eff === 'levy') return `+${Math.round(d.per * L * Game.ageNo())} soldiers per land`; return `+${Math.round(100 * d.per * L)}%`; }
+  function renderCmds() {
+    const f = Game.fmt, C = Game.cmdState(), n = Game.cmdSlots(), T = Game.cmdTraining(), list = CONFIG.war.commands, uc = Game.cmdUnlockCost();
+    if (cmdSel >= n) cmdSel = Math.max(0, n - 1);
+    const shown = Math.max(n + 1, Math.min(CONFIG.war.slotsAgeOne, 10));
+    const key = [n, cmdSel, JSON.stringify(C.eq), JSON.stringify(C.lv), JSON.stringify(C.un), T ? T.id + T.to : '', Math.floor((Game.S.res.gold || 0) / Math.max(1, uc.gold) * 20)].join('|');
+    if (cmdKey !== key) { cmdKey = key;
+      const slots = Array.from({ length: shown }, (_, i) => { if (i >= n) return `<div class="cslot lock" title="Opens with the next land">🔒<small>${i === n ? (Game.ageNo() > 1 || n >= CONFIG.war.slotsAgeOne ? 'Era Ruler' : 'next land') : ''}</small></div>`; const id = C.eq[i], d = id && Game.cmdDef(id);
+        return `<button class="cslot${d ? '' : ' open'}${cmdSel === i ? ' sel' : ''}" data-cslot="${i}" aria-label="${d ? d.name : 'Empty slot'}">${d ? d.icon : '+'}<small>${d ? 'Lv ' + Game.cmdLv(id) : 'empty'}</small></button>`; }).join('');
+      const fams = [...new Set(list.map(d => d.fam))];
+      const lib = fams.map(fm => `<div class="cfam">${fm}</div>` + list.filter(d => d.fam === fm).map(d => { const un = !!C.un[d.id], L = Game.cmdLv(d.id), eq = Game.cmdEquipped(d.id), tc = Game.cmdTrainCost(d.id), tt = Game.cmdTrainTime(d.id), me = T && T.id === d.id;
+        const act = !un ? `<button class="cbtn" data-cun="${d.id}" ${Game.S.res.gold >= uc.gold ? '' : 'disabled'}><span class="pu-l">Unlock</span><span class="pu-c${Game.S.res.gold >= uc.gold ? '' : ' poor'}">${ico(R.gold.icon, 12)}${f(uc.gold)}</span></button>`
+          : me ? `<button class="cbtn" disabled><span class="pu-l">Training…</span><span class="pu-c done">Lv ${T.to}</span></button>`
+          : `<button class="cbtn" data-ctr="${d.id}" ${!T && Game.S.res.gold >= tc.gold ? '' : 'disabled'}><span class="pu-l">Train → Lv ${L + 1}</span><span class="pu-c${Game.S.res.gold >= tc.gold ? '' : ' poor'}">${ico(R.gold.icon, 12)}${f(tc.gold)} · ${fmtDur(tt)}</span></button>`;
+        return `<div class="crow${un ? '' : ' locked'}${eq ? ' eq' : ''}"><div class="ci">${d.icon}</div><div class="cm"><div class="ct">${d.name}${un ? ` <span class="dim small">Lv ${L}</span>` : ''}${eq ? ' <span class="cpill on">equipped</span>' : un && n ? ` <button class="cpill" data-ceq="${d.id}">equip in slot ${cmdSel + 1}</button>` : ''}</div><div class="cd">${d.desc}${un ? ` · now <b>${cmdEffect(d, L)}</b>` : ''}</div></div>${act}</div>`; }).join('')).join('');
+      setHtml($('cmd-root'), `<div class="card"><div class="row-between"><b>Command slots</b><span class="dim small">${n} open</span></div><div class="cslots">${slots}</div>
+          <div class="small dim">${n ? 'Tap a slot, then equip a command into it. Only equipped commands work.' : 'Conquer a land to open your first slot.'} Every land of the first Age opens a slot; after that, each Era Ruler (lands 5 and 10) opens one more.</div></div>
+        <div class="card ctrain" id="cmd-train"></div>
+        <div class="card"><div class="row-between"><b>Commands</b><span class="dim small">unlock once · yours forever</span></div><div class="clib">${lib}</div></div>`);
+      $('cmd-root').querySelectorAll('[data-cslot]').forEach(b => b.addEventListener('click', () => { cmdSel = +b.dataset.cslot; cmdKey = ''; render(true); }));
+      $('cmd-root').querySelectorAll('[data-ceq]').forEach(b => b.addEventListener('click', () => { if (Game.cmdEquip(b.dataset.ceq, cmdSel)) { cmdKey = ''; render(true); } }));
+      $('cmd-root').querySelectorAll('[data-cun]').forEach(b => b.addEventListener('click', () => { if (Game.cmdUnlock(b.dataset.cun)) { cmdKey = ''; render(true); } }));
+      $('cmd-root').querySelectorAll('[data-ctr]').forEach(b => b.addEventListener('click', () => { if (Game.cmdTrain(b.dataset.ctr)) { cmdKey = ''; render(true); } }));
+    }
+    { const box = $('cmd-train'); if (T) { const d = Game.cmdDef(T.id); setHtml(box, `<div class="row-between small"><span>📜 Training <b>${d.name}</b> Lv ${T.to - 1} → ${T.to}</span><span class="dim">${fmtDur(T.total - T.t)} left</span></div><div class="bar ctbar"><div style="width:${(100 * T.t / T.total).toFixed(1)}%"></div></div><div class="small dim">One command trains at a time, and training keeps going while you are away. Each level takes ×${CONFIG.war.cmdTimeGrow} longer.</div>`); }
+      else setHtml(box, `<div class="small">📜 <b>Nothing in training.</b> <span class="dim">Pick a command below and train it — one at a time, and it keeps going while you are away.</span></div>`); }
+    const can = !T && list.some(d => C.un[d.id] && Game.S.res.gold >= Game.cmdTrainCost(d.id).gold) || (n > 0 && C.eq.slice(0, n).some(x => !x) && list.some(d => C.un[d.id] && !Game.cmdEquipped(d.id)));
+    $('badge-cmds').classList.toggle('hidden', !can); return can;
+  }
+  function renderWar() {
+    const on = Game.armyMode(); setArmyMode(on); if (!on) return false;
+    renderCommander(); const a = renderSupply(), c = renderCmds(); $('badge-hero').classList.toggle('hidden', !(a || c)); return a || c;
+  }
   function goToBld(id) { const t = document.querySelector('[data-tab=kingdom]'); if (t && !t.disabled) t.click(); const k = document.querySelector('[data-ksub=prod]'); if (k && !k.disabled) k.click(); const r = document.querySelector('[data-rtab=kingdom]'); if (r && desktop) r.click(); openBld(id); }
   function fmtEta(sec) { const m = Math.max(1, Math.round(sec / 60)); return m < 60 ? `${m} min` : m < 48 * 60 ? `${Math.floor(m / 60)} h${m % 60 ? ' ' + (m % 60) + ' min' : ''}` : `${Math.round(m / 60)} h`; }
   // Beta 0.4.4: the invasion forecast — how long this land takes at today's pace, and what one change would make it faster
@@ -1897,29 +1965,30 @@ const UI = (() => {
     const tip = fc.by === 'barracks' ? `<b>Faster:</b> upgrade the <b>Barracks</b> — your goods arrive faster than it trains${faster}.`
       : `<b>Faster:</b> the army waits on <b>${R[fc.by].name.toLowerCase()}</b>. Upgrade the ${lname} chain's slowest building, the <b>${Game.stepDef(fc.slow).name}</b>${faster}. <button class="belt-go" data-go-bld="${fc.slow}">Go to the ${Game.stepDef(fc.slow).name} ›</button>`;
     return `<div class="fr-fc"><div>⏱ <b>${G.name}</b> falls in about <b>${fmtEta(fc.eta)}</b> at this pace <span class="dim">(plus the forts)</span>. Your army settles near <b>${f(fc.army)}</b>: +${fc.rate.toFixed(1)} trained / min, ${(100 * Game.siegeAttrition()).toFixed(1).replace(/\.0$/, "")}% fall each minute.</div>
-      <div class="fr-tip">${tip} <span class="dim">A stronger hero also makes every soldier count for more.</span></div></div>`;
+      <div class="fr-tip">${tip} ${Game.armyMode() ? '<span class="dim">Better Supply (Blades) also makes every soldier count for more.</span>' : '<span class="dim">A stronger hero also makes every soldier count for more.</span>'}</div></div>`;
   }
   function renderFront(LN) {
-    const box = $('front-box'), S = Game.S, h = S.hero, f = Game.fmt, G = Game.ground(), won = !!LN && Game.isEndless() && Game.landDone(LN), show = !!LN && Game.heroFighting() && (!Game.isEndless() || won);
+    const box = $('front-box'), S = Game.S, h = S.hero, f = Game.fmt, G = Game.ground(), won = !!LN && Game.isEndless() && Game.landDone(LN), show = !!LN && (Game.armyMode() || Game.heroFighting()) && (!Game.isEndless() || won);
     box.classList.toggle('hidden', !show); if (!show) return;
     if (won) { const nx = Game.landDef(LN + 1), qid = nx ? Game.landQuestId(LN + 1) : null, q = qid && CONFIG.quests.find(x => x.id === qid), m = Game.marchReady();
       setHtml(box, `<div class="row-between small"><span>🏰 ${G.name} is yours — the Front rests here</span><b>100%</b></div><div class="fr-bar"><i style="width:100%"></i></div>
         <div class="fr-note">${!nx ? 'This was the last land of the Age.' : m ? (S.settings.autoMarch !== false ? `The army marches on to <b>${nx.name}</b> — the siege begins there.` : `<b>${nx.name}</b> is open. Choose it under Where to fight to start its siege (auto-march is off).`) : q ? `The Front moves on to <b>${nx.name}</b> once you reach the quest <b>${q.name}</b>. Until then your army rests (no one falls) and the hero farms the Endless Battle here.` : `${nx.name}: ${Game.landReqText(LN + 1)}.`}</div>
-        <div class="fr-help dim">In an unconquered land, soldiers besiege each stage: the bar fills from soldiers × their worth, and your hero duels the captain at every fort.</div>`); return; }
+        <div class="fr-help dim">In an unconquered land, soldiers besiege each stage: the bar fills from soldiers × their worth${Game.armyMode() ? ', and every 10th stage is a fort the army storms' : ', and your hero duels the captain at every fort'}.</div>`); return; }
     const s = h.stage, boss = Game.isBoss(s), held = s < (h.bestStage || 1), mar = Game.marching(), w = Game.soldierWorth(LN, boss ? s - 1 : s), hold = Game.frontHold(), F = Game.frontState(), nx = s + 1;
-    const pct = boss ? 1 : Math.min(1, h.siege || 0), fall = Game.attritionPerMin(), gp = Game.goldPerFallen(s), eta = Game.siegeEta();
+    const army = Game.armyMode(), pct = boss && !army ? 1 : Math.min(1, h.siege || 0), fall = Game.attritionPerMin(), gp = Game.goldPerFallen(s), eta = Game.siegeEta();
     let head, note = '';
-    if (boss) { head = `🏰 Fort — your hero duels <b>${Game.enemyName()}</b>`; note = s >= G.stages ? `Beat the ruler and ${G.name} is yours.` : `The army waits at the walls; when he falls, the siege moves on.`; }
+    if (boss && army) { head = `🏰 Storming the fort of <b>${Game.enemyName()}</b>`; note = s >= G.stages ? `Take this fort and ${G.name} is yours.` : `A fort is ${CONFIG.war.fortMult}× a normal stage, divided by your fort power (<b>×${Game.fortPower().toFixed(2)}</b> — Helmets and Crowns).`; }
+    else if (boss) { head = `🏰 Fort — your hero duels <b>${Game.enemyName()}</b>`; note = s >= G.stages ? `Beat the ruler and ${G.name} is yours.` : `The army waits at the walls; when he falls, the siege moves on.`; }
     else if (hold === 'weak') { head = `🏰 The walls of stage ${nx} are breached`; note = `<b class="bad">${Game.enemyName(nx)}</b> is too strong for your hero, so the army holds the walls (no one falls). Strengthen the hero — gear, levels, Crowns — or tap <b>Advance</b> to attack anyway.`; }
     else if (hold === 'rest') { head = `🏰 The walls of stage ${nx} are breached`; note = `Your hero rests before facing ${Game.enemyName(nx)} again (${Math.ceil(h.bossWait - h.time)} s).`; }
     else if (held) { head = `Marching back to the front — stage ${h.bestStage}`; }
     else if (mar <= 0) { head = `⚔ Siege of stage ${s}`; note = `<b class="bad">No soldiers at the front.</b> The Barracks needs lumber, arms and bread — the siege waits, nothing is lost.`; }
     else head = `⚔ Siege of stage ${s} → ${nx}${Game.isBoss(nx) ? ' · 🏰 fort' : ''}`;
-    const chips = boss || held || hold ? '' : `<div class="fr-chips"><span><b>${f(mar)}</b> at the front</span><span>worth <b>×${w.toFixed(w < 10 ? 2 : 1)}</b> each</span><span class="bad">−${fall.toFixed(1)}/min</span>${gp > 0 ? `<span class="gold">+${f(fall * gp)}/min gold</span>` : ''}${eta < 1e6 ? `<span>next stage ${Game.fmtTime(eta)}</span>` : ''}</div>`;
+    const chips = (boss && !army) || held || hold ? '' : `<div class="fr-chips"><span><b>${f(mar)}</b> at the front</span><span>worth <b>×${w.toFixed(w < 10 ? 2 : 1)}</b> each</span><span class="bad">−${fall.toFixed(1)}/min</span>${gp > 0 ? `<span class="gold">+${f(fall * gp)}/min gold</span>` : ''}${eta < 1e6 ? `<span>next stage ${Game.fmtTime(eta)}</span>` : ''}</div>`;
     const last = F.last && h.time - F.last.t < 120 ? `<div class="fr-last">Last sortie: ${f(F.last.fell)} fell${F.last.gold > 0 ? `, +${f(F.last.gold)} gold` : ''} · siege ${Math.floor(100 * F.last.pct)}%</div>` : '';
     const fcH = held ? '' : forecastHtml(LN, G);
     setHtml(box, `<div class="row-between small"><span>${head}</span><b>${Math.floor(100 * pct)}%</b></div><div class="fr-bar"><i style="width:${(100 * pct).toFixed(1)}%"></i></div>${chips}${note ? `<div class="fr-note">${note}</div>` : ''}${fcH}${last}
-      <div class="fr-help dim">Your hero leads: each soldier is worth ×${w.toFixed(w < 10 ? 2 : 1)} here — a stronger hero makes every soldier count for more${w > (Game.LC_siege().worthKnee || 1e9) ? ' (past ×' + Game.LC_siege().worthKnee + ' it grows more slowly, but it never stops)' : ''}.</div>`);
+      ${Game.armyMode() ? `<div class="fr-help dim">Each soldier is worth ×${w.toFixed(w < 10 ? 2 : 1)} — Supply (Blades), the Commander's rank and the Crown Tree raise it.</div>` : `<div class="fr-help dim">Your hero leads: each soldier is worth ×${w.toFixed(w < 10 ? 2 : 1)} here — a stronger hero makes every soldier count for more${w > (Game.LC_siege().worthKnee || 1e9) ? ' (past ×' + Game.LC_siege().worthKnee + ' it grows more slowly, but it never stops)' : ''}.</div>`}`);
   }
   function heroScreenVisible() {
     const c = $('fight-card').offsetParent ? $('fight-card') : (!Game.heroFighting() && $('harvest-card').offsetParent) ? $('harvest-card') : null; if (!c) return false; // 0.10.12: on a gathering screen the fight shows in the dock
@@ -1968,6 +2037,7 @@ const UI = (() => {
     else if (ms.length > 1) CBQ.push({ small: 1, ico: '⚒', kicker: 'Ready to go deeper', title: `${ms.length} buildings`, sub: ms.map(m => m.name).slice(0, 3).join(' · ') });
     for (const e of evs) {
       if (e.who === 'crown') { const G = Game.landDef(e.n); CBQ.push({ ico: '👑', kicker: 'Land conquered', title: G ? G.name : 'Conquered', sub: `You take ${G ? G.crown : 'a crown'} · +${e.v} Crown${e.v === 1 ? '' : 's'} when the crown passes${e.first ? ' · new in the Vault' : ''}` }); }
+      else if (e.who === 'refund050') CBQ.push({ ico: '👑', kicker: 'The Crown Tree is rescaled', title: `+${e.crowns} Crowns refunded`, sub: 'Its effects are smaller now and its ranks deeper — built for a war of months. Spend them in Army → Crowns.' });
       else if (e.who === 'refund046') CBQ.push({ ico: '👑', kicker: 'The Crown Tree is rebuilt', title: `+${e.crowns} Crowns refunded`, sub: `${e.gold ? '+' + Game.fmt(e.gold) + ' gold from the Halls · ' : ''}Spend them in Skills → Crown Tree: Hero, Army and Realm` });
       else if (e.who === 'crownpass') CBQ.push({ ico: '👑', kicker: 'Long live the heir', title: `Dynasty ${Game.S.legacy.dynasty}`, sub: `+${e.gain} Crowns to spend in the Crown Tree · lands you know fall ${3 + Game.perkRank('lap')}× faster` });
       else if (e.who === 'dig') CBQ.push({ small: 1, ico: '⛏', kicker: 'Your town grows', title: `${e.name} · ${e.unit} ${e.d}`, sub: 'It starts small but can grow far bigger than the last — upgrade its three steps inside.' });
