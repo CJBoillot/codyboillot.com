@@ -817,8 +817,21 @@ const UI = (() => {
   // ===== Beta 0.4.3: the whole chain on one screen — every built building of the line as one snaking belt =====
   const CV = { lid: null, raf: 0 };
   const RAIN = ['#e8433c', '#ef6a3a', '#f2923a', '#f2c63a', '#d2dc48', '#86d44a', '#44c98c', '#38c4d0', '#4a92ea', '#8c6aea'];
+  // Beta 0.4.7: upgrade buttons read "Upgrade" and the gold it costs; a ×1 / Max toggle sits at the top of the column
+  const storeFull = k => Game.overflowRate(k).u > 1e-6 || (Game.S.res[k] || 0) >= Game.resCap(k) - 1e-6; // nowhere left to go: sold where it waits
+  const upMode = () => Game.S.settings.upBuy === 'max' ? 'max' : 1;
+  const buyToggle = () => `<div class="vseg upseg" role="group" aria-label="Upgrade amount"><button data-upbuy="1" aria-pressed="${upMode() === 1}">×1</button><button data-upbuy="max" aria-pressed="${upMode() === 'max'}">Max</button></div>`;
+  function wireBuyToggle(root) { root.querySelectorAll('[data-upbuy]').forEach(b => b.addEventListener('click', () => { Game.S.settings.upBuy = b.dataset.upbuy === 'max' ? 'max' : '1'; root.querySelectorAll('[data-upbuy]').forEach(x => x.setAttribute('aria-pressed', String(x === b))); render(true); })); }
+  function upBtnHtml(id, p) {
+    const f = Game.fmt, lv = Game.partLv(id, p);
+    if (lv >= 10) return `<span class="pu-l">Max level</span><span class="pu-c done">Lv 10</span>`;
+    const plan = Game.stepUpPlan(id, p, upMode()), capped = !plan.n && Game.effLv(id, p) >= Game.levelCap();
+    if (capped) return `<span class="pu-l">Upgrade</span><span class="pu-c small">bigger settlement</span>`;
+    const cost = plan.n ? plan.cost.gold : Game.stepUpCost(id, p).gold;
+    return `<span class="pu-l">${upMode() === 'max' && plan.n > 1 ? 'Upgrade ×' + plan.n : 'Upgrade'}</span><span class="pu-c${plan.n ? '' : ' poor'}">${ico(R.gold.icon, 13)}${f(cost)}</span>`;
+  }
   function chainView(cv, stage, lid) {
-    const ctx = cv.getContext('2d'), LANE = 4, SPEED = 170, T = 2.0, PAD = 12, CELL = 10, CG = 3, SLOTH = 24, SG = 3, BEND = 14, ROWH = 58, HEAD = 58, GUT = 62;
+    const ctx = cv.getContext('2d'), LANE = 4, SPEED = 170, T = 2.0, PAD = 12, CELL = 10, CG = 3, SLOTH = 24, SG = 3, BEND = 14, ROWH = 58, HEAD = 58, GUT = 70;
     const B = Game.lineSteps(lid).filter(st => Game.stepBuilt(st.id)).map((st, bi) => { const im = new Image(); im.src = artOf(st); return { st, id: st.id, bi, img: im, feed: !!st.from }; });
     let W = 0, H = 0, BW = 0, BR = 0, SLOTW = 20, ores = [], pops = [], clock = 0, agg = {}, x0 = 0;
     const lvOf = (b, k) => Game.partLv(b.id, Game.PARTS[k]);
@@ -877,8 +890,10 @@ const UI = (() => {
             if (s.p < 1) continue; S[j] = null; const o = s.o, from = slotC(b, k, j); o.c = RAIN[Math.min(RAIN.length - 1, bi * 3 + k + 1)];
             if (k < 2) toLane(b, k + 1, o, [...bend(row.ltr ? 'r' : 'l', row.y, b.rows[k + 1].y), cellC(b, k + 1, 0)]);
             else { tally(b.id + 'm', unit(b), from.x, from.y + 2, o.c, R[b.st.make].name.toLowerCase());
-              const nb = B[bi + 1]; if (nb && nb.tr) { if (nb.queue.length >= nb.qMax) { const sold = Game.overflowRate(b.st.make).u > 1e-6; /* the next building is full: this cart goes to the Storehouse */
-                  o.wp = [{ x: from.x, y: from.y - 16 }]; o.onArrive = () => { o.dead = true; }; o.fade = 1; tally(b.id + 'x', unit(b), from.x, from.y - 12, sold ? '#e8c06a' : '#9c8f7c', `${R[b.st.make].name.toLowerCase()} ${sold ? 'sold' : '→ Storehouse'}`); }
+              const nb = B[bi + 1]; if (nb && nb.tr) { if (nb.queue.length >= nb.qMax) { /* the next building is full: this cart goes to the Storehouse, or is sold where it waits */
+                  const tail = qDist(nb, nb.qMax), at = trAt(nb.tr, tail), amt = unit(b), mk = b.st.make; o.wp = trPath(nb.tr, tail); /* it rolls to the back of the queue: sold right there if the Storehouse is full too */
+                  o.onArrive = () => { o.dead = true; const sold2 = storeFull(mk), g = amt * ((CONFIG.resources[mk] || {}).sell || 0) * (CONFIG.kingdom.autoSell || 0.25);
+                    if (sold2) tally(nb.id + 'sell', g, at.x - 70, at.y + 4, '#e8c06a', 'gold'); else tally(nb.id + 'store', amt, at.x - 90, at.y + 4, '#9c8f7c', `${R[mk].name.toLowerCase()} stored`); }; }
                 else { const q = { o, left: unit(b), spot: nb.queue.length }; nb.queue.push(q); o.wp = trPath(nb.tr, qDist(nb, q.spot)); o.onArrive = () => { restack(nb); }; } } /* it waits on the transfer belt until the next building takes it */
               else { o.wp = [{ x: BR, y: row.y }]; o.onArrive = () => { o.dead = true; }; } } } } });
       ores = ores.filter(o => !o.dead);
@@ -900,7 +915,7 @@ const UI = (() => {
         if (B.length > 1 && Game.slowestInLine(lid) === b.id) { const sw = ctx.measureText(sub).width; ctx.font = '700 10.5px Inter, system-ui, sans-serif'; ctx.fillStyle = '#ffb347'; ctx.fillText('· slowest', PAD + 66 + sw + 5, b.top + 36); }
         if (bi) { const up = CF.find(c => c.id === B[bi - 1].id); if (up && up.out > 1e-9) { const took = up.out - up.spare, pct = took / up.out; /* what the transfer belt carries on, and what it can't */
           ctx.textAlign = 'right'; ctx.font = '600 10.5px Inter, system-ui, sans-serif'; const gd = R[B[bi - 1].st.make].name.toLowerCase();
-          if (pct < 0.97) { const sold = Game.overflowRate(B[bi - 1].st.make).u > 1e-6, y = B[bi - 1].rows[2].y + 27; ctx.fillStyle = '#ffb347'; ctx.fillText(`${b.st.name} takes ${f(took)} of ${f(up.out)} ${gd}/s · rest ${sold ? 'sold' : 'stored'}`, BR - BEND - 6, y); }
+          if (pct < 0.97) { const sold = storeFull(B[bi - 1].st.make), y = B[bi - 1].rows[2].y + 27; ctx.fillStyle = '#ffb347'; ctx.fillText(`${b.st.name} takes ${f(took)} of ${f(up.out)} ${gd}/s · rest ${sold ? 'sold' : 'stored'}`, BR - BEND - 6, y); }
           ctx.textAlign = 'left'; } }
         ctx.strokeStyle = '#3a2e24'; ctx.lineWidth = 5; ctx.lineCap = 'round';
         for (let r = 0; r < 2; r++) { const pts = bend(b.rows[r].ltr ? 'r' : 'l', b.rows[r].y, b.rows[r + 1].y); ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.stroke(); }
@@ -925,17 +940,17 @@ const UI = (() => {
     function placeControls() {
       stage.querySelectorAll('.pup,.pdeep,.pname-go').forEach(e => e.remove());
       B.forEach(b => {
-        b.ups = b.rows.map((row, k) => { const el = document.createElement('button'), p = Game.PARTS[k]; el.className = 'pup'; el.style.left = (BW + 2) + 'px'; el.style.width = (GUT - 6) + 'px'; el.style.top = (row.y - 17) + 'px'; el.style.height = '34px';
-          el.setAttribute('aria-label', `Upgrade ${b.st.name} ${Game.partName(b.id, p)}`); el.addEventListener('click', () => { if (Game.upgradeStep(b.id, p, 1)) { flash(el); render(true); } }); stage.appendChild(el); return el; });
+        b.ups = b.rows.map((row, k) => { const el = document.createElement('button'), p = Game.PARTS[k]; el.className = 'pup'; el.style.left = (BW + 2) + 'px'; el.style.width = (GUT - 6) + 'px'; el.style.top = (row.y - 19) + 'px'; el.style.height = '38px';
+          el.setAttribute('aria-label', `Upgrade ${b.st.name} ${Game.partName(b.id, p)}`); el.addEventListener('click', () => { if (Game.upgradeStep(b.id, p, upMode())) { flash(el); render(true); } }); stage.appendChild(el); return el; });
         const d = document.createElement('button'); d.className = 'pdeep'; d.style.right = '4px'; d.style.top = (b.top + 6) + 'px'; d.addEventListener('click', () => { if (Game.dig(b.id)) { prodKey = ''; render(true); } }); b.deep = d; stage.appendChild(d);
         const go = document.createElement('button'); go.className = 'pname-go'; go.style.left = (PAD + 16) + 'px'; go.style.top = (b.top + 4) + 'px'; go.style.width = '160px'; go.style.height = '38px'; go.setAttribute('aria-label', `Open the ${b.st.name} on its own`);
         go.addEventListener('click', () => { Game.S.settings.chainView = 'one'; bldKey = ''; openBld(b.id); }); stage.appendChild(go); });
       sync();
     }
     function sync() { const f = Game.fmt; B.forEach(b => { if (!b.ups) return; const maxed = Game.depthMaxed(b.id), hk = hotK(b);
-      b.ups.forEach((el, k) => { const p = Game.PARTS[k], lv = Game.partLv(b.id, p), plan = Game.stepUpPlan(b.id, p, 1), capped = lv < 10 && !plan.n && Game.effLv(b.id, p) >= Game.levelCap();
+      b.ups.forEach((el, k) => { const p = Game.PARTS[k], lv = Game.partLv(b.id, p), plan = Game.stepUpPlan(b.id, p, upMode());
         el.hidden = maxed; el.disabled = !plan.n; el.classList.toggle('alarm', k === hk && lv < 10);
-        const html = lv >= 10 ? '<b>Lv 10</b><small>max</small>' : capped ? `<b>Lv ${lv}</b><small>settlement</small>` : `<b>Lv ${lv}→${lv + 1}</b><small>${f(Game.stepUpCost(b.id, p).gold)} g</small>`; if (el.__h !== html) { el.innerHTML = html; el.__h = html; } });
+        const html = upBtnHtml(b.id, p); if (el.__h !== html) { el.innerHTML = html; el.__h = html; } });
       const room = Game.digRoom(b.id), dh = room ? `<b>${b.st.dig || 'Go deeper'}</b><small>${Game.unitName(b.id)} ${Game.depthOf(b.id) + 1} · ${f(Game.digCost(b.id).gold)} g</small>` : `<b>${Game.unitName(b.id)} ${Game.depthOf(b.id) + 1}</b><small>needs a bigger settlement</small>`;
       b.deep.hidden = !maxed; b.deep.disabled = !Game.canDig(b.id); b.deep.classList.toggle('ready', room); if (b.deep.__h !== dh) { b.deep.innerHTML = dh; b.deep.__h = dh; } }); }
     layout(); for (let i = 0; i < 60 * 30; i++) tick(1 / 60); pops = []; agg = {};
@@ -959,10 +974,11 @@ const UI = (() => {
           <div class="belt-army hidden" data-f="army"></div>
           <div class="belt-head"><div class="belt-title"><div><h3>${{ forest: 'Wood', mine: 'Arms', farm: 'Food' }[lid] || line.name} chain</h3><p>${steps.map(x => R[x.make].name.toLowerCase()).join(' → ')}</p></div></div>
             <div class="belt-hr">${viewToggle('chain')}<div class="belt-out">Out<b><span data-f="outico"></span><span data-f="out"></span></b></div></div></div>
+          <div class="up-bar"><span>Upgrade</span>${buyToggle()}</div>
           <div class="chain-stage" id="chain-stage"><canvas id="chain-cv" aria-label="The whole ${line.name} as one belt"></canvas></div>
           <div class="tiny dim belt-note">Tap a building's name to open it on its own. Colours run red to violet along the whole chain.</div>
         </div>`);
-      wireToggle(box); setHtml(box.querySelector('[data-f=outico]'), ico(R[last.make].icon, 20)); CV.lid = null; glowKey = ''; }
+      wireToggle(box); wireBuyToggle(box); setHtml(box.querySelector('[data-f=outico]'), ico(R[last.make].icon, 20)); CV.lid = null; glowKey = ''; }
     ensureChain(lid);
     { const cf = Game.chainFlow(lid).find(c => c.id === last.id), out = cf ? cf.out : 0; setText(box.querySelector('[data-f=out]'), `${out < 10 ? out.toFixed(2) : f(out)} ${R[last.make].name.toLowerCase()}/s`); }
     { const ab = box.querySelector('[data-f=army]'), bl = armyLimit(), W = bl && Object.values(CONFIG.kingdom.army.lines).find(x => x.good === bl), mine = W && W.line === lid, slow = mine ? Game.slowestInLine(lid) : null;
@@ -981,17 +997,16 @@ const UI = (() => {
           <div class="belt-head"><div class="belt-title"><img src="${artOf(st)}" srcset="${artOf(st)} 1x, assets/buildings/${st.art || st.id}@2x.webp 2x" alt=""><div><h3>${st.name}</h3><p><span data-f="depth"></span> · makes <b>${R[st.make].name.toLowerCase()}</b></p></div></div>
             <div class="belt-hr">${viewToggle('one')}<div class="belt-out">Output<b><span data-f="outico"></span><span data-f="out"></span></b></div></div></div>
           <canvas id="belt-cv" aria-label="${st.name}: goods move through ${Game.PARTS.map(p => Game.partName(id, p)).join(', ')}"></canvas>
-          <div class="kbar" id="bld-kbar"></div>
-          <div class="belt-ups">${Game.PARTS.map(p => `<button class="belt-up" data-part="${p}" data-id="${id}"><span data-f="pn${p}">${Game.partName(id, p)}</span><b data-f="pl${p}"></b><span class="cost" data-f="pc${p}"></span></button>`).join('')}
+          <div class="up-bar"><span>Upgrade</span>${buyToggle()}</div>
+          <div class="belt-ups">${Game.PARTS.map(p => `<button class="belt-up" data-part="${p}" data-id="${id}"><span class="pu-n"><span data-f="pn${p}">${Game.partName(id, p)}</span> <span data-f="pl${p}"></span></span><span class="pu-b" data-f="pc${p}"></span></button>`).join('')}
             <button class="belt-deeper hidden" data-dig><span data-f="dt"></span><small data-f="ds"></small><span class="cost" data-f="dc"></span></button></div>
           <div class="tiny dim belt-note" data-f="note"></div>
         </div>${stock}`);
       { const ch = box.querySelector('[data-f=chain]'); ch.addEventListener('click', e => { const g = e.target.closest('[data-go]'); if (g) openBld(g.dataset.go); });
         ch.addEventListener('keydown', e => { if (e.key !== 'Enter' && e.key !== ' ') return; const g = e.target.closest('[data-go]'); if (g) { e.preventDefault(); openBld(g.dataset.go); } }); }
-      box.querySelectorAll('.belt-up').forEach(b => b.addEventListener('click', () => { if (Game.upgradeStep(id, b.dataset.part, kBuy)) { flash(b); render(true); } }));
+      box.querySelectorAll('.belt-up').forEach(b => b.addEventListener('click', () => { if (Game.upgradeStep(id, b.dataset.part, upMode())) { flash(b); render(true); } })); wireBuyToggle(box);
       box.querySelector('[data-dig]').addEventListener('click', () => { if (Game.dig(id)) { prodKey = ''; render(true); } });
       box.querySelectorAll('[data-stock]').forEach(b => b.addEventListener('click', () => { const v = b.dataset.stock; if (Game.setStockMode(st.make, v === 'auto' ? 'auto' : +v)) { Game.save(); render(true); } }));
-      $('bld-kbar').innerHTML = kbarHtml(); $('bld-kbar').querySelectorAll('[data-kbuy]').forEach(b => b.addEventListener('click', () => { kBuy = b.dataset.kbuy === 'max' ? 'max' : +b.dataset.kbuy; prodKey = ''; bldKey = ''; render(true); }));
       setHtml(box.querySelector('[data-f=outico]'), ico(R[st.make].icon, 20)); wireToggle(box);
       BV.id = null; glowKey = ''; }
     ensureBelt(id);
@@ -999,10 +1014,10 @@ const UI = (() => {
     setText(box.querySelector('[data-f=depth]'), `${Game.unitName(id)} ${D}`);
     setText(box.querySelector('[data-f=out]'), `${fo(out)} ${gd}/s`);
     { const maxed = Game.depthMaxed(id), hot = Game.bottleneckPart(id);
-      Game.PARTS.forEach(p => { const b = box.querySelector(`.belt-up[data-part="${p}"]`), lv = Game.partLv(id, p), plan = Game.stepUpPlan(id, p, kBuy), capped = lv < 10 && !plan.n && Game.effLv(id, p) >= Game.levelCap();
+      Game.PARTS.forEach(p => { const b = box.querySelector(`.belt-up[data-part="${p}"]`), lv = Game.partLv(id, p), plan = Game.stepUpPlan(id, p, upMode());
         b.classList.toggle('hidden', maxed); b.disabled = !plan.n; b.classList.toggle('alarm', hot === p && lv < 10);
-        setText(b.querySelector(`[data-f=pl${p}]`), lv >= 10 ? 'Lv 10 · max' : `Lv ${lv} → ${lv + Math.max(1, plan.n)}`);
-        setHtml(b.querySelector(`[data-f=pc${p}]`), lv >= 10 ? '' : capped ? '<span class="tiny">raise the settlement</span>' : costHtml(plan.n ? plan.cost : Game.stepUpCost(id, p)).replace(/<span class="cost-name">[^<]*<\/span>/g, '')); });
+        setText(b.querySelector(`[data-f=pl${p}]`), `· Lv ${lv}`);
+        setHtml(b.querySelector(`[data-f=pc${p}]`), upBtnHtml(id, p)); });
       const db = box.querySelector('[data-dig]'), room = Game.digRoom(id); db.classList.toggle('hidden', !maxed); db.disabled = !Game.canDig(id);
       if (maxed) { setText(db.querySelector('[data-f=dt]'), `${st.dig || 'Go deeper'} · ${Game.unitName(id)} ${D + 1}`);
         setText(db.querySelector('[data-f=ds]'), room ? `${Game.unitName(id)} ${D} folds away · ${Game.unitName(id)} ${D + 1} starts at Lv 1 making ${fo(Game.stepOutput(id))} ${gd}/s` : `A bigger settlement is needed before ${Game.unitName(id)} ${D + 1}`);
