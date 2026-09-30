@@ -834,7 +834,10 @@ const UI = (() => {
           if (k > 0 || b.feed) for (let i = 0; i < LANE; i++) { const off = i * (CELL + CG); cells.push(ltr ? { x: x0 + off, y: y - CELL / 2 } : { x: x0 + inner - CELL - off, y: y - CELL / 2 }); }
           for (let i = 0; i < 10; i++) { const off = laneW + gap + i * (SLOTW + SG); slots.push(ltr ? { x: x0 + off, y: y - SLOTH / 2 } : { x: x0 + inner - SLOTW - off, y: y - SLOTH / 2 }); }
           return { y, ltr, cells, slots }; });
-        b.lanes = [0, 1, 2].map(() => Array(LANE).fill(null)); b.slots = [0, 1, 2].map(() => Array(10).fill(null)); b.laneT = 0; b.inAcc = 0; b.D = Game.depthOf(b.id); });
+        b.lanes = [0, 1, 2].map(() => Array(LANE).fill(null)); b.slots = [0, 1, 2].map(() => Array(10).fill(null)); b.laneT = 0; b.inAcc = 0; b.debt = 0; b.queue = []; b.D = Game.depthOf(b.id); });
+      B.forEach((b, bi) => { const nb = B[bi + 1]; if (!nb) return; /* the transfer belt into the next building: carts wait here when it can't keep up */
+        const pts = [...bend(b.rows[2].ltr ? 'r' : 'l', b.rows[2].y, nb.rows[0].y), cellC(nb, 0, 0)], cum = [0]; for (let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y));
+        nb.tr = { pts, cum, len: cum[cum.length - 1] }; nb.qMax = Math.max(3, Math.min(9, Math.floor(nb.tr.len / 13) - 1)); });
       ores = []; placeControls();
     }
     const cellC = (b, k, i) => { const c = b.rows[k].cells[i]; return { x: c.x + CELL / 2, y: c.y + CELL / 2 }; };
@@ -843,6 +846,10 @@ const UI = (() => {
       const q = (a, c, d, t) => ({ x: (1 - t) * (1 - t) * a.x + 2 * (1 - t) * t * c.x + t * t * d.x, y: (1 - t) * (1 - t) * a.y + 2 * (1 - t) * t * c.y + t * t * d.y });
       for (let i = 0; i <= 10; i++) out.push(q({ x: e, y: y1 }, { x, y: y1 }, { x, y: m }, i / 10)); for (let i = 1; i <= 10; i++) out.push(q({ x, y: m }, { x, y: y2 }, { x: e, y: y2 }, i / 10)); return out; }
     const moving = o => o.wp.length > 0;
+    function trAt(tr, d) { d = Math.max(0, Math.min(tr.len, d)); let i = 1; while (i < tr.cum.length - 1 && tr.cum[i] < d) i++; const a = tr.pts[i - 1], z = tr.pts[i], u = (d - tr.cum[i - 1]) / Math.max(1e-9, tr.cum[i] - tr.cum[i - 1]); return { x: a.x + (z.x - a.x) * u, y: a.y + (z.y - a.y) * u }; }
+    function trPath(tr, d) { const out = []; for (let i = 1; i < tr.pts.length && tr.cum[i] < d; i++) out.push(tr.pts[i]); out.push(trAt(tr, d)); return out; }
+    const qDist = (nb, i) => nb.tr.len - 12 - i * 13; /* queue spot i, counted back from the building's door */
+    function restack(nb) { nb.queue.forEach((q, i) => { q.spot = i; if (q.o.onArrive) return; const want = trAt(nb.tr, qDist(nb, i)); if (Math.abs(q.o.pos.x - want.x) > 0.5 || Math.abs(q.o.pos.y - want.y) > 0.5) q.o.wp = [want]; }); }
     const tally = (key, n, x, y, color, u) => { const a = agg[key] || (agg[key] = { n: 0 }); a.n += n; a.x = x; a.y = y; a.color = color; a.unit = u; };
     function toLane(b, k, o, path) { o.wp = path; o.onArrive = () => { if (b.lanes[k][0]) o.dead = true; else b.lanes[k][0] = o; }; }
     const hotK = b => { const p = Game.bottleneckPart(b.id); return p === 'C' ? 1 : p === 'H' ? 2 : -1; };
@@ -855,8 +862,10 @@ const UI = (() => {
       B.forEach((b, bi) => {
         if (Game.depthOf(b.id) !== b.D) { b.D = Game.depthOf(b.id); b.lanes = [0, 1, 2].map(() => Array(LANE).fill(null)); b.slots = [0, 1, 2].map(() => Array(10).fill(null)); pops.push({ x: BW / 2, y: b.rows[0].y - 4, text: `${Game.unitName(b.id)} ${b.D} opened`, color: '#7fd28f', t: 0 }); }
         if (!b.feed) { const S = b.slots[0]; for (let j = 0; j < lvOf(b, 0); j++) if (!S[j]) { const p = slotC(b, 0, j), o = { pos: { ...p }, wp: [], r: 1, c: RAIN[0] }; ores.push(o); S[j] = { o, p: 0 }; } }
-        else { const cf = Game.chainFlow(lid).find(c => c.id === b.id), rate = cf ? cf.supply / b.st.ratio : 0; b.inAcc += rate * dt / Math.max(1e-9, unit(b));
-          while (b.inAcc >= 1) { b.inAcc -= 1; const e = cellC(b, 0, 0); if (!b.lanes[0][0]) { const o = { pos: { x: e.x, y: e.y }, wp: [], c: RAIN[bi * 3] }; ores.push(o); b.lanes[0][0] = o; } } }
+        else if (b.tr && !b.lanes[0][0]) { /* the next cart in takes what it needs from the carts waiting on the transfer belt */
+          if (!b.debt) b.debt = unit(b) * b.st.ratio;
+          while (b.debt > 1e-9 && b.queue.length) { const q = b.queue[0]; if (q.o.onArrive || moving(q.o)) break; const d = Math.min(b.debt, q.left); q.left -= d; b.debt -= d; if (q.left <= 1e-9) { q.o.dead = true; b.queue.shift(); restack(b); } }
+          if (b.debt <= 1e-9) { b.debt = 0; const e = cellC(b, 0, 0), o = { pos: { x: e.x, y: e.y }, wp: [], c: RAIN[bi * 3] }; ores.push(o); b.lanes[0][0] = o; } }
         b.laneT += dt;
         if (b.laneT >= 0.06) { b.laneT = 0;
           for (let k = 0; k < 3; k++) { const L = b.lanes[k]; if (!b.rows[k].cells.length) continue;
@@ -868,10 +877,12 @@ const UI = (() => {
             if (s.p < 1) continue; S[j] = null; const o = s.o, from = slotC(b, k, j); o.c = RAIN[Math.min(RAIN.length - 1, bi * 3 + k + 1)];
             if (k < 2) toLane(b, k + 1, o, [...bend(row.ltr ? 'r' : 'l', row.y, b.rows[k + 1].y), cellC(b, k + 1, 0)]);
             else { tally(b.id + 'm', unit(b), from.x, from.y + 2, o.c, R[b.st.make].name.toLowerCase());
-              const nb = B[bi + 1]; if (nb) { o.wp = [...bend(row.ltr ? 'r' : 'l', row.y, nb.rows[0].y)]; o.onArrive = () => { o.dead = true; }; } // it rolls into the next building, whose own arrivals carry on from there
+              const nb = B[bi + 1]; if (nb && nb.tr) { if (nb.queue.length >= nb.qMax) { const sold = Game.overflowRate(b.st.make).u > 1e-6; /* the next building is full: this cart goes to the Storehouse */
+                  o.wp = [{ x: from.x, y: from.y - 16 }]; o.onArrive = () => { o.dead = true; }; o.fade = 1; tally(b.id + 'x', unit(b), from.x, from.y - 12, sold ? '#e8c06a' : '#9c8f7c', `${R[b.st.make].name.toLowerCase()} ${sold ? 'sold' : '→ Storehouse'}`); }
+                else { const q = { o, left: unit(b), spot: nb.queue.length }; nb.queue.push(q); o.wp = trPath(nb.tr, qDist(nb, q.spot)); o.onArrive = () => { restack(nb); }; } } /* it waits on the transfer belt until the next building takes it */
               else { o.wp = [{ x: BR, y: row.y }]; o.onArrive = () => { o.dead = true; }; } } } } });
       ores = ores.filter(o => !o.dead);
-      if ((agg.t = (agg.t || 0) + dt) >= 0.8) { B.forEach(b => { const r = Game.beltRate(b.id); for (const [p, k] of [['C', 1], ['H', 2]]) if (r[p] && r[p].g > 0) { const c = b.rows[k].cells[0]; if (c) tally(b.id + p, r[p].g * 0.8, c.x, c.y - 10, '#e8c06a', 'gold'); } });
+      if ((agg.t = (agg.t || 0) + dt) >= 0.8) { B.forEach(b => { const r = Game.beltRate(b.id); for (const [p, k] of [['C', 1], ['H', 2]]) if (r[p] && r[p].g * 0.8 >= 0.05) { const c = b.rows[k].cells[0]; if (c) tally(b.id + p, r[p].g * 0.8, c.x, c.y - 10, '#e8c06a', 'gold'); } });
         for (const key in agg) { const a = agg[key]; if (key !== 't' && a.n > 0) pops.push({ x: a.x, y: a.y, text: `+${Game.fmt(a.n)} ${a.unit}`, color: a.color, t: 0 }); } agg = {}; }
       for (const p of pops) p.t += dt; pops = pops.filter(p => p.t < 1.2);
     }
@@ -885,7 +896,12 @@ const UI = (() => {
         if (bi) { ctx.strokeStyle = '#2a211a'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(PAD, b.top + 2); ctx.lineTo(W - PAD, b.top + 2); ctx.stroke(); }
         if (b.img.complete && b.img.naturalWidth) ctx.drawImage(b.img, PAD + 20, b.top + 6, 40, 30);
         ctx.textAlign = 'left'; ctx.font = '700 15px Cinzel, Georgia, serif'; ctx.fillStyle = '#e8c06a'; ctx.fillText(b.st.name, PAD + 66, b.top + 22);
-        ctx.font = '11px Inter, system-ui, sans-serif'; ctx.fillStyle = '#9c8f7c'; ctx.fillText(`${Game.unitName(b.id)} ${Game.depthOf(b.id)} · ${f(cf ? cf.out : Game.stepOutput(b.id))} ${R[b.st.make].name.toLowerCase()}/s`, PAD + 66, b.top + 36);
+        ctx.font = '11px Inter, system-ui, sans-serif'; ctx.fillStyle = '#9c8f7c'; const sub = `${Game.unitName(b.id)} ${Game.depthOf(b.id)} · ${f(cf ? cf.out : Game.stepOutput(b.id))} ${R[b.st.make].name.toLowerCase()}/s`; ctx.fillText(sub, PAD + 66, b.top + 36);
+        if (B.length > 1 && Game.slowestInLine(lid) === b.id) { const sw = ctx.measureText(sub).width; ctx.font = '700 10.5px Inter, system-ui, sans-serif'; ctx.fillStyle = '#ffb347'; ctx.fillText('· slowest', PAD + 66 + sw + 5, b.top + 36); }
+        if (bi) { const up = CF.find(c => c.id === B[bi - 1].id); if (up && up.out > 1e-9) { const took = up.out - up.spare, pct = took / up.out; /* what the transfer belt carries on, and what it can't */
+          ctx.textAlign = 'right'; ctx.font = '600 10.5px Inter, system-ui, sans-serif'; const gd = R[B[bi - 1].st.make].name.toLowerCase();
+          if (pct < 0.97) { const sold = Game.overflowRate(B[bi - 1].st.make).u > 1e-6, y = B[bi - 1].rows[2].y + 27; ctx.fillStyle = '#ffb347'; ctx.fillText(`${b.st.name} takes ${f(took)} of ${f(up.out)} ${gd}/s · rest ${sold ? 'sold' : 'stored'}`, BR - BEND - 6, y); }
+          ctx.textAlign = 'left'; } }
         ctx.strokeStyle = '#3a2e24'; ctx.lineWidth = 5; ctx.lineCap = 'round';
         for (let r = 0; r < 2; r++) { const pts = bend(b.rows[r].ltr ? 'r' : 'l', b.rows[r].y, b.rows[r + 1].y); ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.stroke(); }
         if (B[bi + 1]) { const pts = bend(b.rows[2].ltr ? 'r' : 'l', b.rows[2].y, B[bi + 1].rows[0].y); ctx.strokeStyle = '#4a3a2a'; ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.stroke(); }
@@ -901,7 +917,7 @@ const UI = (() => {
             if (i < lv) { ctx.fillStyle = '#2b2014'; ctx.fill(); ctx.strokeStyle = '#c9973f'; ctx.lineWidth = 1.1; ctx.stroke(); } else { ctx.fillStyle = '#120e0b'; ctx.fill(); ctx.setLineDash([3, 3]); ctx.strokeStyle = '#3a2e24'; ctx.lineWidth = 1; ctx.stroke(); ctx.setLineDash([]); }
             const sl = b.slots[k][i]; if (sl && !moving(sl.o)) { const h = (SLOTH - 4) * Math.min(1, sl.p); rr(s.x + 2, s.y + SLOTH - 2 - h, SLOTW - 4, h, 2); ctx.fillStyle = '#8a5a22'; ctx.fill(); } }); }); });
       { const last = B[B.length - 1]; if (last) { const nx = Game.nextStep(last.id); ctx.textAlign = 'right'; ctx.font = '600 11px Inter, system-ui, sans-serif'; ctx.fillStyle = '#e8c06a'; ctx.fillText(nx ? `to the ${nx.name} ›` : 'to the Storehouse ›', BR, last.rows[2].y + 24); } }
-      for (const o of ores) cart(o.pos.x, o.pos.y, o.r && o.r < 4.2 ? o.r : 4.2, o.c);
+      for (const o of ores) { if (o.fade) ctx.globalAlpha = Math.max(0.15, 1 - ((o.fadeT = (o.fadeT || 0) + 1 / 60) * 3)); cart(o.pos.x, o.pos.y, o.r && o.r < 4.2 ? o.r : 4.2, o.c); ctx.globalAlpha = 1; }
       ctx.textAlign = 'center';
       for (const p of pops) { const u = p.t / 1.2; ctx.globalAlpha = 1 - u * u; ctx.font = '700 11.5px Inter, system-ui, sans-serif'; ctx.fillStyle = p.color; ctx.strokeStyle = '#0d0a08'; ctx.lineWidth = 3; ctx.strokeText(p.text, p.x, p.y - 20 * u); ctx.fillText(p.text, p.x, p.y - 20 * u); ctx.globalAlpha = 1; }
     }
@@ -991,7 +1007,9 @@ const UI = (() => {
       if (maxed) { setText(db.querySelector('[data-f=dt]'), `${st.dig || 'Go deeper'} · ${Game.unitName(id)} ${D + 1}`);
         setText(db.querySelector('[data-f=ds]'), room ? `${Game.unitName(id)} ${D} folds away · ${Game.unitName(id)} ${D + 1} starts at Lv 1 making ${fo(Game.stepOutput(id))} ${gd}/s` : `A bigger settlement is needed before ${Game.unitName(id)} ${D + 1}`);
         setHtml(db.querySelector('[data-f=dc]'), room ? costHtml(Game.digCost(id)).replace(/<span class="cost-name">[^<]*<\/span>/g, '') : ''); }
-      setHtml(box.querySelector('[data-f=note]'), hot ? `<b class="warn">${Game.partName(id, hot)} can't keep up</b> — goods are sold cheap at its belt. Upgrade it.` : maxed ? '' : `Each level adds a slot. With all three at Lv 10, ${Game.unitName(id)} ${D + 1} opens and starts where this one ends.`); }
+      const cfN = Game.chainFlow(st.line).find(c => c.id === id), nxN = Game.nextStep(id), spill = cfN && nxN && Game.stepBuilt(nxN.id) && cfN.out > 1e-9 && cfN.spare / cfN.out > 0.03;
+      setHtml(box.querySelector('[data-f=note]'), spill ? `<b class="warn">The ${nxN.name} takes only ${fo(cfN.out - cfN.spare)} of your ${fo(cfN.out)} ${gd}/s.</b> The rest goes to the Storehouse — upgrade the ${nxN.name} to use it. <button class="belt-go" data-go-next="${nxN.id}">Go to the ${nxN.name} ›</button>` : hot ? `<b class="warn">${Game.partName(id, hot)} can't keep up</b> — goods are sold cheap at its belt. Upgrade it.` : maxed ? '' : `Each level adds a slot. With all three at Lv 10, ${Game.unitName(id)} ${D + 1} opens and starts where this one ends.`);
+      { const gn = box.querySelector('[data-go-next]'); if (gn) gn.onclick = () => openBld(gn.dataset.goNext); } }
     { // the army's bottleneck, told where it can be fixed: in the chain that is short
       const ab = box.querySelector('[data-f=army]'), bl = armyLimit(), A = CONFIG.kingdom.army.lines, W = bl && Object.values(A).find(x => x.good === bl);
       const mine = W && W.line === st.line, slow = mine ? Game.slowestInLine(st.line) : null, lname = W ? { forest: 'Wood', mine: 'Arms', farm: 'Food' }[W.line] : '';
