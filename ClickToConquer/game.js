@@ -1182,7 +1182,9 @@ function generalEdge(n = landN(), s = S.hero.stage, st = stats('sustained')) { /
   return Math.max(1e-6, (hp / Math.max(sd * 0.05, sd - rg * 0.5)) / (lc.hp / Math.max(1e-9, dps)));
 }
 function worthRef(n) { const B = SG(); return Math.pow(10, B.refLog - B.refSlope * (n - 1)) / Math.pow(ageMult('hp') * ageMult('hit'), B.refAge); }
-function soldierWorth(n = landN(), s = S.hero.stage, st) { const B = SG(); return Math.max(B.worthMin, Math.min(B.worthMax, B.worthK * Math.pow(generalEdge(n, s, st) / worthRef(n), B.worthExp))); }
+function worthRaw(n = landN(), s = S.hero.stage, st) { const B = SG(); return B.worthK * Math.pow(generalEdge(n, s, st) / worthRef(n), B.worthExp); }
+function softWorth(raw) { const B = SG(), k = B.worthKnee || Infinity; return raw <= k ? raw : k * Math.pow(raw / k, B.worthSoft ?? 0.5); } // Beta 0.4.5: a soft cap — the hero never stops mattering
+function soldierWorth(n = landN(), s = S.hero.stage, st) { const B = SG(); return Math.max(B.worthMin, Math.min(B.worthMax, softWorth(worthRaw(n, s, st)))); }
 function siegePerMin(n = landN(), s = S.hero.stage) { return marching() * soldierWorth(n, s) / siegeCost(n, s); } // stages per minute
 function siegeActive() { return siegeOn() && (S.hero.siege || 0) < 1 && S.hero.stage >= (S.hero.bestStage || 1) && marching() > 0; }
 function attritionPerMin() { return siegeActive() ? marching() * SG().attrition : 0; }
@@ -1765,7 +1767,7 @@ window.Game = {
   toolTierUnlocked, toolPower, toolCraftCost, toolUpgradeCost, canToolTierUp, craftTool, upgradeTool, activityDef, activityAvailable, setActivity, masteryLevel, harvestTime, harvestYield, harvestRates,
   questCurrent, questProgress, questClaim, suggestGoal, ground, setGround, groundUnlocked, dropToolMult, bestStageAll, groundDrops, toolSlotUnlocked,
   techDef, hasTech, techProgress, canResearch, research, researching, buildingUnlocked, gearTierUnlocked, dropUnlocked, counter,
-  soldiersPerMin, steadyArmy, landEta, invasionForecast, siegeAttrition: () => SG().attrition, LC_siege: () => SG(), soldierLand, workIn, landQuestId, siegeOn, siegeCost, soldierWorth, siegePerMin, siegeActive, attritionPerMin, goldPerFallen, commanderReady, frontHold, siegeEta, frontState, generalEdge, worthRef,
+  soldiersPerMin, steadyArmy, landEta, invasionForecast, siegeAttrition: () => SG().attrition, worthRaw, LC_siege: () => SG(), soldierLand, workIn, landQuestId, siegeOn, siegeCost, soldierWorth, siegePerMin, siegeActive, attritionPerMin, goldPerFallen, commanderReady, frontHold, siegeEta, frontState, generalEdge, worthRef,
   kingdomRates, chainFlow, marchReady, autoMarch, limitParts, overflowRate, kingdomNo, allSteps, stepDef, stepUnlocked, lineUnlocked, lineSteps, stepState, nextStep, stepMods, kTier, tierDef, stepAvailable, stepBuilt, canBuild, buildStep, tierGoods, tierNeed, tierPaid, tierPaidDone, tierStepsReady, contribute, canRaise, raiseTier, accountantSteps, assignAccountant, cityChecks, cityComplete, stepRate, stepPhases, stepCycle, stepBatch, stepOutput, thrallLevel, thrallCap, dismiss, stepLimit, stepUpCost, stepUpPlan, upgradeStep, stepWorkerSlots,
   assignWorker, assignOverseer, unassign, thrallPost, useAbility, refreshOffers, hire, maxStars, storeUpCost, upgradeStore, orderGoods, foundRenownNeed, canDeliver, deliver, swapOrder, swapReady, rankIndex, rankInfo, heroFighting, thrallCount, sellPrice, sell, buyPrice, buyRes, buyMax, canBuyRes,
   canAdvance, advance, stageSustainable, autoAdvanceBlock, autoKillsNeeded, killHeal, retreat, canAfford, add, simulate, applyOffline, claimOffline, offlineStages,

@@ -1853,7 +1853,7 @@ const UI = (() => {
     const tip = fc.by === 'barracks' ? `<b>Faster:</b> upgrade the <b>Barracks</b> — your goods arrive faster than it trains${faster}.`
       : `<b>Faster:</b> the army waits on <b>${R[fc.by].name.toLowerCase()}</b>. Upgrade the ${lname} chain's slowest building, the <b>${Game.stepDef(fc.slow).name}</b>${faster}. <button class="belt-go" data-go-bld="${fc.slow}">Go to the ${Game.stepDef(fc.slow).name} ›</button>`;
     return `<div class="fr-fc"><div>⏱ <b>${G.name}</b> falls in about <b>${fmtEta(fc.eta)}</b> at this pace <span class="dim">(plus the forts)</span>. Your army settles near <b>${f(fc.army)}</b>: +${fc.rate.toFixed(1)} trained / min, ${Math.round(100 * Game.siegeAttrition())}% fall each minute.</div>
-      <div class="fr-tip">${tip} ${Game.soldierWorth(LN) < Game.LC_siege().worthMax * 0.98 ? '<span class="dim">A stronger hero also makes every soldier count for more.</span>' : ''}</div></div>`;
+      <div class="fr-tip">${tip} <span class="dim">A stronger hero also makes every soldier count for more.</span></div></div>`;
   }
   function renderFront(LN) {
     const box = $('front-box'), S = Game.S, h = S.hero, f = Game.fmt, G = Game.ground(), won = !!LN && Game.isEndless() && Game.landDone(LN), show = !!LN && Game.heroFighting() && (!Game.isEndless() || won);
@@ -1871,11 +1871,11 @@ const UI = (() => {
     else if (held) { head = `Marching back to the front — stage ${h.bestStage}`; }
     else if (mar <= 0) { head = `⚔ Siege of stage ${s}`; note = `<b class="bad">No soldiers at the front.</b> The Barracks needs lumber, arms and bread — the siege waits, nothing is lost.`; }
     else head = `⚔ Siege of stage ${s} → ${nx}${Game.isBoss(nx) ? ' · 🏰 fort' : ''}`;
-    const chips = boss || held || hold ? '' : `<div class="fr-chips"><span><b>${f(mar)}</b> at the front</span><span>worth <b>×${w.toFixed(w < 10 ? 2 : 1)}</b> each</span><span class="bad">−${fall.toFixed(1)}/min</span><span class="gold">+${f(fall * gp)}/min gold</span>${eta < 1e6 ? `<span>next stage ${Game.fmtTime(eta)}</span>` : ''}</div>`;
-    const last = F.last && h.time - F.last.t < 120 ? `<div class="fr-last">Last sortie: ${f(F.last.fell)} fell, +${f(F.last.gold)} gold · siege ${Math.floor(100 * F.last.pct)}%</div>` : '';
+    const chips = boss || held || hold ? '' : `<div class="fr-chips"><span><b>${f(mar)}</b> at the front</span><span>worth <b>×${w.toFixed(w < 10 ? 2 : 1)}</b> each</span><span class="bad">−${fall.toFixed(1)}/min</span>${gp > 0 ? `<span class="gold">+${f(fall * gp)}/min gold</span>` : ''}${eta < 1e6 ? `<span>next stage ${Game.fmtTime(eta)}</span>` : ''}</div>`;
+    const last = F.last && h.time - F.last.t < 120 ? `<div class="fr-last">Last sortie: ${f(F.last.fell)} fell${F.last.gold > 0 ? `, +${f(F.last.gold)} gold` : ''} · siege ${Math.floor(100 * F.last.pct)}%</div>` : '';
     const fcH = held ? '' : forecastHtml(LN, G);
     setHtml(box, `<div class="row-between small"><span>${head}</span><b>${Math.floor(100 * pct)}%</b></div><div class="fr-bar"><i style="width:${(100 * pct).toFixed(1)}%"></i></div>${chips}${note ? `<div class="fr-note">${note}</div>` : ''}${fcH}${last}
-      <div class="fr-help dim">${w >= Game.LC_siege().worthMax * 0.98 ? `Your hero leads: each soldier is worth ×${w.toFixed(0)} here, the most a soldier can be worth — only more soldiers make this land fall faster.` : `Your hero leads: each soldier is worth ×${w.toFixed(2)} here — a stronger hero makes every soldier count for more.`}</div>`);
+      <div class="fr-help dim">Your hero leads: each soldier is worth ×${w.toFixed(w < 10 ? 2 : 1)} here — a stronger hero makes every soldier count for more${w > (Game.LC_siege().worthKnee || 1e9) ? ' (past ×' + Game.LC_siege().worthKnee + ' it grows more slowly, but it never stops)' : ''}.</div>`);
     box.onclick = e => { const g = e.target.closest('[data-go-bld]'); if (g) goToBld(g.dataset.goBld); };
   }
   function heroScreenVisible() {

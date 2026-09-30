@@ -7,7 +7,7 @@
 // ============================================================
 
 const CONFIG = {
-  version: 'Beta 0.4.4',
+  version: 'Beta 0.4.5',
   tickMs: 100,
   maxCatchupSeconds: 5,
   autosaveMs: 10000,
@@ -444,7 +444,7 @@ const CONFIG = {
       curve: { hp: 105, hit: 11.5, landHp: 2.8, landHit: 1.9, spanHp: 2.0, spanHit: 1.6, captainHp: 9, captainHit: 0.47, rulerHp: 12, rulerHit: 0.47, /* Beta 0.1.16: bosses take ~3× longer and hit ~3× softer — same total danger, a real fight */ endless: 1.15 },
       // Beta 0.4.0 The Front: soldiers are the fuel of conquest. A stage between forts is a siege of cost(n, s) soldier-minutes of worth;
       // the marching army fills it at (soldiers × worth) per minute and loses `attrition` of itself per minute while it does. Forts (every 10th stage) are the hero's duel.
-      siege: { p0: 300, landG: 1.65, span: 4, attrition: 0.02, worthK: 2, worthExp: 0.35, worthMin: 0.25, worthMax: 40, refLog: 0.3, refSlope: 0.64, refAge: 0.3,
+      siege: { p0: 300, landG: 1.65, span: 4, attrition: 0.02, worthK: 2, worthExp: 0.35, worthMin: 0.25, worthMax: 1e9, worthKnee: 25, worthSoft: 0.5, /* Beta 0.4.5: no hard cap — past ×25 worth grows as the square root, so a stronger hero always helps */ refLog: 0.3, refSlope: 0.64, refAge: 0.3,
         goldPer: 1, sortie: 30, retry: 90, ageExp: 0.4 } },
     // Settlement tiers inside one land. Raising a tier costs `cap` of every good made so far (pay in as you go) and loses nothing.
     tiers: [
@@ -506,6 +506,7 @@ const CONFIG = {
   // jobs (jobs completed by hand or thrall), sold (gold earned at market), stage, boss, founded, thrall (assigned), activity (swings).
   // Shown in Settings → What's new (newest first). Keep each line short.
   changelog: [
+    ['Beta 0.4.5', 'Your hero always matters at the Front. A soldier\'s worth used to stop at ×40, so by the middle lands a stronger hero no longer sped up the siege. Now there is no ceiling: past ×25 worth grows more slowly (with the square root of your hero\'s edge), but every upgrade, level and Crown still makes each soldier count for more. The Front no longer shows a gold line in lands that pay no spoils.'],
     ['Beta 0.4.4', 'Army economy audit. A soldier now costs the same however big your army is — the old price rose 1% with every soldier you had, so doubling your goods barely grew the army and invasions never caught up. The price is now set per land (3 of each good in the first land, doubling each land after, more in later Ages), and the army boost to your hero is a little softer to match. The Front now tells you how long the land will take at your current pace, how big your army will settle, what is holding it back and how much faster fixing it would make you, with a button straight to that building. The Barracks says what it is training as fast as, instead of "paused". Bottleneck alarms on the belts now update the moment you upgrade. Going deeper costs half as much.'],
     ['Beta 0.4.3', 'The whole chain on one screen. Inside any building, the small Chain | One switch beside Output shows every building of that chain as one snaking belt — the middle building runs the other way so the belt flows straight on, and colours step from red to violet along the whole chain. Every phase has its upgrade button beside its row (glowing red when it is the bottleneck), and a gold button appears beside a building\'s name when it can go deeper. Tap a building\'s name to open it on its own. Also: slots start working as a cart is sent to them, and row labels sit clear of the bottleneck glow.'],
     ['Beta 0.4.2', 'When the Barracks is paused for lack of lumber, arms or bread, every building in that chain now says so at the top: the slowest building tells you which part to upgrade, the others take you to it. The Output box now shows the building\'s steady output instead of a jumpy average.'],
