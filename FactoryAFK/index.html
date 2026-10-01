@@ -14,8 +14,8 @@
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>html,body{margin:0;padding:0}img{max-width:100%}[hidden]{display:none!important}</style>
-<script src="cloud-config.js?v=0.4.1"></script>
-<script src="cloud.js?v=0.4.1" defer></script>
+<script src="cloud-config.js?v=0.4.2"></script>
+<script src="cloud.js?v=0.4.2" defer></script>
 </head>
 <body>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -639,7 +639,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   try { theme = localStorage.getItem('afk-factory.theme') || 'system'; } catch (e) {}
   const applyTheme = () => { const r = document.documentElement; if (theme === 'system') { if (hostTheme) r.setAttribute('data-theme', hostTheme); else r.removeAttribute('data-theme'); } else r.setAttribute('data-theme', theme); readColors(); };
   applyTheme(); matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => { if (theme === 'system') readColors(); });
-  const VERSION = { stage: 'Alpha', semver: '0.4.1' }; // bump with every release
+  const VERSION = { stage: 'Alpha', semver: '0.4.2' }; // bump with every release
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const $ = id => document.getElementById(id);
 
@@ -1008,9 +1008,13 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   function tickPL(K, dt) { const d = plDef(K.kind, K.id), c = plState(K.kind, K.id); if (!d || !c) return;
     const placed = K.rows.filter(R => c.slots[R.i]);
     const want = R => (R.buf > 0 ? 1 : 0) + R.feed.items.length + K.down.items.filter(it => it.to === R.i).length;
+    // fair share: each Level builds a claim on input at the rate it needs it; the most-owed Level gets the next batch, and if the
+    // warehouse can't fill that batch yet everyone waits, so short supply is split evenly instead of the shallow Levels grabbing it
+    if (c.on) placed.forEach(R => { R.owed = Math.min(d.nIn * LOAD(R.i) * 3, (R.owed || 0) + machIn(d, R.i, c.slots[R.i]) * dt); });
     if (c.on && placed.length && K.down.canInsert(0)) {
-      const R = placed.filter(r => want(r) < 2 + Math.ceil(c.slots[r.i] * (r.i + 1) / 2) && S.items[d.in] >= d.nIn * LOAD(r.i)).sort((a, b) => want(a) - want(b))[0];
-      if (R) { const L = d.nIn * LOAD(R.i); S.items[d.in] -= L; consumed(d.in, L); K.flowIn.push([clock, L]);
+      const top = placed.filter(r => want(r) < 2 + Math.ceil(c.slots[r.i] * (r.i + 1) / 2)).sort((a, b) => b.owed / LOAD(b.i) - a.owed / LOAD(a.i))[0];
+      const R = top && S.items[d.in] >= d.nIn * LOAD(top.i) ? top : null;
+      if (R) { const L = d.nIn * LOAD(R.i); R.owed -= L; S.items[d.in] -= L; consumed(d.in, L); K.flowIn.push([clock, L]);
         K.down.insert(0, { item: d.in, load: L, to: R.i, stop: K.G.downStop(R.i), exit: it => { if (!R.feed.canInsert(0)) return false; R.feed.insert(0, { item: d.in, load: it.load }); return true; } }); } }
     K.down.tick(dt);
     K.rows.forEach(R => { R.feed.tick(dt); if (R.flash > 0) R.flash -= dt; const sp = c.slots[R.i] || 0, L = LOAD(R.i); let working = false;
