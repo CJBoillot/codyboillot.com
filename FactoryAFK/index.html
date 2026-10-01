@@ -14,8 +14,8 @@
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>html,body{margin:0;padding:0}img{max-width:100%}[hidden]{display:none!important}</style>
-<script src="cloud-config.js?v=0.3.18"></script>
-<script src="cloud.js?v=0.3.18" defer></script>
+<script src="cloud-config.js?v=0.3.19"></script>
+<script src="cloud.js?v=0.3.19" defer></script>
 </head>
 <body>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -352,17 +352,20 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
 .wrow:first-child { border-top: 0; }
 .wrow > img { width: 38px; height: 38px; align-self: start; }
 .wmid { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
-.wmid b { font-size: 13.5px; } .wmid span { font-size: 12px; color: var(--dim); } .wmid span em { font-style: normal; color: var(--text); font-weight: 800; }
-.wmid span i { font-style: normal; font-weight: 700; } .wmid span i.up { color: var(--grass); } .wmid span i.down { color: var(--alarm); }
+.wmid b { font-size: 13.5px; } .wmid .wct { font-size: 12px; color: var(--dim); } .wmid .wct em { font-style: normal; color: var(--text); font-weight: 800; }
+.wmid .wct i { font-style: normal; font-weight: 700; } .wmid .wct i.up { color: var(--grass); } .wmid .wct i.down { color: var(--alarm); }
 .wmid .bar { height: 6px; }
-.wrow.full .wmid span { color: var(--alarm); } .wrow.full .bar i { background: var(--alarm); }
+.wrow.full .wmid .wct { color: var(--gold); } .wrow.full .bar i { background: var(--gold); }
+.wrow.recycling .wmid .wct { color: var(--sky); } .wrow.recycling .bar i { background: var(--sky); }
+.wrow.stopped .wmid .wct { color: var(--alarm); } .wrow.stopped .bar i { background: var(--alarm); }
 .wsell { display: flex; flex-direction: column; gap: 4px; }
 .sellb { font: inherit; font-size: 11.5px; font-weight: 800; color: var(--text); background: var(--panel); border: 1px solid var(--line); border-radius: 9px; padding: 4px 8px; cursor: pointer; display: flex; justify-content: space-between; gap: 6px; min-width: 104px; }
 .sellb em { font-style: normal; color: var(--gold); }
 .sellb:disabled { opacity: .45; cursor: default; }
 .recy { font: inherit; font-size: 11px; font-weight: 700; color: var(--dim); background: none; border: 1px dashed var(--line); border-radius: 8px; padding: 3px 8px 3px 3px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; align-self: stretch; }
 .recy img { width: 18px; height: 18px; }
-.recy[aria-pressed="true"] { color: var(--grass); border: 1px solid var(--grass2); background: var(--ok); }
+.recy { white-space: nowrap; }
+.recy[aria-pressed="true"] { color: var(--sky); border: 1px solid var(--sky2); background: var(--box); }
 .recy:disabled { opacity: .5; cursor: default; }
 #bld .unl { margin-top: 4px; }
 .hdraw small { display: block; font-family: var(--font-body); font-weight: 600; font-size: 10.5px; color: var(--dim); }
@@ -624,7 +627,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   try { theme = localStorage.getItem('afk-factory.theme') || 'system'; } catch (e) {}
   const applyTheme = () => { const r = document.documentElement; if (theme === 'system') { if (hostTheme) r.setAttribute('data-theme', hostTheme); else r.removeAttribute('data-theme'); } else r.setAttribute('data-theme', theme); readColors(); };
   applyTheme(); matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => { if (theme === 'system') readColors(); });
-  const VERSION = { stage: 'Alpha', semver: '0.3.18' }; // bump with every release
+  const VERSION = { stage: 'Alpha', semver: '0.3.19' }; // bump with every release
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const $ = id => document.getElementById(id);
 
@@ -1412,11 +1415,21 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   // ---- HUB warehouses: every item's stock, rate, sell buttons and recycler hook-up ----
   const whShown = () => Object.keys(ITEMS).filter(k => k === 'iron_ore' || S.items[k] > 0 || S.made[k]
     || MINES.some(m => m.ore === k && S.mines[m.id]) || LINES.some(l => l.out === k && S.lines[l.id]) || CRAFTS.some(c => c.out === k && S.crafts[c.id]));
+  // is something plugged in that should be filling this warehouse? (drills for ore, running smelters / constructors for what they make)
+  const hasMaker = k => MINES.some(m => m.ore === k && S.mines[m.id] && S.mines[m.id].levels.some(l => l.drill))
+    || LINES.some(l => l.out === k && S.lines[l.id] && S.lines[l.id].on && S.lines[l.id].slots.some(Boolean))
+    || CRAFTS.some(c => c.out === k && S.crafts[c.id] && S.crafts[c.id].on && S.crafts[c.id].slots.some(Boolean));
+  const recyPerS = k => ITEMS[k].value / RECYCLE_CUT / RECYCLE_T;
+  const fmtCr = x => (x % 1 ? x.toFixed(1) : String(x));
   function renderWh() {
     const r = rateCache || {}, wf = walletFull();
+    // row colour: blue = full enough that the Recycler is selling it; gold = full and backing up; red = its makers are stopped (no input or no power); green = filling
     const rows = whShown().map(k => { const n = Math.floor(S.items[k] || 0), cap = capOf(k), v = ITEMS[k].value, rt = r[k] || 0, run = S.inv.recycler && RECY[k] && RECY[k].on;
-      const recy = S.inv.recycler ? `<span class="recy" aria-pressed="${!!run}"><img src="icons/merger.webp" alt="">${run ? `Recycling · +${(v / RECYCLE_CUT).toFixed(0)} per ${RECYCLE_T} s` : wf && n >= cap * RECYCLE_AT ? 'Recycler waits: wallet full' : `Recycler starts at ${Math.round(RECYCLE_AT * 100)}% full`}</span>` : '';
-      return `<div class="wrow${n >= cap ? ' full' : ''}">${icon(k)}<div class="wmid"><b>${ITEMS[k].name}</b><span><em>${big(n)}</em> / ${big(cap)}${n >= cap ? ' · FULL' : ''} · <i class="${Math.abs(rt) < 0.05 ? '' : rt > 0 ? 'up' : 'down'}">${fmtRate(rt)}</i></span><div class="bar"><i style="width:${Math.min(100, n / cap * 100)}%"></i></div>${recy}</div>
+      const stopped = !run && n < cap && hasMaker(k) && clock > 10 && winRate(flow[k]) < 0.01;
+      const st = run ? 'recycling' : n >= cap ? 'full' : stopped ? 'stopped' : '';
+      const tag = run ? (n >= cap ? ' · FULL' : '') : n >= cap ? ' · FULL' : stopped ? ' · STOPPED' : '';
+      const recy = S.inv.recycler ? `<span class="recy" aria-pressed="${!!run}"><img src="icons/merger.webp" alt="">${run ? `Recycling · +${fmtCr(recyPerS(k))}/s` : wf && n >= cap * RECYCLE_AT ? 'Waits: wallet full' : `Recycles at ${Math.round(RECYCLE_AT * 100)}% full`}</span>` : '';
+      return `<div class="wrow${st ? ' ' + st : ''}">${icon(k)}<div class="wmid"><b>${ITEMS[k].name}</b><span class="wct"><em>${big(n)}</em> / ${big(cap)}${tag} · <i class="${Math.abs(rt) < 0.05 ? '' : rt > 0 ? 'up' : 'down'}">${fmtRate(rt)}</i></span><div class="bar"><i style="width:${Math.min(100, n / cap * 100)}%"></i></div>${recy}</div>
         <div class="wsell">${wf ? `<button class="sellb" disabled>Wallet full<em></em></button><button class="sellb" disabled>Spend first<em></em></button>` : `<button class="sellb" data-sell="${k}" data-n="10" ${n < 10 || walletRoom() < 10 * v ? 'disabled' : ''}>Sell 10<em>+${big(10 * v)}</em></button><button class="sellb" data-sell="${k}" data-n="all" ${n < 1 || walletRoom() < v ? 'disabled' : ''}>Sell all<em>+${big(Math.min(n, Math.floor(walletRoom() / v)) * v)}</em></button>`}</div></div>`; }).join('');
     if ($('whs')._h !== rows) { $('whs')._h = rows; $('whs').innerHTML = rows; }
     const b = [['basic_drill', 'Basic Drill', ownedCount('basic'), placedDrills('basic') ? `${placedDrills('basic')} placed` : ''], ['electric_drill', 'Electric Drill', ownedCount('electric'), placedDrills('electric') ? `${placedDrills('electric')} placed` : ''],
@@ -1424,7 +1437,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
       ['battery_t1', 'Battery T1', S.inv.battery, S.inv.battery ? `${big(powerCap())} kW` : ''], ['merger', 'Recycler', S.inv.recycler || 0, ''], ['coal_generator', 'Coal Power Plant', S.inv.plant || 0, '']].filter(x => x[2] > 0);
     const bh = b.length ? `<p class="fnote">Buildings (they don't use warehouse space)</p><div class="unl">${b.map(([ic, nm, n, t]) => `<span>${icon(ic)}${nm} ×${n}${t ? ` · ${t}` : ''}</span>`).join('')}</div>` : '';
     if ($('bld')._h !== bh) { $('bld')._h = bh; $('bld').innerHTML = bh; }
-    const tg = $('recy-tag'); tg.hidden = !S.inv.recycler; if (S.inv.recycler) { const on = Object.values(RECY).some(x => x.on); tg.textContent = on ? 'RECYCLER EARNING' : 'RECYCLER IDLE'; tg.classList.toggle('ok', on); }
+    const tg = $('recy-tag'); tg.hidden = !S.inv.recycler; if (S.inv.recycler) { const on = Object.values(RECY).some(x => x.on); const tot = Object.keys(RECY).filter(k => RECY[k].on && ITEMS[k]).reduce((a, k) => a + recyPerS(k), 0); tg.textContent = on ? `RECYCLER +${fmtCr(tot)}/s` : 'RECYCLER IDLE'; tg.classList.toggle('ok', on); }
   }
   $('whs').addEventListener('click', e => { const sb = e.target.closest('[data-sell]');
     if (sb) { const k = sb.dataset.sell; sell(k, sb.dataset.n === 'all' ? Infinity : +sb.dataset.n); renderWh(); } });
