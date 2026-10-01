@@ -14,8 +14,8 @@
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>html,body{margin:0;padding:0}img{max-width:100%}[hidden]{display:none!important}</style>
-<script src="cloud-config.js?v=0.3.4"></script>
-<script src="cloud.js?v=0.3.4" defer></script>
+<script src="cloud-config.js?v=0.3.5"></script>
+<script src="cloud.js?v=0.3.5" defer></script>
 </head>
 <body>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -294,7 +294,10 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
 .pw-top span { font-size: 12px; color: var(--dim); }
 .pw-top .pw-use { text-align: right; } .pw-top .pw-use b { font-size: 18px; color: var(--text); }
 /* until the Coal Power Plant is built, Tap for Power sticks just above the tab bar */
-.bigtap.stick { position: sticky; bottom: calc(var(--tabs-h, 72px) + 8px); z-index: 4; box-shadow: 0 6px 0 #8a6516, 0 0 24px #ffd06444, 0 -10px 24px var(--bg); }
+.taphit { position: absolute; z-index: 2; background: transparent; border: 0; padding: 0; border-radius: 16px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.taphit:disabled { cursor: default; }
+.taphit:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
+.taphit .float { white-space: nowrap; color: var(--gold); text-shadow: 0 1px 2px var(--bg), 0 0 6px var(--bg); top: 0; }
 .bigtap { position: relative; font: inherit; border: 0; border-radius: 16px; padding: 22px 12px; cursor: pointer; color: #1a1406; background: radial-gradient(circle at 50% 30%, #ffe08a, var(--gold) 55%, #c9962a); box-shadow: 0 6px 0 #8a6516, 0 0 24px #ffd06444; display: flex; flex-direction: column; align-items: center; gap: 2px; -webkit-tap-highlight-color: transparent; }
 .bigtap span { font-family: var(--font-head); font-weight: 700; font-size: 20px; letter-spacing: .06em; display: inline-flex; align-items: center; gap: 6px; }
 .tapbolt { width: 30px; height: 30px; filter: drop-shadow(0 1px 1px #0006); }
@@ -457,7 +460,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   <section class="panel" id="tab-power" role="tabpanel" aria-labelledby="t-power" hidden>
     <div class="card power">
       <div class="fhead"><h2>POWER GRID</h2><span class="tag" id="pw-net">+0.0 kW/s</span></div>
-      <div class="pgrid" id="pgrid"><canvas id="pcv" aria-label="Power grid: tapping sends power into the battery bank, and the bank sends them out to each smelter line"></canvas></div>
+      <div class="pgrid" id="pgrid"><canvas id="pcv" aria-label="Power grid: tapping sends power into the battery bank, and the bank sends them out to each smelter line"></canvas><button class="taphit" id="pw-tap" aria-label="Tap for power"><span class="sr" id="pw-per">+5 kW per tap</span></button></div>
       <div class="pw-up" id="pw-up-host"></div>
       <p class="fnote">Each glowing dot is 1 kW. Taps and the Coal Power Plant charge the battery bank (100 kW per Battery T1). Smelters and Constructors draw 1 kW/s while they work, Electric Drills 0.25. When the bank runs dry, machines wait with "NO POWER".</p>
     </div>
@@ -466,8 +469,6 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
       <p class="fnote">Unplug any building to save power for the ones that matter.</p>
       <div id="phub-rows"></div>
     </div>
-    <!-- last in the Power tab so it can stick above the tab bar until the Coal Power Plant takes over -->
-    <button class="bigtap" id="pw-tap"><span><img class="tapbolt" src="icons/bolt_yellow.webp" alt="">TAP FOR POWER</span><small id="pw-per">+1 per tap</small></button>
   </section>
 
   <section class="panel" id="tab-build" role="tabpanel" aria-labelledby="t-build" hidden>
@@ -565,7 +566,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   try { theme = localStorage.getItem('afk-factory.theme') || 'system'; } catch (e) {}
   const applyTheme = () => { const r = document.documentElement; if (theme === 'system') { if (hostTheme) r.setAttribute('data-theme', hostTheme); else r.removeAttribute('data-theme'); } else r.setAttribute('data-theme', theme); readColors(); };
   applyTheme(); matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => { if (theme === 'system') readColors(); });
-  const VERSION = { stage: 'Alpha', semver: '0.3.4' }; // bump with every release
+  const VERSION = { stage: 'Alpha', semver: '0.3.5' }; // bump with every release
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const $ = id => document.getElementById(id);
 
@@ -1061,6 +1062,8 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
 
   // ---- power ----
   const floatUp = (host, text) => { const f = document.createElement('span'); f.className = 'float'; f.textContent = text; host.appendChild(f); setTimeout(() => f.remove(), 900); };
+  const TAPFX = { t: 0 };
+  $('pw-tap').addEventListener('pointerdown', () => { TAPFX.t = 0.18; });
   $('pw-tap').addEventListener('click', e => { const cap = powerCap(); if (!cap) return; const add = Math.min(tapKw(), cap - S.power); S.power += add; if (add > 0) { powerIn.add(add); tapDots(add); } floatUp(e.currentTarget, add > 0 ? `+${Math.round(add)} kW` : 'Full'); sync(); });
   const tapPill = pill('pw-up', 'bolt_yellow', () => { const max = S.tapLv >= TAP_MAX;
     return { name: `Tap power Lv ${S.tapLv}`, label: max ? '' : `+${tapKw()} → +${TAP_KW[S.tapLv + 1]} kW per tap`, cost: max ? null : tapCost(), up: () => S.tapLv++, max: 'max for Tier 1', gate: 'tap', done: max }; });
@@ -1071,11 +1074,12 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
     return { name: `${ITEMS[k].name} warehouse Lv ${whLvOf(k)}`, label: `${big(S.items[k])}/${big(capOf(k))} → ${big(whCap(whLvOf(k) + 1))}`, cost: whLvOf(k) >= 2 ? null : whCost(k), up: () => S.wh[k] = whLvOf(k) + 1, hot: roomOf(k) < 1, max: 'max for Tier 1', gate: 'wh-' + k, done: whLvOf(k) >= 2 }; }));
 
   // ---- power grid: tap → battery bank → each smelter line. Each glowing dot is 1 kW; wires meet at 90° joints ----
-  const pcv = $('pcv'), pctx = pcv.getContext('2d'); let PW = 0; const PH = 432, PG = {}; let pdots = [], phit = null;
+  const pcv = $('pcv'), pctx = pcv.getContext('2d'); let PW = 0; const PH = 464, PG = {}; let pdots = [], phit = null;
   const DOT_V = 120;
   function playout() { PW = $('pgrid').clientWidth; if (!PW) return; const dpr = devicePixelRatio || 1;
     pcv.width = PW * dpr; pcv.height = PH * dpr; pcv.style.height = PH + 'px'; pctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    Object.assign(PG, { cx: PW / 2, srcY: 42, srcBot: 70, joinY: 100, bankTop: 118, bankBot: 244, busY: 286, conY: 340, tapX: PW * 0.28, genX: PW * 0.72 });
+    Object.assign(PG, { cx: PW / 2, srcY: 50, srcBot: 116, joinY: 132, bankTop: 150, bankBot: 276, busY: 318, conY: 372, tapX: PW * 0.28, genX: PW * 0.72 });
+    Object.assign($('pw-tap').style, { left: (PG.tapX - 60) + 'px', top: '10px', width: '120px', height: '104px' }); // the TAP node and its labels are the button
     pdots = []; }
   // who draws power: every open smelter line, every crafting line, and the Electric drills
   const pConsumers = () => [
@@ -1112,7 +1116,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
     if (!unitsOf(c)) return [`NO ${unitWord(c).toUpperCase()}S`, 'dim', false]; if (!plugOn(c)) return ['UNPLUGGED', 'dim', false];
     if (isStalled(c)) return ['NO POWER', 'alarm', false];
     return [`${Math.min(lineDraw(c.id), consumerMax(c)).toFixed(1)} kW/s`, 'gold', true]; }
-  function ptick(dt) { for (const d of pdots) { d.s += DOT_V * dt; if (d.s >= d.len && !d.gone) { d.gone = true; d.done && d.done(); } } pdots = pdots.filter(d => !d.gone);
+  function ptick(dt) { if (TAPFX.t > 0) TAPFX.t = Math.max(0, TAPFX.t - dt); for (const d of pdots) { d.s += DOT_V * dt; if (d.s >= d.len && !d.gone) { d.gone = true; d.done && d.done(); } } pdots = pdots.filter(d => !d.gone);
     for (const k in pulse) pulse[k] = Math.max(0, pulse[k] - dt); }
   function pwire(p, live) { const line = (w, c) => { ctx.beginPath(); p.forEach((q, i) => i ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y)); ctx.lineWidth = w; ctx.strokeStyle = c; ctx.lineCap = 'square'; ctx.lineJoin = 'miter'; ctx.stroke(); };
     line(9, C.line); line(6, C.bed); line(2, live ? C['wire-on'] : C['wire-off']); }
@@ -1125,11 +1129,16 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
     pwire(inPath(PG.tapX), tapping); pwire(inPath(PG.genX), plant && genR > 0.05);
     const st = cs.map(pState); cs.forEach((c, i) => pwire(outPath(i, n), st[i][2] && S.power >= 1));
     // sources
-    pnode(PG.tapX, PG.srcY, 'bolt_yellow', !cap); ptext('TAP', PG.tapX, PG.srcY + 42, cap ? C.text : C.dim);
+    // the TAP node is the tap button: bigger, and it pulses while the batteries have room
+    { const x = PG.tapX, y = PG.srcY, room = cap && S.power < cap - 0.5, k = TAPFX.t > 0 ? TAPFX.t / 0.18 : 0;
+      if (room && !reduce) { ctx.save(); ctx.globalAlpha = 0.25 + 0.2 * Math.sin(clock * 4); ctx.fillStyle = C.watt; ctx.shadowColor = C.watt; ctx.shadowBlur = 16; rr(x - 38, y - 38, 76, 76, 18); ctx.fill(); ctx.restore(); }
+      ctx.save(); if (!cap) ctx.globalAlpha = 0.4; const sz = 70 - k * 6; rr(x - sz / 2, y - sz / 2, sz, sz, 16); ctx.fillStyle = C.panel2; ctx.fill(); ctx.strokeStyle = room ? C.gold : C.line; ctx.lineWidth = room ? 2 : 1; ctx.stroke();
+      if (ready(IMG.bolt_yellow)) ctx.drawImage(IMG.bolt_yellow, x - sz * 0.38, y - sz * 0.38, sz * 0.76, sz * 0.76); ctx.restore();
+      ptext('TAP FOR POWER', x, y + 52, cap ? C.text : C.dim, 11); ptext(cap ? (S.power >= cap - 0.5 ? 'batteries full' : `+${tapKw()} kW per tap`) : 'build a battery', x, y + 65, cap ? C.gold : C.dim, 10, 700, '"Nunito Sans"'); }
     pnode(PG.genX, PG.srcY, 'coal_generator', !plant);
-    if (!plant) ptext(S.tier >= 5 ? 'POWER PLANT · BUILD IT' : 'POWER PLANT · COAL POWER', PG.genX, PG.srcY + 42, C.dim, 9.5);
-    else { const out = PLANT.starved > 0.5 && S.items.coal < 1; ptext('COAL POWER PLANT', PG.genX, PG.srcY + 42, C.text, 9.5);
-      ptext(out ? 'NO COAL' : `+${Math.min(genR, PLANT_KW).toFixed(1)} of ${PLANT_KW} kW/s`, PG.genX, PG.srcY - 32, out ? C.alarm : C.gold, 10); }
+    if (!plant) { ptext('COAL POWER PLANT', PG.genX, PG.srcY + 52, C.dim, 9.5); ptext(qOpen('plant') ? 'build it' : `quest ${qNum('plant')}`, PG.genX, PG.srcY + 65, C.dim, 10, 700, '"Nunito Sans"'); }
+    else { const out = PLANT.starved > 0.5 && S.items.coal < 1; ptext('COAL POWER PLANT', PG.genX, PG.srcY + 52, C.text, 9.5);
+      ptext(out ? 'NO COAL' : `+${Math.min(genR, PLANT_KW).toFixed(1)} of ${PLANT_KW} kW/s`, PG.genX, PG.srcY + 65, out ? C.alarm : C.gold, 10, 700, '"Nunito Sans"'); }
     // battery bank: a panel of its own, one slot per battery and a dashed slot for the next
     const bx = 12, bw = PW - 24, by = PG.bankTop, bh = PG.bankBot - PG.bankTop;
     rr(bx, by, bw, bh, 12); ctx.fillStyle = C.box; ctx.fill(); ctx.strokeStyle = C.sky2; ctx.lineWidth = 1.5; ctx.stroke();
@@ -1505,8 +1514,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
       const r = $('craft-run'); r.setAttribute('aria-pressed', String(c.on)); r.querySelector('img').setAttribute('src', `icons/${c.on ? 'plug_in' : 'plug_out'}.webp`); r.querySelector('span').textContent = c.on ? 'Running' : 'Unplugged';
       for (let i = 0; i < CRAFT_LEVELS; i++) { const b = $('con-' + i); if (!b) continue; b.hidden = c.slots[i]; b.disabled = S.inv.constructor < 1; b.classList.toggle('ready', S.inv.constructor > 0); b.textContent = S.inv.constructor > 0 ? 'Place constructor' : 'Empty · build a Constructor'; } }
     if (tab === 'power') { const cap = powerCap(), net = rateCache ? rateCache.power : 0;
-      $('pw-per').textContent = cap ? `+${tapKw()} kW per tap` : 'Build a Battery first'; $('pw-tap').disabled = !cap; $('pw-tap').classList.toggle('stick', !S.inv.plant);
-      const th = document.querySelector('.tabs').offsetHeight; if (th && th !== sync._th) { sync._th = th; document.documentElement.style.setProperty('--tabs-h', th + 'px'); }
+      $('pw-per').textContent = cap ? `+${tapKw()} kW per tap` : 'Build a Battery first'; $('pw-tap').disabled = !cap;
       const nt = $('pw-net'); nt.textContent = `${net >= 0.05 ? '+' : net <= -0.05 ? '−' : ''}${Math.abs(net) < 0.05 ? '0.0' : Math.abs(net).toFixed(1)} kW/s`; nt.classList.toggle('up', net >= 0.05); nt.classList.toggle('down', net <= -0.05);
       syncPowerHub(); }
   }
