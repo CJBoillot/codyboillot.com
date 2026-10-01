@@ -14,8 +14,8 @@
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>html,body{margin:0;padding:0}img{max-width:100%}[hidden]{display:none!important}</style>
-<script src="cloud-config.js?v=0.4.4"></script>
-<script src="cloud.js?v=0.4.4" defer></script>
+<script src="cloud-config.js?v=0.4.5"></script>
+<script src="cloud.js?v=0.4.5" defer></script>
 </head>
 <body>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -639,7 +639,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   try { theme = localStorage.getItem('afk-factory.theme') || 'system'; } catch (e) {}
   const applyTheme = () => { const r = document.documentElement; if (theme === 'system') { if (hostTheme) r.setAttribute('data-theme', hostTheme); else r.removeAttribute('data-theme'); } else r.setAttribute('data-theme', theme); readColors(); };
   applyTheme(); matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => { if (theme === 'system') readColors(); });
-  const VERSION = { stage: 'Alpha', semver: '0.4.4' }; // bump with every release
+  const VERSION = { stage: 'Alpha', semver: '0.4.5' }; // bump with every release
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const $ = id => document.getElementById(id);
 
@@ -682,10 +682,10 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   const BELT_MAX_LV = 10, MK = [null, { base: 5, tier: 0 }, { base: 12, tier: 3 }];
   const beltRate = (mk, lv) => MK[mk].base * (1 + 0.12 * (lv - 1));
   const beltCost = (mk, lv) => ({ [CR]: Math.ceil(250 * Math.pow(4, mk - 1) * Math.pow(1.7, lv - 1)) });
-  // every item has its own warehouse: 50 to start, doubling each level, paid in Credits (60% of its capacity × the item's sell value). Buildings never use warehouse space.
+  // every item has its own warehouse: 50 to start, doubling each level, paid in Credits (40% of its capacity × the item's sell value: iron ore Lv 2 = 200, the same as the first sale). Buildings never use warehouse space.
   const whCap = lv => 50 * Math.pow(2, lv - 1);
   const whLvOf = k => S.wh[k] || 1, capOf = k => whCap(whLvOf(k)), roomOf = k => capOf(k) - (S.items[k] || 0);
-  const whCost = k => ({ [CR]: Math.ceil(0.6 * capOf(k)) * ITEMS[k].value });
+  const whCost = k => ({ [CR]: Math.ceil(0.4 * capOf(k)) * ITEMS[k].value });
   const LOAD = i => Math.pow(2, i); // a Level's cart holds twice the Level above
   // one mine per raw resource. Digging deeper costs Credits.
   const MINES = [
@@ -723,7 +723,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   const TAP_KW = [0, 5, 10], TAP_MAX = TAP_KW.length - 1, tapKw = () => TAP_KW[Math.min(S.tapLv || 1, TAP_MAX)], tapCost = () => ({ [CR]: 200 });
   const TIERS = [
     { name: 'Landing', need: { iron_ore: 10 }, unlocks: [['basic_drill', 'Buildings tab'], ['basic_drill', 'Basic Drill']] },
-    { name: 'Smelting', need: { iron_ore: 100 }, unlocks: [['basic_smelter', 'Smelter'], ['battery_t1', 'Battery & Power tab'], ['copper_ore', 'Copper mine'], ['iron_ore', 'Digging to Level 2']] },
+    { name: 'Smelting', need: { iron_ore: 50 }, unlocks: [['basic_smelter', 'Smelter'], ['battery_t1', 'Battery & Power tab'], ['copper_ore', 'Copper mine'], ['iron_ore', 'Digging to Level 2']] },
     { name: 'Parts', need: { iron_ingot: 50, copper_ingot: 50 }, unlocks: [['auto_constructor', 'Constructor & Crafting tab'], ['iron_plate', 'Iron plates'], ['copper_wire', 'Copper wire']] },
     { name: 'Concrete', need: { iron_plate: 10, copper_wire: 30, [CR]: 800 }, unlocks: [['sand', 'Limestone mine'], ['sand', 'Concrete']] },
     { name: 'Coal Power', need: { iron_plate: 15, copper_wire: 30, concrete: 10, [CR]: 3000 }, unlocks: [['coal', 'Coal mine'], ['electric_drill', 'Electric Drill'], ['coal_generator', 'Coal Power Plant']] },
@@ -1506,8 +1506,8 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
     { id: 'landing', t: 'Landing', text: 'Research Landing in the HUB: deliver 10 iron ore.', done: () => S.tier >= 1, go: hub, btn: 'Open the HUB', here: () => tab === 'hub' },
     { id: 'hands', t: 'Hands off', text: 'Build a Basic Drill (20 iron ore) and put it on Iron Level 1.', done: () => drillOn('iron', 0), go: () => S.inv.basic ? (viewMine('iron'), openSheet(0)) : showTab('craft'), btn: () => S.inv.basic ? 'Choose a drill' : 'Open Buildings', here: () => !S.inv.basic && tab === 'craft' },
     { id: 'sale', t: 'First sale', text: 'Sell 20 iron ore in the HUB. Credits go into your wallet.', have: () => S.sold.iron_ore || 0, need: 20, go: hub, btn: 'Open the HUB', here: () => tab === 'hub' },
-    { id: 'room', t: 'Room to grow', text: 'Upgrade the iron ore warehouse to Lv 2 (300 credits) so it holds more.', up: 'wh-iron_ore', done: () => whLvOf('iron_ore') >= 2, go: () => viewMine('iron'), btn: 'Go to the Iron mine', here: () => tab === 'mine' && S.view === 'iron' },
-    { id: 'smelting', t: 'Smelting', text: 'Research Smelting in the HUB: deliver 100 iron ore.', done: () => S.tier >= 2, go: hub, btn: 'Open the HUB', here: () => tab === 'hub' },
+    { id: 'room', t: 'Room to grow', text: 'Upgrade the iron ore warehouse to Lv 2 (200 credits) so it holds more.', up: 'wh-iron_ore', done: () => whLvOf('iron_ore') >= 2, go: () => viewMine('iron'), btn: 'Go to the Iron mine', here: () => tab === 'mine' && S.view === 'iron' },
+    { id: 'smelting', t: 'Smelting', text: 'Research Smelting in the HUB: deliver 50 iron ore.', done: () => S.tier >= 2, go: hub, btn: 'Open the HUB', here: () => tab === 'hub' },
     { id: 'fire', t: 'First fire', text: 'Build a Smelter (50 iron ore) and place it in the Iron line.', done: () => slotOn(S.lines, 'iron'), go: () => S.inv.smelter ? viewLine('iron') : showTab('craft'), btn: () => S.inv.smelter ? 'Open Iron smelting' : 'Open Buildings' },
     { id: 'copperore', t: 'Copper', text: 'Smelters need power, and power needs batteries made with copper. Tap Copper Level 1 to mine 10 copper ore.', have: () => S.made.copper_ore || 0, need: 10,
       go: () => viewMine('copper'), btn: 'Go to the Copper mine', here: () => tab === 'mine' && S.view === 'copper' },
@@ -1531,7 +1531,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
     { id: 'parts', t: 'Parts', text: 'Research Parts in the HUB: deliver 50 iron ingots and 50 copper ingots.', done: () => S.tier >= 3, go: hub, btn: 'Open the HUB', here: () => tab === 'hub' },
     { id: 'build', t: 'Build', text: 'Build two Constructors (40 iron + 20 copper ingots each): one for the Plates line, one for the Wire line.', parts: [['Plates Constructor', () => slotOn(S.crafts, 'plates')], ['Wire Constructor', () => slotOn(S.crafts, 'wire')]],
       go: () => S.inv.constructor ? viewCraft(!slotOn(S.crafts, 'plates') ? 'plates' : 'wire') : showTab('craft'), btn: () => S.inv.constructor ? 'Open Crafting' : 'Open Buildings' },
-    { id: 'stock', t: 'Stockpile', text: 'Make 10 iron plates and 30 copper wire, and upgrade the wire warehouse to Lv 2.', up: 'wh-copper_wire', parts: [['10 plates', () => (S.made.iron_plate || 0) >= 10], ['30 wire', () => (S.made.copper_wire || 0) >= 30], ['Wire warehouse Lv 2 (750 credits)', () => whLvOf('copper_wire') >= 2]],
+    { id: 'stock', t: 'Stockpile', text: 'Make 10 iron plates and 30 copper wire, and upgrade the wire warehouse to Lv 2.', up: 'wh-copper_wire', parts: [['10 plates', () => (S.made.iron_plate || 0) >= 10], ['30 wire', () => (S.made.copper_wire || 0) >= 30], ['Wire warehouse Lv 2 (500 credits)', () => whLvOf('copper_wire') >= 2]],
       go: () => viewCraft((S.made.iron_plate || 0) < 10 ? 'plates' : 'wire'), btn: 'Open Crafting' },
     { id: 'concrete', t: 'Concrete', text: 'Research Concrete in the HUB: 10 plates, 30 wire and 800 credits.', done: () => S.tier >= 4, go: hub, btn: 'Open the HUB', here: () => tab === 'hub' },
     { id: 'mix', t: 'Mix', text: 'Put a drill on Limestone Level 1, place a Constructor in the Concrete line, and make 10 concrete.', parts: [['Drill on Limestone', () => drillOn('limestone', 0)], ['Concrete Constructor', () => slotOn(S.crafts, 'concrete')], ['10 concrete', () => (S.made.concrete || 0) >= 10]],
@@ -1799,6 +1799,9 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
     if (!LV_Q[kind][id] || (st.slots.length === PL_LV && st.slots.every(v => typeof v === 'number'))) return; const n = st.slots.filter(Boolean).length, open = lvShown(kind, id), sp = st.slots.map(Number).filter(Boolean);
     st.slots = Array(PL_LV).fill(0); for (let i = 0; i < Math.min(n, open); i++) st.slots[i] = sp[i] || 1;
     if (n > open) S.inv[plDef(kind, id).mach] = (S.inv[plDef(kind, id).mach] || 0) + n - open; }));
+  if (TIERS[S.tier] && !TIERS[S.tier].later && Object.entries(TIERS[S.tier].need).every(([k, n]) => (S.handed[k] || 0) >= n)) {
+    Object.entries(TIERS[S.tier].need).forEach(([k, n]) => { const extra = (S.handed[k] || 0) - n; if (extra > 0) { if (k === CR) S.credits += extra; else S.items[k] = (S.items[k] || 0) + extra; } });
+    S.tier++; S.handed = {}; }
   RT = makeRT(); pops = []; fpops = []; openAll();
   if (!mineShown(S.view)) S.view = 'iron'; if (!lineShown(S.sview)) S.sview = 'iron';
   if (!S.crafts[S.cview]) S.cview = Object.keys(S.crafts)[0] || 'plates';
