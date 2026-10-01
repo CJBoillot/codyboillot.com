@@ -14,8 +14,8 @@
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>html,body{margin:0;padding:0}img{max-width:100%}[hidden]{display:none!important}</style>
-<script src="cloud-config.js?v=0.3.13"></script>
-<script src="cloud.js?v=0.3.13" defer></script>
+<script src="cloud-config.js?v=0.3.14"></script>
+<script src="cloud.js?v=0.3.14" defer></script>
 </head>
 <body>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -475,9 +475,9 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   </div>
 
   <section class="panel" id="tab-hub" role="tabpanel" aria-labelledby="t-hub" hidden>
-    <div class="card"><h2>FACTORY STATS</h2><div id="stats"></div></div>
     <div class="card" id="wh-card"><div class="fhead"><h2>WAREHOUSES</h2><span class="tag" id="recy-tag" hidden></span></div><p class="fnote" id="wh-note">Sell for Credits. The wallet holds only so much; when it's full, selling stops.</p><div class="pw-up" id="wallet-host"></div><div id="whs"></div><div id="bld"></div></div>
     <div class="card"><div class="fhead"><h2>RESEARCH</h2><button class="toggle" id="hide-done" aria-pressed="false">Hide completed</button></div><p class="fnote">Pay a bit at a time; progress is kept. Early research takes parts, later research parts plus credits.</p><div id="tiers" class="panel"></div></div>
+    <div class="card"><h2>FACTORY STATS</h2><div id="stats"></div></div>
     <div class="card later-card"><h2>PRESTIGE</h2><p class="fnote">Finish the Launch Project to relocate to a new site and keep Research Data for permanent boosts. Arrives in a later build.</p></div>
   </section>
 
@@ -491,8 +491,8 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
     <div class="card">
       <div class="fhead"><h2 id="line-h">IRON SMELTING</h2><button class="plug" id="fac-run" aria-pressed="true" aria-label="Iron smelting power"><span>Running</span><img src="icons/plug_in.webp" alt=""></button></div>
       <p class="fnote" id="line-note"></p>
-      <div class="fstage" id="fstage"><canvas id="fcv" aria-label="Smelter line: ore from the warehouse is smelted and sent back"></canvas></div>
       <div class="pw-up" id="owh-host"></div>
+      <div class="fstage" id="fstage"><canvas id="fcv" aria-label="Smelter line: ore from the warehouse is smelted and sent back"></canvas></div>
     </div>
   </section>
 
@@ -503,8 +503,8 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   <section class="panel" id="tab-power" role="tabpanel" aria-labelledby="t-power" hidden>
     <div class="card power">
       <div class="fhead"><h2>POWER GRID</h2><span class="tag" id="pw-net">+0.0 kW/s</span></div>
-      <div class="pgrid" id="pgrid"><canvas id="pcv" aria-label="Power grid: tapping sends power into the battery bank, and the bank sends them out to each smelter line"></canvas><button class="taphit" id="pw-tap" aria-label="Tap for power"><span class="sr" id="pw-per">+5 kW per tap</span></button></div>
       <div class="pw-up" id="pw-up-host"></div>
+      <div class="pgrid" id="pgrid"><canvas id="pcv" aria-label="Power grid: tapping sends power into the battery bank, and the bank sends them out to each smelter line"></canvas><button class="taphit" id="pw-tap" aria-label="Tap for power"><span class="sr" id="pw-per">+5 kW per tap</span></button></div>
       <p class="fnote">Each glowing dot is 1 kW. Taps and the Coal Power Plant charge the battery bank (100 kW per Battery T1). Smelters and Constructors draw 1 kW/s while they work, Electric Drills 0.25. When the bank runs dry, machines wait with "NO POWER".</p>
     </div>
     <div class="card" id="phub">
@@ -622,7 +622,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   try { theme = localStorage.getItem('afk-factory.theme') || 'system'; } catch (e) {}
   const applyTheme = () => { const r = document.documentElement; if (theme === 'system') { if (hostTheme) r.setAttribute('data-theme', hostTheme); else r.removeAttribute('data-theme'); } else r.setAttribute('data-theme', theme); readColors(); };
   applyTheme(); matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => { if (theme === 'system') readColors(); });
-  const VERSION = { stage: 'Alpha', semver: '0.3.13' }; // bump with every release
+  const VERSION = { stage: 'Alpha', semver: '0.3.14' }; // bump with every release
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const $ = id => document.getElementById(id);
 
@@ -695,8 +695,8 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   const CRAFT = Object.fromEntries(CRAFTS.map(c => [c.id, c])), CON_KW = 1, CRAFT_LEVELS = 1; // Tier 1: one Constructor per Crafting line; Level 2 opens with Tier 2
   // Coal Power Plant: burns 1 coal/s for 8 kW/s, only as fast as the power is needed
   const PLANT_KW = 8, KW_PER_COAL = 8;
-  // power: tap to charge. One quest upgrade takes a tap from +5 to +20 kW; the Coal Power Plant automates it
-  const TAP_KW = [0, 5, 20], TAP_MAX = TAP_KW.length - 1, tapKw = () => TAP_KW[Math.min(S.tapLv || 1, TAP_MAX)], tapCost = () => ({ [CR]: 200 });
+  // power: tap to charge. One quest upgrade takes a tap from +5 to +10 kW; the Coal Power Plant automates it
+  const TAP_KW = [0, 5, 10], TAP_MAX = TAP_KW.length - 1, tapKw = () => TAP_KW[Math.min(S.tapLv || 1, TAP_MAX)], tapCost = () => ({ [CR]: 200 });
   const TIERS = [
     { name: 'Landing', need: { iron_ore: 10 }, unlocks: [['basic_drill', 'Buildings tab'], ['basic_drill', 'Basic Drill']] },
     { name: 'Smelting', need: { iron_ore: 100 }, unlocks: [['basic_smelter', 'Smelter'], ['battery_t1', 'Battery & Power tab'], ['copper_ore', 'Copper mine'], ['iron_ore', 'Digging to Level 2']] },
@@ -1465,7 +1465,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
       go: () => showTab('power'), btn: 'Open Power', here: () => tab === 'power' },
     { id: 'account', t: 'Save your factory', text: 'You are playing as a guest, so this factory lives only on this device. Sign in with Google to back it up and play anywhere, or keep playing as a guest.',
       done: () => !window.FIREBASE_CONFIG || !!S.cloudUser || !!S.guestOK || !S.guest, go: () => { $('hello-cloud').hidden = false; }, btn: 'Choose' },
-    { id: 'taps', t: 'Stronger taps', text: 'Upgrade Tap power from +5 to +20 kW (200 credits).', up: 'tap', done: () => S.tapLv >= 2, go: () => showTab('power'), btn: 'Open Power', here: () => tab === 'power' },
+    { id: 'taps', t: 'Stronger taps', text: 'Upgrade Tap power from +5 to +10 kW (200 credits).', up: 'tap', done: () => S.tapLv >= 2, go: () => showTab('power'), btn: 'Open Power', here: () => tab === 'power' },
     { id: 'deeper', t: 'Deeper', text: 'Dig Iron Level 2 (400 credits) and put a drill on it. Level 2 carts hold 2 ore.', parts: [['Level 2 dug', () => S.mines.iron.levels.length >= 2], ['Drill on Level 2', () => drillOn('iron', 1)]], go: () => viewMine('iron'), btn: 'Go to the Iron mine', here: () => tab === 'mine' && S.view === 'iron' },
     { id: 'copperdrill', t: 'Copper drill', text: 'Put a drill on Copper Level 1 so copper keeps coming without tapping. Build another Basic Drill (20 iron ore) if you need one.', done: () => drillOn('copper', 0),
       go: () => S.inv.basic ? (viewMine('copper'), openSheet(0)) : showTab('craft'), btn: () => S.inv.basic ? 'Choose a drill' : 'Open Buildings', here: () => !S.inv.basic && tab === 'craft' },
@@ -1529,7 +1529,12 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
     if (/Buildings/.test(t)) return { name: 'Buildings', ic: 'basic_drill' };
     if (t === 'Choose') return { name: 'Account', ic: 'logo' };
     return { name: t, ic: 'storage_crate' }; }
-  $('goal-btn').addEventListener('click', () => { const o = objective(); if (!o.btn) return; o.act && o.act(); sync(); });
+  // after Go to, bring what the quest is about into view: its upgrade button, the research list, or the warehouses
+  function showQuestTarget() { const q = Q(); if (!q) return; let el = null;
+    if (q.up) el = [...document.querySelectorAll('.pill.quest')].find(e => !e.hidden && e.offsetParent);
+    else if (tab === 'hub') el = q.id === 'sale' ? $('wh-card') : /^Research/.test(q.text) ? $('tiers') : null;
+    if (el) el.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' }); }
+  $('goal-btn').addEventListener('click', () => { const o = objective(); if (!o.btn) return; o.act && o.act(); sync(); requestAnimationFrame(() => requestAnimationFrame(showQuestTarget)); });
 
   // power status: red = out, yellow = has power but draining, green = holding or charging
   const powerIcon = () => S.power < 1 ? 'power_out' : rateCache && rateCache.power <= -0.05 ? 'power_drain' : 'power_ok';
