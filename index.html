@@ -290,6 +290,10 @@
   .game-preview img { width: min(360px, 90%); height: auto; filter: drop-shadow(0 10px 30px rgba(0,0,0,.6)); }
   .game-preview .tp-hint { position: absolute; right: .9rem; bottom: .7rem; }
 
+  /* ---------- New game: Factory A.F.K. ---------- */
+  .factory-preview { background: radial-gradient(120% 90% at 50% 0%, #15425c 0%, #0b1713 62%, #08110e 100%); }
+  .factory-preview img { width: auto; height: 100%; max-width: 90%; object-fit: contain; }
+
   /* ---------- New demo: SkillTrainer ---------- */
   .sec-tag-new { color: var(--accent-2); }
   /* A live miniature of the lattice, so the panel never goes stale the way a
@@ -335,7 +339,7 @@
       <a href="#about">About</a>
       <a href="#experience">Experience</a>
       <a href="#work">What I Build</a>
-      <a href="#clicktoconquer" class="nav-new">Game<span class="badge-new">New</span></a>
+      <a href="#clicktoconquer" class="nav-new">Games<span class="badge-new">New</span></a>
       <a href="#skilltrainer">Demo</a>
       <a href="#lopro">Featured</a>
       <a href="#skills">Skills</a>
@@ -649,6 +653,44 @@
           <p>Designed as a systems exercise: a tech tree gated by what you have actually done, a quest chain that doubles as the tutorial, and a deterministic offline model so eight hours away resolves instantly. Pacing is tuned by headless bots that play the whole game and report how long each stage takes.</p>
           <p>Shipped like a real product: one-tap Google sign-in and a serverless backend (Firebase Auth + Firestore) back up each player's progress and restore it on any device, with AFK gains applied on resume. Saves are compressed, locked to their owner by security rules, and guarded against two devices overwriting each other, with a choose-your-save screen when they disagree. It runs on the free tier with no servers to maintain, and includes a privacy page and in-game account deletion, ready for the app stores.</p>
           <a class="btn btn-primary" style="margin-top:1.3rem" href="ClickToConquer/">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3l14 9-14 9z"/></svg>
+            Play the alpha
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- NEW GAME: Factory A.F.K. -->
+  <section class="block" id="factoryafk">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <div class="sec-tag sec-tag-new">New Game · Alpha</div>
+        <h2>Factory A.F.K.: an idle factory you wire up yourself</h2>
+        <p>Tap ore out of a mine, then put drills on it. Belts carry every cart from the deepest Level up to the warehouse, smelters turn ore into ingots, and stacked Constructor lines turn ingots into plates, wire and concrete. Everything runs on power you store in batteries: tap to charge them at first, then build a Coal Power Plant and the whole factory runs itself, earning credits while the game is closed.</p>
+      </div>
+      <div class="feature-grid">
+        <a class="video-embed game-preview factory-preview reveal" href="FactoryAFK/" aria-label="Play Factory A.F.K.">
+          <img src="FactoryAFK/icons/logo.webp" alt="Factory A.F.K.: Automated Fabrication Komplex">
+          <span class="tp-hint">Play in your browser</span>
+        </a>
+        <div class="feature-meta reveal">
+          <div class="badge-row">
+            <span class="pill">Playable alpha</span>
+            <span class="pill ghost">Built from scratch</span>
+            <span class="pill ghost">Cloud saves</span>
+          </div>
+          <div class="chips">
+            <span class="chip">Vanilla JS &amp; Canvas</span>
+            <span class="chip">No build step</span>
+            <span class="chip">Mobile first</span>
+            <span class="chip">Offline progress</span>
+            <span class="chip">Google sign-in</span>
+            <span class="chip">Firebase Auth &amp; Firestore</span>
+          </div>
+          <p>Designed around flow, not numbers: every item physically rides a belt, so a full warehouse backs up the line that feeds it and the bottleneck is something you can see. A live power grid shows each kilowatt as a glowing dot moving from the source to the battery bank to the machine that uses it. Tier 1 is a 22-quest line that teaches the whole chain in about an hour, with every upgrade unlocked inside a quest.</p>
+          <p>Offline progress uses a steady-state model of the whole factory, so twelve hours away resolves instantly when you come back. Cloud saves share Click to Conquer's design: one-tap Google sign-in, compressed saves locked to their owner, and a choose-your-save screen when two devices disagree. It runs on the free tier with no servers to maintain.</p>
+          <a class="btn btn-primary" style="margin-top:1.3rem" href="FactoryAFK/">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3l14 9-14 9z"/></svg>
             Play the alpha
           </a>

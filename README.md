@@ -11,11 +11,13 @@ See [SkillTrainer](#skilltrainer) below.
 | File | Purpose |
 |------|---------|
 | `index.html` | The home page, in full. |
-| `404.html` | Site-wide not-found page. Also redirects wrong-case URLs to `/SkillTrainer/`. |
+| `404.html` | Site-wide not-found page. Also redirects wrong-case URLs to `/SkillTrainer/`, `/ClickToConquer/` and `/FactoryAFK/`. |
 | `assets/headshot.jpg` | The portrait on the hero. Falls back to a "CB" monogram if missing. |
 | `assets/favicon.svg` | Browser tab icon, used by both the home page and SkillTrainer. |
 | `resume.pdf` | Backs the résumé button. |
 | `SkillTrainer/` | The training-engine demo. |
+| `ClickToConquer/` | Click to Conquer, an idle survival-crafting game (Firebase cloud saves). |
+| `FactoryAFK/` | Factory A.F.K., an idle factory game. Built from one game file; `cloud.js` + `cloud-config.js` add Google sign-in and Firestore saves (Firebase project `factory-afk`). |
 | `CNAME` | Tells GitHub Pages to serve `codyboillot.com`. |
 | `.nojekyll` | Tells GitHub Pages to serve files as-is. |
 
