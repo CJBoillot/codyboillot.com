@@ -14,8 +14,8 @@
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>html,body{margin:0;padding:0}img{max-width:100%}[hidden]{display:none!important}</style>
-<script src="cloud-config.js?v=0.4.3"></script>
-<script src="cloud.js?v=0.4.3" defer></script>
+<script src="cloud-config.js?v=0.4.4"></script>
+<script src="cloud.js?v=0.4.4" defer></script>
 </head>
 <body>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -639,7 +639,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   try { theme = localStorage.getItem('afk-factory.theme') || 'system'; } catch (e) {}
   const applyTheme = () => { const r = document.documentElement; if (theme === 'system') { if (hostTheme) r.setAttribute('data-theme', hostTheme); else r.removeAttribute('data-theme'); } else r.setAttribute('data-theme', theme); readColors(); };
   applyTheme(); matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => { if (theme === 'system') readColors(); });
-  const VERSION = { stage: 'Alpha', semver: '0.4.3' }; // bump with every release
+  const VERSION = { stage: 'Alpha', semver: '0.4.4' }; // bump with every release
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const $ = id => document.getElementById(id);
 
@@ -1599,8 +1599,13 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   // after Go to, bring what the quest is about into view: its upgrade button, the research list, or the warehouses
   function showQuestTarget() { const q = Q(); if (!q) return; let el = null;
     if (q.up) el = [...document.querySelectorAll('.pill.quest')].find(e => !e.hidden && e.offsetParent);
-    else if (tab === 'hub') el = q.id === 'sale' ? $('wh-card') : /^Research/.test(q.text) ? $('tiers') : null;
-    if (el) el.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' }); }
+    const how = { behavior: reduce ? 'auto' : 'smooth' };
+    if (el) return el.scrollIntoView({ ...how, block: 'center' }); // an upgrade button sits inside a scene: centre it
+    // otherwise bring the top of what the quest is about into view: the open research card, the warehouses, or the tab itself
+    if (tab === 'hub') el = q.id === 'sale' || q.id === 'bank' ? $('wh-card') : /^Research/.test(q.text) ? ($('tiers').querySelector('.tier.now') || $('tiers')) : null;
+    el = el || $('tab-' + tab); if (!el) return;
+    const y = el.getBoundingClientRect().top + scrollY;
+    scrollTo({ ...how, top: y + 160 < innerHeight ? 0 : Math.max(0, y - 12) }); } // already in view from the top of the page: just go to the top
   $('goal-btn').addEventListener('click', () => { const o = objective(); if (!o.btn) return; o.act && o.act(); sync(); requestAnimationFrame(() => requestAnimationFrame(showQuestTarget)); });
 
   // power status: red = out, yellow = has power but draining, green = holding or charging
