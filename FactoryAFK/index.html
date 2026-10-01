@@ -14,8 +14,8 @@
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>html,body{margin:0;padding:0}img{max-width:100%}[hidden]{display:none!important}</style>
-<script src="cloud-config.js?v=0.3.7"></script>
-<script src="cloud.js?v=0.3.7" defer></script>
+<script src="cloud-config.js?v=0.3.8"></script>
+<script src="cloud.js?v=0.3.8" defer></script>
 </head>
 <body>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -566,7 +566,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   try { theme = localStorage.getItem('afk-factory.theme') || 'system'; } catch (e) {}
   const applyTheme = () => { const r = document.documentElement; if (theme === 'system') { if (hostTheme) r.setAttribute('data-theme', hostTheme); else r.removeAttribute('data-theme'); } else r.setAttribute('data-theme', theme); readColors(); };
   applyTheme(); matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => { if (theme === 'system') readColors(); });
-  const VERSION = { stage: 'Alpha', semver: '0.3.7' }; // bump with every release
+  const VERSION = { stage: 'Alpha', semver: '0.3.8' }; // bump with every release
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const $ = id => document.getElementById(id);
 
@@ -726,6 +726,8 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
       Object.values(RT.lines).forEach(L => { [L.fin, L.fout, ...L.feedIn, ...L.feedOut].forEach(b => b.items.forEach(it => add(it.item, 1))); L.jobs.forEach(j => j && add(j.done ? LINE[L.id].out : LINE[L.id].ore, 1)); });
       Object.values(RT.crafts).forEach(K => { const d = CRAFT[K.id]; [K.down, K.rise, ...K.rows.flatMap(R => [R.feed, R.outB])].forEach(b => b.items.forEach(it => add(it.item, 1)));
         K.rows.forEach(R => { add(d.in, R.buf + (R.busy ? d.nIn : 0)); add(d.out, R.out); }); });
+      // belt contents count only up to the warehouse's room: a backed-up belt must not push a warehouse past its cap
+      Object.keys(back).forEach(k => { if (ITEMS[k]) back[k] = Math.max(S.items[k] || 0, Math.min(back[k], capOf(k))); });
       return JSON.stringify({ ...S, items: back, lastTick: Date.now() }); }
 
   // ---- belts: carts slide along a straight path at the belt's speed and queue one cell apart ----
