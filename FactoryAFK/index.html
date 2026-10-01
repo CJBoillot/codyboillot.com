@@ -14,8 +14,8 @@
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>html,body{margin:0;padding:0}img{max-width:100%}[hidden]{display:none!important}</style>
-<script src="cloud-config.js?v=0.3.15"></script>
-<script src="cloud.js?v=0.3.15" defer></script>
+<script src="cloud-config.js?v=0.3.16"></script>
+<script src="cloud.js?v=0.3.16" defer></script>
 </head>
 <body>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -93,13 +93,15 @@ h1 { font-family: var(--font-head); font-weight: 700; font-size: 26px; line-heig
 .goal-body { min-width: 0; display: flex; flex-direction: column; gap: 6px; }
 /* the square action button (quest Go, Build, Deliver): always 68 px, so cards never resize when its text changes.
    small caption on top, an icon of what it does or where it goes, a short label under it */
-.sq { position: relative; overflow: hidden; flex: none; width: 68px; height: 68px; font: inherit; border: 0; border-radius: 12px; color: #06120b; background: linear-gradient(180deg, var(--grass), var(--grass2)); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 5px 3px; cursor: pointer; box-shadow: 0 3px 0 #2a6b28; }
+.sq { position: relative; overflow: hidden; flex: none; width: 68px; height: 68px; font: inherit; border: 0; border-radius: 12px; color: #06120b; background: linear-gradient(180deg, var(--grass), var(--grass2)); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 5px 1px; cursor: pointer; box-shadow: 0 3px 0 #2a6b28; }
 .sq:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 1px 0 #2a6b28; }
 .sq > * { position: relative; }
 .sq small .lk { width: 8px; height: 8px; vertical-align: -1px; }
 .sq small { font-family: var(--font-head); font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; opacity: .75; line-height: 1; white-space: nowrap; }
-.sq img { width: 26px; height: 26px; filter: drop-shadow(0 1px 1px #0005); }
-.sq b { font-family: var(--font-head); font-size: 11px; font-weight: 700; letter-spacing: .02em; line-height: 1.05; text-align: center; max-width: 100%; overflow: hidden; }
+/* a two-line label shrinks the icon instead of being cut off; the square itself never changes size */
+.sq img { height: 26px; width: auto; aspect-ratio: 1; flex: 0 1 26px; min-height: 16px; object-fit: contain; filter: drop-shadow(0 1px 1px #0005); }
+.sq b { flex: none; font-family: var(--font-head); font-size: 10px; font-weight: 700; letter-spacing: 0; line-height: 1.05; text-align: center; max-width: 100%; overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.sq small { flex: none; }
 .sq > i { position: absolute; left: 0; bottom: 0; top: 0; width: 0; background: #ffffff40; }
 .sq:disabled { background: var(--track); color: var(--dim); box-shadow: none; cursor: default; }
 .sq:disabled img { opacity: .6; }
@@ -622,7 +624,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   try { theme = localStorage.getItem('afk-factory.theme') || 'system'; } catch (e) {}
   const applyTheme = () => { const r = document.documentElement; if (theme === 'system') { if (hostTheme) r.setAttribute('data-theme', hostTheme); else r.removeAttribute('data-theme'); } else r.setAttribute('data-theme', theme); readColors(); };
   applyTheme(); matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => { if (theme === 'system') readColors(); });
-  const VERSION = { stage: 'Alpha', semver: '0.3.15' }; // bump with every release
+  const VERSION = { stage: 'Alpha', semver: '0.3.16' }; // bump with every release
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const $ = id => document.getElementById(id);
 
@@ -717,13 +719,13 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   const batteryCost = () => BATTERY_COST[Math.min((S && S.inv && S.inv.battery) || 0, BATTERY_COST.length - 1)];
   const INTRO = { basic: 'hands', smelter: 'fire', battery: 'battery', constructor: 'build', plant: 'plant', electric: 'electric' }; // the quest that teaches each building
   const RECIPES = [
-    { id: 'basic', name: 'Basic Drill', icon: 'basic_drill', cost: { iron_ore: 20 }, T: 1.5, tier: 1, desc: 'Digs one cart every 2 s on any Level of any mine, no power needed.' },
-    { id: 'recycler', name: 'Recycler', icon: 'merger', cost: { iron_ore: 30 }, T: 2, tier: 1, max: 1, reward: true, desc: `One per factory. Sells from every warehouse that is ${Math.round(RECYCLE_AT * 100)}% full: 1 item every ${RECYCLE_T} s from each, at a tenth of its price.` },
-    { id: 'smelter', name: 'Smelter', icon: 'basic_smelter', cost: { iron_ore: 100 }, T: 3, tier: 2, desc: `Turns 1 ore into 1 ingot every ${SMELT_T} s in any Smelt line. Draws ${SMELT_KW} kW/s while it works.` },
-    { id: 'battery', name: 'Battery T1', icon: 'battery_t1', get cost() { return batteryCost(); }, T: 2, tier: 2, desc: `Stores ${BATTERY_W} kW. Tap in the Power tab to charge it. Each extra battery costs a lot more.` },
-    { id: 'constructor', name: 'Constructor', icon: 'auto_constructor', cost: { iron_ingot: 40, copper_ingot: 20 }, T: 4, tier: 3, desc: `Makes plates, wire or concrete on one Level of a Crafting line. Draws ${CON_KW} kW/s while it works.` },
-    { id: 'electric', name: 'Electric Drill', icon: 'electric_drill', cost: { iron_plate: 5, copper_wire: 10 }, T: 3, tier: 5, desc: 'Digs one cart every second. Draws 0.25 kW/s while it digs.' },
-    { id: 'plant', name: 'Coal Power Plant', icon: 'coal_generator', cost: { iron_plate: 40, copper_wire: 80, concrete: 40 }, T: 6, tier: 5, max: 1, desc: `Burns 1 coal/s from the coal warehouse for ${PLANT_KW} kW/s, only as fast as power is needed. Enough for the whole Tier 1 factory.` },
+    { id: 'basic', sq: 'Drill', name: 'Basic Drill', icon: 'basic_drill', cost: { iron_ore: 20 }, T: 1.5, tier: 1, desc: 'Digs one cart every 2 s on any Level of any mine, no power needed.' },
+    { id: 'recycler', sq: 'Recycler', name: 'Recycler', icon: 'merger', cost: { iron_ore: 30 }, T: 2, tier: 1, max: 1, reward: true, desc: `One per factory. Sells from every warehouse that is ${Math.round(RECYCLE_AT * 100)}% full: 1 item every ${RECYCLE_T} s from each, at a tenth of its price.` },
+    { id: 'smelter', sq: 'Smelter', name: 'Smelter', icon: 'basic_smelter', cost: { iron_ore: 100 }, T: 3, tier: 2, desc: `Turns 1 ore into 1 ingot every ${SMELT_T} s in any Smelt line. Draws ${SMELT_KW} kW/s while it works.` },
+    { id: 'battery', sq: 'Battery', name: 'Battery T1', icon: 'battery_t1', get cost() { return batteryCost(); }, T: 2, tier: 2, desc: `Stores ${BATTERY_W} kW. Tap in the Power tab to charge it. Each extra battery costs a lot more.` },
+    { id: 'constructor', sq: 'Constructor', name: 'Constructor', icon: 'auto_constructor', cost: { iron_ingot: 40, copper_ingot: 20 }, T: 4, tier: 3, desc: `Makes plates, wire or concrete on one Level of a Crafting line. Draws ${CON_KW} kW/s while it works.` },
+    { id: 'electric', sq: 'Electric Drill', name: 'Electric Drill', icon: 'electric_drill', cost: { iron_plate: 5, copper_wire: 10 }, T: 3, tier: 5, desc: 'Digs one cart every second. Draws 0.25 kW/s while it digs.' },
+    { id: 'plant', sq: 'Power Plant', name: 'Coal Power Plant', icon: 'coal_generator', cost: { iron_plate: 40, copper_wire: 80, concrete: 40 }, T: 6, tier: 5, max: 1, desc: `Burns 1 coal/s from the coal warehouse for ${PLANT_KW} kW/s, only as fast as power is needed. Enough for the whole Tier 1 factory.` },
   ];
 
   // ---- saved state ----
@@ -1442,7 +1444,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
       <div class="rc-body"><h3>${r.name}<small id="own-${r.id}"></small></h3>
         <div class="rc-cost">${Object.entries(r.cost).map(([k, n]) => `<span class="cst" data-k="${k}" data-n="${n}">${icon(k, '', ITEMS[k].name)}${big(n)}</span>`).join('')}<span class="rc-t">${r.T} s</span></div>
         <p>${r.desc}</p></div>
-      <button class="sq" id="craft-${r.id}" aria-label="Build ${r.name}"><i></i><small>Build</small>${icon(r.icon, '', '')}<b>${r.name}</b></button></div>`).join('')
+      <button class="sq" id="craft-${r.id}" aria-label="Build ${r.name}"><i></i><small>Build</small>${icon(r.icon, '', '')}<b>${r.sq || r.name}</b></button></div>`).join('')
       + RECIPES.filter(r => !taught(r) && !(r.reward && S.inv.recycler)).map(r => lockedCard(r, r.reward ? 'Reward for finishing Tier 1.' : `Unlocks with quest ${qNum(INTRO[r.id])}: ${QUESTS[qNum(INTRO[r.id]) - 1].t}.`, r.reward ? 'Tier 1' : `Quest ${qNum(INTRO[r.id])}`)).join('');
     RECIPES.forEach(r => { const b = $('craft-' + r.id); if (b) b.addEventListener('click', () => { if (crafting[r.id] || !canPay(r.cost) || (r.max && (S.inv[r.id] || 0) >= r.max)) return; pay(r.cost); crafting[r.id] = { p: 0 }; sync(); save(); }); });
   }
@@ -1584,7 +1586,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
     if (tab === 'craft') {
       RECIPES.forEach(r => { const b = $('craft-' + r.id); if (!b) return; const c = crafting[r.id], short = Object.entries(r.cost).find(([k, n]) => (S.items[k] || 0) < n), have = S.inv[r.id] || 0, capped = r.max && have >= r.max;
         b.disabled = !!c || !!short || capped; b.classList.toggle('busy', !!c);
-        const cap = c ? 'Building' : capped ? 'Built' : short ? 'Need' : 'Build', lab = c ? `${Math.floor(c.p * 100)}%` : capped ? 'One max' : short ? `${big(short[1] - (S.items[short[0]] || 0))} more` : r.name;
+        const cap = c ? 'Building' : capped ? 'Built' : short ? 'Need' : 'Build', lab = c ? `${Math.floor(c.p * 100)}%` : capped ? 'One max' : short ? `${big(short[1] - (S.items[short[0]] || 0))} more` : r.sq || r.name;
         b.querySelector('small').textContent = cap; b.querySelector('b').textContent = lab;
         b.querySelector('i').style.width = (c ? c.p * 100 : 0) + '%';
         const o = $('own-' + r.id); if (o) o.textContent = r.max ? '' : ownedCount(r.id) ? `×${ownedCount(r.id)}` : ''; });
