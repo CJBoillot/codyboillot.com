@@ -14,8 +14,8 @@
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>html,body{margin:0;padding:0}img{max-width:100%}[hidden]{display:none!important}</style>
-<script src="cloud-config.js?v=0.3.5"></script>
-<script src="cloud.js?v=0.3.5" defer></script>
+<script src="cloud-config.js?v=0.3.6"></script>
+<script src="cloud.js?v=0.3.6" defer></script>
 </head>
 <body>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -566,7 +566,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   try { theme = localStorage.getItem('afk-factory.theme') || 'system'; } catch (e) {}
   const applyTheme = () => { const r = document.documentElement; if (theme === 'system') { if (hostTheme) r.setAttribute('data-theme', hostTheme); else r.removeAttribute('data-theme'); } else r.setAttribute('data-theme', theme); readColors(); };
   applyTheme(); matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => { if (theme === 'system') readColors(); });
-  const VERSION = { stage: 'Alpha', semver: '0.3.5' }; // bump with every release
+  const VERSION = { stage: 'Alpha', semver: '0.3.6' }; // bump with every release
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const $ = id => document.getElementById(id);
 
@@ -1621,6 +1621,8 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   if (!S.crafts[S.cview]) S.cview = Object.keys(S.crafts)[0] || 'plates';
   flayout(); clayout(); showTab('mine');
   wholeItems(); // 0.3.0 offline progress could leave 99.6 in a warehouse of 100
+  // the Recycler is Tier 1's reward: one built before 0.3.1 goes back (its 30 iron ore refunded) until Tier 1 is done
+  if (S.inv.recycler && !S.t1done && S.quest < QUESTS.length) { S.inv.recycler = 0; S.items.iron_ore = Math.min(capOf('iron_ore'), (S.items.iron_ore || 0) + 30); save(); }
   if (S.lastTick) showWelcome(runOffline((Date.now() - S.lastTick) / 1000));
   renderCloud();
   let last = performance.now(), syncT = 0, saveT = 0;
