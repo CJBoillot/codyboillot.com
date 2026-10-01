@@ -14,8 +14,8 @@
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>html,body{margin:0;padding:0}img{max-width:100%}[hidden]{display:none!important}</style>
-<script src="cloud-config.js?v=0.4.5"></script>
-<script src="cloud.js?v=0.4.5" defer></script>
+<script src="cloud-config.js?v=0.4.6"></script>
+<script src="cloud.js?v=0.4.6" defer></script>
 </head>
 <body>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -639,7 +639,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   try { theme = localStorage.getItem('afk-factory.theme') || 'system'; } catch (e) {}
   const applyTheme = () => { const r = document.documentElement; if (theme === 'system') { if (hostTheme) r.setAttribute('data-theme', hostTheme); else r.removeAttribute('data-theme'); } else r.setAttribute('data-theme', theme); readColors(); };
   applyTheme(); matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => { if (theme === 'system') readColors(); });
-  const VERSION = { stage: 'Alpha', semver: '0.4.5' }; // bump with every release
+  const VERSION = { stage: 'Alpha', semver: '0.4.6' }; // bump with every release
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const $ = id => document.getElementById(id);
 
@@ -808,7 +808,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
       const back = { ...S.items }, add = (k, n) => back[k] = (back[k] || 0) + n;
       Object.values(RT.mines).forEach(M => [M.shaft, M.surf, ...M.tunnels].forEach(b => b.items.forEach(it => add(it.item, it.load || 1))));
       [...Object.values(RT.lines), ...Object.values(RT.crafts)].forEach(K => { const d = plDef(K.kind, K.id); [K.down, K.rise, ...K.rows.flatMap(R => [R.feed, R.outB])].forEach(b => b.items.forEach(it => add(it.item, it.load || 1)));
-        K.rows.forEach(R => { add(d.in, R.buf + (R.busy ? d.nIn * LOAD(R.i) : 0)); add(d.out, R.out * d.nOut * LOAD(R.i)); }); });
+        K.rows.forEach(R => { add(d.in, R.buf + (R.busy ? d.nIn * LOAD(R.i) : 0)); add(d.out, R.left || 0); }); });
       // belt contents count only up to the warehouse's room: a backed-up belt must not push a warehouse past its cap
       Object.keys(back).forEach(k => { if (ITEMS[k]) back[k] = Math.max(S.items[k] || 0, Math.min(back[k], capOf(k))); });
       return JSON.stringify({ ...S, items: back, lastTick: Date.now() }); }
@@ -841,6 +841,19 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
     const got = earn(ITEMS[k].value / RECYCLE_CUT * n, true); r.last = clock; r.log.push([clock, got]); produced(k, n); return true; }
   const recyOn = k => !!(S.inv.recycler && RECY[k] && RECY[k].on);
   function arrived(k, n) { S.made[k] = (S.made[k] || 0) + n; (flow[k] = flow[k] || []).push([clock, n]); produced(k, n); }
+  // production is instant: an item goes straight into its warehouse (whatever fits), anything over goes to the Recycler once you
+  // have it; returns what is left over (only when the warehouse is full and there is no Recycler yet, so the machine waits)
+  function stash(k, n) { const fit = Math.min(n, Math.floor(roomOf(k))); if (fit > 0) { S.items[k] += fit; arrived(k, fit); }
+    const left = n - Math.max(0, fit); if (left > 0 && recyTake(k, left)) return 0; return left; }
+  // ---- belts are just for show: icons ride a route of belts at a steady pace, as many as the flow per minute ----
+  const RIDE = 80, RIDE_MAX = 3.2; // px per second; icons per second at most, so busy belts stay readable
+  const seg = (b, from, to) => [b, from, to];
+  function ride(list, segs, item) { list.push({ segs, d: 0, item, len: segs.reduce((a, [b, f, t]) => a + Math.max(0, t - f), 0) }); }
+  function rideFlow(list, acc, key, perMin, segs, item, dt) { if (perMin <= 0) { acc[key] = Math.min(acc[key] || 0, 0.6); return; }
+    acc[key] = (acc[key] || 0.6) + Math.min(RIDE_MAX, perMin / 25) * dt; while (acc[key] >= 1) { acc[key] -= 1; ride(list, segs(), item); } }
+  function rideTick(list, dt) { for (let k = list.length - 1; k >= 0; k--) { const r = list[k]; r.d += RIDE * dt; if (r.d >= r.len) list.splice(k, 1); } }
+  function ridePos(r) { let d = r.d; for (const [b, f, t] of r.segs) { const L = Math.max(0, Math.min(t, b.len) - f); if (d <= L) return b.pos(f + d); d -= L; }
+    const [b, , t] = r.segs[r.segs.length - 1]; return b.pos(Math.min(t, b.len)); }
   // rates on the top bar: what machines make minus what machines eat, over the last 10 s (spending on upgrades is left out)
   const used = {};
   // a rate meter in 1-second buckets over the last 10 s: cheap even when fed every frame
@@ -864,7 +877,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   let RT, pops, fpops, clock = 0; const RECY = Object.create(null), PLANT = { fuel: 0, starved: 0, genAcc: 0 };
   const newLevelRT = () => ({ sock: null, swing: 0, blocked: 0, stuck: 0, nopow: 0 });
   function makeMineRT(id) { const m = S.mines[id];
-    const M = { id, levels: m.levels.map(newLevelRT), surfWait: 0 };
+    const M = { id, levels: m.levels.map(newLevelRT), surfWait: 0, riders: [], acc: {} };
     M.surf = Belt(() => beltRate(m.surfMk, m.surfLv), it => { // a cart unloads as much as fits; whatever is left waits on the cart, so a warehouse can always fill to the top
       const n = Math.min(it.load || 1, Math.floor(roomOf(it.item)));
       if (n < 1) return recyTake(it.item, it.load || 1);
@@ -875,6 +888,8 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
     return M; }
   function makeTunnel(M, i) { return Belt(() => { const l = S.mines[M.id].levels[i]; return beltRate(l.beltMk, l.beltLv); }, it => { const si = M.shaftIn(i);
       if (!M.shaft.canInsert(si)) return false; M.shaft.insert(si, { ox: PITCH, oy: 0, load: it.load, item: it.item }); return true; }); }
+  // where a mine Level's icons ride: along its tunnel, up the shaft, across the surface into the warehouse
+  const mineRoute = (M, i) => [seg(M.tunnels[i], 0, M.tunnels[i].len), seg(M.shaft, M.shaftIn ? M.shaftIn(i) : 0, M.shaft.len), seg(M.surf, 0, M.surf.len)];
   // a production line (Smelt or Crafting): input warehouse → trunk down the left wall → each Level's belt → its machine →
   // out-belt → riser up the right wall → output warehouse. Level N carts carry 2^(N-1), so carts per minute never grows
   const plDef = (kind, id) => kind === 'smelt' ? LINE[id] : CRAFT[id];
@@ -882,12 +897,12 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   const machIn = (d, i, sp) => d.nIn / d.T * LOAD(i) * sp;          // input items per second
   const machKw = (i, sp) => MKW * LOAD(i) * sp;
   function makePL(kind, id) { const d = plDef(kind, id);
-    const K = { kind, id, flowIn: [], flowOut: [], G: { downStop: () => 0, riseIn: () => 0 } };
+    const K = { kind, id, flowIn: [], flowOut: [], riders: [], acc: {}, G: { downStop: () => 0, riseIn: () => 0 } };
     K.down = Belt(() => 5, () => false);
     K.rise = Belt(() => 5, it => { const n = Math.min(it.load || 1, Math.floor(roomOf(d.out)));
       if (n < 1) { if (!recyTake(d.out, it.load || 1)) return false; K.flowOut.push([clock, it.load || 1]); return true; }
       S.items[d.out] += n; arrived(d.out, n); K.flowOut.push([clock, n]); it.load = (it.load || 1) - n; return it.load <= 0; });
-    K.rows = Array.from({ length: PL_LV }, (_, i) => { const R = { i, buf: 0, busy: false, p: 0, out: 0, stall: 0, flash: 0, eff: 0 };
+    K.rows = Array.from({ length: PL_LV }, (_, i) => { const R = { i, buf: 0, busy: false, p: 0, left: 0, stall: 0, flash: 0, eff: 0, on: false };
       R.feed = Belt(() => 5, it => { if (R.buf >= d.nIn * LOAD(i)) return false; R.buf += it.load || 1; return true; });
       R.outB = Belt(() => 5, it => { const s = K.G.riseIn(i); if (!K.rise.canInsert(s)) return false; K.rise.insert(s, { item: d.out, load: it.load }); return true; });
       return R; });
@@ -981,14 +996,15 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
     clock += dt; S.played = (S.played || 0) + dt;
     Object.values(RT.mines).forEach(M => { const m = S.mines[M.id], ore = MINE[M.id].ore;
       if (m.dig && Date.now() >= m.dig.end) { m.dig = null; addLevel(M.id); }
-      m.levels.forEach((lv, i) => { const r = M.levels[i], tb = M.tunnels[i]; if (r.swing > 0) r.swing -= dt; if (r.blocked > 0) r.blocked -= dt;
-        if (lv.drill) { if (!r.sock) r.sock = { p: 0 }; const D = DRILLS[lv.drill];
-          if (r.sock.p < 1) { if (D.kw && (!S.drillsOn || !useKw('drills', D.kw * LOAD(i), dt))) r.nopow = S.drillsOn ? r.nopow + dt : 0; else { r.nopow = 0; r.sock.p = Math.min(1, r.sock.p + dt / D.T); } }
-          if (r.sock.p >= 1 && tb.canInsert(0)) { const p = tb.pos(0); tb.insert(0, { ox: X.sock + SLOTW / 2 - p.x, oy: 0, load: LOAD(i), item: ore }); r.sock = null; } }
-        else r.sock = null;
-        tb.tick(dt); r.stuck = tb.front() ? r.stuck + dt : 0; });
-      M.shaft.tick(dt); M.surf.tick(dt);
-      M.surfWait = M.shaft.front() ? M.surfWait + dt : 0; });
+      m.levels.forEach((lv, i) => { const r = M.levels[i]; if (r.swing > 0) r.swing -= dt; if (r.blocked > 0) r.blocked -= dt; let rate = 0;
+        if (lv.drill) { if (!r.sock) r.sock = { p: 0, left: 0 }; const D = DRILLS[lv.drill];
+          if (r.sock.left > 0) { r.sock.left = stash(ore, r.sock.left); r.stuck = r.sock.left > 0 ? r.stuck + dt : 0; if (r.sock.left <= 0) r.sock.p = 0; } // waiting on a full warehouse
+          else if (D.kw && (!S.drillsOn || !useKw('drills', D.kw * LOAD(i), dt))) r.nopow = S.drillsOn ? r.nopow + dt : 0;
+          else { r.nopow = 0; r.stuck = 0; rate = LOAD(i) / D.T * 60; r.sock.p += dt / D.T; if (r.sock.p >= 1) { r.sock.p -= 1; r.sock.left = stash(ore, LOAD(i)); if (r.sock.left > 0) r.sock.p = 1; } } }
+        else { r.sock = null; r.stuck = 0; }
+        rideFlow(M.riders, M.acc, i, rate, () => mineRoute(M, i), ore, dt); });
+      rideTick(M.riders, dt);
+      M.surfWait = 0; });
     // production lines, all running at once
     Object.values(RT.lines).forEach(K => tickPL(K, dt));
     Object.values(RT.crafts).forEach(K => tickPL(K, dt));
@@ -1006,31 +1022,31 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   }
   const powerRate = () => powerUsed.rate();
   function tickPL(K, dt) { const d = plDef(K.kind, K.id), c = plState(K.kind, K.id); if (!d || !c) return;
-    const placed = K.rows.filter(R => c.slots[R.i]);
-    const want = R => (R.buf > 0 ? 1 : 0) + R.feed.items.length + K.down.items.filter(it => it.to === R.i).length;
-    // fair share: each Level builds a claim on input at the rate it needs it; the most-owed Level gets the next batch, and if the
-    // warehouse can't fill that batch yet everyone waits, so short supply is split evenly instead of the shallow Levels grabbing it
-    if (c.on) placed.forEach(R => { R.owed = Math.min(d.nIn * LOAD(R.i) * 3, (R.owed || 0) + machIn(d, R.i, c.slots[R.i]) * dt); });
-    if (c.on && placed.length && K.down.canInsert(0)) {
-      const top = placed.filter(r => want(r) < 2 + Math.ceil(c.slots[r.i] * (r.i + 1) / 2)).sort((a, b) => b.owed / LOAD(b.i) - a.owed / LOAD(a.i))[0];
-      const R = top && S.items[d.in] >= d.nIn * LOAD(top.i) ? top : null;
-      if (R) { const L = d.nIn * LOAD(R.i); R.owed -= L; S.items[d.in] -= L; consumed(d.in, L); K.flowIn.push([clock, L]);
-        K.down.insert(0, { item: d.in, load: L, to: R.i, stop: K.G.downStop(R.i), exit: it => { if (!R.feed.canInsert(0)) return false; R.feed.insert(0, { item: d.in, load: it.load }); return true; } }); } }
-    K.down.tick(dt);
-    K.rows.forEach(R => { R.feed.tick(dt); if (R.flash > 0) R.flash -= dt; const sp = c.slots[R.i] || 0, L = LOAD(R.i); let working = false;
+    const placed = K.rows.filter(R => c.slots[R.i]), batch = R => d.nIn * LOAD(R.i);
+    // fair share: each Level builds a claim on input at the rate it needs it; a Level with room in its hopper takes its next batch
+    // straight from the warehouse, most-owed first, and if the warehouse can't cover that batch everyone waits, so short supply is split evenly
+    if (c.on) { placed.forEach(R => { R.owed = Math.min(batch(R) * 3, (R.owed || 0) + machIn(d, R.i, c.slots[R.i]) * dt); });
+      for (let guard = 0; guard < 16; guard++) { const R = placed.filter(r => r.buf < batch(r)).sort((a, b) => b.owed / LOAD(b.i) - a.owed / LOAD(a.i))[0];
+        if (!R || S.items[d.in] < batch(R)) break; const L = batch(R); R.owed -= L; R.buf += L; S.items[d.in] -= L; consumed(d.in, L); K.flowIn.push([clock, L]); } }
+    K.rows.forEach(R => { if (R.flash > 0) R.flash -= dt; const sp = c.slots[R.i] || 0, L = LOAD(R.i); let working = false;
+      if (R.left > 0) { const was = R.left; R.left = stash(d.out, R.left); if (was > R.left) K.flowOut.push([clock, was - R.left]); } // output waiting on a full warehouse
       if (sp) {
-        if (!R.busy && R.buf >= d.nIn * L && R.out === 0) { R.buf -= d.nIn * L; R.busy = true; R.p = 0; }
-        if (R.busy && c.on) { if (useKw(K.id, machKw(R.i, sp), dt)) { R.stall = 0; working = true; R.p += dt * sp / d.T; if (R.p >= 1) { R.busy = false; R.out += 1; R.flash = 0.4; } } else R.stall += dt; }
+        if (!R.busy && R.buf >= d.nIn * L && R.left <= 0) { R.buf -= d.nIn * L; R.busy = true; R.p = 0; }
+        if (R.busy && c.on) { if (useKw(K.id, machKw(R.i, sp), dt)) { R.stall = 0; working = true; R.p += dt * sp / d.T;
+            if (R.p >= 1) { R.busy = false; R.flash = 0.4; const n = d.nOut * L; R.left = stash(d.out, n); K.flowOut.push([clock, n - R.left]);
+              if (R.buf >= d.nIn * L && R.left <= 0) { R.buf -= d.nIn * L; R.busy = true; R.p -= 1; } } } else R.stall += dt; } // a full hopper rolls straight into the next batch
         else R.stall = 0;
         R.eff += ((working ? 1 : 0) - R.eff) * Math.min(1, dt / 8); } // share of the last few seconds it spent working
-      if (R.out > 0 && R.outB.canInsert(0)) { R.outB.insert(0, { item: d.out, load: d.nOut * L }); R.out--; }
-      R.outB.tick(dt); });
-    K.rise.tick(dt); }
+      R.on = working; const inMin = working ? machIn(d, R.i, sp) * 60 : 0;
+      rideFlow(K.riders, K.acc, 'i' + R.i, inMin, () => [seg(K.down, 0, K.G.downStop(R.i)), seg(R.feed, 0, R.feed.len)], d.in, dt);
+      rideFlow(K.riders, K.acc, 'o' + R.i, inMin * d.nOut / d.nIn, () => [seg(R.outB, 0, R.outB.len), seg(K.rise, K.G.riseIn(R.i), K.rise.len)], d.out, dt); });
+    rideTick(K.riders, dt); }
 
-  function tapLevel(i) { const M = RT.mines[S.view], r = M.levels[i], tb = M.tunnels[i], ore = MINE[S.view].ore;
+  // a tap lands in the warehouse at once; one icon still rides the belt so you see it go
+  function tapLevel(i) { const M = RT.mines[S.view], r = M.levels[i], ore = MINE[S.view].ore;
     r.swing = 0.15; const f = { x: X.rockX + 10, y: rowY(i) };
-    if (!tb.canInsert(0)) { r.blocked = 1.2; pop(f.x - 20, f.y - 26, 'belt full', C.alarm); return; }
-    tb.insert(0, { ox: f.x - tb.pos(0).x, oy: 0, load: LOAD(i), item: ore }); pop(f.x + 12, f.y - 26, '+' + LOAD(i), ITEMS[ore].color); }
+    if (roomOf(ore) < 1 && !S.inv.recycler) { r.blocked = 1.2; pop(f.x - 20, f.y - 26, 'warehouse full', C.alarm); return; }
+    stash(ore, LOAD(i)); ride(M.riders, mineRoute(M, i), ore); pop(f.x + 12, f.y - 26, '+' + LOAD(i), ITEMS[ore].color); sync(); }
 
   // ---- drawing helpers ----
   function rr(x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
@@ -1051,6 +1067,9 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
     const n = it.load || 1, queued = k > 0 && b.items[k - 1].s - it.s < PITCH + 0.5;
     if (n > 1 && !queued) { const t = '×' + big(n); ctx.font = '700 8px "Chakra Petch", system-ui, sans-serif'; const w = ctx.measureText(t).width + 5;
       rr(x + 3, y - 12, w, 10, 3); ctx.fillStyle = C.panel; ctx.fill(); ctx.strokeStyle = C.line; ctx.lineWidth = 0.8; ctx.stroke(); ctx.fillStyle = C.text; ctx.textAlign = 'left'; ctx.fillText(t, x + 5.5, y - 4); } }); }
+  function drawRiders(list) { for (const r of list) { const p = ridePos(r), im = img(r.item);
+    if (ready(im)) { ctx.save(); ctx.shadowColor = '#0008'; ctx.shadowBlur = 3; ctx.shadowOffsetY = 1; ctx.drawImage(im, p.x - ICON_SZ / 2, p.y - ICON_SZ / 2, ICON_SZ, ICON_SZ); ctx.restore(); }
+    else cart(p.x, p.y, 4.2, ITEMS[r.item].color); } }
   function node(i, swing) { const y = rowY(i), sz = 54, cx = X.rockX + X.rockW / 2, im = img(MINE[S.view].ore); ctx.save(); if (swing > 0) ctx.translate(Math.sin(swing * 90) * 2, 0);
     if (ready(im)) ctx.drawImage(im, cx - sz / 2, y - sz / 2 + 2, sz, sz); ctx.restore(); }
   const note = (text, x, y, color, pulse, align) => { ctx.globalAlpha = pulse && !reduce ? 0.55 + 0.4 * Math.sin(clock * 4) : 0.95; ctx.textAlign = align || 'left'; ctx.fillStyle = color; ctx.font = '700 10.5px "Chakra Petch", system-ui, sans-serif'; ctx.fillText(text, x, y); ctx.globalAlpha = 1; };
@@ -1088,12 +1107,9 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
         if (r.sock) { rr(bx, by, Math.max(5, bw * r.sock.p), 5, 2.5); ctx.fillStyle = r.sock.p >= 1 ? C.grass : ITEMS[mine.ore].color; ctx.fill(); } }
       else { rr(X.sock, y - SLOTH / 2, SLOTW, SLOTH, 4); ctx.fillStyle = C.panel2; ctx.fill(); ctx.setLineDash([3, 3]); ctx.strokeStyle = C.line; ctx.lineWidth = 1; ctx.stroke(); ctx.setLineDash([]); }
       node(i, r.swing);
-      beltItems(tb);
-      if (r.stuck > 0.6) note('SHAFT FULL', X.ex + PITCH + 8, y + 26, C.alarm);
-      else if (tb.full() && (r.blocked > 0 || (lv.drill && r.sock && r.sock.p >= 1))) note('BELT FULL', X.ex + PITCH + 8, y + 26, C.alarm);
       if (!lv.drill) note('TAP TO MINE', W - PAD - 2, y + 42, C.grass, true, 'right'); // under the ore, until a drill takes over
     });
-    beltItems(M.shaft); beltItems(M.surf);
+    drawRiders(M.riders);
     drawPops(pops);
   }
 
@@ -1120,16 +1136,16 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
     const id = S.view, m = S.mines[id], M = RT.mines[id];
     const grp = (style, ...kids) => { const g = place(document.createElement('div'), style); g.className = 'grp'; kids.forEach(k => g.appendChild(k)); return g; };
     const mid = b => { const a = b.pos(0), e = b.pos(b.len); return (a.x + e.x) / 2; };
-    grp({ left: PAD + 'px', top: '6px' }, beltPill('up-shaft', 'Shaft', () => [m.shaftMk, m.shaftLv], v => m.shaftLv = v, () => M.levels.some(r => r.stuck > 0.6), 'shaft-' + id));
+    if (0) grp({ left: PAD + 'px', top: '6px' }, beltPill('up-shaft', 'Shaft', () => [m.shaftMk, m.shaftLv], v => m.shaftLv = v, () => M.levels.some(r => r.stuck > 0.6), 'shaft-' + id));
     grp({ left: X.whX + 'px', width: X.whW + 'px', top: '54px', transform: 'translateY(-100%)' }, pill('up-wh', 'warehouse', () => { const k = MINE[S.view].ore, done = whLvOf(k) >= T1_MAX; return { name: `Warehouse Lv ${whLvOf(k)}`, label: `→ ${big(whCap(whLvOf(k) + 1))}`, cost: done ? null : whCost(k), up: () => S.wh[k] = whLvOf(k) + 1, hot: roomOf(k) < 1 && !recyOn(k), max: 'max for Tier 1', gate: 'wh-' + k, done }; }));
-    grp({ left: mid(M.surf) + 'px', top: (SURFY - CELL / 2 - 6) + 'px', transform: 'translate(-50%, -100%)' }, beltPill('up-surf', 'Surface', () => [m.surfMk, m.surfLv], v => m.surfLv = v, () => M.surfWait > 0.6 && roomOf(MINE[S.view].ore) >= 1, 'surf-' + id));
+    if (0) grp({ left: mid(M.surf) + 'px', top: (SURFY - CELL / 2 - 6) + 'px', transform: 'translate(-50%, -100%)' }, beltPill('up-surf', 'Surface', () => [m.surfMk, m.surfLv], v => m.surfLv = v, () => M.surfWait > 0.6 && roomOf(MINE[S.view].ore) >= 1, 'surf-' + id));
     m.levels.forEach((lv, i) => { const y = rowY(i);
       const h = document.createElement('button'); h.className = 'hit'; h.setAttribute('aria-label', `Mine Level ${i + 1}`);
       place(h, { left: (PAD + 44) + 'px', right: '0', top: (y - 66) + 'px', height: ROWH + 'px' }).addEventListener('click', () => tapLevel(i));
       const d = document.createElement('button'); d.className = 'drillbtn'; d.id = 'drill-' + i; d.innerHTML = '<span><b></b><small></small></span>';
       place(d, { right: PAD + 'px', top: (y - 62) + 'px' }).addEventListener('click', e => { e.stopPropagation(); openSheet(i); });
-      grp({ left: mid(M.tunnels[i]) + 'px', top: (y - CELL / 2 - 6) + 'px', transform: 'translate(-50%, -100%)' }, beltPill('up-belt-' + i, 'Tunnel', () => [lv.beltMk, lv.beltLv], v => lv.beltLv = v, () => !!(M.levels[i].sock && M.levels[i].sock.p >= 1 && M.tunnels[i].full() && M.levels[i].stuck <= 0.6), `tunnel-${id}-${i}`)); });
-    requestAnimationFrame(() => m.levels.forEach((lv, i) => { const g = $('up-belt-' + i), d = $('drill-' + i); if (!g || !d) return; const grp = g.parentNode;
+      if (0) grp({ left: mid(M.tunnels[i]) + 'px', top: (y - CELL / 2 - 6) + 'px', transform: 'translate(-50%, -100%)' }, beltPill('up-belt-' + i, 'Tunnel', () => [lv.beltMk, lv.beltLv], v => lv.beltLv = v, () => !!(M.levels[i].sock && M.levels[i].sock.p >= 1 && M.tunnels[i].full() && M.levels[i].stuck <= 0.6), `tunnel-${id}-${i}`)); });
+    if (0) requestAnimationFrame(() => m.levels.forEach((lv, i) => { const g = $('up-belt-' + i), d = $('drill-' + i); if (!g || !d) return; const grp = g.parentNode;
       const w = grp.offsetWidth, limit = d.offsetLeft - 6 - w / 2, want = mid(M.tunnels[i]); grp.style.left = Math.max(X.ex + PITCH + w / 2 - 8, Math.min(want, limit)) + 'px'; }));
     if (m.levels.length >= MAX_LEVELS) { const t = document.createElement('div'); t.className = 'dig'; t.style.opacity = '.55'; t.innerHTML = `${icon(MINE[id].ore)}<span><b>Level ${m.levels.length + 1}</b><small>Tier 2</small></span><em></em>`;
       place(t, { left: (PAD + 48) + 'px', right: PAD + 'px', top: (rowY(m.levels.length - 1) + 50) + 'px' }); }
@@ -1356,7 +1372,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
     if (X.n < PL_LV || true) { const yn = X.rowY(X.n - 1) + 76, q = X.n < PL_LV ? lvQ(kind, id, X.n) : null;
       ctx.setLineDash([5, 5]); rr(12, yn, W2 - 24, 30, 10); ctx.strokeStyle = C.line; ctx.lineWidth = 1.2; ctx.stroke(); ctx.setLineDash([]);
       t(q ? `Level ${X.n + 1} · opens with quest ${qNum(q)}` : `Level ${PL_LV + 1} · Tier 2`, W2 / 2, yn + 19, C.dim, 11); }
-    belts.forEach(beltItems); }
+    drawRiders(K.riders); }
   const drawLine = () => drawPL('smelt'), drawCraft = () => drawPL('craft');
   // how much of an item the factory can make per minute: drills for ore, the machines of the line that makes it otherwise
   function supplyPerMin(k) { const m = MINES.find(x => x.ore === k);
