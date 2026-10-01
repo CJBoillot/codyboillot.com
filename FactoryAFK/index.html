@@ -14,8 +14,8 @@
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>html,body{margin:0;padding:0}img{max-width:100%}[hidden]{display:none!important}</style>
-<script src="cloud-config.js?v=0.3.21"></script>
-<script src="cloud.js?v=0.3.21" defer></script>
+<script src="cloud-config.js?v=0.3.22"></script>
+<script src="cloud.js?v=0.3.22" defer></script>
 </head>
 <body>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -595,7 +595,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
     <h2 id="ty-h">THANK YOU FOR PLAYING THE DEMO</h2>
     <p>Your coal plant is running and the lights are on. That is everything this demo holds.</p>
     <div class="wb-gains" id="ty-stats"></div>
-    <div class="ty-reward"><img src="icons/merger.webp" alt=""><span><b>Reward: the Recycler</b><small>Sells a trickle from full warehouses, so the factory earns credits on its own, even while you're away.</small></span></div>
+    <div class="ty-reward"><img src="icons/merger.webp" alt=""><span><b>Reward: the Recycler</b><small>When a warehouse is full, it sells what keeps arriving instead of letting the belt back up, so the factory earns credits on its own, even while you're away.</small></span></div>
     <p class="ty-soon">More tiers coming soon.</p>
     <button class="deliver" id="ty-keep">Keep playing</button>
     <button class="ghost" id="ty-restart">Restart the game</button>
@@ -629,7 +629,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   try { theme = localStorage.getItem('afk-factory.theme') || 'system'; } catch (e) {}
   const applyTheme = () => { const r = document.documentElement; if (theme === 'system') { if (hostTheme) r.setAttribute('data-theme', hostTheme); else r.removeAttribute('data-theme'); } else r.setAttribute('data-theme', theme); readColors(); };
   applyTheme(); matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => { if (theme === 'system') readColors(); });
-  const VERSION = { stage: 'Alpha', semver: '0.3.21' }; // bump with every release
+  const VERSION = { stage: 'Alpha', semver: '0.3.22' }; // bump with every release
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const $ = id => document.getElementById(id);
 
@@ -657,8 +657,9 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   const CR = 'credits'; // the currency: upgrades and research cost Credits; crafting still costs items
   const nameOf = k => k === CR ? 'Credits' : ITEMS[k] ? ITEMS[k].name : k;
   const costHTML = c => Object.entries(c).map(([k, n]) => `${big(n)} ${icon(k, '', nameOf(k))}`).join(' ');
-  // Recycler (one per factory): sells only from a FULL warehouse, 1 item every 2 s each, at a tenth of the price
-  const RECYCLE_T = 2, RECYCLE_CUT = 10, RECYCLE_AT = 1, RECYCLE_HOLD = 6;
+  // Recycler (one per factory): sits in front of every warehouse. When a warehouse is full, it takes items off the incoming
+  // belt before they reach it, 1 item every 2 s per warehouse, and sells them at a tenth of the price. The warehouse stays full
+  const RECYCLE_T = 2, RECYCLE_CUT = 10, RECYCLE_AT = 1, RECYCLE_HOLD = 4;
   // Wallet: credits are capped. Tier 1 starts at 1,000 and one quest upgrade takes it to 10,000
   const WALLET = [0, 1000, 10000], walletCap = () => WALLET[Math.min(S.walletLv || 1, WALLET.length - 1)];
   const perS = r => `${(Math.round(r * 10) / 10).toFixed(1)}/s`;
@@ -725,7 +726,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   const INTRO = { basic: 'hands', smelter: 'fire', battery: 'battery', constructor: 'build', plant: 'plant', electric: 'electric' }; // the quest that teaches each building
   const RECIPES = [
     { id: 'basic', sq: 'Drill', name: 'Basic Drill', icon: 'basic_drill', cost: { iron_ore: 20 }, T: 1.5, tier: 1, desc: 'Digs one cart every 2 s on any Level of any mine, no power needed.' },
-    { id: 'recycler', sq: 'Recycler', name: 'Recycler', icon: 'merger', cost: { iron_ore: 30 }, T: 2, tier: 1, max: 1, reward: true, desc: `One per factory. Sells from every full warehouse: 1 item every ${RECYCLE_T} s from each, at a tenth of its price.` },
+    { id: 'recycler', sq: 'Recycler', name: 'Recycler', icon: 'merger', cost: { iron_ore: 30 }, T: 2, tier: 1, max: 1, reward: true, desc: `One per factory. When a warehouse is full, it takes items off the belt before they reach it and sells them: up to 1 every ${RECYCLE_T} s per warehouse, at a tenth of the price.` },
     { id: 'smelter', sq: 'Smelter', name: 'Smelter', icon: 'basic_smelter', cost: { iron_ore: 100 }, T: 3, tier: 2, desc: `Turns 1 ore into 1 ingot every ${SMELT_T} s in any Smelt line. Draws ${SMELT_KW} kW/s while it works.` },
     { id: 'battery', sq: 'Battery', name: 'Battery T1', icon: 'battery_t1', get cost() { return batteryCost(); }, T: 2, tier: 2, desc: `Stores ${BATTERY_W} kW. Tap in the Power tab to charge it. Each extra battery costs a lot more.` },
     { id: 'constructor', sq: 'Constructor', name: 'Constructor', icon: 'auto_constructor', cost: { iron_ingot: 40, copper_ingot: 20 }, T: 4, tier: 3, desc: `Makes plates, wire or concrete on one Level of a Crafting line. Draws ${CON_KW} kW/s while it works.` },
@@ -817,6 +818,10 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
 
   // ---- stats: what reaches the warehouse, per item ----
   const flow = {}; // item → [time, amount] over the last 30 s
+  // an item reaches a full warehouse: the Recycler takes it off the belt if its 2 s slot is ready
+  function recyTake(k) { if (!S.inv.recycler || walletFull()) return false; const r = RECY[k]; if (!r || r.acc < 1) return false;
+    r.acc -= 1; r.last = clock; earn(ITEMS[k].value / RECYCLE_CUT, true); return true; }
+  const recyOn = k => !!(S.inv.recycler && RECY[k] && RECY[k].on);
   function arrived(k, n) { S.made[k] = (S.made[k] || 0) + n; (flow[k] = flow[k] || []).push([clock, n]); }
   // rates on the top bar: what machines make minus what machines eat, over the last 10 s (spending on upgrades is left out)
   const used = {};
@@ -843,7 +848,9 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   function makeMineRT(id) { const m = S.mines[id];
     const M = { id, levels: m.levels.map(newLevelRT), surfWait: 0 };
     M.surf = Belt(() => beltRate(m.surfMk, m.surfLv), it => { // a cart unloads as much as fits; whatever is left waits on the cart, so a warehouse can always fill to the top
-      const n = Math.min(it.load || 1, Math.floor(roomOf(it.item))); if (n < 1) return false; S.items[it.item] += n; arrived(it.item, n);
+      const n = Math.min(it.load || 1, Math.floor(roomOf(it.item)));
+      if (n < 1) { if (!recyTake(it.item)) return false; it.load = (it.load || 1) - 1; return it.load <= 0; }
+      S.items[it.item] += n; arrived(it.item, n);
       if (id === S.view) pop(X.whX + X.whW / 2, SURFY + 44, '+' + big(n), ITEMS[it.item].color); it.load = (it.load || 1) - n; return it.load <= 0; });
     M.shaft = Belt(() => beltRate(m.shaftMk, m.shaftLv), it => { if (!M.surf.canInsert(0)) return false; M.surf.insert(0, { ox: -PITCH, oy: 0, load: it.load, item: it.item }); return true; });
     M.tunnels = m.levels.map((l, i) => makeTunnel(M, i));
@@ -856,13 +863,13 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
     L.fin = Belt(() => 5, () => false);
     L.feedIn = Array.from({ length: FAC_SLOTS }, (_, j) => Belt(() => 5, it => { if (L.jobs[j]) return false; L.jobs[j] = { p: 0 }; return true; }));
     L.feedOut = Array.from({ length: FAC_SLOTS }, (_, j) => Belt(() => 5, it => { const s = FX.outS(j); if (!L.fout.canInsert(s)) return false; L.fout.insert(s, { ox: 0, oy: -PITCH, item: it.item, load: 1 }); return true; }));
-    L.fout = Belt(() => 5, it => { if (roomOf(def.out) < 1) return false; S.items[def.out] += 1; arrived(def.out, 1); L.flowOut.push(clock); if (id === S.sview) fpop(FX.outBoxC().x, FX.outBoxC().y - 30, '+1', ITEMS[def.out].color); return true; });
+    L.fout = Belt(() => 5, it => { if (roomOf(def.out) < 1) return recyTake(def.out); S.items[def.out] += 1; arrived(def.out, 1); L.flowOut.push(clock); if (id === S.sview) fpop(FX.outBoxC().x, FX.outBoxC().y - 30, '+1', ITEMS[def.out].color); return true; });
     return L; }
   // a crafting line: input warehouse → trunk down the left wall → each Level's belt → its Constructor → out-belt → riser up the right wall → output warehouse
   function makeCraftRT(id) { const d = CRAFT[id];
     const K = { id, flowIn: [], flowOut: [] };
     K.down = Belt(() => 5, () => false);
-    K.rise = Belt(() => beltRate(1, S.crafts[id].outLv || 1), it => { if (roomOf(d.out) < 1) return false; S.items[d.out] += 1; arrived(d.out, 1); K.flowOut.push(clock); return true; });
+    K.rise = Belt(() => beltRate(1, S.crafts[id].outLv || 1), it => { if (roomOf(d.out) < 1) return recyTake(d.out); S.items[d.out] += 1; arrived(d.out, 1); K.flowOut.push(clock); return true; });
     K.rows = Array.from({ length: CRAFT_LEVELS }, (_, i) => { const R = { i, buf: 0, busy: false, p: 0, out: 0, stall: 0, flash: 0 };
       R.feed = Belt(() => 5, () => { if (R.buf >= d.nIn) return false; R.buf++; return true; });
       R.outB = Belt(() => 5, it => { const s = KX.riseIn(i); if (!K.rise.canInsert(s)) return false; K.rise.insert(s, { item: d.out, load: 1 }); return true; });
@@ -980,11 +987,9 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
       PLANT.genAcc += made; while (PLANT.genAcc >= 1) { PLANT.genAcc -= 1; genDot(); } }
     // the Recycler sells a trickle from every FULL warehouse. Each sale drops it to 99/100 until the next cart arrives,
     // so it counts as "recycling" for a few seconds after it was last full; otherwise the row would flicker on every sale
-    if (S.inv.recycler) Object.keys(ITEMS).forEach(k => { const r = RECY[k] = RECY[k] || { acc: 0, hold: 0 };
-      if (walletFull()) { r.acc = 0; r.hold = 0; r.on = false; return; }
-      if ((S.items[k] || 0) >= capOf(k)) { r.hold = RECYCLE_HOLD; r.acc += dt / RECYCLE_T; if (r.acc >= 1) { r.acc -= 1; S.items[k] -= 1; earn(ITEMS[k].value / RECYCLE_CUT, true); } }
-      else { r.hold = Math.max(0, (r.hold || 0) - dt); r.acc = Math.min(r.acc, 1); if (!r.hold) r.acc = 0; }
-      r.on = r.hold > 0; });
+    if (S.inv.recycler) Object.keys(ITEMS).forEach(k => { const r = RECY[k] = RECY[k] || { acc: 0, last: -99 };
+      if (walletFull() || roomOf(k) >= 1) r.acc = 0; else r.acc = Math.min(1, r.acc + dt / RECYCLE_T);
+      r.on = roomOf(k) < 1 && !walletFull() && clock - r.last < RECYCLE_HOLD; });
     RECIPES.forEach(r => { const c = crafting[r.id]; if (c) { c.p += dt / r.T; if (c.p >= 1) { delete crafting[r.id]; S.inv[r.id] = (S.inv[r.id] || 0) + 1; S.crafted[r.id] = (S.crafted[r.id] || 0) + 1; if (r.id === 'battery' && tab === 'craft') renderCraft(); save(); } } });
     questTick(dt);
   }
@@ -1030,7 +1035,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
     { const txt = `${big(S.items[mine.ore])}/${big(capOf(mine.ore))}`; ctx.font = '700 15px "Chakra Petch", system-ui, sans-serif'; const tw = ctx.measureText(txt).width, iw = 26, x0 = X.whX + (X.whW - iw - 4 - tw) / 2;
       if (ready(img(mine.ore))) ctx.drawImage(img(mine.ore), x0, 80, iw, iw);
       ctx.textAlign = 'left'; ctx.fillStyle = C.text; ctx.fillText(txt, x0 + iw + 4, 99); }
-    if (roomOf(mine.ore) < 1) note('WAREHOUSE FULL', X.whX + X.whW / 2, 136, C.alarm, false, 'center');
+    if (roomOf(mine.ore) < 1) { if (recyOn(mine.ore)) note('RECYCLING', X.whX + X.whW / 2, 136, C.sky, false, 'center'); else note('WAREHOUSE FULL', X.whX + X.whW / 2, 136, C.alarm, false, 'center'); }
     m.levels.forEach((lv, i) => { const y = rowY(i), r = M.levels[i], tb = M.tunnels[i];
       ctx.textAlign = 'left'; ctx.font = '700 12.5px "Chakra Petch", system-ui, sans-serif'; ctx.fillStyle = C.text; const t = `LEVEL ${i + 1}`; ctx.fillText(t, X.boxX, y - 50);
       const tw = ctx.measureText(t).width; ctx.font = '11px "Nunito Sans", system-ui, sans-serif'; ctx.fillStyle = C.dim; ctx.fillText(`${mine.name.toLowerCase()} ×${LOAD(i)}`, X.boxX + tw + 7, y - 50);
@@ -1103,7 +1108,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
     const grp = (style, ...kids) => { const g = place(document.createElement('div'), style); g.className = 'grp'; kids.forEach(k => g.appendChild(k)); return g; };
     const mid = b => { const a = b.pos(0), e = b.pos(b.len); return (a.x + e.x) / 2; };
     grp({ left: PAD + 'px', top: '6px' }, beltPill('up-shaft', 'Shaft', () => [m.shaftMk, m.shaftLv], v => m.shaftLv = v, () => M.levels.some(r => r.stuck > 0.6), 'shaft-' + id));
-    grp({ left: X.whX + 'px', width: X.whW + 'px', top: '54px', transform: 'translateY(-100%)' }, pill('up-wh', 'warehouse', () => { const k = MINE[S.view].ore, done = whLvOf(k) >= T1_MAX; return { name: `Warehouse Lv ${whLvOf(k)}`, label: `→ ${big(whCap(whLvOf(k) + 1))}`, cost: done ? null : whCost(k), up: () => S.wh[k] = whLvOf(k) + 1, hot: roomOf(k) < 1, max: 'max for Tier 1', gate: 'wh-' + k, done }; }));
+    grp({ left: X.whX + 'px', width: X.whW + 'px', top: '54px', transform: 'translateY(-100%)' }, pill('up-wh', 'warehouse', () => { const k = MINE[S.view].ore, done = whLvOf(k) >= T1_MAX; return { name: `Warehouse Lv ${whLvOf(k)}`, label: `→ ${big(whCap(whLvOf(k) + 1))}`, cost: done ? null : whCost(k), up: () => S.wh[k] = whLvOf(k) + 1, hot: roomOf(k) < 1 && !recyOn(k), max: 'max for Tier 1', gate: 'wh-' + k, done }; }));
     grp({ left: mid(M.surf) + 'px', top: (SURFY - CELL / 2 - 6) + 'px', transform: 'translate(-50%, -100%)' }, beltPill('up-surf', 'Surface', () => [m.surfMk, m.surfLv], v => m.surfLv = v, () => M.surfWait > 0.6 && roomOf(MINE[S.view].ore) >= 1, 'surf-' + id));
     m.levels.forEach((lv, i) => { const y = rowY(i);
       const h = document.createElement('button'); h.className = 'hit'; h.setAttribute('aria-label', `Mine Level ${i + 1}`);
@@ -1145,7 +1150,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   $('wallet-host').appendChild(pill('up-wallet', 'credits', () => { const done = (S.walletLv || 1) >= 2;
     return { name: `Wallet Lv ${S.walletLv || 1}`, label: `holds ${big(walletCap())}${done ? '' : ` → ${big(WALLET[2])}`}`, cost: done ? null : { [CR]: 800 }, up: () => S.walletLv = 2, max: `holds ${big(walletCap())} · max for Tier 1`, gate: 'wallet', done }; }));
   $('owh-host').appendChild(pill('up-owh', 'warehouse', () => { const k = LINE[S.sview].out;
-    return { name: `${ITEMS[k].name} warehouse Lv ${whLvOf(k)}`, label: `${big(S.items[k])}/${big(capOf(k))} → ${big(whCap(whLvOf(k) + 1))}`, cost: whLvOf(k) >= 2 ? null : whCost(k), up: () => S.wh[k] = whLvOf(k) + 1, hot: roomOf(k) < 1, max: 'max for Tier 1', gate: 'wh-' + k, done: whLvOf(k) >= 2 }; }));
+    return { name: `${ITEMS[k].name} warehouse Lv ${whLvOf(k)}`, label: `${big(S.items[k])}/${big(capOf(k))} → ${big(whCap(whLvOf(k) + 1))}`, cost: whLvOf(k) >= 2 ? null : whCost(k), up: () => S.wh[k] = whLvOf(k) + 1, hot: roomOf(k) < 1 && !recyOn(k), max: 'max for Tier 1', gate: 'wh-' + k, done: whLvOf(k) >= 2 }; }));
 
   // ---- power grid: tap → battery bank → each smelter line. Each glowing dot is 1 kW; wires meet at 90° joints ----
   const pcv = $('pcv'), pctx = pcv.getContext('2d'); let PW = 0; const PH = 464, PG = {}; let pdots = [], phit = null;
@@ -1302,7 +1307,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   }
   $('craft-run').addEventListener('click', () => { const c = S.crafts[S.cview]; if (!c) return; c.on = !c.on; sync(); save(); });
   $('cwh-host').appendChild(pill('up-cwh', 'warehouse', () => { const k = CRAFT[S.cview] ? CRAFT[S.cview].out : 'iron_plate', done = whLvOf(k) >= 2;
-    return { name: `${ITEMS[k].name} warehouse Lv ${whLvOf(k)}`, label: `${big(S.items[k])}/${big(capOf(k))} → ${big(whCap(whLvOf(k) + 1))}`, cost: done ? null : whCost(k), up: () => S.wh[k] = whLvOf(k) + 1, hot: roomOf(k) < 1, max: 'max for Tier 1', gate: 'wh-' + k, done }; }));
+    return { name: `${ITEMS[k].name} warehouse Lv ${whLvOf(k)}`, label: `${big(S.items[k])}/${big(capOf(k))} → ${big(whCap(whLvOf(k) + 1))}`, cost: done ? null : whCost(k), up: () => S.wh[k] = whLvOf(k) + 1, hot: roomOf(k) < 1 && !recyOn(k), max: 'max for Tier 1', gate: 'wh-' + k, done }; }));
   function drawCraft() {
     const id = S.cview, d = CRAFT[id], c = S.crafts[id], K = RT.crafts[id]; if (!d || !c || !K) return;
     ctx = cctx; ctx.clearRect(0, 0, CW, CH);
@@ -1315,7 +1320,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
     const box = (b, k, title, r, sign) => { ctx.fillStyle = C.box; ctx.fillRect(b.x, b.y, b.w, b.h); ctx.strokeStyle = C.sky2; ctx.lineWidth = 1.5; ctx.strokeRect(b.x + .75, b.y + .75, b.w - 1.5, b.h - 1.5);
       ctx.textAlign = 'center'; ctx.font = '700 9.5px "Chakra Petch", system-ui, sans-serif'; ctx.fillStyle = C.sky; ctx.fillText(title, b.x + b.w / 2, b.y + 15);
       if (ready(img(k))) ctx.drawImage(img(k), b.x + 8, b.y + 22, 28, 28);
-      ctx.textAlign = 'left'; ctx.font = '700 14px "Chakra Petch", system-ui, sans-serif'; ctx.fillStyle = roomOf(k) < 1 ? C.alarm : C.text; ctx.fillText(`${big(S.items[k])}/${big(capOf(k))}`, b.x + 40, b.y + 42);
+      ctx.textAlign = 'left'; ctx.font = '700 14px "Chakra Petch", system-ui, sans-serif'; ctx.fillStyle = roomOf(k) < 1 ? (recyOn(k) ? C.sky : C.alarm) : C.text; ctx.fillText(`${big(S.items[k])}/${big(capOf(k))}`, b.x + 40, b.y + 42);
       ctx.textAlign = 'center'; ctx.font = '700 10.5px "Nunito Sans", system-ui, sans-serif'; ctx.fillStyle = r < 0.05 ? C.dim : sign === '+' ? C.grass : C.alarm; ctx.fillText(`${r < 0.05 ? '' : sign}${r.toFixed(1)}/s`, b.x + b.w / 2, b.y + b.h - 7); };
     box(KX.inBox, d.in, `${ITEMS[d.in].name.toUpperCase()} IN`, rate(K.flowIn), '−');
     box(KX.outBox, d.out, `${ITEMS[d.out].name.toUpperCase()} OUT`, rate(K.flowOut), '+');
@@ -1535,7 +1540,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   // a quest can open a tab, a mine, a line or a building: redraw whatever is on screen so it shows at once
   function refreshUnlocks() { if (tab === 'mine') layout(); if (tab === 'smelt') flayout(); if (tab === 'craft') renderCraft(); if (tab === 'build') clayout(); if (tab === 'hub') renderHub(); sync(); }
   function objective() { const q = Q();
-    if (!q) return { head: 'TIER 1 COMPLETE', text: 'Reward: the Recycler. It sells a trickle from every full warehouse, so your factory now earns credits on its own, even while you are away. Tier 2 arrives in a later build.', btn: tab !== 'hub' ? 'See it in the HUB' : null, dest: 'Open the HUB', act: () => showTab('hub') };
+    if (!q) return { head: 'TIER 1 COMPLETE', text: 'Reward: the Recycler. When a warehouse is full, it sells what keeps arriving, so your factory now earns credits on its own, even while you are away. Tier 2 arrives in a later build.', btn: tab !== 'hub' ? 'See it in the HUB' : null, dest: 'Open the HUB', act: () => showTab('hub') };
     const btn = typeof q.btn === 'function' ? q.btn() : q.btn, here = q.here && q.here();
     const o = { head: `QUEST ${S.quest + 1}/${QUESTS.length}`, title: q.t, text: q.text, btn: here ? null : btn, dest: btn, act: q.go };
     if (q.parts) { const n = q.parts.filter(([, f]) => f()).length; o.have = n; o.need = q.parts.length; o.list = q.parts.map(([l, f]) => `${f() ? '✓' : '○'} ${l}`).join('   '); }
@@ -1643,9 +1648,11 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
     const made0 = { ...S.made }, cr0 = S.credits; let noPow = 0, lastUse = 0;
     const drills = []; Object.entries(S.mines).forEach(([id, m]) => m.levels.forEach((l, i) => { if (l.drill) drills.push({ ore: MINE[id].ore, rate: LOAD(i) / DRILLS[l.drill].T, kw: DRILLS[l.drill].kw }); }));
     const room = k => Math.max(0, capOf(k) - (S.items[k] || 0));
-    const put = k => n => { const r = Math.min(n, room(k)); if (r > 0) { S.items[k] = (S.items[k] || 0) + r; S.made[k] = (S.made[k] || 0) + r; } return r; };
+    let over = {}; // what reached a full warehouse this second: the Recycler sells up to 1 item / 2 s of it
+    const put = k => n => { const r = Math.min(n, room(k)); if (r > 0) { S.items[k] = (S.items[k] || 0) + r; S.made[k] = (S.made[k] || 0) + r; } if (n - r > 1e-9) over[k] = (over[k] || 0) + n - r; return r; };
+    const roomR = k => room(k) + (S.inv.recycler && !walletFull() ? 1 / RECYCLE_T : 0); // machines keep running while the Recycler takes their output
     for (let t = 0; t < secs; t++) {
-      let gen = 0;
+      let gen = 0; over = {};
       if (S.inv.plant) { const want = Math.min(PLANT_KW, Math.max(0, powerCap() - S.power) + lastUse);
         while (want - gen > 1e-9) { if (PLANT.fuel <= 1e-9) { if ((S.items.coal || 0) >= 1) { S.items.coal -= 1; PLANT.fuel += KW_PER_COAL; } else break; }
           const take = Math.min(PLANT.fuel, want - gen); PLANT.fuel -= take; gen += take; } }
@@ -1653,12 +1660,12 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
       const draw = kw => { if (kw <= 0) return 1; if (P >= kw) { P -= kw; used += kw; return 1; } const f = P / kw; used += P; P = 0; short = true; return f; };
       drills.forEach(d => { let f = 1; if (d.kw) { if (!S.drillsOn) return; f = draw(d.kw); } put(d.ore)(d.rate * f); });
       Object.entries(S.lines).forEach(([id, line]) => { const L = LINE[id], n = line.slots.filter(Boolean).length; if (!L || !n || !line.on) return;
-        let k = Math.min(n / SMELT_T, S.items[L.ore] || 0, room(L.out)); if (k <= 1e-9) return;
+        let k = Math.min(n / SMELT_T, S.items[L.ore] || 0, roomR(L.out)); if (k <= 1e-9) return;
         k *= draw(k * SMELT_T * SMELT_KW); S.items[L.ore] -= k; put(L.out)(k); });
       Object.entries(S.crafts).forEach(([id, c]) => { const d = CRAFT[id], n = c.slots.filter(Boolean).length; if (!d || !n || !c.on) return;
-        let k = Math.min(n / d.T, (S.items[d.in] || 0) / d.nIn, room(d.out) / d.nOut); if (k <= 1e-9) return;
+        let k = Math.min(n / d.T, (S.items[d.in] || 0) / d.nIn, roomR(d.out) / d.nOut); if (k <= 1e-9) return;
         k *= draw(k * d.T * CON_KW); S.items[d.in] -= k * d.nIn; put(d.out)(k * d.nOut); });
-      if (S.inv.recycler) Object.keys(ITEMS).forEach(k => { if ((S.items[k] || 0) >= capOf(k) - 1e-6 && !walletFull()) { const n = 1 / RECYCLE_T; S.items[k] -= n; earn(ITEMS[k].value / RECYCLE_CUT * n); } });
+      if (S.inv.recycler) Object.keys(over).forEach(k => { if (!walletFull()) earn(ITEMS[k].value / RECYCLE_CUT * Math.min(over[k], 1 / RECYCLE_T)); });
       S.power = Math.min(powerCap(), P); lastUse = used; if (short) noPow++;
     }
     wholeItems(); // the model moves fractions of items; warehouses hold whole ones, or the last cart never fits
