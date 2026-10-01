@@ -14,8 +14,8 @@
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>html,body{margin:0;padding:0}img{max-width:100%}[hidden]{display:none!important}</style>
-<script src="cloud-config.js?v=0.3.9"></script>
-<script src="cloud.js?v=0.3.9" defer></script>
+<script src="cloud-config.js?v=0.3.10"></script>
+<script src="cloud.js?v=0.3.10" defer></script>
 </head>
 <body>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -91,14 +91,24 @@ h1 { font-family: var(--font-head); font-weight: 700; font-size: 26px; line-heig
 .goal p { margin: 0; font-size: 13px; font-weight: 600; }
 .goal { display: grid; grid-template-columns: 1fr 68px; gap: 10px; align-items: center; }
 .goal-body { min-width: 0; display: flex; flex-direction: column; gap: 6px; }
-/* the Go button: a fixed 68 px square so the card never resizes when the quest changes */
-.goal .go { width: 68px; height: 68px; font: inherit; border: 0; border-radius: 12px; color: #06120b; background: linear-gradient(180deg, var(--grass), var(--grass2)); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 5px 3px; cursor: pointer; box-shadow: 0 3px 0 #2a6b28; }
-.goal .go:active { transform: translateY(2px); box-shadow: 0 1px 0 #2a6b28; }
-.goal .go small { font-family: var(--font-head); font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; opacity: .75; line-height: 1; white-space: nowrap; }
-.goal .go img { width: 26px; height: 26px; filter: drop-shadow(0 1px 1px #0005); }
-.goal .go b { font-family: var(--font-head); font-size: 11px; letter-spacing: .02em; line-height: 1.05; text-align: center; }
-.goal .go.here { background: var(--ok, #12261c); color: var(--grass); box-shadow: none; border: 1px dashed var(--grass2); cursor: default; transform: none; }
-.goal .go.here img { opacity: .7; }
+/* the square action button (quest Go, Build, Deliver): always 68 px, so cards never resize when its text changes.
+   small caption on top, an icon of what it does or where it goes, a short label under it */
+.sq { position: relative; overflow: hidden; flex: none; width: 68px; height: 68px; font: inherit; border: 0; border-radius: 12px; color: #06120b; background: linear-gradient(180deg, var(--grass), var(--grass2)); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 5px 3px; cursor: pointer; box-shadow: 0 3px 0 #2a6b28; }
+.sq:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 1px 0 #2a6b28; }
+.sq > * { position: relative; }
+.sq small .lk { width: 8px; height: 8px; vertical-align: -1px; }
+.sq small { font-family: var(--font-head); font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; opacity: .75; line-height: 1; white-space: nowrap; }
+.sq img { width: 26px; height: 26px; filter: drop-shadow(0 1px 1px #0005); }
+.sq b { font-family: var(--font-head); font-size: 11px; font-weight: 700; letter-spacing: .02em; line-height: 1.05; text-align: center; max-width: 100%; overflow: hidden; }
+.sq > i { position: absolute; left: 0; bottom: 0; top: 0; width: 0; background: #ffffff40; }
+.sq:disabled { background: var(--track); color: var(--dim); box-shadow: none; cursor: default; }
+.sq:disabled img { opacity: .6; }
+.sq.busy:disabled { background: linear-gradient(180deg, var(--grass2), var(--track)); color: var(--text); }
+.sq.here { background: var(--ok); color: var(--grass); box-shadow: none; border: 1px dashed var(--grass2); cursor: default; }
+.sq.here img { opacity: .7; }
+/* (not .locked: that class is the centered placeholder text style) */
+.sq.sql { background: var(--panel2); border: 1px solid var(--line); color: var(--dim); }
+.sq.sql img { filter: grayscale(1); opacity: .5; }
 .bar { height: 8px; border-radius: 99px; background: var(--track); overflow: hidden; border: 1px solid var(--line); }
 .bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--grass2), var(--grass)); border-radius: 99px; transition: width .25s; }
 .stage { position: relative; border: 1px solid var(--line); border-radius: 18px; overflow: hidden; background: var(--earth1); }
@@ -225,6 +235,8 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
 .tag { font-family: var(--font-head); font-size: 10.5px; letter-spacing: .1em; padding: 2px 8px; border-radius: 99px; border: 1px solid var(--line); color: var(--dim); white-space: nowrap; }
 .tag.ok { color: var(--grass); border-color: var(--grass2); }
 .tag.now { color: #06120b; background: var(--grass); border-color: var(--grass); }
+.tier-pay { display: grid; grid-template-columns: 1fr 68px; gap: 10px; align-items: center; }
+.tier-pay .needs { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 .need { display: grid; grid-template-columns: 30px 1fr auto; align-items: center; gap: 8px; font-size: 12.5px; font-variant-numeric: tabular-nums; }
 .need img { width: 30px; height: 30px; }
 .need .bar { grid-column: 2; }
@@ -238,10 +250,10 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
 .recipe + .recipe { border-top: 1px solid var(--line); padding-top: 10px; }
 /* crafting: compact rows. Big icon = the building; small icons = what it costs */
 #recipes { gap: 8px; }
-.rc.locked { opacity: .55; } .rc.locked .ico { position: relative; background: var(--panel2); border-color: var(--line); } .rc.locked .ico img { filter: grayscale(1); }
+.rc.rcl { opacity: .6; }
 .rc-lock { position: absolute; right: -4px; bottom: -4px; width: 20px; height: 20px; border-radius: 50%; background: var(--panel); border: 1px solid var(--line); color: var(--dim); display: grid; place-items: center; }
 .rc-lock .lk { width: 10px; height: 10px; }
-.rc { display: grid; grid-template-columns: 52px 1fr; gap: 6px 10px; align-items: center; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); padding: 8px; }
+.rc { display: grid; grid-template-columns: 1fr 68px; gap: 6px 10px; align-items: center; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); padding: 8px; }
 .rc .ico { width: 52px; height: 52px; border-radius: 12px; background: var(--ok); border: 1px solid var(--grass2); display: grid; place-items: center; }
 .rc .ico img { width: 46px; height: 46px; }
 .rc-body { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
@@ -438,7 +450,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
     <p class="fnote" id="goal-list" hidden></p>
     <div class="bar" id="goal-bar"><i></i></div>
     </div>
-    <button class="go" id="goal-btn"><small>Go to:</small><img src="icons/storage_crate.webp" alt=""><b>HUB</b></button>
+    <button class="go sq" id="goal-btn"><small>Go to:</small><img src="icons/storage_crate.webp" alt=""><b>HUB</b></button>
   </div>
 
   <section class="panel" id="tab-hub" role="tabpanel" aria-labelledby="t-hub" hidden>
@@ -576,7 +588,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   try { theme = localStorage.getItem('afk-factory.theme') || 'system'; } catch (e) {}
   const applyTheme = () => { const r = document.documentElement; if (theme === 'system') { if (hostTheme) r.setAttribute('data-theme', hostTheme); else r.removeAttribute('data-theme'); } else r.setAttribute('data-theme', theme); readColors(); };
   applyTheme(); matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => { if (theme === 'system') readColors(); });
-  const VERSION = { stage: 'Alpha', semver: '0.3.9' }; // bump with every release
+  const VERSION = { stage: 'Alpha', semver: '0.3.10' }; // bump with every release
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const $ = id => document.getElementById(id);
 
@@ -1342,14 +1354,15 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
       const room = st === 'now' && Object.entries(T.need).some(([k, v]) => bal(k) >= 1 && (S.handed[k] || 0) < v);
       const payNow = Object.fromEntries(Object.entries(T.need).map(([k, v]) => [k, Math.min(Math.floor(bal(k)), v - (S.handed[k] || 0))]).filter(e => e[1] > 0));
       const short = st === 'now' && !full ? Object.entries(T.need).filter(([k, v]) => (S.handed[k] || 0) < v).map(([k, v]) => `${big(v - (S.handed[k] || 0))} ${plural(k, v - (S.handed[k] || 0))}`).join(' + ') : '';
-      return `<div class="tier ${st}"><header><h3>${T.name}</h3>${tag}</header>${st === 'done' ? '' : needs}
-        ${st === 'now' && !full ? `<button class="deliver" data-t="${i}" ${room ? '' : 'disabled'}>${room ? `Deliver ${costHTML(payNow)}` : `Need ${short}`}</button>` : ''}
+      const nItems = Object.values(payNow).reduce((a, b) => a + b, 0);
+      const pay = st === 'now' && !full ? `<button class="sq tdel" data-t="${i}" ${room ? '' : 'disabled'} title="${room ? `Deliver ${nItems} items` : `Need ${short}`}"><small>${room ? 'Deliver' : 'Need'}</small>${icon('storage_crate')}<b>${room ? `${big(nItems)} items` : 'more'}</b></button>` : '';
+      return `<div class="tier ${st}"><header><h3>${T.name}</h3>${tag}</header>${st === 'done' ? '' : pay ? `<div class="tier-pay"><div class="needs">${needs}</div>${pay}</div>` : needs}
         ${full && T.later ? `<p class="fnote">Fully paid. What it unlocks arrives in the next build, and it completes then.</p>` : ''}
         <div class="unl">${T.unlocks.map(([k, t]) => `<span>${icon(k)}${t}</span>`).join('')}</div></div>`; };
     const list = nodes.sort((a, b) => order[a.st] - order[b.st]).filter(n => !(S.hideDone && n.st === 'done'));
     const doneN = nodes.filter(n => n.st === 'done').length;
     $('tiers').innerHTML = list.map(card).join('') + (S.hideDone && doneN ? `<p class="fnote">${doneN} completed research hidden.</p>` : '');
-    $('tiers').querySelectorAll('.deliver').forEach(b => b.addEventListener('click', () => deliver(+b.dataset.t)));
+    $('tiers').querySelectorAll('.tdel').forEach(b => b.addEventListener('click', () => deliver(+b.dataset.t)));
     const h = $('hide-done'); h.setAttribute('aria-pressed', String(!!S.hideDone)); h.textContent = S.hideDone ? 'Show completed' : 'Hide completed';
   }
   // ---- HUB warehouses: every item's stock, rate, sell buttons and recycler hook-up ----
@@ -1382,14 +1395,14 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   const taught = r => !r.reward && S.tier >= r.tier && (ownedCount(r.id) > 0 || !INTRO[r.id] || S.quest >= questAt(INTRO[r.id]));
   const ownedCount = id => (S.inv[id] || 0) + (id === 'basic' || id === 'electric' ? placedDrills(id) : id === 'smelter' ? placedSmelters() : id === 'constructor' ? placedCons() : 0);
   function renderCraft() {
-    const lockedCard = (r, why) => `<div class="rc locked"><div class="ico">${icon(r.icon, '', r.name)}<span class="rc-lock">${LOCK_SM}</span></div><div class="rc-body"><h3>${r.name}</h3><p>${why}</p></div></div>`;
+    const lockedCard = (r, why, q) => `<div class="rc rcl"><div class="rc-body"><h3>${r.name}</h3><p>${why}</p></div><button class="sq sql" disabled><small>${LOCK_SM} ${q}</small>${icon(r.icon, '', r.name)}<b>Locked</b></button></div>`;
     const shown = RECIPES.filter(r => taught(r) || S.tier >= 1);
-    $('recipes').innerHTML = RECIPES.filter(taught).map(r => `<div class="rc"><div class="ico">${icon(r.icon, '', r.name)}</div>
+    $('recipes').innerHTML = RECIPES.filter(taught).map(r => `<div class="rc">
       <div class="rc-body"><h3>${r.name}<small id="own-${r.id}"></small></h3>
         <div class="rc-cost">${Object.entries(r.cost).map(([k, n]) => `<span class="cst" data-k="${k}" data-n="${n}">${icon(k, '', ITEMS[k].name)}${big(n)}</span>`).join('')}<span class="rc-t">${r.T} s</span></div>
         <p>${r.desc}</p></div>
-      <button class="craft" id="craft-${r.id}"><i></i><span>Craft</span></button></div>`).join('')
-      + RECIPES.filter(r => !taught(r) && !(r.reward && S.inv.recycler)).map(r => lockedCard(r, r.reward ? 'Reward for finishing Tier 1.' : `Unlocks with quest ${qNum(INTRO[r.id])}: ${QUESTS[qNum(INTRO[r.id]) - 1].t}.`)).join('');
+      <button class="sq" id="craft-${r.id}" aria-label="Build ${r.name}"><i></i><small>Build</small>${icon(r.icon, '', '')}<b>${r.name}</b></button></div>`).join('')
+      + RECIPES.filter(r => !taught(r) && !(r.reward && S.inv.recycler)).map(r => lockedCard(r, r.reward ? 'Reward for finishing Tier 1.' : `Unlocks with quest ${qNum(INTRO[r.id])}: ${QUESTS[qNum(INTRO[r.id]) - 1].t}.`, r.reward ? 'Tier 1' : `Quest ${qNum(INTRO[r.id])}`)).join('');
     RECIPES.forEach(r => { const b = $('craft-' + r.id); if (b) b.addEventListener('click', () => { if (crafting[r.id] || !canPay(r.cost) || (r.max && (S.inv[r.id] || 0) >= r.max)) return; pay(r.cost); crafting[r.id] = { p: 0 }; sync(); save(); }); });
   }
 
@@ -1524,7 +1537,9 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
       const sm = b.querySelector('small'), h = d.cost ? `${d.label || perS(d.rate)} · ▲ <em>${costHTML(d.cost)}</em>` : d.max; if (sm._h !== h) { sm.innerHTML = h; sm._h = h; } b.disabled = !d.cost || !canPay(d.cost); b.classList.toggle('alarm', !!d.hot && !!d.cost); b.classList.toggle('quest', questUp() === d.gate && !!d.cost); });
     if (tab === 'craft') {
       RECIPES.forEach(r => { const b = $('craft-' + r.id); if (!b) return; const c = crafting[r.id], short = Object.entries(r.cost).find(([k, n]) => (S.items[k] || 0) < n), have = S.inv[r.id] || 0, capped = r.max && have >= r.max;
-        b.disabled = !!c || !!short || capped; b.querySelector('span').textContent = c ? 'Building…' : capped ? 'Built · one per factory' : short ? `Need ${big(short[1] - (S.items[short[0]] || 0))} more ${ITEMS[short[0]].name.toLowerCase()}` : `Build ${r.name}`;
+        b.disabled = !!c || !!short || capped; b.classList.toggle('busy', !!c);
+        const cap = c ? 'Building' : capped ? 'Built' : short ? 'Need' : 'Build', lab = c ? `${Math.floor(c.p * 100)}%` : capped ? 'One max' : short ? `${big(short[1] - (S.items[short[0]] || 0))} more` : r.name;
+        b.querySelector('small').textContent = cap; b.querySelector('b').textContent = lab;
         b.querySelector('i').style.width = (c ? c.p * 100 : 0) + '%';
         const o = $('own-' + r.id); if (o) o.textContent = r.max ? '' : ownedCount(r.id) ? `×${ownedCount(r.id)}` : ''; });
       $('recipes').querySelectorAll('.cst').forEach(e => e.classList.toggle('short', (S.items[e.dataset.k] || 0) < +e.dataset.n));
