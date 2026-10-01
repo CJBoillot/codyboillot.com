@@ -14,8 +14,8 @@
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>html,body{margin:0;padding:0}img{max-width:100%}[hidden]{display:none!important}</style>
-<script src="cloud-config.js?v=0.3.8"></script>
-<script src="cloud.js?v=0.3.8" defer></script>
+<script src="cloud-config.js?v=0.3.9"></script>
+<script src="cloud.js?v=0.3.9" defer></script>
 </head>
 <body>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -89,8 +89,16 @@ h1 { font-family: var(--font-head); font-weight: 700; font-size: 26px; line-heig
 .goal .row b { font-family: var(--font-head); font-size: 12px; letter-spacing: .08em; color: var(--sky); }
 .goal .row span { color: var(--dim); font-variant-numeric: tabular-nums; }
 .goal p { margin: 0; font-size: 13px; font-weight: 600; }
-.goal button { font: inherit; font-weight: 800; font-size: 13px; color: #06120b; background: linear-gradient(180deg, var(--grass), var(--grass2)); border: 0; border-radius: 10px; padding: 8px 10px; cursor: pointer; }
-.goal button:disabled { background: var(--track); color: var(--dim); cursor: default; }
+.goal { display: grid; grid-template-columns: 1fr 68px; gap: 10px; align-items: center; }
+.goal-body { min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+/* the Go button: a fixed 68 px square so the card never resizes when the quest changes */
+.goal .go { width: 68px; height: 68px; font: inherit; border: 0; border-radius: 12px; color: #06120b; background: linear-gradient(180deg, var(--grass), var(--grass2)); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 5px 3px; cursor: pointer; box-shadow: 0 3px 0 #2a6b28; }
+.goal .go:active { transform: translateY(2px); box-shadow: 0 1px 0 #2a6b28; }
+.goal .go small { font-family: var(--font-head); font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; opacity: .75; line-height: 1; white-space: nowrap; }
+.goal .go img { width: 26px; height: 26px; filter: drop-shadow(0 1px 1px #0005); }
+.goal .go b { font-family: var(--font-head); font-size: 11px; letter-spacing: .02em; line-height: 1.05; text-align: center; }
+.goal .go.here { background: var(--ok, #12261c); color: var(--grass); box-shadow: none; border: 1px dashed var(--grass2); cursor: default; transform: none; }
+.goal .go.here img { opacity: .7; }
 .bar { height: 8px; border-radius: 99px; background: var(--track); overflow: hidden; border: 1px solid var(--line); }
 .bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--grass2), var(--grass)); border-radius: 99px; transition: width .25s; }
 .stage { position: relative; border: 1px solid var(--line); border-radius: 18px; overflow: hidden; background: var(--earth1); }
@@ -424,11 +432,13 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   </div>
 
   <div class="goal" id="goal">
+    <div class="goal-body">
     <div class="row"><b class="next" id="goal-head">QUEST</b><span id="goal-num"></span></div>
     <p id="goal-text"></p>
     <p class="fnote" id="goal-list" hidden></p>
     <div class="bar" id="goal-bar"><i></i></div>
-    <button id="goal-btn" hidden></button>
+    </div>
+    <button class="go" id="goal-btn"><small>Go to:</small><img src="icons/storage_crate.webp" alt=""><b>HUB</b></button>
   </div>
 
   <section class="panel" id="tab-hub" role="tabpanel" aria-labelledby="t-hub" hidden>
@@ -566,7 +576,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   try { theme = localStorage.getItem('afk-factory.theme') || 'system'; } catch (e) {}
   const applyTheme = () => { const r = document.documentElement; if (theme === 'system') { if (hostTheme) r.setAttribute('data-theme', hostTheme); else r.removeAttribute('data-theme'); } else r.setAttribute('data-theme', theme); readColors(); };
   applyTheme(); matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => { if (theme === 'system') readColors(); });
-  const VERSION = { stage: 'Alpha', semver: '0.3.8' }; // bump with every release
+  const VERSION = { stage: 'Alpha', semver: '0.3.9' }; // bump with every release
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const $ = id => document.getElementById(id);
 
@@ -1448,13 +1458,26 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   // a quest can open a tab, a mine, a line or a building: redraw whatever is on screen so it shows at once
   function refreshUnlocks() { if (tab === 'mine') layout(); if (tab === 'smelt') flayout(); if (tab === 'craft') renderCraft(); if (tab === 'build') clayout(); if (tab === 'hub') renderHub(); sync(); }
   function objective() { const q = Q();
-    if (!q) return { head: 'TIER 1 COMPLETE', text: 'Reward: the Recycler. It sells a trickle from every warehouse that is 90% full, so your factory now earns credits on its own, even while you are away. Tier 2 arrives in a later build.', btn: tab !== 'hub' ? 'See it in the HUB' : null, act: () => showTab('hub') };
+    if (!q) return { head: 'TIER 1 COMPLETE', text: 'Reward: the Recycler. It sells a trickle from every warehouse that is 90% full, so your factory now earns credits on its own, even while you are away. Tier 2 arrives in a later build.', btn: tab !== 'hub' ? 'See it in the HUB' : null, dest: 'Open the HUB', act: () => showTab('hub') };
     const btn = typeof q.btn === 'function' ? q.btn() : q.btn, here = q.here && q.here();
-    const o = { head: `QUEST ${S.quest + 1}/${QUESTS.length}`, title: q.t, text: q.text, btn: here ? null : btn, act: q.go };
+    const o = { head: `QUEST ${S.quest + 1}/${QUESTS.length}`, title: q.t, text: q.text, btn: here ? null : btn, dest: btn, act: q.go };
     if (q.parts) { const n = q.parts.filter(([, f]) => f()).length; o.have = n; o.need = q.parts.length; o.list = q.parts.map(([l, f]) => `${f() ? '✓' : '○'} ${l}`).join('   '); }
     else if (q.need) { o.have = q.have(); o.need = q.need; }
     return o; }
-  $('goal-btn').addEventListener('click', () => { const o = objective(); o.act && o.act(); sync(); });
+  // the square Go button shows where it takes you: an icon and a short place name
+  function goDest(t) { t = t || ''; let m;
+    if ((m = t.match(/^Go to the (\w+) mine/))) { const id = m[1].toLowerCase(); return { name: `${m[1]} mine`, ic: ICON(MINE[id] ? MINE[id].ore || id : id) }; }
+    if ((m = t.match(/^Open (\w+) smelting/))) return { name: `${m[1]} smelt`, ic: 'basic_smelter' };
+    if (/HUB/.test(t)) return { name: 'HUB', ic: 'storage_crate' };
+    if (/Power/.test(t)) return { name: 'Power', ic: 'bolt_yellow' };
+    if (/Electric/.test(t)) return { name: 'Drills', ic: 'electric_drill' };
+    if (/drill/.test(t)) return { name: 'Drills', ic: 'basic_drill' };
+    if (/Concrete/.test(t)) return { name: 'Concrete', ic: 'auto_constructor' };
+    if (/Crafting/.test(t)) return { name: 'Crafting', ic: 'auto_constructor' };
+    if (/Buildings/.test(t)) return { name: 'Buildings', ic: 'basic_drill' };
+    if (t === 'Choose') return { name: 'Account', ic: 'logo' };
+    return { name: t, ic: 'storage_crate' }; }
+  $('goal-btn').addEventListener('click', () => { const o = objective(); if (!o.btn) return; o.act && o.act(); sync(); });
 
   // power status: red = out, yellow = has power but draining, green = holding or charging
   const powerIcon = () => S.power < 1 ? 'power_out' : rateCache && rateCache.power <= -0.05 ? 'power_drain' : 'power_ok';
@@ -1475,7 +1498,9 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
     const gl = $('goal-list'); gl.hidden = !o.list; if (o.list) gl.textContent = o.list; $('goal').classList.toggle('done-flash', qFlash > 0);
     $('goal-num').textContent = o.need ? (Q() && Q().id === 'lights' ? `${clockTxt(o.have)} / 3:00` : `${big(Math.min(o.have, o.need))} / ${big(o.need)}`) : '';
     $('goal-bar').hidden = !o.need; if (o.need) $('goal-bar').firstElementChild.style.width = Math.min(100, o.have / o.need * 100) + '%';
-    const gb = $('goal-btn'); gb.hidden = !o.btn; if (o.btn) gb.textContent = o.btn;
+    const gb = $('goal-btn'), gd = goDest(o.btn || o.dest), gk = [!!o.btn, gd.name, gd.ic].join('|');
+    if (gb._k !== gk) { gb._k = gk; gb.classList.toggle('here', !o.btn); gb.disabled = !o.btn; gb.title = o.btn || "You're already here";
+      gb.innerHTML = `<small>${o.btn ? 'Go to:' : "You're in:"}</small><img src="icons/${gd.ic}.webp" alt=""><b>${gd.name}</b>`; }
     // main tabs: locked ones show the tier that opens them
     Object.entries(TABS).forEach(([k, t]) => { const b = $('t-' + k), locked = tabLocked(k); b.disabled = locked; b.classList.toggle('new', !locked && k !== 'mine' && !S.seen[k]);
       const sub = $(`t-${k}-sub`), h = locked ? (TAB_Q[k] ? lockLabel(TAB_Q[k]) : needName(t)) : '&nbsp;'; if (sub._h !== h) { sub._h = h; sub.innerHTML = h; } });
