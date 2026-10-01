@@ -14,8 +14,8 @@
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>html,body{margin:0;padding:0}img{max-width:100%}[hidden]{display:none!important}</style>
-<script src="cloud-config.js?v=0.3.17"></script>
-<script src="cloud.js?v=0.3.17" defer></script>
+<script src="cloud-config.js?v=0.3.18"></script>
+<script src="cloud.js?v=0.3.18" defer></script>
 </head>
 <body>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -624,7 +624,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   try { theme = localStorage.getItem('afk-factory.theme') || 'system'; } catch (e) {}
   const applyTheme = () => { const r = document.documentElement; if (theme === 'system') { if (hostTheme) r.setAttribute('data-theme', hostTheme); else r.removeAttribute('data-theme'); } else r.setAttribute('data-theme', theme); readColors(); };
   applyTheme(); matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => { if (theme === 'system') readColors(); });
-  const VERSION = { stage: 'Alpha', semver: '0.3.17' }; // bump with every release
+  const VERSION = { stage: 'Alpha', semver: '0.3.18' }; // bump with every release
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const $ = id => document.getElementById(id);
 
@@ -837,8 +837,9 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   const newLevelRT = () => ({ sock: null, swing: 0, blocked: 0, stuck: 0, nopow: 0 });
   function makeMineRT(id) { const m = S.mines[id];
     const M = { id, levels: m.levels.map(newLevelRT), surfWait: 0 };
-    M.surf = Belt(() => beltRate(m.surfMk, m.surfLv), it => { const n = it.load || 1; if (n > roomOf(it.item)) return false; S.items[it.item] += n; arrived(it.item, n);
-      if (id === S.view) pop(X.whX + X.whW / 2, SURFY + 44, '+' + big(n), ITEMS[it.item].color); return true; });
+    M.surf = Belt(() => beltRate(m.surfMk, m.surfLv), it => { // a cart unloads as much as fits; whatever is left waits on the cart, so a warehouse can always fill to the top
+      const n = Math.min(it.load || 1, Math.floor(roomOf(it.item))); if (n < 1) return false; S.items[it.item] += n; arrived(it.item, n);
+      if (id === S.view) pop(X.whX + X.whW / 2, SURFY + 44, '+' + big(n), ITEMS[it.item].color); it.load = (it.load || 1) - n; return it.load <= 0; });
     M.shaft = Belt(() => beltRate(m.shaftMk, m.shaftLv), it => { if (!M.surf.canInsert(0)) return false; M.surf.insert(0, { ox: -PITCH, oy: 0, load: it.load, item: it.item }); return true; });
     M.tunnels = m.levels.map((l, i) => makeTunnel(M, i));
     return M; }
