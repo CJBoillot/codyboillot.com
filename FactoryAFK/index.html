@@ -14,8 +14,8 @@
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>html,body{margin:0;padding:0}img{max-width:100%}[hidden]{display:none!important}</style>
-<script src="cloud-config.js?v=0.3.14"></script>
-<script src="cloud.js?v=0.3.14" defer></script>
+<script src="cloud-config.js?v=0.3.15"></script>
+<script src="cloud.js?v=0.3.15" defer></script>
 </head>
 <body>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -622,7 +622,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   try { theme = localStorage.getItem('afk-factory.theme') || 'system'; } catch (e) {}
   const applyTheme = () => { const r = document.documentElement; if (theme === 'system') { if (hostTheme) r.setAttribute('data-theme', hostTheme); else r.removeAttribute('data-theme'); } else r.setAttribute('data-theme', theme); readColors(); };
   applyTheme(); matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => { if (theme === 'system') readColors(); });
-  const VERSION = { stage: 'Alpha', semver: '0.3.14' }; // bump with every release
+  const VERSION = { stage: 'Alpha', semver: '0.3.15' }; // bump with every release
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const $ = id => document.getElementById(id);
 
@@ -1369,7 +1369,9 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   // research takes deliveries a bit at a time. Research whose unlocks aren't built yet ("later") still takes deliveries; it completes when its build ships
   const plural = (k, n) => { const nm = nameOf(k).toLowerCase(); return n === 1 || /ore$|stone$|concrete$|coal$/.test(nm) ? nm : nm + 's'; };
   const delivered = i => Object.entries(TIERS[i].need).every(([k, n]) => (S.handed[k] || 0) >= n);
-  function deliver(i) { const T = TIERS[i]; if (i !== S.tier || delivered(i)) return;
+  // each research opens only when its quest begins, even if the research before it is done
+  const RES_Q = ['landing', 'smelting', 'parts', 'concrete', 'coalpower'], resOpen = i => qOpen(RES_Q[i]);
+  function deliver(i) { const T = TIERS[i]; if (i !== S.tier || delivered(i) || !resOpen(i)) return;
     let gave = 0; Object.entries(T.need).forEach(([k, n]) => { const give = Math.min(Math.floor(bal(k)), n - (S.handed[k] || 0)); if (give > 0) { pay({ [k]: give }); S.handed[k] = (S.handed[k] || 0) + give; gave += give; } });
     if (delivered(i) && !T.later) { S.tier++; S.handed = {}; openAll(); }
     renderHub(); sync(); save(); }
@@ -1381,7 +1383,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   }
   function renderHub() {
     $('stats').innerHTML = renderStats();
-    const nodes = TIERS.map((T, i) => ({ i, T, st: i < S.tier ? 'done' : i === S.tier ? 'now' : 'later' }))
+    const nodes = TIERS.map((T, i) => ({ i, T, st: i < S.tier ? 'done' : i === S.tier && resOpen(i) ? 'now' : 'later' }))
       .concat(EXTRA.map(E => ({ E, st: 'later' })));
     const order = { now: 0, later: 1, done: 2 };
     const card = n => { if (n.E) return `<div class="tier later"><header><h3>${n.E.name}</h3><span class="tag">TIER 2</span></header><div class="recipe"><div class="ico">${icon(n.E.icon)}</div><p>${n.E.text}</p></div></div>`;
@@ -1389,7 +1391,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
       const needs = Object.entries(T.need).map(([k, v]) => { const have = st === 'now' ? (S.handed[k] || 0) : 0;
         return `<div class="need">${icon(k)}<div class="bar"><i style="width:${Math.min(100, have / v * 100)}%"></i></div><span><b>${big(have)}</b> / ${big(v)}</span></div>`; }).join('');
       const full = st === 'now' && delivered(i);
-      const tag = st === 'done' ? '<span class="tag ok">RESEARCHED</span>' : full ? '<span class="tag ok">PAID</span>' : st === 'now' ? '<span class="tag now">OPEN</span>' : `<span class="tag">AFTER ${TIERS[i - 1].name.toUpperCase()}</span>`;
+      const tag = st === 'done' ? '<span class="tag ok">RESEARCHED</span>' : full ? '<span class="tag ok">PAID</span>' : st === 'now' ? '<span class="tag now">OPEN</span>' : i === S.tier ? `<span class="tag">${LOCK_SM} QUEST ${qNum(RES_Q[i])}</span>` : `<span class="tag">AFTER ${TIERS[i - 1].name.toUpperCase()}</span>`;
       const room = st === 'now' && Object.entries(T.need).some(([k, v]) => bal(k) >= 1 && (S.handed[k] || 0) < v);
       const payNow = Object.fromEntries(Object.entries(T.need).map(([k, v]) => [k, Math.min(Math.floor(bal(k)), v - (S.handed[k] || 0))]).filter(e => e[1] > 0));
       const short = st === 'now' && !full ? Object.entries(T.need).filter(([k, v]) => (S.handed[k] || 0) < v).map(([k, v]) => `${big(v - (S.handed[k] || 0))} ${plural(k, v - (S.handed[k] || 0))}`).join(' + ') : '';
@@ -1561,7 +1563,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
     // main tabs: locked ones show the tier that opens them
     Object.entries(TABS).forEach(([k, t]) => { const b = $('t-' + k), locked = tabLocked(k); b.disabled = locked; b.classList.toggle('new', !locked && k !== 'mine' && !S.seen[k]);
       const sub = $(`t-${k}-sub`), h = locked ? (TAB_Q[k] ? lockLabel(TAB_Q[k]) : needName(t)) : '&nbsp;'; if (sub._h !== h) { sub._h = h; sub.innerHTML = h; } });
-    if (TIERS[S.tier] && Object.entries(TIERS[S.tier].need).some(([k, n]) => bal(k) >= Math.min(n - (S.handed[k] || 0), 100) && (S.handed[k] || 0) < n)) { $('t-hub-sub').textContent = 'Research'; $('t-hub-sub')._h = null; }
+    if (TIERS[S.tier] && resOpen(S.tier) && Object.entries(TIERS[S.tier].need).some(([k, n]) => bal(k) >= Math.min(n - (S.handed[k] || 0), 100) && (S.handed[k] || 0) < n)) { $('t-hub-sub').textContent = 'Research'; $('t-hub-sub')._h = null; }
     if (S.tier >= 2 && S.power < 1 && (placedSmelters() || placedCons() || placedDrills('electric')) && !tabLocked('power')) { $('t-power-sub').textContent = 'Empty'; $('t-power-sub')._h = null; }
     $('t-mine').classList.toggle('new', MINES.some(m => S.mines[m.id] && m.id !== 'iron' && !S.seen['mine-' + m.id]));
     $('mtabs').querySelectorAll('button').forEach(b => b.classList.toggle('new', !!S.mines[b.dataset.m] && b.dataset.m !== 'iron' && !S.seen['mine-' + b.dataset.m]));
@@ -1589,7 +1591,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
       $('recipes').querySelectorAll('.cst').forEach(e => e.classList.toggle('short', (S.items[e.dataset.k] || 0) < +e.dataset.n));
     }
     if (tab === 'hub') $('wh-card').hidden = !qOpen('sale');
-    if (tab === 'hub') { const k = JSON.stringify([S.tier, S.handed, Math.floor(S.credits)]); if ($('tiers')._k !== k) { $('tiers')._k = k; renderHub(); } else $('stats').innerHTML = renderStats(); renderWh(); }
+    if (tab === 'hub') { const k = JSON.stringify([S.tier, S.quest, S.handed, Math.floor(S.credits)]); if ($('tiers')._k !== k) { $('tiers')._k = k; renderHub(); } else $('stats').innerHTML = renderStats(); renderWh(); }
     if (tab === 'smelt' && S.lines[S.sview]) { const line = S.lines[S.sview], def = LINE[S.sview];
       $('line-h').textContent = `${def.name.toUpperCase()} SMELTING`;
       $('line-note').textContent = `${ITEMS[def.ore].name} leaves the warehouse on the top belt, each smelter makes 1 ${ITEMS[def.out].name.toLowerCase()}/s and draws ${SMELT_KW} kW/s while it works, and the bottom belt brings them back.`;
