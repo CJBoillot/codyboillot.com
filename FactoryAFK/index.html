@@ -14,8 +14,8 @@
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>html,body{margin:0;padding:0}img{max-width:100%}[hidden]{display:none!important}</style>
-<script src="cloud-config.js?v=0.3.11"></script>
-<script src="cloud.js?v=0.3.11" defer></script>
+<script src="cloud-config.js?v=0.3.12"></script>
+<script src="cloud.js?v=0.3.12" defer></script>
 </head>
 <body>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -613,7 +613,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   try { theme = localStorage.getItem('afk-factory.theme') || 'system'; } catch (e) {}
   const applyTheme = () => { const r = document.documentElement; if (theme === 'system') { if (hostTheme) r.setAttribute('data-theme', hostTheme); else r.removeAttribute('data-theme'); } else r.setAttribute('data-theme', theme); readColors(); };
   applyTheme(); matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => { if (theme === 'system') readColors(); });
-  const VERSION = { stage: 'Alpha', semver: '0.3.11' }; // bump with every release
+  const VERSION = { stage: 'Alpha', semver: '0.3.12' }; // bump with every release
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const $ = id => document.getElementById(id);
 
@@ -683,7 +683,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
     { id: 'wire', name: 'Copper Wire', short: 'Wire', in: 'copper_ingot', nIn: 1, out: 'copper_wire', nOut: 2, T: 1, tier: 3, ctier: 1, rl: '1 ingot → 2 wire' },
     { id: 'concrete', name: 'Concrete', short: 'Concrete', in: 'limestone', nIn: 3, out: 'concrete', nOut: 1, T: 2, tier: 4, ctier: 1, rl: '3 limestone → 1 concrete' },
   ];
-  const CRAFT = Object.fromEntries(CRAFTS.map(c => [c.id, c])), CON_KW = 1, CRAFT_LEVELS = 2;
+  const CRAFT = Object.fromEntries(CRAFTS.map(c => [c.id, c])), CON_KW = 1, CRAFT_LEVELS = 1; // Tier 1: one Constructor per Crafting line; Level 2 opens with Tier 2
   // Coal Power Plant: burns 1 coal/s for 8 kW/s, only as fast as the power is needed
   const PLANT_KW = 8, KW_PER_COAL = 8;
   // power: tap to charge. One quest upgrade takes a tap from +5 to +20 kW; the Coal Power Plant automates it
@@ -703,12 +703,15 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
     { icon: 'battery_t3', name: 'Battery T3', text: 'Stores 20× a T1 battery.' },
   ];
   const BATTERY_W = 100; // each battery stores this much power
+  // the first battery is cheap; each one after it costs a lot more, so power stays a tapping job until the Coal Power Plant
+  const BATTERY_COST = [{ copper_ore: 10, iron_ore: 10 }, { copper_ingot: 50, iron_ingot: 50 }, { iron_plate: 20, copper_wire: 40 }, { iron_plate: 40, copper_wire: 80 }];
+  const batteryCost = () => BATTERY_COST[Math.min((S && S.inv && S.inv.battery) || 0, BATTERY_COST.length - 1)];
   const INTRO = { basic: 'hands', smelter: 'fire', battery: 'battery', constructor: 'build', plant: 'plant', electric: 'electric' }; // the quest that teaches each building
   const RECIPES = [
     { id: 'basic', name: 'Basic Drill', icon: 'basic_drill', cost: { iron_ore: 20 }, T: 1.5, tier: 1, desc: 'Digs one cart every 2 s on any Level of any mine, no power needed.' },
     { id: 'recycler', name: 'Recycler', icon: 'merger', cost: { iron_ore: 30 }, T: 2, tier: 1, max: 1, reward: true, desc: `One per factory. Sells from every warehouse that is ${Math.round(RECYCLE_AT * 100)}% full: 1 item every ${RECYCLE_T} s from each, at a tenth of its price.` },
     { id: 'smelter', name: 'Smelter', icon: 'basic_smelter', cost: { iron_ore: 100 }, T: 3, tier: 2, desc: `Turns 1 ore into 1 ingot every ${SMELT_T} s in any Smelt line. Draws ${SMELT_KW} kW/s while it works.` },
-    { id: 'battery', name: 'Battery T1', icon: 'battery_t1', cost: { copper_ore: 10, iron_ore: 10 }, T: 2, tier: 2, desc: `Stores ${BATTERY_W} kW. Tap in the Power tab to charge it.` },
+    { id: 'battery', name: 'Battery T1', icon: 'battery_t1', get cost() { return batteryCost(); }, T: 2, tier: 2, desc: `Stores ${BATTERY_W} kW. Tap in the Power tab to charge it. Each extra battery costs a lot more.` },
     { id: 'constructor', name: 'Constructor', icon: 'auto_constructor', cost: { iron_ingot: 40, copper_ingot: 20 }, T: 4, tier: 3, desc: `Makes plates, wire or concrete on one Level of a Crafting line. Draws ${CON_KW} kW/s while it works.` },
     { id: 'electric', name: 'Electric Drill', icon: 'electric_drill', cost: { iron_plate: 5, copper_wire: 10 }, T: 3, tier: 5, desc: 'Digs one cart every second. Draws 0.25 kW/s while it digs.' },
     { id: 'plant', name: 'Coal Power Plant', icon: 'coal_generator', cost: { iron_plate: 40, copper_wire: 80, concrete: 40 }, T: 6, tier: 5, max: 1, desc: `Burns 1 coal/s from the coal warehouse for ${PLANT_KW} kW/s, only as fast as power is needed. Enough for the whole Tier 1 factory.` },
@@ -743,6 +746,8 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
     if (!s || !s.mines) firstRun = true;
     if (s && s.mines) { S = Object.assign(fresh(), s); S.items = Object.assign(fresh().items, s.items); S.inv = Object.assign(fresh().inv, s.inv); Object.keys(S.items).forEach(k => { if (!ITEMS[k]) delete S.items[k]; }); S.crafts = S.crafts || {}; S.sold = S.sold || {}; }
   } catch (e) {}
+  // 0.3.12: Crafting lines have one Level in Tier 1. A Constructor already on a lower Level goes back to inventory
+  Object.values(S.crafts).forEach(c => { if (c.slots.length > CRAFT_LEVELS) { S.inv.constructor = (S.inv.constructor || 0) + c.slots.slice(CRAFT_LEVELS).filter(Boolean).length; c.slots = c.slots.slice(0, CRAFT_LEVELS); } });
   Object.values(S.mines).forEach(m => { m.levels.forEach(l => { l.beltLv = Math.min(BELT_MAX_LV, l.beltLv || 1); l.beltMk = l.beltMk || 1; }); m.shaftLv = Math.min(BELT_MAX_LV, m.shaftLv); m.surfLv = Math.min(BELT_MAX_LV, m.surfLv); });
   const needName = t => TIERS[t - 1] ? TIERS[t - 1].name : 'later'; // the research that opens something
   const powerCap = () => (S.inv.battery || 0) * BATTERY_W;
@@ -960,7 +965,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
     if (S.inv.recycler) Object.keys(ITEMS).forEach(k => { const r = RECY[k] = RECY[k] || { acc: 0 };
       if ((S.items[k] || 0) < Math.max(1, capOf(k) * RECYCLE_AT) || walletFull()) { r.acc = 0; r.on = false; return; }
       r.on = true; r.acc += dt / RECYCLE_T; if (r.acc >= 1) { r.acc -= 1; S.items[k] -= 1; earn(ITEMS[k].value / RECYCLE_CUT, true); } });
-    RECIPES.forEach(r => { const c = crafting[r.id]; if (c) { c.p += dt / r.T; if (c.p >= 1) { delete crafting[r.id]; S.inv[r.id] = (S.inv[r.id] || 0) + 1; S.crafted[r.id] = (S.crafted[r.id] || 0) + 1; save(); } } });
+    RECIPES.forEach(r => { const c = crafting[r.id]; if (c) { c.p += dt / r.T; if (c.p >= 1) { delete crafting[r.id]; S.inv[r.id] = (S.inv[r.id] || 0) + 1; S.crafted[r.id] = (S.crafted[r.id] || 0) + 1; if (r.id === 'battery' && tab === 'craft') renderCraft(); save(); } } });
     questTick(dt);
   }
   const powerRate = () => powerUsed.rate();
@@ -1458,7 +1463,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
     { id: 'copperline', t: 'Copper line', text: 'Place a Smelter in the Copper line and upgrade the copper ore warehouse to Lv 2.', up: 'wh-copper_ore', parts: [['Smelter in Copper line', () => slotOn(S.lines, 'copper')], ['Copper warehouse Lv 2 (300 credits)', () => whLvOf('copper_ore') >= 2]],
       go: () => !slotOn(S.lines, 'copper') ? (S.inv.smelter ? viewLine('copper') : showTab('craft')) : viewMine('copper'), btn: () => !slotOn(S.lines, 'copper') ? (S.inv.smelter ? 'Open Copper smelting' : 'Open Buildings') : 'Go to the Copper mine' },
     { id: 'parts', t: 'Parts', text: 'Research Parts in the HUB: deliver 50 iron ingots and 50 copper ingots.', done: () => S.tier >= 3, go: hub, btn: 'Open the HUB', here: () => tab === 'hub' },
-    { id: 'build', t: 'Build', text: 'Build Constructors (40 iron + 20 copper ingots) for the Plates and Wire lines, and 2 more batteries.', parts: [['Plates Constructor', () => slotOn(S.crafts, 'plates')], ['Wire Constructor', () => slotOn(S.crafts, 'wire')], ['3 batteries', () => S.inv.battery >= 3]],
+    { id: 'build', t: 'Build', text: 'Build two Constructors (40 iron + 20 copper ingots each): one for the Plates line, one for the Wire line.', parts: [['Plates Constructor', () => slotOn(S.crafts, 'plates')], ['Wire Constructor', () => slotOn(S.crafts, 'wire')]],
       go: () => S.inv.constructor ? viewCraft(!slotOn(S.crafts, 'plates') ? 'plates' : 'wire') : showTab('craft'), btn: () => S.inv.constructor ? 'Open Crafting' : 'Open Buildings' },
     { id: 'surface', t: 'Faster surface', text: 'Upgrade the Iron surface belt to Lv 2 (250 credits).', up: 'surf-iron', done: () => S.mines.iron.surfLv >= 2, go: () => viewMine('iron'), btn: 'Go to the Iron mine', here: () => tab === 'mine' && S.view === 'iron' },
     { id: 'stock', t: 'Stockpile', text: 'Make 30 iron plates and 60 copper wire, and upgrade the wire warehouse to Lv 2.', up: 'wh-copper_wire', parts: [['30 plates', () => (S.made.iron_plate || 0) >= 30], ['60 wire', () => (S.made.copper_wire || 0) >= 60], ['Wire warehouse Lv 2 (600 credits)', () => whLvOf('copper_wire') >= 2]],
