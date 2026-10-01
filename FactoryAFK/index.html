@@ -14,8 +14,8 @@
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>html,body{margin:0;padding:0}img{max-width:100%}[hidden]{display:none!important}</style>
-<script src="cloud-config.js?v=0.3.16"></script>
-<script src="cloud.js?v=0.3.16" defer></script>
+<script src="cloud-config.js?v=0.3.17"></script>
+<script src="cloud.js?v=0.3.17" defer></script>
 </head>
 <body>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -624,7 +624,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   try { theme = localStorage.getItem('afk-factory.theme') || 'system'; } catch (e) {}
   const applyTheme = () => { const r = document.documentElement; if (theme === 'system') { if (hostTheme) r.setAttribute('data-theme', hostTheme); else r.removeAttribute('data-theme'); } else r.setAttribute('data-theme', theme); readColors(); };
   applyTheme(); matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => { if (theme === 'system') readColors(); });
-  const VERSION = { stage: 'Alpha', semver: '0.3.16' }; // bump with every release
+  const VERSION = { stage: 'Alpha', semver: '0.3.17' }; // bump with every release
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const $ = id => document.getElementById(id);
 
@@ -1453,6 +1453,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   const drillOn = (id, i) => !!(S.mines[id] && S.mines[id].levels[i] && S.mines[id].levels[i].drill);
   const slotOn = (kind, id) => !!(kind[id] && kind[id].slots.some(Boolean));
   const hub = () => showTab('hub');
+  const LIGHTS_T = 60; // Lights on: seconds of steady green power that finish Tier 1
   const QUESTS = [
     { id: 'ore', t: 'First ore', text: 'Tap Iron Level 1 to mine 10 iron ore.', have: () => S.made.iron_ore || 0, need: 10, go: () => viewMine('iron'), btn: 'Go to the Iron mine', here: () => tab === 'mine' && S.view === 'iron' },
     { id: 'landing', t: 'Landing', text: 'Research Landing in the HUB: deliver 10 iron ore.', done: () => S.tier >= 1, go: hub, btn: 'Open the HUB', here: () => tab === 'hub' },
@@ -1490,7 +1491,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
       go: () => S.mines.coal && S.mines.coal.levels.length >= 2 && drillOn('coal', 0) && drillOn('coal', 1) ? showTab('craft') : viewMine('coal'), btn: () => S.mines.coal && S.mines.coal.levels.length >= 2 && drillOn('coal', 0) && drillOn('coal', 1) ? 'Open Buildings' : 'Go to the Coal mine' },
     { id: 'electric', t: 'Go electric', text: 'Dig Level 2 in every mine and put Electric Drills on all 8 Levels.', have: () => placedDrills('electric'), need: 8, done: () => MINES.every(m => S.mines[m.id] && S.mines[m.id].levels.length >= 2) && placedDrills('electric') >= 8,
       go: () => { const m = MINES.find(m => S.mines[m.id] && (S.mines[m.id].levels.length < 2 || S.mines[m.id].levels.some(l => l.drill !== 'electric'))); if (S.inv.electric || (m && S.mines[m.id].levels.length < 2)) viewMine(m ? m.id : 'iron'); else showTab('craft'); }, btn: () => S.inv.electric ? 'Place Electric Drills' : 'Open Buildings' },
-    { id: 'lights', t: 'Lights on', text: 'Run for 3 minutes with power green and no NO POWER alarm. Reward: the Recycler.', have: () => Math.floor(S.lightsT || 0), need: 180, done: () => (S.lightsT || 0) >= 180, go: hub, btn: 'Open the HUB', here: () => tab === 'hub' },
+    { id: 'lights', t: 'Lights on', text: 'Run for 1 minute with power green and no NO POWER alarm. Reward: the Recycler.', have: () => Math.floor(S.lightsT || 0), need: LIGHTS_T, done: () => (S.lightsT || 0) >= LIGHTS_T, go: hub, btn: 'Open the HUB', here: () => tab === 'hub' },
   ];
   const Q = () => QUESTS[S.quest];
   const qOpen = id => !id || S.quest >= QUESTS.findIndex(q => q.id === id);
@@ -1557,7 +1558,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
     const sv = starving(), al = $('pw-alarm'); al.classList.toggle('on', sv.length > 0); al.tabIndex = sv.length ? 0 : -1;
     const o = objective(); $('goal-head').innerHTML = o.title ? `${o.head} <em>· ${o.title}</em>` : o.head; $('goal-text').textContent = o.text;
     const gl = $('goal-list'); gl.hidden = !o.list; if (o.list) gl.textContent = o.list; $('goal').classList.toggle('done-flash', qFlash > 0);
-    $('goal-num').textContent = o.need ? (Q() && Q().id === 'lights' ? `${clockTxt(o.have)} / 3:00` : `${big(Math.min(o.have, o.need))} / ${big(o.need)}`) : '';
+    $('goal-num').textContent = o.need ? (Q() && Q().id === 'lights' ? `${clockTxt(o.have)} / ${clockTxt(LIGHTS_T)}` : `${big(Math.min(o.have, o.need))} / ${big(o.need)}`) : '';
     $('goal-bar').hidden = !o.need; if (o.need) $('goal-bar').firstElementChild.style.width = Math.min(100, o.have / o.need * 100) + '%';
     const gb = $('goal-btn'), gd = goDest(o.btn || o.dest), gk = [!!o.btn, gd.name, gd.ic].join('|');
     if (gb._k !== gk) { gb._k = gk; gb.classList.toggle('here', !o.btn); gb.disabled = !o.btn; gb.title = o.btn || "You're already here";
