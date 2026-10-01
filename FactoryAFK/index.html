@@ -14,8 +14,8 @@
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>html,body{margin:0;padding:0}img{max-width:100%}[hidden]{display:none!important}</style>
-<script src="cloud-config.js?v=0.3.10"></script>
-<script src="cloud.js?v=0.3.10" defer></script>
+<script src="cloud-config.js?v=0.3.11"></script>
+<script src="cloud.js?v=0.3.11" defer></script>
 </head>
 <body>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -415,6 +415,18 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
 .cs-card.pick { border-color: var(--grass); background: var(--ok); }
 .cs-card b { font-family: var(--font-head); font-size: 13px; color: var(--sky); letter-spacing: .06em; }
 .cs-card span { color: var(--dim); }
+.thanks { text-align: center; align-items: center; }
+.thanks > * { width: 100%; }
+.thanks .ty-logo { width: 72px; height: 72px; }
+.thanks h2 { margin: 0; line-height: 1.15; }
+.thanks p { margin: 0; font-size: 13px; color: var(--dim); }
+.thanks .ty-eyebrow { font-family: var(--font-head); font-size: 11px; letter-spacing: .14em; color: var(--gold); }
+.thanks .wb-gains { justify-content: center; }
+.ty-reward { display: flex; gap: 10px; align-items: center; text-align: left; border: 1px solid var(--grass2); background: var(--ok); border-radius: 12px; padding: 8px 10px; }
+.ty-reward img { width: 40px; height: 40px; flex: none; }
+.ty-reward span { display: flex; flex-direction: column; gap: 2px; }
+.ty-reward small { font-size: 12px; color: var(--dim); line-height: 1.3; }
+.thanks .ty-soon { font-family: var(--font-head); font-size: 15px; font-weight: 700; color: var(--sky); letter-spacing: .04em; }
 .wb-gains { display: flex; flex-wrap: wrap; gap: 6px; }
 .wb-gains span { display: inline-flex; align-items: center; gap: 4px; font-weight: 800; font-size: 13px; background: var(--panel2); border: 1px solid var(--line); border-radius: 99px; padding: 2px 10px 2px 3px; font-variant-numeric: tabular-nums; }
 .wb-gains img { width: 22px; height: 22px; }
@@ -560,6 +572,19 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
     <button class="ghost" id="hc-guest">Play as guest</button>
   </div>
 </div>
+<div class="sheet" id="thanks" hidden>
+  <div class="card thanks" role="dialog" aria-modal="true" aria-labelledby="ty-h">
+    <img class="ty-logo" src="icons/logo.webp" alt="">
+    <p class="ty-eyebrow">TIER 1 COMPLETE</p>
+    <h2 id="ty-h">THANK YOU FOR PLAYING THE DEMO</h2>
+    <p>Your coal plant is running and the lights are on. That is everything this demo holds.</p>
+    <div class="wb-gains" id="ty-stats"></div>
+    <div class="ty-reward"><img src="icons/merger.webp" alt=""><span><b>Reward: the Recycler</b><small>Sells a trickle from full warehouses, so the factory earns credits on its own, even while you're away.</small></span></div>
+    <p class="ty-soon">More tiers coming soon.</p>
+    <button class="deliver" id="ty-keep">Keep playing</button>
+    <button class="ghost" id="ty-restart">Restart the game</button>
+  </div>
+</div>
 <div class="sheet" id="welcome" hidden>
   <div class="card" role="dialog" aria-modal="true" aria-labelledby="wb-h">
     <h2 id="wb-h">WELCOME BACK</h2>
@@ -588,7 +613,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   try { theme = localStorage.getItem('afk-factory.theme') || 'system'; } catch (e) {}
   const applyTheme = () => { const r = document.documentElement; if (theme === 'system') { if (hostTheme) r.setAttribute('data-theme', hostTheme); else r.removeAttribute('data-theme'); } else r.setAttribute('data-theme', theme); readColors(); };
   applyTheme(); matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => { if (theme === 'system') readColors(); });
-  const VERSION = { stage: 'Alpha', semver: '0.3.10' }; // bump with every release
+  const VERSION = { stage: 'Alpha', semver: '0.3.11' }; // bump with every release
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const $ = id => document.getElementById(id);
 
@@ -1464,7 +1489,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   function questTick(dt) {
     if (Q() && Q().id === 'lights') { const ok = S.power >= 1 && rateCache && rateCache.power > -0.05 && !starving().length; S.lightsT = ok ? (S.lightsT || 0) + dt : 0; }
     let moved = false; while (Q() && qDone(Q())) { S.quest++; moved = true; }
-    if (moved && !Q() && !S.t1done) { S.t1done = true; S.inv.recycler = Math.max(1, S.inv.recycler || 0); } // Tier 1's reward
+    if (moved && !Q() && !S.t1done) { S.t1done = true; S.inv.recycler = Math.max(1, S.inv.recycler || 0); showThanks(); } // Tier 1's reward
     if (moved) { qFlash = 1.5; save(); refreshUnlocks(); }
     if (qFlash > 0) qFlash -= dt;
   }
@@ -1656,7 +1681,18 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   // ---- reset (two taps) ----
   let armed = 0; $('reset').addEventListener('click', e => { const b = e.currentTarget;
     if (!armed) { armed = setTimeout(() => { armed = 0; b.textContent = 'Start over'; b.classList.remove('warn'); }, 3000); b.textContent = 'Tap again to erase'; b.classList.add('warn'); return; }
-    clearTimeout(armed); armed = 0; b.textContent = 'Start over'; b.classList.remove('warn'); S = fresh(); Object.keys(crafting).forEach(k => delete crafting[k]); RT = makeRT(); pops = []; fpops = []; flayout(); clayout(); showTab('mine'); save(); });
+    clearTimeout(armed); armed = 0; b.textContent = 'Start over'; b.classList.remove('warn'); resetGame(); });
+  function resetGame() { S = fresh(); Object.keys(crafting).forEach(k => delete crafting[k]); RT = makeRT(); pops = []; fpops = []; flayout(); clayout(); showTab('mine'); save(); }
+
+  // ---- end of the demo: thank-you card, shown once when Tier 1 is finished ----
+  function showThanks() { if (S.thanked) return;
+    const st = [['credits', `${big(S.credits)} credits`], ['coal_generator', 'Coal plant built'], ['logo', `${clockTxt(S.played || 0)} played`]];
+    $('ty-stats').innerHTML = st.map(([ic, t]) => `<span><img src="icons/${ICON(ic)}.webp" alt="">${t}</span>`).join('');
+    $('ty-restart').textContent = 'Restart the game'; $('ty-restart').classList.remove('warn'); $('thanks').hidden = false; }
+  $('ty-keep').addEventListener('click', () => { S.thanked = true; save(); $('thanks').hidden = true; showTab('hub'); sync(); });
+  let tyArmed = 0; $('ty-restart').addEventListener('click', e => { const b = e.currentTarget;
+    if (!tyArmed) { tyArmed = setTimeout(() => { tyArmed = 0; b.textContent = 'Restart the game'; b.classList.remove('warn'); }, 3000); b.textContent = 'Tap again to erase this factory'; b.classList.add('warn'); return; }
+    clearTimeout(tyArmed); tyArmed = 0; $('thanks').hidden = true; resetGame(); sync(); });
 
   // ---- run ----
   Object.values(S.mines).forEach(m => { if (m.dig && Date.now() >= m.dig.end) { m.dig = null; m.levels.push(freshLevel()); } }); // digs that finished while you were away
@@ -1664,6 +1700,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   if (!mineShown(S.view)) S.view = 'iron'; if (!lineShown(S.sview)) S.sview = 'iron';
   if (!S.crafts[S.cview]) S.cview = Object.keys(S.crafts)[0] || 'plates';
   flayout(); clayout(); showTab('mine');
+  if (S.t1done && !S.thanked) setTimeout(showThanks, 400); // finished Tier 1 before the thank-you card existed
   wholeItems(); // 0.3.0 offline progress could leave 99.6 in a warehouse of 100
   // the Recycler is Tier 1's reward: one built before 0.3.1 goes back (its 30 iron ore refunded) until Tier 1 is done
   if (S.inv.recycler && !S.t1done && S.quest < QUESTS.length) { S.inv.recycler = 0; S.items.iron_ore = Math.min(capOf('iron_ore'), (S.items.iron_ore || 0) + 30); save(); }
