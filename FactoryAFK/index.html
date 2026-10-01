@@ -14,8 +14,8 @@
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>html,body{margin:0;padding:0}img{max-width:100%}[hidden]{display:none!important}</style>
-<script src="cloud-config.js?v=0.3.2"></script>
-<script src="cloud.js?v=0.3.2" defer></script>
+<script src="cloud-config.js?v=0.3.3"></script>
+<script src="cloud.js?v=0.3.3" defer></script>
 </head>
 <body>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -291,6 +291,8 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
 .pw-top b.empty { color: var(--alarm); }
 .pw-top span { font-size: 12px; color: var(--dim); }
 .pw-top .pw-use { text-align: right; } .pw-top .pw-use b { font-size: 18px; color: var(--text); }
+/* until the Coal Power Plant is built, Tap for Power sticks just above the tab bar */
+.bigtap.stick { position: sticky; bottom: calc(var(--tabs-h, 72px) + 8px); z-index: 4; box-shadow: 0 6px 0 #8a6516, 0 0 24px #ffd06444, 0 -10px 24px var(--bg); }
 .bigtap { position: relative; font: inherit; border: 0; border-radius: 16px; padding: 22px 12px; cursor: pointer; color: #1a1406; background: radial-gradient(circle at 50% 30%, #ffe08a, var(--gold) 55%, #c9962a); box-shadow: 0 6px 0 #8a6516, 0 0 24px #ffd06444; display: flex; flex-direction: column; align-items: center; gap: 2px; -webkit-tap-highlight-color: transparent; }
 .bigtap span { font-family: var(--font-head); font-weight: 700; font-size: 20px; letter-spacing: .06em; display: inline-flex; align-items: center; gap: 6px; }
 .tapbolt { width: 30px; height: 30px; filter: drop-shadow(0 1px 1px #0006); }
@@ -454,7 +456,6 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
     <div class="card power">
       <div class="fhead"><h2>POWER GRID</h2><span class="tag" id="pw-net">+0.0 kW/s</span></div>
       <div class="pgrid" id="pgrid"><canvas id="pcv" aria-label="Power grid: tapping sends power into the battery bank, and the bank sends them out to each smelter line"></canvas></div>
-      <button class="bigtap" id="pw-tap"><span><img class="tapbolt" src="icons/bolt_yellow.webp" alt="">TAP FOR POWER</span><small id="pw-per">+1 per tap</small></button>
       <div class="pw-up" id="pw-up-host"></div>
       <p class="fnote">Each glowing dot is 1 kW. Taps and the Coal Power Plant charge the battery bank (100 kW per Battery T1). Smelters and Constructors draw 1 kW/s while they work, Electric Drills 0.25. When the bank runs dry, machines wait with "NO POWER".</p>
     </div>
@@ -463,6 +464,8 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
       <p class="fnote">Unplug any building to save power for the ones that matter.</p>
       <div id="phub-rows"></div>
     </div>
+    <!-- last in the Power tab so it can stick above the tab bar until the Coal Power Plant takes over -->
+    <button class="bigtap" id="pw-tap"><span><img class="tapbolt" src="icons/bolt_yellow.webp" alt="">TAP FOR POWER</span><small id="pw-per">+1 per tap</small></button>
   </section>
 
   <section class="panel" id="tab-build" role="tabpanel" aria-labelledby="t-build" hidden>
@@ -560,7 +563,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   try { theme = localStorage.getItem('afk-factory.theme') || 'system'; } catch (e) {}
   const applyTheme = () => { const r = document.documentElement; if (theme === 'system') { if (hostTheme) r.setAttribute('data-theme', hostTheme); else r.removeAttribute('data-theme'); } else r.setAttribute('data-theme', theme); readColors(); };
   applyTheme(); matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => { if (theme === 'system') readColors(); });
-  const VERSION = { stage: 'Alpha', semver: '0.3.2' }; // bump with every release
+  const VERSION = { stage: 'Alpha', semver: '0.3.3' }; // bump with every release
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const $ = id => document.getElementById(id);
 
@@ -1499,7 +1502,8 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
       const r = $('craft-run'); r.setAttribute('aria-pressed', String(c.on)); r.querySelector('img').setAttribute('src', `icons/${c.on ? 'plug_in' : 'plug_out'}.webp`); r.querySelector('span').textContent = c.on ? 'Running' : 'Unplugged';
       for (let i = 0; i < CRAFT_LEVELS; i++) { const b = $('con-' + i); if (!b) continue; b.hidden = c.slots[i]; b.disabled = S.inv.constructor < 1; b.classList.toggle('ready', S.inv.constructor > 0); b.textContent = S.inv.constructor > 0 ? 'Place constructor' : 'Empty · build a Constructor'; } }
     if (tab === 'power') { const cap = powerCap(), net = rateCache ? rateCache.power : 0;
-      $('pw-per').textContent = cap ? `+${tapKw()} kW per tap` : 'Build a Battery first'; $('pw-tap').disabled = !cap;
+      $('pw-per').textContent = cap ? `+${tapKw()} kW per tap` : 'Build a Battery first'; $('pw-tap').disabled = !cap; $('pw-tap').classList.toggle('stick', !S.inv.plant);
+      const th = document.querySelector('.tabs').offsetHeight; if (th && th !== sync._th) { sync._th = th; document.documentElement.style.setProperty('--tabs-h', th + 'px'); }
       const nt = $('pw-net'); nt.textContent = `${net >= 0.05 ? '+' : net <= -0.05 ? '−' : ''}${Math.abs(net) < 0.05 ? '0.0' : Math.abs(net).toFixed(1)} kW/s`; nt.classList.toggle('up', net >= 0.05); nt.classList.toggle('down', net <= -0.05);
       syncPowerHub(); }
   }
