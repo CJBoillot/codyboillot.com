@@ -14,8 +14,8 @@
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>html,body{margin:0;padding:0}img{max-width:100%}[hidden]{display:none!important}</style>
-<script src="cloud-config.js?v=0.3.0"></script>
-<script src="cloud.js?v=0.3.0" defer></script>
+<script src="cloud-config.js?v=0.3.1"></script>
+<script src="cloud.js?v=0.3.1" defer></script>
 </head>
 <body>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -387,6 +387,13 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
 .wb-gains { display: flex; flex-wrap: wrap; gap: 6px; }
 .wb-gains span { display: inline-flex; align-items: center; gap: 4px; font-weight: 800; font-size: 13px; background: var(--panel2); border: 1px solid var(--line); border-radius: 99px; padding: 2px 10px 2px 3px; font-variant-numeric: tabular-nums; }
 .wb-gains img { width: 22px; height: 22px; }
+/* ---- first-run welcome screen ---- */
+.first { position: fixed; inset: 0; z-index: 20; background: radial-gradient(120% 80% at 50% 0%, var(--sky-bot), var(--bg) 70%); display: flex; align-items: center; justify-content: center; padding: 24px 16px; overflow-y: auto; }
+.first-box { width: min(400px, 100%); display: flex; flex-direction: column; align-items: stretch; gap: 12px; text-align: center; }
+.first-box img { width: min(280px, 80%); align-self: center; filter: drop-shadow(0 8px 20px #0006); }
+.first-tag { margin: 0; font-family: var(--font-head); font-weight: 700; font-size: 18px; color: var(--text); }
+.first-box .fnote { margin: 0; }
+.first-box .deliver { padding: 12px; font-size: 15px; }
 /* ---- quest strip ---- */
 .goal.done-flash { border-color: var(--gold); box-shadow: 0 0 0 2px #ffd06455; }
 .goal .row b.next em { font-style: normal; color: var(--dim); font-weight: 600; letter-spacing: .04em; }
@@ -503,6 +510,16 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
     <div class="cbtns"><button class="ghost" id="cs-use-local">Keep this device</button><button class="deliver" id="cs-use-cloud">Use cloud</button></div>
   </div>
 </div>
+<div class="first" id="first" hidden>
+  <div class="first-box">
+    <img src="icons/logo.webp" alt="Factory A.F.K.: Automated Fabrication Komplex">
+    <p class="first-tag">Mine it. Smelt it. Wire it up. Then let it run.</p>
+    <p class="fnote">Build a factory from a single tap to a coal-powered line that runs while you are away.</p>
+    <button class="gsi-btn" id="first-signin" hidden><svg viewBox="0 0 48 48" width="18" height="18" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C41.4 35.2 44 30 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg><span>Sign in with Google</span></button>
+    <button class="deliver" id="first-guest">Continue as guest</button>
+    <p class="fnote" id="first-note">Signing in backs up your factory so you can play on any device. As a guest, it is saved on this device only.</p>
+  </div>
+</div>
 <div class="sheet" id="hello-cloud" hidden>
   <div class="card" role="dialog" aria-modal="true" aria-labelledby="hc-h">
     <h2 id="hc-h">SAVE YOUR FACTORY</h2>
@@ -539,7 +556,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   try { theme = localStorage.getItem('afk-factory.theme') || 'system'; } catch (e) {}
   const applyTheme = () => { const r = document.documentElement; if (theme === 'system') { if (hostTheme) r.setAttribute('data-theme', hostTheme); else r.removeAttribute('data-theme'); } else r.setAttribute('data-theme', theme); readColors(); };
   applyTheme(); matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => { if (theme === 'system') readColors(); });
-  const VERSION = { stage: 'Alpha', semver: '0.3.0' }; // bump with every release
+  const VERSION = { stage: 'Alpha', semver: '0.3.1' }; // bump with every release
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const $ = id => document.getElementById(id);
 
@@ -615,7 +632,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   // power: tap to charge. One quest upgrade takes a tap from +5 to +20 kW; the Coal Power Plant automates it
   const TAP_KW = [0, 5, 20], TAP_MAX = TAP_KW.length - 1, tapKw = () => TAP_KW[Math.min(S.tapLv || 1, TAP_MAX)], tapCost = () => ({ [CR]: 200 });
   const TIERS = [
-    { name: 'Landing', need: { iron_ore: 10 }, unlocks: [['basic_drill', 'Buildings tab'], ['basic_drill', 'Basic Drill'], ['merger', 'Recycler']] },
+    { name: 'Landing', need: { iron_ore: 10 }, unlocks: [['basic_drill', 'Buildings tab'], ['basic_drill', 'Basic Drill']] },
     { name: 'Smelting', need: { iron_ore: 100 }, unlocks: [['basic_smelter', 'Smelter'], ['battery_t1', 'Battery & Power tab'], ['copper_ore', 'Copper mine'], ['iron_ore', 'Digging to Level 2']] },
     { name: 'Parts', need: { iron_ingot: 50, copper_ingot: 50 }, unlocks: [['auto_constructor', 'Constructor & Crafting tab'], ['iron_plate', 'Iron plates'], ['copper_wire', 'Copper wire']] },
     { name: 'Concrete', need: { iron_plate: 30, copper_wire: 60, [CR]: 800 }, unlocks: [['sand', 'Limestone mine'], ['sand', 'Concrete']] },
@@ -629,9 +646,10 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
     { icon: 'battery_t3', name: 'Battery T3', text: 'Stores 20× a T1 battery.' },
   ];
   const BATTERY_W = 100; // each battery stores this much power
+  const INTRO = { basic: 'hands', smelter: 'fire', battery: 'spark', constructor: 'build', plant: 'plant', electric: 'electric' }; // the quest that teaches each building
   const RECIPES = [
     { id: 'basic', name: 'Basic Drill', icon: 'basic_drill', cost: { iron_ore: 20 }, T: 1.5, tier: 1, desc: 'Digs one cart every 2 s on any Level of any mine, no power needed.' },
-    { id: 'recycler', name: 'Recycler', icon: 'merger', cost: { iron_ore: 30 }, T: 2, tier: 1, max: 1, desc: `One per factory. Sells from every warehouse that is ${Math.round(RECYCLE_AT * 100)}% full: 1 item every ${RECYCLE_T} s from each, at a tenth of its price.` },
+    { id: 'recycler', name: 'Recycler', icon: 'merger', cost: { iron_ore: 30 }, T: 2, tier: 1, max: 1, reward: true, desc: `One per factory. Sells from every warehouse that is ${Math.round(RECYCLE_AT * 100)}% full: 1 item every ${RECYCLE_T} s from each, at a tenth of its price.` },
     { id: 'smelter', name: 'Smelter', icon: 'basic_smelter', cost: { iron_ore: 100 }, T: 3, tier: 2, desc: `Turns 1 ore into 1 ingot every ${SMELT_T} s in any Smelt line. Draws ${SMELT_KW} kW/s while it works.` },
     { id: 'battery', name: 'Battery T1', icon: 'battery_t1', cost: { copper_ore: 10, iron_ore: 10 }, T: 2, tier: 2, desc: `Stores ${BATTERY_W} kW. Tap in the Power tab to charge it.` },
     { id: 'constructor', name: 'Constructor', icon: 'auto_constructor', cost: { iron_ingot: 40, copper_ingot: 20 }, T: 4, tier: 3, desc: `Makes plates, wire or concrete on one Level of a Crafting line. Draws ${CON_KW} kW/s while it works.` },
@@ -647,7 +665,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   const freshCraft = () => ({ slots: Array(CRAFT_LEVELS).fill(false), on: true });
   const fresh = () => ({ items: Object.fromEntries(Object.keys(ITEMS).map(k => [k, 0])), inv: { basic: 0, electric: 0, smelter: 0, battery: 0, recycler: 0, constructor: 0, plant: 0 }, credits: 0, walletLv: 1, crafted: {}, tier: 0, handed: {}, hideDone: false,
     mines: { iron: freshMine() }, view: 'iron', lines: {}, sview: 'iron', crafts: {}, cview: 'plates', wh: {}, power: 0, tapLv: 1, made: {}, sold: {}, seen: {}, quest: 0, lightsT: 0, drillsOn: true, played: 0, guest: false });
-  let S = fresh(), migrated = false;
+  let S = fresh(), migrated = false, firstRun = false;
   try {
     let s = JSON.parse(localStorage.getItem(KEY) || 'null');
     if (!s) { // 0.2.3 and older (v6): research took credits, one recycler per warehouse, a Limestone smelter line
@@ -665,6 +683,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
         if (s.mines.sand) { s.mines.limestone = s.mines.sand; delete s.mines.sand; } if (s.view === 'sand') s.view = 'limestone';
         s.lines = { iron: s.fac || freshLine() }; delete s.fac; }
     }
+    if (!s || !s.mines) firstRun = true;
     if (s && s.mines) { S = Object.assign(fresh(), s); S.items = Object.assign(fresh().items, s.items); S.inv = Object.assign(fresh().inv, s.inv); Object.keys(S.items).forEach(k => { if (!ITEMS[k]) delete S.items[k]; }); S.crafts = S.crafts || {}; S.sold = S.sold || {}; }
   } catch (e) {}
   Object.values(S.mines).forEach(m => { m.levels.forEach(l => { l.beltLv = Math.min(BELT_MAX_LV, l.beltLv || 1); l.beltMk = l.beltMk || 1; }); m.shaftLv = Math.min(BELT_MAX_LV, m.shaftLv); m.surfLv = Math.min(BELT_MAX_LV, m.surfLv); });
@@ -937,7 +956,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
       beltItems(tb);
       if (r.stuck > 0.6) note('SHAFT FULL', X.ex + PITCH + 8, y + 26, C.alarm);
       else if (tb.full() && (r.blocked > 0 || (lv.drill && r.sock && r.sock.p >= 1))) note('BELT FULL', X.ex + PITCH + 8, y + 26, C.alarm);
-      else if (!lv.drill) note('TAP TO MINE', X.ex + PITCH + 8, y + 26, C.grass, true);
+      if (!lv.drill) note('TAP TO MINE', W - PAD - 2, y + 42, C.grass, true, 'right'); // under the ore, until a drill takes over
     });
     beltItems(M.shaft); beltItems(M.surf);
     drawPops(pops);
@@ -1318,14 +1337,17 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   const placedDrills = t => Object.values(S.mines).reduce((a, m) => a + m.levels.filter(l => l.drill === t).length, 0);
   const placedSmelters = () => Object.values(S.lines).reduce((a, l) => a + l.slots.filter(Boolean).length, 0);
   const placedCons = () => Object.values(S.crafts).reduce((a, c) => a + c.slots.filter(Boolean).length, 0);
+  const questAt = id => QUESTS.findIndex(q => q.id === id);
+  const taught = r => !r.reward && S.tier >= r.tier && (ownedCount(r.id) > 0 || !INTRO[r.id] || S.quest >= questAt(INTRO[r.id]));
   const ownedCount = id => (S.inv[id] || 0) + (id === 'basic' || id === 'electric' ? placedDrills(id) : id === 'smelter' ? placedSmelters() : id === 'constructor' ? placedCons() : 0);
   function renderCraft() {
-    $('recipes').innerHTML = RECIPES.filter(r => S.tier >= r.tier).map(r => `<div class="rc"><div class="ico">${icon(r.icon, '', r.name)}</div>
+    $('recipes').innerHTML = RECIPES.filter(taught).map(r => `<div class="rc"><div class="ico">${icon(r.icon, '', r.name)}</div>
       <div class="rc-body"><h3>${r.name}<small id="own-${r.id}"></small></h3>
         <div class="rc-cost">${Object.entries(r.cost).map(([k, n]) => `<span class="cst" data-k="${k}" data-n="${n}">${icon(k, '', ITEMS[k].name)}${big(n)}</span>`).join('')}<span class="rc-t">${r.T} s</span></div>
         <p>${r.desc}</p></div>
       <button class="craft" id="craft-${r.id}"><i></i><span>Craft</span></button></div>`).join('')
-      + (S.tier < 5 ? `<p class="fnote">More buildings unlock with research in the HUB.</p>` : '');
+      + (RECIPES.some(r => !r.reward && !taught(r)) ? `<p class="fnote">More buildings appear as quests teach you what they do.</p>` : '')
+      + (S.inv.recycler ? '' : `<p class="fnote">The Recycler is the reward for finishing Tier 1.</p>`);
     RECIPES.forEach(r => { const b = $('craft-' + r.id); if (b) b.addEventListener('click', () => { if (crafting[r.id] || !canPay(r.cost) || (r.max && (S.inv[r.id] || 0) >= r.max)) return; pay(r.cost); crafting[r.id] = { p: 0 }; sync(); save(); }); });
   }
 
@@ -1334,22 +1356,23 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   const slotOn = (kind, id) => !!(kind[id] && kind[id].slots.some(Boolean));
   const hub = () => showTab('hub');
   const QUESTS = [
-    { t: 'First ore', text: 'Tap Iron Level 1 to mine 10 iron ore.', have: () => S.made.iron_ore || 0, need: 10, go: () => viewMine('iron'), btn: 'Go to the Iron mine', here: () => tab === 'mine' && S.view === 'iron' },
+    { id: 'ore', t: 'First ore', text: 'Tap Iron Level 1 to mine 10 iron ore.', have: () => S.made.iron_ore || 0, need: 10, go: () => viewMine('iron'), btn: 'Go to the Iron mine', here: () => tab === 'mine' && S.view === 'iron' },
     { t: 'Landing', text: 'Research Landing in the HUB: deliver 10 iron ore.', done: () => S.tier >= 1, go: hub, btn: 'Open the HUB', here: () => tab === 'hub' },
-    { t: 'Hands off', text: 'Build a Basic Drill (20 iron ore) and put it on Iron Level 1.', done: () => drillOn('iron', 0), go: () => S.inv.basic ? (viewMine('iron'), openSheet(0)) : showTab('craft'), btn: () => S.inv.basic ? 'Choose a drill' : 'Open Buildings', here: () => !S.inv.basic && tab === 'craft' },
+    { id: 'hands', t: 'Hands off', text: 'Build a Basic Drill (20 iron ore) and put it on Iron Level 1.', done: () => drillOn('iron', 0), go: () => S.inv.basic ? (viewMine('iron'), openSheet(0)) : showTab('craft'), btn: () => S.inv.basic ? 'Choose a drill' : 'Open Buildings', here: () => !S.inv.basic && tab === 'craft' },
     { t: 'First sale', text: 'Sell 20 iron ore in the HUB. Credits go into your wallet.', have: () => S.sold.iron_ore || 0, need: 20, go: hub, btn: 'Open the HUB', here: () => tab === 'hub' },
-    { t: 'Room to grow', text: 'Upgrade the iron ore warehouse to Lv 2 and build the Recycler.', up: 'wh-iron_ore', parts: [['Warehouse Lv 2 (300 credits)', () => whLvOf('iron_ore') >= 2], ['Recycler (30 iron ore)', () => S.inv.recycler >= 1]],
-      go: () => whLvOf('iron_ore') < 2 ? viewMine('iron') : showTab('craft'), btn: () => whLvOf('iron_ore') < 2 ? 'Go to the Iron mine' : 'Open Buildings' },
+    { t: 'Room to grow', text: 'Upgrade the iron ore warehouse to Lv 2 (300 credits) so it holds more.', up: 'wh-iron_ore', done: () => whLvOf('iron_ore') >= 2, go: () => viewMine('iron'), btn: 'Go to the Iron mine', here: () => tab === 'mine' && S.view === 'iron' },
     { t: 'Smelting', text: 'Research Smelting in the HUB: deliver 100 iron ore.', done: () => S.tier >= 2, go: hub, btn: 'Open the HUB', here: () => tab === 'hub' },
-    { t: 'First fire', text: 'Build a Smelter (100 iron ore) and place it in the Iron line.', done: () => slotOn(S.lines, 'iron'), go: () => S.inv.smelter ? viewLine('iron') : showTab('craft'), btn: () => S.inv.smelter ? 'Open Iron smelting' : 'Open Buildings' },
-    { t: 'Spark', text: 'Smelters need power. Mine 10 copper ore, build a Battery T1, and charge it with a tap.', parts: [['Battery T1', () => S.inv.battery >= 1], ['Charged', () => S.power >= 1 || !!S.made.iron_ingot]],
+    { id: 'fire', t: 'First fire', text: 'Build a Smelter (100 iron ore) and place it in the Iron line.', done: () => slotOn(S.lines, 'iron'), go: () => S.inv.smelter ? viewLine('iron') : showTab('craft'), btn: () => S.inv.smelter ? 'Open Iron smelting' : 'Open Buildings' },
+    { id: 'account', t: 'Save your factory', text: 'You are playing as a guest, so this factory lives only on this device. Sign in with Google to back it up and play anywhere, or keep playing as a guest.',
+      done: () => !window.FIREBASE_CONFIG || !!S.cloudUser || !!S.guestOK || !S.guest, go: () => { $('hello-cloud').hidden = false; }, btn: 'Choose' },
+    { id: 'spark', t: 'Spark', text: 'Smelters need power. Mine 10 copper ore, build a Battery T1, and charge it with a tap.', parts: [['Battery T1', () => S.inv.battery >= 1], ['Charged', () => S.power >= 1 || !!S.made.iron_ingot]],
       go: () => !S.inv.battery ? ((S.items.copper_ore || 0) >= 10 ? showTab('craft') : viewMine('copper')) : showTab('power'), btn: () => !S.inv.battery ? ((S.items.copper_ore || 0) >= 10 ? 'Open Buildings' : 'Go to the Copper mine') : 'Open Power' },
     { t: 'Stronger taps', text: 'Upgrade Tap power from +5 to +20 kW (200 credits).', up: 'tap', done: () => S.tapLv >= 2, go: () => showTab('power'), btn: 'Open Power', here: () => tab === 'power' },
     { t: 'Deeper', text: 'Dig Iron Level 2 (400 credits) and put a drill on it. Level 2 carts hold 2 ore.', parts: [['Level 2 dug', () => S.mines.iron.levels.length >= 2], ['Drill on Level 2', () => drillOn('iron', 1)]], go: () => viewMine('iron'), btn: 'Go to the Iron mine', here: () => tab === 'mine' && S.view === 'iron' },
     { t: 'Copper line', text: 'Place a Smelter in the Copper line and upgrade the copper ore warehouse to Lv 2.', up: 'wh-copper_ore', parts: [['Smelter in Copper line', () => slotOn(S.lines, 'copper')], ['Copper warehouse Lv 2 (300 credits)', () => whLvOf('copper_ore') >= 2]],
       go: () => !slotOn(S.lines, 'copper') ? (S.inv.smelter ? viewLine('copper') : showTab('craft')) : viewMine('copper'), btn: () => !slotOn(S.lines, 'copper') ? (S.inv.smelter ? 'Open Copper smelting' : 'Open Buildings') : 'Go to the Copper mine' },
     { t: 'Parts', text: 'Research Parts in the HUB: deliver 50 iron ingots and 50 copper ingots.', done: () => S.tier >= 3, go: hub, btn: 'Open the HUB', here: () => tab === 'hub' },
-    { t: 'Build', text: 'Build Constructors (40 iron + 20 copper ingots) for the Plates and Wire lines, and 2 more batteries.', parts: [['Plates Constructor', () => slotOn(S.crafts, 'plates')], ['Wire Constructor', () => slotOn(S.crafts, 'wire')], ['3 batteries', () => S.inv.battery >= 3]],
+    { id: 'build', t: 'Build', text: 'Build Constructors (40 iron + 20 copper ingots) for the Plates and Wire lines, and 2 more batteries.', parts: [['Plates Constructor', () => slotOn(S.crafts, 'plates')], ['Wire Constructor', () => slotOn(S.crafts, 'wire')], ['3 batteries', () => S.inv.battery >= 3]],
       go: () => S.inv.constructor ? viewCraft(!slotOn(S.crafts, 'plates') ? 'plates' : 'wire') : showTab('craft'), btn: () => S.inv.constructor ? 'Open Crafting' : 'Open Buildings' },
     { t: 'Faster surface', text: 'Upgrade the Iron surface belt to Lv 2 (250 credits).', up: 'surf-iron', done: () => S.mines.iron.surfLv >= 2, go: () => viewMine('iron'), btn: 'Go to the Iron mine', here: () => tab === 'mine' && S.view === 'iron' },
     { t: 'Stockpile', text: 'Make 30 iron plates and 60 copper wire, and upgrade the wire warehouse to Lv 2.', up: 'wh-copper_wire', parts: [['30 plates', () => (S.made.iron_plate || 0) >= 30], ['60 wire', () => (S.made.copper_wire || 0) >= 60], ['Wire warehouse Lv 2 (600 credits)', () => whLvOf('copper_wire') >= 2]],
@@ -1359,24 +1382,25 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
       go: () => !drillOn('limestone', 0) ? viewMine('limestone') : viewCraft('concrete'), btn: () => !drillOn('limestone', 0) ? 'Go to the Limestone mine' : 'Open Concrete' },
     { t: 'Bank account', text: 'Upgrade your wallet to hold 10,000 credits (800 credits).', up: 'wallet', done: () => (S.walletLv || 1) >= 2, go: hub, btn: 'Open the HUB', here: () => tab === 'hub' },
     { t: 'Coal Power', text: 'Research Coal Power in the HUB: plates, wire, concrete and 3,000 credits.', done: () => S.tier >= 5, go: hub, btn: 'Open the HUB', here: () => tab === 'hub' },
-    { t: 'Power plant', text: 'Dig Coal Level 2, put drills on both Coal Levels, and build the Coal Power Plant.', parts: [['Coal Level 2 (400 credits)', () => S.mines.coal && S.mines.coal.levels.length >= 2], ['Drills on both', () => drillOn('coal', 0) && drillOn('coal', 1)], ['Power Plant', () => S.inv.plant >= 1]],
+    { id: 'plant', t: 'Power plant', text: 'Dig Coal Level 2, put drills on both Coal Levels, and build the Coal Power Plant.', parts: [['Coal Level 2 (400 credits)', () => S.mines.coal && S.mines.coal.levels.length >= 2], ['Drills on both', () => drillOn('coal', 0) && drillOn('coal', 1)], ['Power Plant', () => S.inv.plant >= 1]],
       go: () => S.mines.coal && S.mines.coal.levels.length >= 2 && drillOn('coal', 0) && drillOn('coal', 1) ? showTab('craft') : viewMine('coal'), btn: () => S.mines.coal && S.mines.coal.levels.length >= 2 && drillOn('coal', 0) && drillOn('coal', 1) ? 'Open Buildings' : 'Go to the Coal mine' },
-    { t: 'Go electric', text: 'Dig Level 2 in every mine and put Electric Drills on all 8 Levels.', have: () => placedDrills('electric'), need: 8, done: () => MINES.every(m => S.mines[m.id] && S.mines[m.id].levels.length >= 2) && placedDrills('electric') >= 8,
+    { id: 'electric', t: 'Go electric', text: 'Dig Level 2 in every mine and put Electric Drills on all 8 Levels.', have: () => placedDrills('electric'), need: 8, done: () => MINES.every(m => S.mines[m.id] && S.mines[m.id].levels.length >= 2) && placedDrills('electric') >= 8,
       go: () => { const m = MINES.find(m => S.mines[m.id] && (S.mines[m.id].levels.length < 2 || S.mines[m.id].levels.some(l => l.drill !== 'electric'))); if (S.inv.electric || (m && S.mines[m.id].levels.length < 2)) viewMine(m ? m.id : 'iron'); else showTab('craft'); }, btn: () => S.inv.electric ? 'Place Electric Drills' : 'Open Buildings' },
-    { t: 'Lights on', text: 'Run for 3 minutes with power green, no NO POWER alarm, and the Recycler earning.', have: () => Math.floor(S.lightsT || 0), need: 180, done: () => (S.lightsT || 0) >= 180, go: hub, btn: 'Open the HUB', here: () => tab === 'hub' },
+    { id: 'lights', t: 'Lights on', text: 'Run for 3 minutes with power green and no NO POWER alarm. Reward: the Recycler.', have: () => Math.floor(S.lightsT || 0), need: 180, done: () => (S.lightsT || 0) >= 180, go: hub, btn: 'Open the HUB', here: () => tab === 'hub' },
   ];
   const Q = () => QUESTS[S.quest];
   const questUp = () => Q() && Q().up;
   const qDone = q => q.parts ? q.parts.every(([, f]) => f()) : q.done ? q.done() : (q.have() >= q.need);
   let qFlash = 0;
   function questTick(dt) {
-    if (S.quest === 21) { const ok = S.power >= 1 && rateCache && rateCache.power > -0.05 && !starving().length && (rateCache.credits > 0 || walletRoom() < 10) /* a full wallet counts: the Recycler would be earning */; S.lightsT = ok ? (S.lightsT || 0) + dt : 0; }
+    if (Q() && Q().id === 'lights') { const ok = S.power >= 1 && rateCache && rateCache.power > -0.05 && !starving().length; S.lightsT = ok ? (S.lightsT || 0) + dt : 0; }
     let moved = false; while (Q() && qDone(Q())) { S.quest++; moved = true; }
+    if (moved && !Q() && !S.t1done) { S.t1done = true; S.inv.recycler = Math.max(1, S.inv.recycler || 0); } // Tier 1's reward
     if (moved) { qFlash = 1.5; save(); }
     if (qFlash > 0) qFlash -= dt;
   }
   function objective() { const q = Q();
-    if (!q) return { head: 'TIER 1 COMPLETE', text: 'Your factory runs itself on coal power and earns credits while you are away. Tier 2 arrives in a later build.' };
+    if (!q) return { head: 'TIER 1 COMPLETE', text: 'Reward: the Recycler. It sells a trickle from every warehouse that is 90% full, so your factory now earns credits on its own, even while you are away. Tier 2 arrives in a later build.', btn: tab !== 'hub' ? 'See it in the HUB' : null, act: () => showTab('hub') };
     const btn = typeof q.btn === 'function' ? q.btn() : q.btn, here = q.here && q.here();
     const o = { head: `QUEST ${S.quest + 1}/${QUESTS.length}`, title: q.t, text: q.text, btn: here ? null : btn, act: q.go };
     if (q.parts) { const n = q.parts.filter(([, f]) => f()).length; o.have = n; o.need = q.parts.length; o.list = q.parts.map(([l, f]) => `${f() ? '✓' : '○'} ${l}`).join('   '); }
@@ -1401,7 +1425,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
     const sv = starving(), al = $('pw-alarm'); al.classList.toggle('on', sv.length > 0); al.tabIndex = sv.length ? 0 : -1;
     const o = objective(); $('goal-head').innerHTML = o.title ? `${o.head} <em>· ${o.title}</em>` : o.head; $('goal-text').textContent = o.text;
     const gl = $('goal-list'); gl.hidden = !o.list; if (o.list) gl.textContent = o.list; $('goal').classList.toggle('done-flash', qFlash > 0);
-    $('goal-num').textContent = o.need ? (S.quest === 21 ? `${clockTxt(o.have)} / 3:00` : `${big(Math.min(o.have, o.need))} / ${big(o.need)}`) : '';
+    $('goal-num').textContent = o.need ? (Q() && Q().id === 'lights' ? `${clockTxt(o.have)} / 3:00` : `${big(Math.min(o.have, o.need))} / ${big(o.need)}`) : '';
     $('goal-bar').hidden = !o.need; if (o.need) $('goal-bar').firstElementChild.style.width = Math.min(100, o.have / o.need * 100) + '%';
     const gb = $('goal-btn'); gb.hidden = !o.btn; if (o.btn) gb.textContent = o.btn;
     // main tabs: locked ones show the tier that opens them
@@ -1455,6 +1479,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   // smelters and constructors turn inputs into outputs as far as stock, room and power allow, and the Recycler sells
   // from full warehouses into the wallet. Belts run far faster than any machine here, so they are left out.
   const OFF_CAP = 12 * 3600, OFF_MIN = 60;
+  const wholeItems = () => Object.keys(S.items).forEach(k => { S.items[k] = Math.max(0, Math.floor((S.items[k] || 0) + 1e-6)); });
   function runOffline(away) {
     const secs = Math.floor(Math.min(away, OFF_CAP)); if (secs < OFF_MIN) return null;
     const made0 = { ...S.made }, cr0 = S.credits; let noPow = 0, lastUse = 0;
@@ -1478,6 +1503,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
       if (S.inv.recycler) Object.keys(ITEMS).forEach(k => { if ((S.items[k] || 0) >= Math.max(1, capOf(k) * RECYCLE_AT) && !walletFull()) { const n = 1 / RECYCLE_T; S.items[k] -= n; earn(ITEMS[k].value / RECYCLE_CUT * n); } });
       S.power = Math.min(powerCap(), P); lastUse = used; if (short) noPow++;
     }
+    wholeItems(); // the model moves fractions of items; warehouses hold whole ones, or the last cart never fits
     const made = {}; Object.keys(ITEMS).forEach(k => { const d = (S.made[k] || 0) - (made0[k] || 0); if (d >= 1) made[k] = d; });
     return { away, secs, made, credits: S.credits - cr0, noPow };
   }
@@ -1502,7 +1528,11 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   window.Game = { SAVE_KEY: KEY, get version() { return `${VERSION.stage} ${VERSION.semver}`; }, get S() { return S; }, saveString, saveMeta, restoreString, saveCard, ago, save,
     setSaveHook: f => { saveHook = f; } };
   const SIL = '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><circle cx="12" cy="8.5" r="4"/><path d="M4 20.5c.8-4 4.2-6 8-6s7.2 2 8 6z"/></svg>';
-  let helloShown = false;
+  // first visit with no save: a welcome screen with sign-in or guest
+  if (firstRun) $('first').hidden = false;
+  if (!window.FIREBASE_CONFIG) $('first-note').textContent = 'Cloud saves are available at codyboillot.com/FactoryAFK. Here, your factory is saved on this device.';
+  $('first-guest').addEventListener('click', () => { S.guest = true; $('first').hidden = true; save(); sync(); });
+  $('first-signin').addEventListener('click', () => window.Cloud && Cloud.signIn());
   function renderCloud() { const Cl = window.Cloud, on = !!(Cl && Cl.available);
     $('avatar').hidden = !on;
     if (!on) { $('cloud-signin').disabled = true; $('cloud-signin').querySelector('span').textContent = 'Cloud saves: play at codyboillot.com/FactoryAFK'; $('cloud-pitch').textContent = 'Cloud saves work on the game\'s home page.'; return; }
@@ -1518,13 +1548,13 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
     const e = $('cloud-err'); e.hidden = !Cl.error; e.textContent = Cl.error || '';
     const b = Cl.backupInfo && Cl.backupInfo(), rb = $('cloud-restore'); rb.hidden = !b; if (b && b.meta) rb.textContent = `Restore previous save (${b.meta.place}, set aside ${ago(b.at)})`;
     // first visit on the site: offer sign-in or guest once, like Click to Conquer
-    if (!helloShown && Cl.ready && !u && !S.guest && Cl.status === 'idle' && Cl.hold == null) { helloShown = true; $('hello-cloud').hidden = false; }
-    if (u) $('hello-cloud').hidden = true; }
+    if (u) { $('hello-cloud').hidden = true; $('first').hidden = true; if (!S.cloudUser) { S.cloudUser = true; save(); } }
+    $('first-signin').hidden = false; $('first-signin').disabled = !Cl.ready; $('first-signin').querySelector('span').textContent = Cl.ready ? 'Sign in with Google' : Cl.status === 'error' ? 'Cloud unavailable right now' : 'Connecting…'; }
   window.UI = { renderCloud, rebuild: () => {} };
   $('avatar').addEventListener('click', () => { syncSeg(); $('settings').hidden = false; });
   $('cloud-signin').addEventListener('click', () => window.Cloud && Cloud.signIn());
   $('hc-signin').addEventListener('click', () => { $('hello-cloud').hidden = true; window.Cloud && Cloud.signIn(); });
-  const goGuest = () => { S.guest = true; save(); $('hello-cloud').hidden = true; renderCloud(); };
+  const goGuest = () => { S.guest = true; S.guestOK = true; save(); $('hello-cloud').hidden = true; renderCloud(); sync(); };
   $('cloud-guest').addEventListener('click', goGuest); $('hc-guest').addEventListener('click', goGuest);
   $('cloud-now').addEventListener('click', () => window.Cloud && Cloud.push(true));
   $('cloud-signout').addEventListener('click', () => window.Cloud && Cloud.signOut());
@@ -1545,6 +1575,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   if (!S.mines[S.view]) S.view = 'iron'; if (!S.lines[S.sview]) S.sview = 'iron';
   if (!S.crafts[S.cview]) S.cview = Object.keys(S.crafts)[0] || 'plates';
   flayout(); clayout(); showTab('mine');
+  wholeItems(); // 0.3.0 offline progress could leave 99.6 in a warehouse of 100
   if (S.lastTick) showWelcome(runOffline((Date.now() - S.lastTick) / 1000));
   renderCloud();
   let last = performance.now(), syncT = 0, saveT = 0;
