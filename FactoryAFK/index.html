@@ -14,8 +14,8 @@
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>html,body{margin:0;padding:0}img{max-width:100%}[hidden]{display:none!important}</style>
-<script src="cloud-config.js?v=0.3.12"></script>
-<script src="cloud.js?v=0.3.12" defer></script>
+<script src="cloud-config.js?v=0.3.13"></script>
+<script src="cloud.js?v=0.3.13" defer></script>
 </head>
 <body>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -136,6 +136,8 @@ canvas { width: 100%; display: block; }
 .pill small em { font-style: normal; color: var(--text); font-weight: 700; }
 .pill small em img { width: 13px; height: 13px; vertical-align: -3px; }
 .pill:disabled { opacity: .55; cursor: default; }
+.pill.poor:disabled { opacity: 1; }
+.pill.poor small em { color: var(--alarm); }
 .pill.quest { border-color: var(--gold); box-shadow: 0 0 0 2px #ffd06433; }
 .pill[hidden] { display: none !important; }
 .pill.alarm { border-color: var(--alarm); background: linear-gradient(180deg, var(--alarm-bg1), var(--alarm-bg2)); animation: alarm 1.05s ease-in-out infinite; }
@@ -329,6 +331,13 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
 .float { position: absolute; left: 50%; top: 10px; font-family: var(--font-head); font-weight: 700; font-size: 20px; color: #fff6d6; text-shadow: 0 1px 3px #0008; pointer-events: none; animation: floatup .9s ease-out forwards; }
 @keyframes floatup { from { transform: translate(-50%, 0); opacity: 1; } to { transform: translate(-50%, -40px); opacity: 0; } }
 .pw-up .pill, #pw-up, #up-owh { width: 100%; }
+/* full-width upgrade buttons (warehouses on the Smelt and Crafting screens, tap power): bigger, easier to read */
+.pw-up .pill { min-height: 46px; padding: 6px 12px 6px 8px; gap: 8px; border-radius: 11px; }
+.pw-up .pill > img { width: 32px; height: 32px; }
+.pw-up .pill b { font-size: 13.5px; }
+.pw-up .pill small { font-size: 12px; color: var(--text); opacity: .85; }
+.pw-up .pill small em img { width: 15px; height: 15px; }
+.pill.alarm small { color: var(--alarm-text); opacity: 1; }
 .pgrid { position: relative; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: var(--panel); }
 .pgrid canvas { cursor: default; }
 .tag.up { color: var(--grass); border-color: var(--grass2); } .tag.down { color: var(--alarm); border-color: var(--alarm); }
@@ -510,8 +519,8 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
     <div class="card">
       <div class="fhead"><h2 id="craft-h">IRON PLATES</h2><button class="plug" id="craft-run" aria-pressed="true" aria-label="Crafting power"><span>Running</span><img src="icons/plug_in.webp" alt=""></button></div>
       <p class="fnote" id="craft-note"></p>
-      <div class="stage cstage" id="cstage"><canvas id="ccv" aria-label="Crafting line: input items ride down the left wall, turn off at each Level into its Constructor, and the products ride up the right wall into their warehouse"></canvas></div>
       <div class="pw-up" id="cwh-host"></div>
+      <div class="stage cstage" id="cstage"><canvas id="ccv" aria-label="Crafting line: input items ride down the left wall, turn off at each Level into its Constructor, and the products ride up the right wall into their warehouse"></canvas></div>
     </div>
   </section>
 
@@ -613,7 +622,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   try { theme = localStorage.getItem('afk-factory.theme') || 'system'; } catch (e) {}
   const applyTheme = () => { const r = document.documentElement; if (theme === 'system') { if (hostTheme) r.setAttribute('data-theme', hostTheme); else r.removeAttribute('data-theme'); } else r.setAttribute('data-theme', theme); readColors(); };
   applyTheme(); matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => { if (theme === 'system') readColors(); });
-  const VERSION = { stage: 'Alpha', semver: '0.3.12' }; // bump with every release
+  const VERSION = { stage: 'Alpha', semver: '0.3.13' }; // bump with every release
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const $ = id => document.getElementById(id);
 
@@ -1564,7 +1573,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
       d.querySelector('small').textContent = lv.drill ? `${LOAD(i)} ${MINE[id].name.toLowerCase()} / ${DRILLS[lv.drill].T} s · auto` : S.inv.basic || S.inv.electric ? 'Tap to assign' : 'Assign a drill';
       d.classList.toggle('has', !!lv.drill); d.classList.toggle('ready', (!lv.drill && S.inv.basic > 0) || (lv.drill !== 'electric' && S.inv.electric > 0)); });
     document.querySelectorAll('.pill').forEach(b => { const d = b._get(), show = !!d.gate && (questUp() === d.gate || !!d.done); b.hidden = !show; if (!show) return; b.querySelector('b').textContent = d.name;
-      const sm = b.querySelector('small'), h = d.cost ? `${d.label || perS(d.rate)} · ▲ <em>${costHTML(d.cost)}</em>` : d.max; if (sm._h !== h) { sm.innerHTML = h; sm._h = h; } b.disabled = !d.cost || !canPay(d.cost); b.classList.toggle('alarm', !!d.hot && !!d.cost); b.classList.toggle('quest', questUp() === d.gate && !!d.cost); });
+      const sm = b.querySelector('small'), h = d.cost ? `${d.label || perS(d.rate)} · ▲ <em>${costHTML(d.cost)}</em>` : d.max; if (sm._h !== h) { sm.innerHTML = h; sm._h = h; } b.disabled = !d.cost || !canPay(d.cost); b.classList.toggle('poor', !!d.cost && !canPay(d.cost)); b.classList.toggle('alarm', !!d.hot && !!d.cost); b.classList.toggle('quest', questUp() === d.gate && !!d.cost); });
     if (tab === 'craft') {
       RECIPES.forEach(r => { const b = $('craft-' + r.id); if (!b) return; const c = crafting[r.id], short = Object.entries(r.cost).find(([k, n]) => (S.items[k] || 0) < n), have = S.inv[r.id] || 0, capped = r.max && have >= r.max;
         b.disabled = !!c || !!short || capped; b.classList.toggle('busy', !!c);
