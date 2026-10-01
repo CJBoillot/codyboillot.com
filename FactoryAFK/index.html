@@ -14,8 +14,8 @@
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>html,body{margin:0;padding:0}img{max-width:100%}[hidden]{display:none!important}</style>
-<script src="cloud-config.js?v=0.3.22"></script>
-<script src="cloud.js?v=0.3.22" defer></script>
+<script src="cloud-config.js?v=0.4.0"></script>
+<script src="cloud.js?v=0.4.0" defer></script>
 </head>
 <body>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -378,6 +378,14 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
 .plug span { min-width: 66px; text-align: right; }
 .plug[aria-pressed="false"], .plug[aria-checked="false"]:not(:disabled) { border-color: var(--alarm); color: var(--alarm); }
 .plug:disabled { cursor: default; opacity: .75; border-color: var(--line); padding: 2px; }
+/* a line's one plug sits between its IN and OUT boxes and runs or stops every machine on it */
+.plug.lplug { position: absolute; z-index: 3; top: 14px; left: 50%; transform: translateX(-50%); width: 72px; height: 70px; padding: 4px 2px; flex-direction: column; justify-content: center; gap: 2px; background: var(--ok); font-family: var(--font-head); font-size: 10.5px; font-weight: 700; }
+.plug.lplug span { min-width: 0; text-align: center; }
+.plug.lplug[aria-pressed="false"] { background: var(--panel2); }
+/* a placed machine is its own upgrade button (×2) once the stretch goals open */
+.machit { position: absolute; z-index: 2; background: transparent; border: 0; border-radius: 10px; cursor: pointer; padding: 0; }
+.machit:disabled { cursor: default; }
+.machit:not(:disabled):active { background: #ffd06422; }
 .hrow .plug img { width: 34px; height: 34px; }
 .sw { width: 48px; height: 28px; border-radius: 99px; border: 1px solid var(--line); background: var(--track); position: relative; padding: 0; }
 .sw i { position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: var(--dim); }
@@ -496,10 +504,10 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   <section class="panel" id="tab-smelt" role="tabpanel" aria-labelledby="t-smelt" hidden>
     <div class="mtabs" id="stabs" role="tablist" aria-label="Smelter lines"></div>
     <div class="card">
-      <div class="fhead"><h2 id="line-h">IRON SMELTING</h2><button class="plug" id="fac-run" aria-pressed="true" aria-label="Iron smelting power"><span>Running</span><img src="icons/plug_in.webp" alt=""></button></div>
+      <div class="fhead"><h2 id="line-h">IRON SMELTING</h2></div>
       <p class="fnote" id="line-note"></p>
       <div class="pw-up" id="owh-host"></div>
-      <div class="fstage" id="fstage"><canvas id="fcv" aria-label="Smelter line: ore from the warehouse is smelted and sent back"></canvas></div>
+      <div class="stage cstage" id="fstage"><canvas id="fcv" aria-label="Smelter line: ore rides down the left wall, turns off at each Level into its Smelter, and ingots ride up the right wall into their warehouse"></canvas><button class="plug lplug" id="fac-run" aria-pressed="true" aria-label="Power for every smelter on this line"><img src="icons/plug_in.webp" alt=""><span>Running</span></button></div>
     </div>
   </section>
 
@@ -512,8 +520,9 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
       <div class="fhead"><h2>POWER GRID</h2><span class="tag" id="pw-net">+0.0 kW/s</span></div>
       <div class="pw-up" id="pw-up-host"></div>
       <div class="pgrid" id="pgrid"><canvas id="pcv" aria-label="Power grid: tapping sends power into the battery bank, and the bank sends them out to each smelter line"></canvas><button class="taphit" id="pw-tap" aria-label="Tap for power"><span class="sr" id="pw-per">+5 kW per tap</span></button></div>
-      <p class="fnote">Each glowing dot is 1 kW. Taps and the Coal Power Plant charge the battery bank (100 kW per Battery T1). Smelters and Constructors draw 1 kW/s while they work, Electric Drills 0.25. When the bank runs dry, machines wait with "NO POWER".</p>
+      <p class="fnote">Each glowing dot is 1 kW. Taps and the Coal Power Plant charge the battery bank (100 kW per Battery T1). Machines draw 0.25 kW/s on Level 1 and double each Level down (Electric Drills 0.5); a ×2 machine draws double. When the bank runs dry, machines wait with "NO POWER".</p>
     </div>
+    <div class="card" id="plant-card" hidden><div class="fhead"><h2>COAL POWER PLANT</h2><span class="tag" id="plant-tag"></span></div><p class="fnote" id="plant-note"></p><div class="tier now" id="plant-up"></div></div>
     <div class="card" id="phub">
       <div class="fhead"><h2>POWER HUB</h2></div>
       <p class="fnote">Unplug any building to save power for the ones that matter.</p>
@@ -524,10 +533,10 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   <section class="panel" id="tab-build" role="tabpanel" aria-labelledby="t-build" hidden>
     <div class="nav2"><div class="ttabs" role="tablist" aria-label="Tier" id="ttabs"></div><div class="ctabs" role="tablist" aria-label="Crafts in this tier" id="ctabs"></div></div>
     <div class="card">
-      <div class="fhead"><h2 id="craft-h">IRON PLATES</h2><button class="plug" id="craft-run" aria-pressed="true" aria-label="Crafting power"><span>Running</span><img src="icons/plug_in.webp" alt=""></button></div>
+      <div class="fhead"><h2 id="craft-h">IRON PLATES</h2></div>
       <p class="fnote" id="craft-note"></p>
       <div class="pw-up" id="cwh-host"></div>
-      <div class="stage cstage" id="cstage"><canvas id="ccv" aria-label="Crafting line: input items ride down the left wall, turn off at each Level into its Constructor, and the products ride up the right wall into their warehouse"></canvas></div>
+      <div class="stage cstage" id="cstage"><canvas id="ccv" aria-label="Crafting line: input items ride down the left wall, turn off at each Level into its Constructor, and the products ride up the right wall into their warehouse"></canvas><button class="plug lplug" id="craft-run" aria-pressed="true" aria-label="Power for every constructor on this line"><img src="icons/plug_in.webp" alt=""><span>Running</span></button></div>
     </div>
   </section>
 
@@ -596,6 +605,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
     <p>Your coal plant is running and the lights are on. That is everything this demo holds.</p>
     <div class="wb-gains" id="ty-stats"></div>
     <div class="ty-reward"><img src="icons/merger.webp" alt=""><span><b>Reward: the Recycler</b><small>When a warehouse is full, it sells what keeps arriving instead of letting the belt back up, so the factory earns credits on its own, even while you're away.</small></span></div>
+    <p>Keep playing: three stretch goals take every line to 4 Levels and the Power Plant to Lv 4.</p>
     <p class="ty-soon">More tiers coming soon.</p>
     <button class="deliver" id="ty-keep">Keep playing</button>
     <button class="ghost" id="ty-restart">Restart the game</button>
@@ -615,7 +625,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
     <h2 id="sheet-h">LEVEL 1 · DRILL</h2>
     <button class="opt" id="opt-none"><i class="none"></i><b>No drill</b><span id="opt-none-t">Tap the Level to mine</span><em></em></button>
     <button class="opt" id="opt-basic"><img src="icons/basic_drill.webp" alt=""><b>Basic Drill</b><span id="opt-basic-t">1 cart every 2 s, automatic</span><em id="opt-basic-n"></em></button>
-    <button class="opt" id="opt-electric" hidden><img src="icons/electric_drill.webp" alt=""><b>Electric Drill</b><span id="opt-electric-t">1 cart every second, 0.25 kW/s</span><em id="opt-electric-n"></em></button>
+    <button class="opt" id="opt-electric" hidden><img src="icons/electric_drill.webp" alt=""><b>Electric Drill</b><span id="opt-electric-t">1 cart every second, 0.5 kW/s</span><em id="opt-electric-n"></em></button>
     <button class="close" id="sheet-close">Done</button>
   </div>
 </div>
@@ -629,7 +639,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   try { theme = localStorage.getItem('afk-factory.theme') || 'system'; } catch (e) {}
   const applyTheme = () => { const r = document.documentElement; if (theme === 'system') { if (hostTheme) r.setAttribute('data-theme', hostTheme); else r.removeAttribute('data-theme'); } else r.setAttribute('data-theme', theme); readColors(); };
   applyTheme(); matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => { if (theme === 'system') readColors(); });
-  const VERSION = { stage: 'Alpha', semver: '0.3.22' }; // bump with every release
+  const VERSION = { stage: 'Alpha', semver: '0.4.0' }; // bump with every release
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const $ = id => document.getElementById(id);
 
@@ -639,10 +649,10 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
     copper_ore: { name: 'Copper ore', color: '#e3834e', value: 10 },
     limestone: { name: 'Limestone', color: '#d8d2bd', ic: 'sand', value: 10 },
     coal: { name: 'Coal', color: '#7f878c', value: 10 },
-    iron_ingot: { name: 'Iron ingot', color: '#eef4f6', value: 20 },
-    copper_ingot: { name: 'Copper ingot', color: '#f4a36e', value: 20 },
-    iron_plate: { name: 'Iron plate', color: '#6fa8dc', value: 40 },
-    copper_wire: { name: 'Copper wire', color: '#e8a33c', value: 20 },
+    iron_ingot: { name: 'Iron ingot', color: '#eef4f6', value: 40 },
+    copper_ingot: { name: 'Copper ingot', color: '#f4a36e', value: 40 },
+    iron_plate: { name: 'Iron plate', color: '#6fa8dc', value: 100 },
+    copper_wire: { name: 'Copper wire', color: '#e8a33c', value: 25 },
     concrete: { name: 'Concrete', color: '#b8bcb6', ic: 'sand', value: 50 },
   };
   const ICON = k => (ITEMS[k] && ITEMS[k].ic) || k;
@@ -657,9 +667,9 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   const CR = 'credits'; // the currency: upgrades and research cost Credits; crafting still costs items
   const nameOf = k => k === CR ? 'Credits' : ITEMS[k] ? ITEMS[k].name : k;
   const costHTML = c => Object.entries(c).map(([k, n]) => `${big(n)} ${icon(k, '', nameOf(k))}`).join(' ');
-  // Recycler (one per factory): sits in front of every warehouse. When a warehouse is full, it takes items off the incoming
-  // belt before they reach it, 1 item every 2 s per warehouse, and sells them at a tenth of the price. The warehouse stays full
-  const RECYCLE_T = 2, RECYCLE_CUT = 10, RECYCLE_AT = 1, RECYCLE_HOLD = 4;
+  // Recycler (one per factory, Tier 1's reward): sits in front of every warehouse. When a warehouse is full it takes everything
+  // that keeps arriving off the belt and sells it at a tenth of the price (scrapped once the wallet is full), so lines never back up
+  const RECYCLE_CUT = 10, RECYCLE_HOLD = 4;
   // Wallet: credits are capped. Tier 1 starts at 1,000 and one quest upgrade takes it to 10,000
   const WALLET = [0, 1000, 10000], walletCap = () => WALLET[Math.min(S.walletLv || 1, WALLET.length - 1)];
   const perS = r => `${(Math.round(r * 10) / 10).toFixed(1)}/s`;
@@ -667,7 +677,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   // ---- tuning ----
   const CELL = 11, PITCH = 14, SLOTH = 30, SLOTW = 24, PAD = 10;
   const GY = 118, SURFY = 88, ROW0 = GY + 82, ROWH = 112; // multiples of the belt cell pitch, so every junction lands on the grid
-  const DRILLS = { basic: { name: 'Basic Drill', T: 2, kw: 0, ic: 'basic_drill' }, electric: { name: 'Electric Drill', T: 1, kw: 0.25, ic: 'electric_drill' } };
+  const DRILLS = { basic: { name: 'Basic Drill', T: 2, kw: 0, ic: 'basic_drill' }, electric: { name: 'Electric Drill', T: 1, kw: 0.5, ic: 'electric_drill' } }; // Electric: ×2 a Basic Drill, 0.5 kW/s on Level 1, ×2 each Level down
   // Belts: a Mark is researched once per tier (Mk2 comes with Tier 2: Parts); within a Mark, levels 1-10 are costly mini upgrades
   const BELT_MAX_LV = 10, MK = [null, { base: 5, tier: 0 }, { base: 12, tier: 3 }];
   const beltRate = (mk, lv) => MK[mk].base * (1 + 0.12 * (lv - 1));
@@ -685,32 +695,38 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
     { id: 'coal', ore: 'coal', name: 'Coal', tier: 5 },
   ];
   const MINE = Object.fromEntries(MINES.map(m => [m.id, m]));
-  const DIG_COST = [0, 400], DIG_TIME = [0, 30], MAX_LEVELS = DIG_COST.length; // Tier 1 stops at Level 2 in every mine
+  const DIG_COST = [0, 400, 1500, 4000], DIG_TIME = [0, 30, 60, 120], MAX_LEVELS = DIG_COST.length; // Tier 1: Level 2 in the main game, Levels 3–4 in the stretch goals
   const digLevelTier = n => n >= 1 ? 2 : 0; // digging below Level 1 opens with Smelting research
   // one smelter line per ore that needs smelting. Limestone skips the smelter: it goes straight to a concrete Constructor
+  // Every production line (Smelt and Crafting) stacks Levels like a mine. Level N of a line handles 2^(N-1) × Level 1, so a
+  // mine Level feeds the Smelter Level beside it and that feeds the Constructor Level beside it, one to one, at any depth
   const LINES = [
-    { id: 'iron', ore: 'iron_ore', out: 'iron_ingot', name: 'Iron', tier: 2 },
-    { id: 'copper', ore: 'copper_ore', out: 'copper_ingot', name: 'Copper', tier: 2 },
+    { id: 'iron', ore: 'iron_ore', in: 'iron_ore', out: 'iron_ingot', name: 'Iron', tier: 2, nIn: 3, nOut: 1, T: 6, mach: 'smelter', img: 'basic_smelter' },
+    { id: 'copper', ore: 'copper_ore', in: 'copper_ore', out: 'copper_ingot', name: 'Copper', tier: 2, nIn: 3, nOut: 1, T: 6, mach: 'smelter', img: 'basic_smelter' },
   ];
   const LINE = Object.fromEntries(LINES.map(l => [l.id, l]));
-  const SMELT_T = 1, FAC_SLOTS = 4, SMELT_KW = 1; // a smelter makes 1 ingot/s and draws 1 kW/s while it works
-  // Crafting lines: stacked Levels like a mine, one Constructor per Level. Each Constructor draws 1 kW/s while it works
+  const PL_LV = 4; // Levels a production line grows to in Tier 1
+  // Level 1 rates: Smelter 3 ore → 1 ingot / 6 s (30 ore in, 10 ingots out a minute); Plates 2 ingots → 1 / 12 s (10 in, 5 out);
+  // Wire 1 ingot → 2 / 6 s (10 in, 20 out); Concrete 3 limestone → 1 / 6 s (30 in, 10 out)
   const CRAFTS = [
-    { id: 'plates', name: 'Iron Plates', short: 'Plates', in: 'iron_ingot', nIn: 3, out: 'iron_plate', nOut: 2, T: 3, tier: 3, ctier: 1, rl: '3 ingots → 2 plates' },
-    { id: 'wire', name: 'Copper Wire', short: 'Wire', in: 'copper_ingot', nIn: 1, out: 'copper_wire', nOut: 2, T: 1, tier: 3, ctier: 1, rl: '1 ingot → 2 wire' },
-    { id: 'concrete', name: 'Concrete', short: 'Concrete', in: 'limestone', nIn: 3, out: 'concrete', nOut: 1, T: 2, tier: 4, ctier: 1, rl: '3 limestone → 1 concrete' },
+    { id: 'plates', name: 'Iron Plates', short: 'Plates', in: 'iron_ingot', nIn: 2, out: 'iron_plate', nOut: 1, T: 12, tier: 3, ctier: 1, mach: 'constructor', img: 'auto_constructor' },
+    { id: 'wire', name: 'Copper Wire', short: 'Wire', in: 'copper_ingot', nIn: 1, out: 'copper_wire', nOut: 2, T: 6, tier: 3, ctier: 1, mach: 'constructor', img: 'auto_constructor' },
+    { id: 'concrete', name: 'Concrete', short: 'Concrete', in: 'limestone', nIn: 3, out: 'concrete', nOut: 1, T: 6, tier: 4, ctier: 1, mach: 'constructor', img: 'auto_constructor' },
   ];
-  const CRAFT = Object.fromEntries(CRAFTS.map(c => [c.id, c])), CON_KW = 1, CRAFT_LEVELS = 1; // Tier 1: one Constructor per Crafting line; Level 2 opens with Tier 2
-  // Coal Power Plant: burns 1 coal/s for 8 kW/s, only as fast as the power is needed
-  const PLANT_KW = 8, KW_PER_COAL = 8;
+  const CRAFT = Object.fromEntries(CRAFTS.map(c => [c.id, c]));
+  // power: a machine draws MKW at Level 1, ×2 per Level and ×2 with its upgrade (0.25 kW/s → 2 kW/s on Level 4 ×1)
+  const MKW = 0.25, UP2 = 200; // a ×2 upgrade on Level N costs UP2 × 2^(N-1) credits
+  // Coal Power Plant: Lv 1 10 kW/s, each upgrade doubles it; 8 kW per coal, burned only as fast as the power is needed
+  const PLANT_LV_KW = [0, 10, 20, 40, 80], KW_PER_COAL = 8, plantKw = () => PLANT_LV_KW[S.plantLv || 1];
+  const PLANT_UP = [null, null, { iron_plate: 20, copper_wire: 40, concrete: 20, [CR]: 2000 }, { iron_plate: 40, copper_wire: 80, concrete: 40, [CR]: 4000 }, { iron_plate: 80, copper_wire: 160, concrete: 80, [CR]: 8000 }];
   // power: tap to charge. One quest upgrade takes a tap from +5 to +10 kW; the Coal Power Plant automates it
   const TAP_KW = [0, 5, 10], TAP_MAX = TAP_KW.length - 1, tapKw = () => TAP_KW[Math.min(S.tapLv || 1, TAP_MAX)], tapCost = () => ({ [CR]: 200 });
   const TIERS = [
     { name: 'Landing', need: { iron_ore: 10 }, unlocks: [['basic_drill', 'Buildings tab'], ['basic_drill', 'Basic Drill']] },
     { name: 'Smelting', need: { iron_ore: 100 }, unlocks: [['basic_smelter', 'Smelter'], ['battery_t1', 'Battery & Power tab'], ['copper_ore', 'Copper mine'], ['iron_ore', 'Digging to Level 2']] },
     { name: 'Parts', need: { iron_ingot: 50, copper_ingot: 50 }, unlocks: [['auto_constructor', 'Constructor & Crafting tab'], ['iron_plate', 'Iron plates'], ['copper_wire', 'Copper wire']] },
-    { name: 'Concrete', need: { iron_plate: 30, copper_wire: 60, [CR]: 800 }, unlocks: [['sand', 'Limestone mine'], ['sand', 'Concrete']] },
-    { name: 'Coal Power', need: { iron_plate: 40, copper_wire: 60, concrete: 30, [CR]: 3000 }, unlocks: [['coal', 'Coal mine'], ['electric_drill', 'Electric Drill'], ['coal_generator', 'Coal Power Plant']] },
+    { name: 'Concrete', need: { iron_plate: 10, copper_wire: 30, [CR]: 800 }, unlocks: [['sand', 'Limestone mine'], ['sand', 'Concrete']] },
+    { name: 'Coal Power', need: { iron_plate: 15, copper_wire: 30, concrete: 10, [CR]: 3000 }, unlocks: [['coal', 'Coal mine'], ['electric_drill', 'Electric Drill'], ['coal_generator', 'Coal Power Plant']] },
   ];
   // research that follows the main chain; shown locked until it arrives in a later build
   const EXTRA = [
@@ -723,25 +739,26 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   // the first battery is cheap; each one after it costs a lot more, so power stays a tapping job until the Coal Power Plant
   const BATTERY_COST = [{ copper_ore: 10, iron_ore: 10 }, { copper_ingot: 50, iron_ingot: 50 }, { iron_plate: 20, copper_wire: 40 }, { iron_plate: 40, copper_wire: 80 }];
   const batteryCost = () => BATTERY_COST[Math.min((S && S.inv && S.inv.battery) || 0, BATTERY_COST.length - 1)];
-  const INTRO = { basic: 'hands', smelter: 'fire', battery: 'battery', constructor: 'build', plant: 'plant', electric: 'electric' }; // the quest that teaches each building
+  const INTRO = { basic: 'hands', smelter: 'fire', battery: 'battery', constructor: 'build', plant: 'plant', electric: 'e1' }; // the quest that teaches each building
   const RECIPES = [
     { id: 'basic', sq: 'Drill', name: 'Basic Drill', icon: 'basic_drill', cost: { iron_ore: 20 }, T: 1.5, tier: 1, desc: 'Digs one cart every 2 s on any Level of any mine, no power needed.' },
-    { id: 'recycler', sq: 'Recycler', name: 'Recycler', icon: 'merger', cost: { iron_ore: 30 }, T: 2, tier: 1, max: 1, reward: true, desc: `One per factory. When a warehouse is full, it takes items off the belt before they reach it and sells them: up to 1 every ${RECYCLE_T} s per warehouse, at a tenth of the price.` },
-    { id: 'smelter', sq: 'Smelter', name: 'Smelter', icon: 'basic_smelter', cost: { iron_ore: 100 }, T: 3, tier: 2, desc: `Turns 1 ore into 1 ingot every ${SMELT_T} s in any Smelt line. Draws ${SMELT_KW} kW/s while it works.` },
+    { id: 'recycler', sq: 'Recycler', name: 'Recycler', icon: 'merger', cost: { iron_ore: 30 }, T: 2, tier: 1, max: 1, reward: true, desc: 'One per factory. When a warehouse is full it takes everything still arriving off the belt and sells it at a tenth of the price, so nothing backs up.' },
+    { id: 'smelter', sq: 'Smelter', name: 'Smelter', icon: 'basic_smelter', cost: { iron_ore: 50 }, T: 3, tier: 2, desc: '3 ore → 1 ingot every 6 s on Level 1 of a Smelt line (30 ore a minute); each Level down handles double. 0.25 kW/s on Level 1.' },
     { id: 'battery', sq: 'Battery', name: 'Battery T1', icon: 'battery_t1', get cost() { return batteryCost(); }, T: 2, tier: 2, desc: `Stores ${BATTERY_W} kW. Tap in the Power tab to charge it. Each extra battery costs a lot more.` },
-    { id: 'constructor', sq: 'Constructor', name: 'Constructor', icon: 'auto_constructor', cost: { iron_ingot: 40, copper_ingot: 20 }, T: 4, tier: 3, desc: `Makes plates, wire or concrete on one Level of a Crafting line. Draws ${CON_KW} kW/s while it works.` },
-    { id: 'electric', sq: 'Electric Drill', name: 'Electric Drill', icon: 'electric_drill', cost: { iron_plate: 5, copper_wire: 10 }, T: 3, tier: 5, desc: 'Digs one cart every second. Draws 0.25 kW/s while it digs.' },
-    { id: 'plant', sq: 'Power Plant', name: 'Coal Power Plant', icon: 'coal_generator', cost: { iron_plate: 40, copper_wire: 80, concrete: 40 }, T: 6, tier: 5, max: 1, desc: `Burns 1 coal/s from the coal warehouse for ${PLANT_KW} kW/s, only as fast as power is needed. Enough for the whole Tier 1 factory.` },
+    { id: 'constructor', sq: 'Constructor', name: 'Constructor', icon: 'auto_constructor', cost: { iron_ingot: 40, copper_ingot: 20 }, T: 4, tier: 3, desc: 'Makes plates, wire or concrete on one Level of a Crafting line; each Level down handles double. 0.25 kW/s on Level 1.' },
+    { id: 'electric', sq: 'Electric Drill', name: 'Electric Drill', icon: 'electric_drill', cost: { iron_plate: 5, copper_wire: 10 }, T: 3, tier: 5, desc: 'Digs one cart every second, twice a Basic Drill. Draws 0.5 kW/s on Level 1, double each Level down.' },
+    { id: 'plant', sq: 'Power Plant', name: 'Coal Power Plant', icon: 'coal_generator', cost: { iron_plate: 15, copper_wire: 40, concrete: 15 }, T: 6, tier: 5, max: 1, desc: `Burns coal for ${PLANT_LV_KW[1]} kW/s (${KW_PER_COAL} kW per coal), only as fast as power is needed. Upgrades in the Power tab double it.` },
   ];
 
   // ---- saved state ----
   const KEY = 'afk-factory.v7';
   const freshLevel = () => ({ drill: null, beltLv: 1, beltMk: 1 });
   const freshMine = () => ({ levels: [freshLevel()], shaftLv: 1, shaftMk: 1, surfLv: 1, surfMk: 1, dig: null });
-  const freshLine = () => ({ slots: Array(FAC_SLOTS).fill(false), on: true });
-  const freshCraft = () => ({ slots: Array(CRAFT_LEVELS).fill(false), on: true });
+  // a line's slots hold each Level's machine: 0 none, 1 = ×1, 2 = upgraded ×2
+  const freshLine = () => ({ slots: Array(PL_LV).fill(0), on: true });
+  const freshCraft = freshLine;
   const fresh = () => ({ items: Object.fromEntries(Object.keys(ITEMS).map(k => [k, 0])), inv: { basic: 0, electric: 0, smelter: 0, battery: 0, recycler: 0, constructor: 0, plant: 0 }, credits: 0, walletLv: 1, crafted: {}, tier: 0, handed: {}, hideDone: false,
-    mines: { iron: freshMine() }, view: 'iron', lines: {}, sview: 'iron', crafts: {}, cview: 'plates', wh: {}, power: 0, tapLv: 1, made: {}, sold: {}, seen: {}, quest: 0, lightsT: 0, drillsOn: true, played: 0, guest: false });
+    mines: { iron: freshMine() }, view: 'iron', lines: {}, sview: 'iron', crafts: {}, cview: 'plates', wh: {}, power: 0, tapLv: 1, made: {}, sold: {}, seen: {}, quest: 0, qv: 4, lightsT: 0, eT: 0, plantLv: 1, plantHand: {}, drillsOn: true, played: 0, guest: false });
   let S = fresh(), migrated = false, firstRun = false;
   try {
     let s = JSON.parse(localStorage.getItem(KEY) || 'null');
@@ -761,10 +778,8 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
         s.lines = { iron: s.fac || freshLine() }; delete s.fac; }
     }
     if (!s || !s.mines) firstRun = true;
-    if (s && s.mines) { S = Object.assign(fresh(), s); S.items = Object.assign(fresh().items, s.items); S.inv = Object.assign(fresh().inv, s.inv); Object.keys(S.items).forEach(k => { if (!ITEMS[k]) delete S.items[k]; }); S.crafts = S.crafts || {}; S.sold = S.sold || {}; }
+    if (s && s.mines) { S = Object.assign(fresh(), s); S.items = Object.assign(fresh().items, s.items); S.inv = Object.assign(fresh().inv, s.inv); Object.keys(S.items).forEach(k => { if (!ITEMS[k]) delete S.items[k]; }); S.crafts = S.crafts || {}; S.sold = S.sold || {}; if (!s.qv) S.qv = 0; }
   } catch (e) {}
-  // 0.3.12: Crafting lines have one Level in Tier 1. A Constructor already on a lower Level goes back to inventory
-  Object.values(S.crafts).forEach(c => { if (c.slots.length > CRAFT_LEVELS) { S.inv.constructor = (S.inv.constructor || 0) + c.slots.slice(CRAFT_LEVELS).filter(Boolean).length; c.slots = c.slots.slice(0, CRAFT_LEVELS); } });
   Object.values(S.mines).forEach(m => { m.levels.forEach(l => { l.beltLv = Math.min(BELT_MAX_LV, l.beltLv || 1); l.beltMk = l.beltMk || 1; }); m.shaftLv = Math.min(BELT_MAX_LV, m.shaftLv); m.surfLv = Math.min(BELT_MAX_LV, m.surfLv); });
   const needName = t => TIERS[t - 1] ? TIERS[t - 1].name : 'later'; // the research that opens something
   const powerCap = () => (S.inv.battery || 0) * BATTERY_W;
@@ -792,9 +807,8 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
       // anything still riding a belt or sitting in a machine is saved as if it had arrived
       const back = { ...S.items }, add = (k, n) => back[k] = (back[k] || 0) + n;
       Object.values(RT.mines).forEach(M => [M.shaft, M.surf, ...M.tunnels].forEach(b => b.items.forEach(it => add(it.item, it.load || 1))));
-      Object.values(RT.lines).forEach(L => { [L.fin, L.fout, ...L.feedIn, ...L.feedOut].forEach(b => b.items.forEach(it => add(it.item, 1))); L.jobs.forEach(j => j && add(j.done ? LINE[L.id].out : LINE[L.id].ore, 1)); });
-      Object.values(RT.crafts).forEach(K => { const d = CRAFT[K.id]; [K.down, K.rise, ...K.rows.flatMap(R => [R.feed, R.outB])].forEach(b => b.items.forEach(it => add(it.item, 1)));
-        K.rows.forEach(R => { add(d.in, R.buf + (R.busy ? d.nIn : 0)); add(d.out, R.out); }); });
+      [...Object.values(RT.lines), ...Object.values(RT.crafts)].forEach(K => { const d = plDef(K.kind, K.id); [K.down, K.rise, ...K.rows.flatMap(R => [R.feed, R.outB])].forEach(b => b.items.forEach(it => add(it.item, it.load || 1)));
+        K.rows.forEach(R => { add(d.in, R.buf + (R.busy ? d.nIn * LOAD(R.i) : 0)); add(d.out, R.out * d.nOut * LOAD(R.i)); }); });
       // belt contents count only up to the warehouse's room: a backed-up belt must not push a warehouse past its cap
       Object.keys(back).forEach(k => { if (ITEMS[k]) back[k] = Math.max(S.items[k] || 0, Math.min(back[k], capOf(k))); });
       return JSON.stringify({ ...S, items: back, lastTick: Date.now() }); }
@@ -818,11 +832,15 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
 
   // ---- stats: what reaches the warehouse, per item ----
   const flow = {}; // item → [time, amount] over the last 30 s
-  // an item reaches a full warehouse: the Recycler takes it off the belt if its 2 s slot is ready
-  function recyTake(k) { if (!S.inv.recycler || walletFull()) return false; const r = RECY[k]; if (!r || r.acc < 1) return false;
-    r.acc -= 1; r.last = clock; earn(ITEMS[k].value / RECYCLE_CUT, true); return true; }
+  // what a line actually produced (into the warehouse or into the Recycler), per item, for the per-minute rates and stretch goals
+  const prod = {}; const produced = (k, n) => (prod[k] = prod[k] || []).push([clock, n]);
+  const PROD_WIN = 20;
+  const prodPerMin = k => { const l = prod[k] || []; while (l.length && clock - l[0][0] > PROD_WIN) l.shift(); return l.reduce((a, e) => a + e[1], 0) / Math.min(PROD_WIN, Math.max(1, clock)) * 60; };
+  // something reaches a full warehouse: the Recycler (once you have it) takes all of it off the belt and sells it at a tenth of the price
+  function recyTake(k, n = 1) { if (!S.inv.recycler) return false; const r = RECY[k] = RECY[k] || { log: [], last: -99 };
+    const got = earn(ITEMS[k].value / RECYCLE_CUT * n, true); r.last = clock; r.log.push([clock, got]); produced(k, n); return true; }
   const recyOn = k => !!(S.inv.recycler && RECY[k] && RECY[k].on);
-  function arrived(k, n) { S.made[k] = (S.made[k] || 0) + n; (flow[k] = flow[k] || []).push([clock, n]); }
+  function arrived(k, n) { S.made[k] = (S.made[k] || 0) + n; (flow[k] = flow[k] || []).push([clock, n]); produced(k, n); }
   // rates on the top bar: what machines make minus what machines eat, over the last 10 s (spending on upgrades is left out)
   const used = {};
   // a rate meter in 1-second buckets over the last 10 s: cheap even when fed every frame
@@ -849,7 +867,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
     const M = { id, levels: m.levels.map(newLevelRT), surfWait: 0 };
     M.surf = Belt(() => beltRate(m.surfMk, m.surfLv), it => { // a cart unloads as much as fits; whatever is left waits on the cart, so a warehouse can always fill to the top
       const n = Math.min(it.load || 1, Math.floor(roomOf(it.item)));
-      if (n < 1) { if (!recyTake(it.item)) return false; it.load = (it.load || 1) - 1; return it.load <= 0; }
+      if (n < 1) return recyTake(it.item, it.load || 1);
       S.items[it.item] += n; arrived(it.item, n);
       if (id === S.view) pop(X.whX + X.whW / 2, SURFY + 44, '+' + big(n), ITEMS[it.item].color); it.load = (it.load || 1) - n; return it.load <= 0; });
     M.shaft = Belt(() => beltRate(m.shaftMk, m.shaftLv), it => { if (!M.surf.canInsert(0)) return false; M.surf.insert(0, { ox: -PITCH, oy: 0, load: it.load, item: it.item }); return true; });
@@ -857,24 +875,24 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
     return M; }
   function makeTunnel(M, i) { return Belt(() => { const l = S.mines[M.id].levels[i]; return beltRate(l.beltMk, l.beltLv); }, it => { const si = M.shaftIn(i);
       if (!M.shaft.canInsert(si)) return false; M.shaft.insert(si, { ox: PITCH, oy: 0, load: it.load, item: it.item }); return true; }); }
-  // a smelter line: warehouse → top belt → feeder down into each smelter → feeder down out of it → bottom belt → warehouse
-  function makeLineRT(id) { const def = LINE[id];
-    const L = { id, jobs: Array(FAC_SLOTS).fill(null), stall: Array(FAC_SLOTS).fill(0), flowIn: [], flowOut: [], pw: [] };
-    L.fin = Belt(() => 5, () => false);
-    L.feedIn = Array.from({ length: FAC_SLOTS }, (_, j) => Belt(() => 5, it => { if (L.jobs[j]) return false; L.jobs[j] = { p: 0 }; return true; }));
-    L.feedOut = Array.from({ length: FAC_SLOTS }, (_, j) => Belt(() => 5, it => { const s = FX.outS(j); if (!L.fout.canInsert(s)) return false; L.fout.insert(s, { ox: 0, oy: -PITCH, item: it.item, load: 1 }); return true; }));
-    L.fout = Belt(() => 5, it => { if (roomOf(def.out) < 1) return recyTake(def.out); S.items[def.out] += 1; arrived(def.out, 1); L.flowOut.push(clock); if (id === S.sview) fpop(FX.outBoxC().x, FX.outBoxC().y - 30, '+1', ITEMS[def.out].color); return true; });
-    return L; }
-  // a crafting line: input warehouse → trunk down the left wall → each Level's belt → its Constructor → out-belt → riser up the right wall → output warehouse
-  function makeCraftRT(id) { const d = CRAFT[id];
-    const K = { id, flowIn: [], flowOut: [] };
+  // a production line (Smelt or Crafting): input warehouse → trunk down the left wall → each Level's belt → its machine →
+  // out-belt → riser up the right wall → output warehouse. Level N carts carry 2^(N-1), so carts per minute never grows
+  const plDef = (kind, id) => kind === 'smelt' ? LINE[id] : CRAFT[id];
+  const plState = (kind, id) => kind === 'smelt' ? S.lines[id] : S.crafts[id];
+  const machIn = (d, i, sp) => d.nIn / d.T * LOAD(i) * sp;          // input items per second
+  const machKw = (i, sp) => MKW * LOAD(i) * sp;
+  function makePL(kind, id) { const d = plDef(kind, id);
+    const K = { kind, id, flowIn: [], flowOut: [], G: { downStop: () => 0, riseIn: () => 0 } };
     K.down = Belt(() => 5, () => false);
-    K.rise = Belt(() => beltRate(1, S.crafts[id].outLv || 1), it => { if (roomOf(d.out) < 1) return recyTake(d.out); S.items[d.out] += 1; arrived(d.out, 1); K.flowOut.push(clock); return true; });
-    K.rows = Array.from({ length: CRAFT_LEVELS }, (_, i) => { const R = { i, buf: 0, busy: false, p: 0, out: 0, stall: 0, flash: 0 };
-      R.feed = Belt(() => 5, () => { if (R.buf >= d.nIn) return false; R.buf++; return true; });
-      R.outB = Belt(() => 5, it => { const s = KX.riseIn(i); if (!K.rise.canInsert(s)) return false; K.rise.insert(s, { item: d.out, load: 1 }); return true; });
+    K.rise = Belt(() => 5, it => { const n = Math.min(it.load || 1, Math.floor(roomOf(d.out)));
+      if (n < 1) { if (!recyTake(d.out, it.load || 1)) return false; K.flowOut.push([clock, it.load || 1]); return true; }
+      S.items[d.out] += n; arrived(d.out, n); K.flowOut.push([clock, n]); it.load = (it.load || 1) - n; return it.load <= 0; });
+    K.rows = Array.from({ length: PL_LV }, (_, i) => { const R = { i, buf: 0, busy: false, p: 0, out: 0, stall: 0, flash: 0, eff: 0 };
+      R.feed = Belt(() => 5, it => { if (R.buf >= d.nIn * LOAD(i)) return false; R.buf += it.load || 1; return true; });
+      R.outB = Belt(() => 5, it => { const s = K.G.riseIn(i); if (!K.rise.canInsert(s)) return false; K.rise.insert(s, { item: d.out, load: it.load }); return true; });
       return R; });
     return K; }
+  const makeLineRT = id => makePL('smelt', id), makeCraftRT = id => makePL('craft', id);
   function makeRT() { const rt = { mines: {}, lines: {}, crafts: {} };
     Object.keys(S.mines).forEach(id => rt.mines[id] = makeMineRT(id)); Object.keys(S.lines).forEach(id => rt.lines[id] = makeLineRT(id)); Object.keys(S.crafts).forEach(id => rt.crafts[id] = makeCraftRT(id)); return rt; }
   // open every mine and smelter line the current tier allows
@@ -888,8 +906,9 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
     m.levels.push(freshLevel()); M.levels.push(newLevelRT()); M.tunnels.push(makeTunnel(M, n));
     layout(); if (id === S.view) pop(W / 2, rowY(n) - 30, `Level ${n + 1} open`, C.grass); sync(); save(); }
   const digCost = (id, n) => ({ [CR]: DIG_COST[n] });
-  const DIG_Q = { iron: 'deeper', coal: 'plant', copper: 'electric', limestone: 'electric' }; // the quest that first digs each mine deeper
-  const digLocked = (id, n) => S.tier < digLevelTier(n) || !qOpen(DIG_Q[id]);
+  const DIG_Q = { iron: 'deeper', copper: 'copperdeep', limestone: 'e1', coal: 'e1' }; // the quest that first digs each mine to Level 2; Levels 3–4 open with the stretch goals
+  const digQ = (id, n) => n >= 2 ? 'e1' : DIG_Q[id];
+  const digLocked = (id, n) => S.tier < digLevelTier(n) || !qOpen(digQ(id, n));
   function startDig() { const id = S.view, m = S.mines[id], n = m.levels.length; if (n >= MAX_LEVELS || m.dig || digLocked(id, n) || !canPay(digCost(id, n))) return;
     pay(digCost(id, n)); m.dig = { level: n, end: Date.now() + DIG_TIME[n] * 1000, len: DIG_TIME[n] }; sync(); save(); }
   const pop = (x, y, text, color) => pops.push({ x, y, text, color, t: 0 });
@@ -915,24 +934,47 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
     buildUI(); renderTabs('mtabs', MINES, S.view, id => S.mines[id], mineShown, id => { S.view = id; S.seen['mine-' + id] = true; pops = []; layout(); sync(); }, m => `${m.levels.length} Level${m.levels.length > 1 ? 's' : ''}`, MINE_Q);
   }
 
-  // ---- smelter line layout (the same geometry for every line) ----
-  let FW = 0; const FH = 262, FX = {}, IN_Y = 56, SM_Y = 128, OUT_Y = 210;
-  function flayout() {
-    FW = fstage.clientWidth || Math.max(280, document.querySelector('.app').clientWidth - 58); // works while the tab is hidden too
-    const dpr = devicePixelRatio || 1; fcv.width = FW * dpr; fcv.height = FH * dpr; fcv.style.height = FH + 'px'; fctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    FX.slot = j => 12 + 30 + j * ((FW - 24 - 60) / (FAC_SLOTS - 1));
-    const a = 12 + CELL / 2 + 2, e = FW - 12 - CELL / 2 - 2, inTop = IN_Y + PITCH, inBot = SM_Y - 26, outTop = SM_Y + 36, outBot = OUT_Y - PITCH;
-    FX.inS = j => FX.slot(j) - a; FX.outS = j => FX.slot(j) - a; FX.outBoxC = () => ({ x: FW - 60, y: OUT_Y + 34 });
-    Object.values(RT.lines).forEach(L => {
-      L.fin.len = FX.slot(FAC_SLOTS - 1) - a; L.fin.pos = s => ({ x: a + s, y: IN_Y });
-      L.fout.len = e - a; L.fout.pos = s => ({ x: a + s, y: OUT_Y });
-      L.feedIn.forEach((b, j) => { const x = FX.slot(j); b.len = inBot - inTop; b.pos = s => ({ x, y: inTop + s }); });
-      L.feedOut.forEach((b, j) => { const x = FX.slot(j); b.len = outBot - outTop; b.pos = s => ({ x, y: outTop + s }); });
-      [L.fin, L.fout, ...L.feedIn, ...L.feedOut].forEach(b => b.items.forEach(it => it.s = Math.min(it.s, b.len)));
-      L.fin.items.forEach(it => { if (it.to != null) it.stop = FX.inS(it.to); }); }); // ore already on the belt re-aims at its smelter's new position
-    if (S.lines[S.sview]) renderTabs('stabs', LINES, S.sview, id => S.lines[id], lineShown, id => { S.sview = id; S.seen['line-' + id] = true; fpops = []; flayout(); sync(); }, l => `${l.slots.filter(Boolean).length}/${FAC_SLOTS} smelters`.replace(' smelters', '') + ' smelters', LINE_Q);
-    buildFacUI();
-  }
+  // ---- production line views: Smelt and Crafting draw the same way ----
+  const PL_TOP = 96, PL_ROW0 = PL_TOP + 108, PL_ROWH = 122;
+  const LV_Q = { smelt: { iron: ['fire', 'fire2', 'e1', 'e1'], copper: ['copperline', 'copperdeep', 'e1', 'e1'] },
+    craft: { plates: ['build', 'e1', 'e1', 'e1'], wire: ['build', 'e1', 'e1', 'e1'], concrete: ['mix', 'e1', 'e1', 'e1'] } }; // the quest that opens each Level
+  const lvQ = (kind, id, i) => LV_Q[kind][id][i];
+  const lvOpen = (kind, id, i) => qOpen(lvQ(kind, id, i));
+  const lvShown = (kind, id) => { let n = 1; while (n < PL_LV && lvOpen(kind, id, n)) n++; return n; };
+  const upOpen = () => qOpen('e1'); // ×2 upgrades arrive with the stretch goals
+  const VX = {};
+  const selOf = kind => kind === 'smelt' ? S.sview : S.cview;
+  const rtOf = kind => kind === 'smelt' ? RT.lines : RT.crafts;
+  function plGeom(K, V) { const n = lvShown(K.kind, K.id), X = V.X, yTop = 14 + 70 + 10, yb = X.rowY(n - 1);
+    K.G.downStop = i => X.rowY(i) - yTop; K.G.riseIn = i => yb - X.rowY(i);
+    K.down.len = yb - yTop; K.down.pos = s => ({ x: X.lx, y: yTop + s });
+    K.rise.len = yb - yTop; K.rise.pos = s => ({ x: X.rx, y: yb - s });
+    K.rows.forEach(R => { const y = X.rowY(R.i), x0 = X.lx + PITCH, x1 = X.conX - X.conW / 2 - 8 - CELL / 2;
+      R.feed.len = Math.floor((x1 - x0) / PITCH) * PITCH; R.feed.pos = s => ({ x: x0 + s, y });
+      const o0 = X.conX + X.conW / 2 + 8 + CELL / 2, o1 = X.rx - PITCH; R.outB.len = Math.max(0, o1 - o0); R.outB.pos = s => ({ x: o0 + s, y }); });
+    [K.down, K.rise, ...K.rows.flatMap(R => [R.feed, R.outB])].forEach(b => b.items.forEach(it => it.s = Math.min(it.s, b.len)));
+    K.down.items.forEach(it => { if (it.to != null) it.stop = K.G.downStop(it.to); }); }
+  function pllayout(kind) { const V = VX[kind]; if (!V) return;
+    V.W = V.stage.clientWidth || Math.max(280, document.querySelector('.app').clientWidth - 58);
+    const id = selOf(kind), n = plState(kind, id) ? lvShown(kind, id) : 1;
+    V.H = PL_ROW0 + (n - 1) * PL_ROWH + 118;
+    const dpr = devicePixelRatio || 1; V.cv.width = V.W * dpr; V.cv.height = V.H * dpr; V.cv.style.height = V.H + 'px'; V.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const bw = Math.round(Math.min(132, (V.W - 24 - 72 - 16) / 2));
+    V.X = { lx: 30, rx: V.W - 30, bw, inBox: { x: 12, y: 14, w: bw, h: 70 }, outBox: { x: V.W - 12 - bw, y: 14, w: bw, h: 70 }, rowY: i => PL_ROW0 + i * PL_ROWH, conX: V.W - 110, conW: 70, n };
+    Object.values(rtOf(kind)).forEach(K => plGeom(K, V));
+    buildPLUI(kind); }
+  // the empty Level slots (place a machine) and the placed machines (tap to upgrade ×2)
+  function buildPLUI(kind) { const V = VX[kind]; V.ui.forEach(e => e.remove()); V.ui = [];
+    const id = selOf(kind), c = plState(kind, id); if (!c) return;
+    for (let i = 0; i < V.X.n; i++) { const b = document.createElement('button'); b.id = `${kind}-lv-${i}`;
+      Object.assign(b.style, { left: (V.X.conX - V.X.conW / 2) + 'px', top: (V.X.rowY(i) - 35) + 'px', width: V.X.conW + 'px', height: '70px' });
+      b.addEventListener('click', () => { const d = plDef(kind, selOf(kind)), st = plState(kind, selOf(kind)); if (!st) return;
+        if (!st.slots[i]) { if (S.inv[d.mach] < 1 || !lvOpen(kind, selOf(kind), i)) return; S.inv[d.mach]--; st.slots[i] = 1; sync(); save(); return; }
+        if (st.slots[i] >= 2 || !upOpen()) return; const cost = { [CR]: UP2 * LOAD(i) }; if (!canPay(cost)) return;
+        pay(cost); st.slots[i] = 2; const K = rtOf(kind)[selOf(kind)]; if (K) K.rows[i].flash = 0.6; sync(); save(); });
+      V.stage.appendChild(b); V.ui.push(b); }
+    sync(); }
+  const flayout = () => { pllayout('smelt'); if (S.lines[S.sview]) renderTabs('stabs', LINES, S.sview, id => S.lines[id], lineShown, id => { S.sview = id; S.seen['line-' + id] = true; flayout(); sync(); }, l => `${l.slots.filter(Boolean).length} smelter${l.slots.filter(Boolean).length === 1 ? '' : 's'}`, LINE_Q); };
 
   // ---- simulation ----
   function tick(dt) {
@@ -941,59 +983,45 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
       if (m.dig && Date.now() >= m.dig.end) { m.dig = null; addLevel(M.id); }
       m.levels.forEach((lv, i) => { const r = M.levels[i], tb = M.tunnels[i]; if (r.swing > 0) r.swing -= dt; if (r.blocked > 0) r.blocked -= dt;
         if (lv.drill) { if (!r.sock) r.sock = { p: 0 }; const D = DRILLS[lv.drill];
-          if (r.sock.p < 1) { if (D.kw && (!S.drillsOn || !useKw('drills', D.kw, dt))) r.nopow = S.drillsOn ? r.nopow + dt : 0; else { r.nopow = 0; r.sock.p = Math.min(1, r.sock.p + dt / D.T); } }
+          if (r.sock.p < 1) { if (D.kw && (!S.drillsOn || !useKw('drills', D.kw * LOAD(i), dt))) r.nopow = S.drillsOn ? r.nopow + dt : 0; else { r.nopow = 0; r.sock.p = Math.min(1, r.sock.p + dt / D.T); } }
           if (r.sock.p >= 1 && tb.canInsert(0)) { const p = tb.pos(0); tb.insert(0, { ox: X.sock + SLOTW / 2 - p.x, oy: 0, load: LOAD(i), item: ore }); r.sock = null; } }
         else r.sock = null;
         tb.tick(dt); r.stuck = tb.front() ? r.stuck + dt : 0; });
       M.shaft.tick(dt); M.surf.tick(dt);
       M.surfWait = M.shaft.front() ? M.surfWait + dt : 0; });
-    // smelter lines, all running at once
-    Object.values(RT.lines).forEach(L => { const def = LINE[L.id], line = S.lines[L.id];
-      const want = j => L.fin.items.filter(it => it.to === j).length + L.feedIn[j].items.length + (L.jobs[j] && !L.jobs[j].done ? 1 : 0);
-      const open = line.slots.map((on, j) => on ? j : -1).filter(j => j >= 0);
-      if (line.on && open.length && S.items[def.ore] >= 1 && L.fin.canInsert(0)) {
-        const j = open.reduce((b, k) => want(k) < want(b) ? k : b, open[0]);
-        if (want(j) < 3) { S.items[def.ore] -= 1; consumed(def.ore, 1); L.flowIn.push(clock); L.fin.insert(0, { ox: 0, oy: -22, item: def.ore, load: 1, to: j, stop: FX.inS(j),
-          exit: it => { if (!L.feedIn[j].canInsert(0)) return false; L.feedIn[j].insert(0, { ox: 0, oy: -PITCH, item: it.item, load: 1 }); return true; } }); } }
-      L.fin.tick(dt); L.feedIn.forEach(b => b.tick(dt));
-      L.jobs.forEach((j, k) => { if (!j) return;
-        if (!j.done) { if (!line.on) { L.stall[k] = 0; return; } if (!useKw(L.id, SMELT_KW, dt)) { L.stall[k] += dt; return; }
-          L.stall[k] = 0; j.started = true; j.p += dt / SMELT_T; if (j.p >= 1) j.done = true; }
-        if (j.done && L.feedOut[k].canInsert(0)) { L.feedOut[k].insert(0, { ox: 0, oy: -14, item: def.out, load: 1 }); L.jobs[k] = null; } });
-      L.feedOut.forEach(b => b.tick(dt)); L.fout.tick(dt); });
+    // production lines, all running at once
+    Object.values(RT.lines).forEach(K => tickPL(K, dt));
+    Object.values(RT.crafts).forEach(K => tickPL(K, dt));
     for (const p of pops) p.t += dt; pops = pops.filter(p => p.t < 1.1);
     for (const p of fpops) p.t += dt; fpops = fpops.filter(p => p.t < 1.1);
-    // crafting lines
-    Object.values(RT.crafts).forEach(K => { const d = CRAFT[K.id], c = S.crafts[K.id];
-      const placed = K.rows.filter(R => c.slots[R.i]);
-      const want = R => R.buf + R.feed.items.length + K.down.items.filter(it => it.to === R.i).length;
-      if (c.on && placed.length && S.items[d.in] >= 1 && K.down.canInsert(0)) { const R = placed.reduce((b, r) => want(r) < want(b) ? r : b, placed[0]);
-        if (want(R) < d.nIn * 2) { S.items[d.in] -= 1; consumed(d.in, 1); K.flowIn.push(clock);
-          K.down.insert(0, { item: d.in, load: 1, to: R.i, stop: KX.downStop(R.i), exit: it => { if (!R.feed.canInsert(0)) return false; R.feed.insert(0, { item: d.in, load: 1 }); return true; } }); } }
-      K.down.tick(dt);
-      K.rows.forEach(R => { R.feed.tick(dt); if (R.flash > 0) R.flash -= dt;
-        if (c.slots[R.i]) {
-          if (!R.busy && R.buf >= d.nIn && R.out === 0) { R.buf -= d.nIn; R.busy = true; R.p = 0; }
-          if (R.busy && c.on) { if (useKw(K.id, CON_KW, dt)) { R.stall = 0; R.p += dt / d.T; if (R.p >= 1) { R.busy = false; R.out += d.nOut; R.flash = 0.4; } } else R.stall += dt; }
-          else R.stall = 0; }
-        if (R.out > 0 && R.outB.canInsert(0)) { R.outB.insert(0, { item: d.out, load: 1 }); R.out--; }
-        R.outB.tick(dt); });
-      K.rise.tick(dt); });
     // Coal Power Plant: burns coal only as fast as the batteries have room
-    if (S.inv.plant) { const want = Math.min(PLANT_KW * dt, Math.max(0, powerCap() - S.power)); let made = 0;
+    if (S.inv.plant) { const want = Math.min(plantKw() * dt, Math.max(0, powerCap() - S.power)); let made = 0;
       while (want - made > 1e-9) { if (PLANT.fuel <= 1e-9) { if (S.items.coal >= 1) { S.items.coal -= 1; consumed('coal', 1); PLANT.fuel += KW_PER_COAL; } else break; }
         const take = Math.min(PLANT.fuel, want - made); PLANT.fuel -= take; made += take; }
       S.power += made; powerIn.add(made); plantMeter.add(made); PLANT.starved = made < want - 1e-6 ? PLANT.starved + dt : 0;
       PLANT.genAcc += made; while (PLANT.genAcc >= 1) { PLANT.genAcc -= 1; genDot(); } }
-    // the Recycler sells a trickle from every FULL warehouse. Each sale drops it to 99/100 until the next cart arrives,
-    // so it counts as "recycling" for a few seconds after it was last full; otherwise the row would flicker on every sale
-    if (S.inv.recycler) Object.keys(ITEMS).forEach(k => { const r = RECY[k] = RECY[k] || { acc: 0, last: -99 };
-      if (walletFull() || roomOf(k) >= 1) r.acc = 0; else r.acc = Math.min(1, r.acc + dt / RECYCLE_T);
-      r.on = roomOf(k) < 1 && !walletFull() && clock - r.last < RECYCLE_HOLD; });
+    if (S.inv.recycler) Object.keys(ITEMS).forEach(k => { const r = RECY[k] = RECY[k] || { log: [], last: -99 }; r.on = roomOf(k) < 1 && clock - r.last < RECYCLE_HOLD; });
     RECIPES.forEach(r => { const c = crafting[r.id]; if (c) { c.p += dt / r.T; if (c.p >= 1) { delete crafting[r.id]; S.inv[r.id] = (S.inv[r.id] || 0) + 1; S.crafted[r.id] = (S.crafted[r.id] || 0) + 1; if (r.id === 'battery' && tab === 'craft') renderCraft(); save(); } } });
     questTick(dt);
   }
   const powerRate = () => powerUsed.rate();
+  function tickPL(K, dt) { const d = plDef(K.kind, K.id), c = plState(K.kind, K.id); if (!d || !c) return;
+    const placed = K.rows.filter(R => c.slots[R.i]);
+    const want = R => (R.buf > 0 ? 1 : 0) + R.feed.items.length + K.down.items.filter(it => it.to === R.i).length;
+    if (c.on && placed.length && K.down.canInsert(0)) {
+      const R = placed.filter(r => want(r) < 2 + Math.ceil(c.slots[r.i] * (r.i + 1) / 2) && S.items[d.in] >= d.nIn * LOAD(r.i)).sort((a, b) => want(a) - want(b))[0];
+      if (R) { const L = d.nIn * LOAD(R.i); S.items[d.in] -= L; consumed(d.in, L); K.flowIn.push([clock, L]);
+        K.down.insert(0, { item: d.in, load: L, to: R.i, stop: K.G.downStop(R.i), exit: it => { if (!R.feed.canInsert(0)) return false; R.feed.insert(0, { item: d.in, load: it.load }); return true; } }); } }
+    K.down.tick(dt);
+    K.rows.forEach(R => { R.feed.tick(dt); if (R.flash > 0) R.flash -= dt; const sp = c.slots[R.i] || 0, L = LOAD(R.i); let working = false;
+      if (sp) {
+        if (!R.busy && R.buf >= d.nIn * L && R.out === 0) { R.buf -= d.nIn * L; R.busy = true; R.p = 0; }
+        if (R.busy && c.on) { if (useKw(K.id, machKw(R.i, sp), dt)) { R.stall = 0; working = true; R.p += dt * sp / d.T; if (R.p >= 1) { R.busy = false; R.out += 1; R.flash = 0.4; } } else R.stall += dt; }
+        else R.stall = 0;
+        R.eff += ((working ? 1 : 0) - R.eff) * Math.min(1, dt / 8); } // share of the last few seconds it spent working
+      if (R.out > 0 && R.outB.canInsert(0)) { R.outB.insert(0, { item: d.out, load: d.nOut * L }); R.out--; }
+      R.outB.tick(dt); });
+    K.rise.tick(dt); }
 
   function tapLevel(i) { const M = RT.mines[S.view], r = M.levels[i], tb = M.tunnels[i], ore = MINE[S.view].ore;
     r.swing = 0.15; const f = { x: X.rockX + 10, y: rowY(i) };
@@ -1057,33 +1085,6 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
     drawPops(pops);
   }
 
-  function drawLine() {
-    const id = S.sview, def = LINE[id], line = S.lines[id], L = RT.lines[id];
-    ctx = fctx; ctx.clearRect(0, 0, FW, FH);
-    ctx.fillStyle = C.earth1; ctx.fillRect(0, 0, FW, FH);
-    const rate = list => { while (list.length && clock - list[0] > 10) list.shift(); return list.length / Math.min(10, Math.max(1, clock)); };
-    const strip = (y, label, rows, r) => { rr(12, y, FW - 24, 28, 8); ctx.fillStyle = C.box; ctx.fill(); ctx.strokeStyle = C.sky2; ctx.lineWidth = 1.2; ctx.stroke();
-      ctx.textAlign = 'left'; ctx.font = '700 10px "Chakra Petch", system-ui, sans-serif'; ctx.fillStyle = C.sky; ctx.fillText(label, 22, y + 18);
-      const lw = ctx.measureText(label).width; ctx.font = '700 12px "Nunito Sans", system-ui, sans-serif'; ctx.fillStyle = r > 0 ? C.grass : C.dim; ctx.fillText(perS(r), 22 + lw + 8, y + 19);
-      let x = FW - 22; rows.slice().reverse().forEach(([k, n]) => { ctx.font = '700 12px "Nunito Sans", system-ui, sans-serif'; const t = typeof n === 'string' ? n : big(n), tw = ctx.measureText(t).width;
-        ctx.textAlign = 'right'; ctx.fillStyle = C.text; ctx.fillText(t, x, y + 19); x -= tw + 3; if (ready(img(k))) ctx.drawImage(img(k), x - 20, y + 4, 20, 20); x -= 32; }); };
-    strip(8, 'FROM WAREHOUSE ▾', [[def.ore, `${big(S.items[def.ore])}/${big(capOf(def.ore))}`]], rate(L.flowIn));
-    strip(OUT_Y + 20, 'INTO WAREHOUSE ▴', [[def.out, `${big(S.items[def.out])}/${big(capOf(def.out))}`]], rate(L.flowOut));
-    const feeds = line.slots.flatMap((on, j) => on ? [L.feedIn[j], L.feedOut[j]] : []);
-    tracks([L.fin, L.fout, ...feeds]); [L.fin, L.fout, ...feeds].forEach(beltCells);
-    for (let j = 0; j < FAC_SLOTS; j++) { const x = FX.slot(j), job = L.jobs[j];
-      if (!line.slots[j]) continue;
-      if (job && job.started && !job.done && !reduce) { ctx.save(); ctx.globalAlpha = 0.35 + 0.25 * Math.sin(clock * 9 + j); ctx.fillStyle = '#ff8a3c'; ctx.beginPath(); ctx.arc(x, SM_Y + 4, 20, 0, 7); ctx.fill(); ctx.restore(); }
-      if (ready(IMG.basic_smelter)) ctx.drawImage(IMG.basic_smelter, x - 26, SM_Y - 30, 52, 52);
-      const bw = 40, bx = x - bw / 2, by = SM_Y + 26; rr(bx, by, bw, 5, 2.5); ctx.fillStyle = C.track; ctx.fill();
-      if (job && job.started) { rr(bx, by, Math.max(5, bw * Math.min(1, job.p)), 5, 2.5); ctx.fillStyle = job.done ? C.grass : '#ff9a4a'; ctx.fill(); }
-    }
-    [L.fin, L.fout, ...feeds].forEach(beltItems);
-    for (let j = 0; j < FAC_SLOTS; j++) if (line.slots[j] && L.stall[j] > 0.3) { const x = FX.slot(j); ctx.fillStyle = C.panel2; rr(x - 31, SM_Y - 48, 62, 18, 5); ctx.fill(); if (ready(IMG.power_out)) ctx.drawImage(IMG.power_out, x - 30, SM_Y - 47, 16, 16); ctx.save(); ctx.font = '700 9px "Chakra Petch", system-ui, sans-serif'; ctx.globalAlpha = reduce ? 1 : 0.6 + 0.4 * Math.sin(clock * 4); ctx.fillStyle = C.alarm; ctx.textAlign = 'center'; ctx.fillText('NO POWER', x + 7, SM_Y - 36); ctx.restore(); }
-    if (line.on && line.slots.some(Boolean) && S.items[def.ore] < 1 && !L.fin.items.length) note(`NO ${ITEMS[def.ore].name.toUpperCase()}`, 14, IN_Y + 26, C.alarm);
-    drawPops(fpops);
-  }
-
   // ---- sub-tab rows (mines under Extract, lines under Smelt) ----
   function renderTabs(host, defs, sel, state, isOpen, pick, sub, qmap) {
     $(host).style.gridTemplateColumns = `repeat(${defs.length}, minmax(0, 1fr))`;
@@ -1127,16 +1128,6 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   }
   const clockTxt = sec => { sec = Math.max(0, Math.ceil(sec)); const h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60), s = sec % 60; return h ? `${h}h ${m}m` : m ? `${m}:${String(s).padStart(2, '0')}` : `${s}s`; };
 
-  // ---- smelter slot buttons ----
-  let fui = [];
-  function buildFacUI() {
-    fui.forEach(e => e.remove()); fui = [];
-    for (let j = 0; j < FAC_SLOTS; j++) { const b = document.createElement('button'); b.className = 'slotbtn'; b.id = 'slot-' + j;
-      Object.assign(b.style, { left: (FX.slot(j) - 26) + 'px', top: (SM_Y - 30) + 'px', width: '52px', height: '56px' });
-      b.addEventListener('click', () => { const line = S.lines[S.sview]; if (!line || line.slots[j] || S.inv.smelter < 1) return; S.inv.smelter--; line.slots[j] = true; flayout(); sync(); save(); });
-      fstage.appendChild(b); fui.push(b); }
-    sync();
-  }
   $('fac-run').addEventListener('click', () => { const line = S.lines[S.sview]; if (!line) return; line.on = !line.on; sync(); save(); });
 
   // ---- power ----
@@ -1162,7 +1153,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
     pdots = []; }
   // who draws power: every open smelter line, every crafting line, and the Electric drills
   const pConsumers = () => [
-    { id: 'drills', kind: 'drills', name: 'Electric Drills', short: 'DRILLS', icon: 'electric_drill', later: !qOpen('electric') && !elecPlaced(), q: 'electric' },
+    { id: 'drills', kind: 'drills', name: 'Electric Drills', short: 'DRILLS', icon: 'electric_drill', later: !qOpen('e1') && !elecPlaced(), q: 'e1' },
     { id: 'smelters', kind: 'line', name: 'Smelters', short: 'SMELTERS', icon: 'basic_smelter', later: !qOpen('fire') && !placedSmelters(), q: 'fire' },
     { id: 'constructors', kind: 'craft', name: 'Constructors', short: 'CONSTRUCTORS', icon: 'auto_constructor', later: !qOpen('build') && !placedCons(), q: 'build' }];
   const linesWith = () => Object.entries(S.lines).filter(([, l]) => l.slots.some(Boolean));
@@ -1173,7 +1164,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   const setPlug = (c, v) => { if (c.kind === 'line') Object.values(S.lines).forEach(l => l.on = v); else if (c.kind === 'craft') Object.values(S.crafts).forEach(k => k.on = v); else S.drillsOn = v; };
   const unitsOf = c => c.kind === 'line' ? placedSmelters() : c.kind === 'craft' ? placedCons() : elecPlaced();
   const unitWord = c => c.kind === 'line' ? 'smelter' : c.kind === 'craft' ? 'constructor' : 'drill';
-  const isStalled = c => c.kind === 'line' ? Object.values(RT.lines).some(L => S.lines[L.id].on && L.stall.some((t, j) => S.lines[L.id].slots[j] && t > 0.4))
+  const isStalled = c => c.kind === 'line' ? Object.values(RT.lines).some(K => S.lines[K.id].on && K.rows.some(R => S.lines[K.id].slots[R.i] && R.stall > 0.4))
     : c.kind === 'craft' ? Object.values(RT.crafts).some(K => S.crafts[K.id].on && K.rows.some(R => S.crafts[K.id].slots[R.i] && R.stall > 0.4))
     : Object.values(RT.mines).some(M => M.levels.some(r => r.nopow > 0.4));
   const conX = (i, n) => PW * (i * 2 + 1) / (2 * n);
@@ -1187,7 +1178,8 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   function powerDot(id) { if (tab !== 'power' || !PW) return; const cs = pConsumers(), i = cs.findIndex(c => c.id === id); if (i < 0) return;
     const path = outPath(i, cs.length); pdots.push({ path, len: plen(path), s: 0, done: () => pulse[id] = 0.35 }); }
   // max draw = every placed machine working flat out
-  const consumerMax = c => unitsOf(c) * (c.kind === 'line' ? SMELT_KW : c.kind === 'craft' ? CON_KW : DRILLS.electric.kw);
+  const sumKw = lines => Object.values(lines).reduce((a, l) => a + l.slots.reduce((b, sp, i) => b + (sp ? machKw(i, sp) : 0), 0), 0);
+  const consumerMax = c => c.kind === 'line' ? sumKw(S.lines) : c.kind === 'craft' ? sumKw(S.crafts) : Object.values(S.mines).reduce((a, m) => a + m.levels.reduce((b, l, i) => b + (l.drill === 'electric' ? DRILLS.electric.kw * LOAD(i) : 0), 0), 0);
   const lineMax = id => { const c = pConsumers().find(x => x.id === id); return c ? consumerMax(c) : 0; };
   const lineDraw = id => meterOf(id).rate();
   // what a consumer is doing right now: [label, colour key, powered?]
@@ -1217,7 +1209,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
     pnode(PG.genX, PG.srcY, 'coal_generator', !plant);
     if (!plant) { ptext('COAL POWER PLANT', PG.genX, PG.srcY + 52, C.dim, 9.5); ptext(qOpen('plant') ? 'build it' : `quest ${qNum('plant')}`, PG.genX, PG.srcY + 65, C.dim, 10, 700, '"Nunito Sans"'); }
     else { const out = PLANT.starved > 0.5 && S.items.coal < 1; ptext('COAL POWER PLANT', PG.genX, PG.srcY + 52, C.text, 9.5);
-      ptext(out ? 'NO COAL' : `+${Math.min(genR, PLANT_KW).toFixed(1)} of ${PLANT_KW} kW/s`, PG.genX, PG.srcY + 65, out ? C.alarm : C.gold, 10, 700, '"Nunito Sans"'); }
+      ptext(out ? 'NO COAL' : `Lv ${S.plantLv || 1} · +${Math.min(genR, plantKw()).toFixed(1)} of ${plantKw()} kW/s`, PG.genX, PG.srcY + 65, out ? C.alarm : C.gold, 10, 700, '"Nunito Sans"'); }
     // battery bank: a panel of its own, one slot per battery and a dashed slot for the next
     const bx = 12, bw = PW - 24, by = PG.bankTop, bh = PG.bankBot - PG.bankTop;
     rr(bx, by, bw, bh, 12); ctx.fillStyle = C.box; ctx.fill(); ctx.strokeStyle = C.sky2; ctx.lineWidth = 1.5; ctx.stroke();
@@ -1255,93 +1247,111 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
     if ($('phub-rows')._h !== html) { $('phub-rows')._h = html; $('phub-rows').innerHTML = html; } }
   $('phub-rows').addEventListener('click', e => { const b = e.target.closest('[data-plug]'); if (!b || b.disabled) return; const c = pConsumers().find(x => x.id === b.dataset.plug); if (!c) return; setPlug(c, !plugOn(c)); sync(); save(); });
 
+  // ---- Power Plant upgrades (stretch goals): parts and credits, handed in a bit at a time like research ----
+  function renderPlant() { const card = $('plant-card'), lv = S.plantLv || 1, show = !!S.inv.plant && upOpen(); card.hidden = !show; if (!show) return;
+    $('plant-tag').textContent = `Lv ${lv} · ${plantKw()} kW/s`;
+    $('plant-note').textContent = lv >= 4 ? 'Fully upgraded for Tier 1: 80 kW/s from 10 coal a second at full power.' : `Lv ${lv + 1} makes ${PLANT_LV_KW[lv + 1]} kW/s and burns up to ${PLANT_LV_KW[lv + 1] / KW_PER_COAL} coal a second. Hand in parts as you make them.`;
+    const host = $('plant-up'); if (lv >= 4) { host.hidden = true; return; } host.hidden = false;
+    const need = PLANT_UP[lv + 1], h = S.plantHand || {};
+    const rows = Object.entries(need).map(([k, v]) => `<div class="need">${icon(k)}<div class="bar"><i style="width:${Math.min(100, (h[k] || 0) / v * 100)}%"></i></div><span><b>${big(h[k] || 0)}</b> / ${big(v)}</span></div>`).join('');
+    const pay = Object.fromEntries(Object.entries(need).map(([k, v]) => [k, Math.min(Math.floor(bal(k)), v - (h[k] || 0))]).filter(e => e[1] > 0)), n = Object.keys(pay).length, ni = Object.entries(pay).reduce((a, [k, b]) => a + (k === CR ? 0 : b), 0);
+    const key = JSON.stringify([lv, h, pay]); if (host._k === key) return; host._k = key;
+    host.innerHTML = `<header><h3>Upgrade to Lv ${lv + 1}</h3><span class="tag now">${PLANT_LV_KW[lv + 1]} kW/s</span></header><div class="tier-pay"><div class="needs">${rows}</div><button class="sq tdel" id="plant-del" ${n ? '' : 'disabled'}><small>${n ? 'Deliver' : 'Need'}</small>${icon('coal_generator')}<b>${n ? (ni ? big(ni) + ' items' : 'credits') : 'more'}</b></button></div>`;
+    $('plant-del').addEventListener('click', plantDeliver); }
+  function plantDeliver() { const lv = S.plantLv || 1; if (lv >= 4 || !upOpen()) return; const need = PLANT_UP[lv + 1]; S.plantHand = S.plantHand || {};
+    Object.entries(need).forEach(([k, v]) => { const give = Math.min(Math.floor(bal(k)), v - (S.plantHand[k] || 0)); if (give > 0) { pay({ [k]: give }); S.plantHand[k] = (S.plantHand[k] || 0) + give; } });
+    if (Object.entries(need).every(([k, v]) => (S.plantHand[k] || 0) >= v)) { S.plantLv = lv + 1; S.plantHand = {}; }
+    $('plant-up')._k = null; renderPlant(); sync(); save(); }
+
   // ---- Crafting: tier tabs, craft tabs, and a stacked constructor line like the mines ----
-  const cstage = $('cstage'), ccv = $('ccv'), cctx = ccv.getContext('2d'); let CW = 0, CH = 0; const KX = {};
-  const C_TOP = 96, C_ROW0 = C_TOP + 92, C_ROWH = 112;
+  const cstage = $('cstage'), ccv = $('ccv'), cctx = ccv.getContext('2d');
+  VX.smelt = { stage: fstage, cv: fcv, ctx: fctx, ui: [], W: 0 }; VX.craft = { stage: cstage, cv: ccv, ctx: cctx, ui: [], W: 0 };
   const LOCK_SM = '<svg class="lk" viewBox="0 0 12 12" width="9" height="9" aria-hidden="true"><rect x="2" y="5" width="8" height="6" rx="1.5" fill="currentColor"/><path d="M4 5V3.5a2 2 0 0 1 4 0V5" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>';
   const LOCK = '<svg viewBox="0 0 12 12" aria-hidden="true"><rect x="2" y="5" width="8" height="6" rx="1.5" fill="currentColor"/><path d="M4 5V3.5a2 2 0 0 1 4 0V5" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>';
   const LATER_CRAFTS = { 2: [['iron_plate', 'Rods'], ['copper_wire', 'Cable'], ['storage_crate', 'Frames']], 3: [['iron_plate', '?'], ['copper_wire', '?'], ['storage_crate', '?']], 4: [['iron_plate', '?'], ['copper_wire', '?'], ['storage_crate', '?']], 5: [['iron_plate', '?'], ['copper_wire', '?'], ['storage_crate', '?']] };
   let cTier = 1;
   function clayout() {
-    CW = cstage.clientWidth || Math.max(280, document.querySelector('.app').clientWidth - 58);
-    CH = C_ROW0 + CRAFT_LEVELS * C_ROWH + 20;
-    const dpr = devicePixelRatio || 1; ccv.width = CW * dpr; ccv.height = CH * dpr; ccv.style.height = CH + 'px'; cctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    const lx = 30, rx = CW - 30, bw = Math.round(Math.min(132, CW * 0.4));
-    Object.assign(KX, { lx, rx, bw, inBox: { x: 12, y: 14, w: bw, h: 70 }, outBox: { x: CW - 12 - bw, y: 14, w: bw, h: 70 }, rowY: i => C_ROW0 + i * C_ROWH, conX: CW - 110, conW: 70 });
-    const yTop = 14 + 70 + 10, yb = KX.rowY(CRAFT_LEVELS - 1);
-    KX.downStop = i => KX.rowY(i) - yTop; KX.riseIn = i => yb - KX.rowY(i);
-    Object.values(RT.crafts).forEach(K => {
-      K.down.len = yb - yTop; K.down.pos = s => ({ x: lx, y: yTop + s });
-      K.rise.len = yb - yTop; K.rise.pos = s => ({ x: rx, y: yb - s });
-      K.rows.forEach(R => { const y = KX.rowY(R.i), x0 = lx + PITCH, x1 = KX.conX - KX.conW / 2 - 8 - CELL / 2;
-        R.feed.len = Math.floor((x1 - x0) / PITCH) * PITCH; R.feed.pos = s => ({ x: x0 + s, y });
-        const o0 = KX.conX + KX.conW / 2 + 8 + CELL / 2, o1 = rx - PITCH; R.outB.len = Math.max(0, o1 - o0); R.outB.pos = s => ({ x: o0 + s, y }); });
-      [K.down, K.rise, ...K.rows.flatMap(R => [R.feed, R.outB])].forEach(b => b.items.forEach(it => it.s = Math.min(it.s, b.len)));
-      K.down.items.forEach(it => { if (it.to != null) it.stop = KX.downStop(it.to); }); });
     if (!craftShown(S.cview)) S.cview = CRAFTS.map(c => c.id).find(craftShown) || 'plates';
-    renderCraftNav(); buildCraftUI();
-  }
+    pllayout('craft'); renderCraftNav(); }
   // a craft's status for its tab dot: bad = no power, warn = short on input or output full, ok = running, idle = no constructor
   function craftState(id) { const c = S.crafts[id], K = RT.crafts[id]; if (!c || !K) return 'idle'; const rows = K.rows.filter(R => c.slots[R.i]);
     if (!rows.length || !c.on) return 'idle'; if (rows.some(R => R.stall > 0.4)) return 'bad';
-    if (rows.some(R => !R.busy && R.buf < CRAFT[id].nIn && !R.feed.items.length) || roomOf(CRAFT[id].out) < 1) return 'warn'; return 'ok'; }
-  const craftRate = id => { const K = RT.crafts[id]; if (!K) return 0; const l = K.flowOut; while (l.length && clock - l[0] > 10) l.shift(); return l.length / Math.min(10, Math.max(1, clock)); };
+    if (rows.some(R => R.eff < 0.5) || (roomOf(CRAFT[id].out) < 1 && !recyOn(CRAFT[id].out))) return 'warn'; return 'ok'; }
+  const lineRate = K => { const l = K.flowOut; while (l.length && clock - l[0][0] > PROD_WIN) l.shift(); return l.reduce((a, e) => a + e[1], 0) / Math.min(PROD_WIN, Math.max(1, clock)) * 60; }; // per minute
+  const lineMake = (kind, id) => { const d = plDef(kind, id), st = plState(kind, id), K = rtOf(kind)[id]; if (!d || !st || !K || !st.on) return 0;
+    return K.rows.reduce((a, R) => a + (st.slots[R.i] ? machIn(d, R.i, st.slots[R.i]) * 60 * d.nOut / d.nIn * R.eff : 0), 0); };
+  const madePerMin = k => [['smelt', S.lines], ['craft', S.crafts]].reduce((a, [kind, lines]) => a + Object.keys(lines).reduce((b, id) => b + (plDef(kind, id) && plDef(kind, id).out === k ? lineMake(kind, id) : 0), 0), 0);
+  const craftRate = id => lineMake('craft', id);
   function renderCraftNav() {
     const tierBtn = t => { const open = t === 1, st = open ? CRAFTS.map(d => craftState(d.id)) : [], worst = st.includes('bad') ? 'bad' : st.includes('warn') ? 'warn' : st.includes('ok') ? 'ok' : 'idle';
       return `<button role="tab" aria-selected="${t === cTier}" class="${open ? '' : 'locked'}" data-t="${t}" aria-label="Tier ${t}${open ? '' : ', locked'}">${open ? '' : LOCK}T${t}${open ? `<i class="dot-${worst}"></i>` : ''}</button>`; };
     const th = [1, 2, 3, 4, 5].map(tierBtn).join('');
     const ch = cTier === 1 ? CRAFTS.map(d => { const open = craftShown(d.id), st = craftState(d.id), r = craftRate(d.id);
-        return `<button role="tab" aria-selected="${open && d.id === S.cview}" ${open ? '' : 'disabled'} data-c="${d.id}"><img src="icons/${ICON(d.out)}.webp" alt=""><b>${d.short}</b><small>${open ? `<i class="dot-${st}"></i>${r >= 0.05 ? r.toFixed(r >= 10 ? 0 : 1) + '/s' : st === 'idle' ? 'idle' : '0/s'}` : craftOpen(d.id) ? lockLabel(CRAFT_Q[d.id]) : 'research'}</small></button>`; }).join('')
+        return `<button role="tab" aria-selected="${open && d.id === S.cview}" ${open ? '' : 'disabled'} data-c="${d.id}"><img src="icons/${ICON(d.out)}.webp" alt=""><b>${d.short}</b><small>${open ? `<i class="dot-${st}"></i>${r >= 0.5 ? big(r) + '/min' : st === 'idle' ? 'idle' : '0/min'}` : craftOpen(d.id) ? lockLabel(CRAFT_Q[d.id]) : 'research'}</small></button>`; }).join('')
       : LATER_CRAFTS[cTier].map(([ic, nm]) => `<button role="tab" disabled><img src="icons/${ic}.webp" alt=""><b>${nm}</b><small>Tier ${cTier}</small></button>`).join('');
     if ($('ttabs')._h !== th) { $('ttabs')._h = th; $('ttabs').innerHTML = th; }
     if ($('ctabs')._h !== ch) { $('ctabs')._h = ch; $('ctabs').innerHTML = ch; }
   }
   $('ttabs').addEventListener('click', e => { const b = e.target.closest('[data-t]'); if (!b) return; cTier = +b.dataset.t; renderCraftNav(); });
   $('ctabs').addEventListener('click', e => { const b = e.target.closest('[data-c]'); if (!b || b.disabled) return; S.cview = b.dataset.c; S.seen['craft-' + S.cview] = true; clayout(); sync(); });
-  let cui = [];
-  function buildCraftUI() { cui.forEach(e => e.remove()); cui = [];
-    for (let i = 0; i < CRAFT_LEVELS; i++) { const b = document.createElement('button'); b.className = 'conbtn'; b.id = 'con-' + i;
-      Object.assign(b.style, { left: (KX.conX - KX.conW / 2) + 'px', top: (KX.rowY(i) - 35) + 'px', width: KX.conW + 'px', height: '70px' });
-      b.addEventListener('click', () => { const c = S.crafts[S.cview]; if (!c || c.slots[i] || S.inv.constructor < 1) return; S.inv.constructor--; c.slots[i] = true; sync(); save(); });
-      cstage.appendChild(b); cui.push(b); }
-  }
   $('craft-run').addEventListener('click', () => { const c = S.crafts[S.cview]; if (!c) return; c.on = !c.on; sync(); save(); });
   $('cwh-host').appendChild(pill('up-cwh', 'warehouse', () => { const k = CRAFT[S.cview] ? CRAFT[S.cview].out : 'iron_plate', done = whLvOf(k) >= 2;
     return { name: `${ITEMS[k].name} warehouse Lv ${whLvOf(k)}`, label: `${big(S.items[k])}/${big(capOf(k))} → ${big(whCap(whLvOf(k) + 1))}`, cost: done ? null : whCost(k), up: () => S.wh[k] = whLvOf(k) + 1, hot: roomOf(k) < 1 && !recyOn(k), max: 'max for Tier 1', gate: 'wh-' + k, done }; }));
-  function drawCraft() {
-    const id = S.cview, d = CRAFT[id], c = S.crafts[id], K = RT.crafts[id]; if (!d || !c || !K) return;
-    ctx = cctx; ctx.clearRect(0, 0, CW, CH);
-    ctx.fillStyle = C.panel; ctx.fillRect(0, 0, CW, C_TOP);
-    K.rows.forEach(R => { ctx.fillStyle = R.i % 2 ? C.panel : C.panel2; ctx.fillRect(0, KX.rowY(R.i) - C_ROWH / 2 - 8, CW, C_ROWH); });
-    ctx.fillStyle = C.line; ctx.fillRect(0, C_TOP, CW, 2);
-    const belts = [K.down, K.rise, ...K.rows.flatMap(R => R.outB.len > 0 ? [R.feed, R.outB] : [R.feed])];
+  // one drawing for every production line: IN shows only the flow (what feeds it, per minute, against what its machines need),
+  // OUT shows the warehouse and what this line makes per minute; each machine shows its level, next price and efficiency
+  const perMinTxt = r => r >= 100 ? big(r) : r >= 10 ? Math.round(r) : r.toFixed(1).replace(/\.0$/, '');
+  const plurals = (k, n) => { const nm = ITEMS[k].name.toLowerCase(); return n === 1 || /ore$|stone$|concrete$|coal$|wire$/.test(nm) ? nm.replace(/^(iron|copper) /, '') : nm.replace(/^(iron|copper) /, '') + 's'; };
+  function drawPL(kind) { const V = VX[kind], id = selOf(kind), d = plDef(kind, id), c = plState(kind, id), K = rtOf(kind)[id]; if (!d || !c || !K || !V.X) return;
+    const X = V.X, W2 = V.W; ctx = V.ctx; ctx.clearRect(0, 0, W2, V.H);
+    ctx.fillStyle = C.panel; ctx.fillRect(0, 0, W2, PL_TOP);
+    for (let i = 0; i < X.n; i++) { ctx.fillStyle = i % 2 ? C.panel : C.panel2; ctx.fillRect(0, X.rowY(i) - PL_ROWH / 2 - 8, W2, PL_ROWH); }
+    ctx.fillStyle = C.line; ctx.fillRect(0, PL_TOP, W2, 2);
+    const rows = K.rows.slice(0, X.n), belts = [K.down, K.rise, ...rows.flatMap(R => R.outB.len > 0 ? [R.feed, R.outB] : [R.feed])];
     tracks(belts); belts.forEach(beltCells);
-    const rate = l => { while (l.length && clock - l[0] > 10) l.shift(); return l.length / Math.min(10, Math.max(1, clock)); };
-    const box = (b, k, title, r, sign) => { ctx.fillStyle = C.box; ctx.fillRect(b.x, b.y, b.w, b.h); ctx.strokeStyle = C.sky2; ctx.lineWidth = 1.5; ctx.strokeRect(b.x + .75, b.y + .75, b.w - 1.5, b.h - 1.5);
-      ctx.textAlign = 'center'; ctx.font = '700 9.5px "Chakra Petch", system-ui, sans-serif'; ctx.fillStyle = C.sky; ctx.fillText(title, b.x + b.w / 2, b.y + 15);
-      if (ready(img(k))) ctx.drawImage(img(k), b.x + 8, b.y + 22, 28, 28);
-      ctx.textAlign = 'left'; ctx.font = '700 14px "Chakra Petch", system-ui, sans-serif'; ctx.fillStyle = roomOf(k) < 1 ? (recyOn(k) ? C.sky : C.alarm) : C.text; ctx.fillText(`${big(S.items[k])}/${big(capOf(k))}`, b.x + 40, b.y + 42);
-      ctx.textAlign = 'center'; ctx.font = '700 10.5px "Nunito Sans", system-ui, sans-serif'; ctx.fillStyle = r < 0.05 ? C.dim : sign === '+' ? C.grass : C.alarm; ctx.fillText(`${r < 0.05 ? '' : sign}${r.toFixed(1)}/s`, b.x + b.w / 2, b.y + b.h - 7); };
-    box(KX.inBox, d.in, `${ITEMS[d.in].name.toUpperCase()} IN`, rate(K.flowIn), '−');
-    box(KX.outBox, d.out, `${ITEMS[d.out].name.toUpperCase()} OUT`, rate(K.flowOut), '+');
-    const inName = ITEMS[d.in].name.toLowerCase().replace(' ingot', ' ingots'), outName = ITEMS[d.out].name.toLowerCase().replace('plate', 'plates');
-    K.rows.forEach(R => { const y = KX.rowY(R.i), cx = KX.conX, cw = KX.conW, ch = 70, on = c.slots[R.i];
-      ctx.textAlign = 'left'; ctx.font = '700 12px "Chakra Petch", system-ui, sans-serif'; ctx.fillStyle = C.text; ctx.fillText(`LEVEL ${R.i + 1}`, KX.lx + 22, y - 32);
-      ctx.font = '600 10px "Nunito Sans", system-ui, sans-serif'; ctx.fillStyle = C.dim; ctx.fillText(d.rl, KX.lx + 22, y - 18);
-      if (!on) return;
-      if (R.flash > 0 && !reduce) { ctx.save(); ctx.globalAlpha = R.flash * 1.5; ctx.fillStyle = ITEMS[d.out].color; rr(cx - cw / 2 - 4, y - ch / 2 - 4, cw + 8, ch + 8, 12); ctx.fill(); ctx.restore(); }
-      rr(cx - cw / 2, y - ch / 2, cw, ch, 10); ctx.fillStyle = C.panel; ctx.fill(); ctx.strokeStyle = R.busy && R.stall <= 0.4 ? C.grass2 : C.line; ctx.lineWidth = 1.5; ctx.stroke();
-      if (ready(IMG.auto_constructor)) ctx.drawImage(IMG.auto_constructor, cx - 22, y - 32, 44, 44);
-      const pw = Math.min(9, (cw - 20) / (d.nIn + 3)); for (let k = 0; k < d.nIn; k++) { rr(cx - cw / 2 + 8 + k * (pw + 2), y + ch / 2 - 16, pw, 7, 1.5); ctx.fillStyle = k < R.buf ? ITEMS[d.in].color : C.track; ctx.fill(); }
+    const frame = b => { ctx.fillStyle = C.box; ctx.fillRect(b.x, b.y, b.w, b.h); ctx.strokeStyle = C.sky2; ctx.lineWidth = 1.5; ctx.strokeRect(b.x + .75, b.y + .75, b.w - 1.5, b.h - 1.5); };
+    const t = (txt, x, y, col, size, w = 700, align = 'center', font = '"Chakra Petch"') => { ctx.font = `${w} ${size}px ${font}, system-ui, sans-serif`; ctx.fillStyle = col; ctx.textAlign = align; ctx.fillText(txt, x, y); };
+    // IN: supply against demand
+    const sup = supplyPerMin(d.in), need = rows.reduce((a, R) => a + (c.slots[R.i] && c.on ? machIn(d, R.i, c.slots[R.i]) * 60 : 0), 0), ok = sup >= need - 0.5;
+    frame(X.inBox); t(`${ITEMS[d.in].name.toUpperCase()} IN`, X.inBox.x + X.inBox.w / 2, X.inBox.y + 15, C.sky, 9.5);
+    if (ready(img(d.in))) ctx.drawImage(img(d.in), X.inBox.x + 8, X.inBox.y + 22, 28, 28);
+    t(`${perMinTxt(sup)}/min`, X.inBox.x + 40, X.inBox.y + 43, C.text, 15, 700, 'left');
+    t(need > 0 ? `${kind === 'smelt' ? 'smelters' : 'constructors'} need ${perMinTxt(need)}` : 'nothing placed yet', X.inBox.x + X.inBox.w / 2, X.inBox.y + X.inBox.h - 7, need > 0 ? (ok ? C.grass : C.alarm) : C.dim, 9.5, 700, 'center', '"Nunito Sans"');
+    // OUT: warehouse and what this line makes
+    const made = lineMake(kind, id), k = d.out; frame(X.outBox); t(`${ITEMS[k].name.toUpperCase()} OUT`, X.outBox.x + X.outBox.w / 2, X.outBox.y + 15, C.sky, 9.5);
+    if (ready(img(k))) ctx.drawImage(img(k), X.outBox.x + 8, X.outBox.y + 22, 28, 28);
+    t(`${big(S.items[k])}/${big(capOf(k))}`, X.outBox.x + 40, X.outBox.y + 43, roomOf(k) < 1 ? (recyOn(k) ? C.sky : C.alarm) : C.text, 14, 700, 'left');
+    t(made >= 0.5 ? `+${perMinTxt(made)}/min made` : '0/min made', X.outBox.x + X.outBox.w / 2, X.outBox.y + X.outBox.h - 7, made >= 0.5 ? C.grass : C.dim, 10, 700, 'center', '"Nunito Sans"');
+    rows.forEach(R => { const y = X.rowY(R.i), cx = X.conX, cw = X.conW, ch = 70, sp = c.slots[R.i], L = LOAD(R.i);
+      t(`LEVEL ${R.i + 1}`, X.lx + 22, y - 32, C.text, 12, 700, 'left');
+      t(`${d.nIn * L} ${plurals(d.in, d.nIn * L)} → ${d.nOut * L} ${plurals(d.out, d.nOut * L)}`, X.lx + 22, y - 18, C.dim, 10, 600, 'left', '"Nunito Sans"');
+      if (!sp) return;
+      if (R.flash > 0 && !reduce) { ctx.save(); ctx.globalAlpha = Math.min(1, R.flash * 1.5); ctx.fillStyle = ITEMS[d.out].color; rr(cx - cw / 2 - 4, y - ch / 2 - 4, cw + 8, ch + 8, 12); ctx.fill(); ctx.restore(); }
+      rr(cx - cw / 2, y - ch / 2, cw, ch, 10); ctx.fillStyle = C.panel; ctx.fill(); ctx.strokeStyle = R.busy && R.stall <= 0.4 && c.on ? C.grass2 : C.line; ctx.lineWidth = 1.5; ctx.stroke();
+      if (ready(IMG[d.img])) ctx.drawImage(IMG[d.img], cx - 21, y - 30, 42, 42);
+      const pw = Math.min(9, (cw - 20) / (d.nIn + 3)); for (let q = 0; q < d.nIn; q++) { rr(cx - cw / 2 + 8 + q * (pw + 2), y + ch / 2 - 16, pw, 7, 1.5); ctx.fillStyle = q < R.buf / L || R.busy ? ITEMS[d.in].color : C.track; ctx.fill(); }
       const bx0 = cx - cw / 2 + 12 + d.nIn * (pw + 2), bwid = cx + cw / 2 - 8 - bx0; rr(bx0, y + ch / 2 - 14, bwid, 4, 2); ctx.fillStyle = C.track; ctx.fill();
       if (R.busy) { rr(bx0, y + ch / 2 - 14, Math.max(4, bwid * R.p), 4, 2); ctx.fillStyle = R.stall > 0.4 ? C.alarm : C.grass; ctx.fill(); }
-      const st = !c.on ? ['UNPLUGGED', C.dim] : R.stall > 0.4 ? ['NO POWER', C.alarm] : R.out > 0 && !R.outB.canInsert(0) ? ['OUTPUT FULL', C.alarm] : R.busy ? [`${(d.nOut / d.T).toFixed(2).replace(/0$/, '')}/s · ${CON_KW} kW/s`, C.dim] : !R.feed.items.length ? [`WAITING FOR ${ITEMS[d.in].name.toUpperCase()}`, C.gold] : ['loading', C.dim];
-      if (R.stall > 0.4 && ready(IMG.power_out)) ctx.drawImage(IMG.power_out, cx + cw / 2 - 17, y - ch / 2 + 3, 14, 14);
-      ctx.textAlign = 'center'; ctx.font = '700 9.5px "Chakra Petch", system-ui, sans-serif'; ctx.fillStyle = st[1]; ctx.fillText(st[0], cx - 6, y + ch / 2 + 14); });
-    const yn = KX.rowY(CRAFT_LEVELS) - C_ROWH / 2 - 2; ctx.setLineDash([5, 5]); rr(12, yn, CW - 24, 30, 10); ctx.strokeStyle = C.line; ctx.lineWidth = 1.2; ctx.stroke(); ctx.setLineDash([]);
-    ctx.textAlign = 'center'; ctx.font = '700 11px "Chakra Petch", system-ui, sans-serif'; ctx.fillStyle = C.dim; ctx.fillText(`Level ${CRAFT_LEVELS + 1} · Tier 2`, CW / 2, yn + 19);
-    belts.forEach(beltItems);
-  }
+      // above: its speed and, once upgrades are open, the price of the next one
+      if (upOpen()) { ctx.font = '700 10px "Chakra Petch", system-ui, sans-serif'; const a = `×${sp}  `, b = sp >= 2 ? 'max' : `▲ ${big(UP2 * L)}`, w1 = ctx.measureText(a).width, w2 = ctx.measureText(b).width;
+        t(a, cx - (w1 + w2) / 2, y - ch / 2 - 6, C.text, 10, 700, 'left'); t(b, cx - (w1 + w2) / 2 + w1, y - ch / 2 - 6, sp >= 2 ? C.dim : canPay({ [CR]: UP2 * L }) ? C.gold : C.dim, 10, 700, 'left'); }
+      // below: efficiency, or why it is stopped
+      const outMin = machIn(d, R.i, sp) * 60 * d.nOut / d.nIn;
+      if (!c.on) t('UNPLUGGED', cx, y + ch / 2 + 16, C.dim, 10);
+      else if (R.stall > 0.4) t('NO POWER', cx, y + ch / 2 + 16, C.alarm, 10);
+      else { const e = Math.round(R.eff * 100); t(`${e}%`, cx, y + ch / 2 + 17, e >= 90 ? C.grass : e >= 50 ? C.gold : C.alarm, 14); }
+      t(`of ${perMinTxt(outMin)}/min`, cx, y + ch / 2 + 29, C.dim, 9.5, 700, 'center', '"Nunito Sans"'); });
+    // the next Level, or what opens it
+    if (X.n < PL_LV || true) { const yn = X.rowY(X.n - 1) + 76, q = X.n < PL_LV ? lvQ(kind, id, X.n) : null;
+      ctx.setLineDash([5, 5]); rr(12, yn, W2 - 24, 30, 10); ctx.strokeStyle = C.line; ctx.lineWidth = 1.2; ctx.stroke(); ctx.setLineDash([]);
+      t(q ? `Level ${X.n + 1} · opens with quest ${qNum(q)}` : `Level ${PL_LV + 1} · Tier 2`, W2 / 2, yn + 19, C.dim, 11); }
+    belts.forEach(beltItems); }
+  const drawLine = () => drawPL('smelt'), drawCraft = () => drawPL('craft');
+  // how much of an item the factory can make per minute: drills for ore, the machines of the line that makes it otherwise
+  function supplyPerMin(k) { const m = MINES.find(x => x.ore === k);
+    if (m) return S.mines[m.id] ? S.mines[m.id].levels.reduce((a, l, i) => a + (l.drill ? LOAD(i) / DRILLS[l.drill].T * 60 : 0), 0) : 0;
+    let tot = 0; [['smelt', S.lines], ['craft', S.crafts]].forEach(([kind, lines]) => Object.entries(lines).forEach(([id, st]) => { const d = plDef(kind, id); if (!d || d.out !== k || !st.on) return;
+      tot += st.slots.reduce((a, sp, i) => a + (sp ? machIn(d, i, sp) * 60 * d.nOut / d.nIn : 0), 0); }));
+    return tot; }
 
   // ---- settings ----
   $('ver').textContent = `${VERSION.stage} ${VERSION.semver}`; $('set-ver').textContent = `Factory A.F.K. ${VERSION.stage} ${VERSION.semver}`;
@@ -1359,7 +1369,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
     $('opt-none').setAttribute('aria-pressed', String(!lv.drill)); $('opt-basic').setAttribute('aria-pressed', String(lv.drill === 'basic'));
     $('opt-basic-n').textContent = lv.drill === 'basic' ? 'Assigned' : `${S.inv.basic} built`;
     $('opt-basic').disabled = lv.drill !== 'basic' && S.inv.basic < 1;
-    const e = $('opt-electric'); e.hidden = S.tier < 5 && !S.inv.electric; $('opt-electric-t').textContent = `${L} ${what} every second, draws 0.25 kW/s`;
+    const e = $('opt-electric'); e.hidden = S.tier < 5 && !S.inv.electric; $('opt-electric-t').textContent = `${L} ${what} every second, draws ${DRILLS.electric.kw * L} kW/s`;
     e.setAttribute('aria-pressed', String(lv.drill === 'electric')); $('opt-electric-n').textContent = lv.drill === 'electric' ? 'Assigned' : `${S.inv.electric || 0} built`; e.disabled = lv.drill !== 'electric' && !(S.inv.electric >= 1); }
   function assign(type) { const lv = S.mines[S.view].levels[sheetLevel]; if (type && lv.drill !== type && S.inv[type] < 1) return;
     if (lv.drill !== type) { if (lv.drill) S.inv[lv.drill]++; if (type) S.inv[type]--; lv.drill = type; save(); }
@@ -1411,8 +1421,8 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
       const room = st === 'now' && Object.entries(T.need).some(([k, v]) => bal(k) >= 1 && (S.handed[k] || 0) < v);
       const payNow = Object.fromEntries(Object.entries(T.need).map(([k, v]) => [k, Math.min(Math.floor(bal(k)), v - (S.handed[k] || 0))]).filter(e => e[1] > 0));
       const short = st === 'now' && !full ? Object.entries(T.need).filter(([k, v]) => (S.handed[k] || 0) < v).map(([k, v]) => `${big(v - (S.handed[k] || 0))} ${plural(k, v - (S.handed[k] || 0))}`).join(' + ') : '';
-      const nItems = Object.values(payNow).reduce((a, b) => a + b, 0);
-      const pay = st === 'now' && !full ? `<button class="sq tdel" data-t="${i}" ${room ? '' : 'disabled'} title="${room ? `Deliver ${nItems} items` : `Need ${short}`}"><small>${room ? 'Deliver' : 'Need'}</small>${icon('storage_crate')}<b>${room ? `${big(nItems)} items` : 'more'}</b></button>` : '';
+      const nItems = Object.entries(payNow).reduce((a, [k, b]) => a + (k === CR ? 0 : b), 0), crOnly = !nItems && payNow[CR] > 0;
+      const pay = st === 'now' && !full ? `<button class="sq tdel" data-t="${i}" ${room ? '' : 'disabled'} title="${room ? `Deliver ${nItems} items` : `Need ${short}`}"><small>${room ? 'Deliver' : 'Need'}</small>${icon('storage_crate')}<b>${room ? (crOnly ? 'credits' : `${big(nItems)} items`) : 'more'}</b></button>` : '';
       return `<div class="tier ${st}"><header><h3>${T.name}</h3>${tag}</header>${st === 'done' ? '' : pay ? `<div class="tier-pay"><div class="needs">${needs}</div>${pay}</div>` : needs}
         ${full && T.later ? `<p class="fnote">Fully paid. What it unlocks arrives in the next build, and it completes then.</p>` : ''}
         <div class="unl">${T.unlocks.map(([k, t]) => `<span>${icon(k)}${t}</span>`).join('')}</div></div>`; };
@@ -1430,7 +1440,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
     || LINES.some(l => l.out === k && S.lines[l.id] && S.lines[l.id].on && S.lines[l.id].slots.some(Boolean))
     || CRAFTS.some(c => c.out === k && S.crafts[c.id] && S.crafts[c.id].on && S.crafts[c.id].slots.some(Boolean));
   const RECY_SVG = '<svg class="rcy" viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 6.1L17.9 13.4"/><path class="h" d="M15.3 15.0L19.9 16.9L20.5 11.9Z"/><path d="M18.5 19.5L9.7 19.5"/><path class="h" d="M9.7 16.5L5.7 19.5L9.7 22.5Z"/><path d="M4.0 16.9L8.4 9.6"/><path class="h" d="M11.0 11.1L10.4 6.1L5.8 8.0Z"/></svg>'; // recycling logo: three chasing arrows
-  const recyPerS = k => ITEMS[k].value / RECYCLE_CUT / RECYCLE_T;
+  const recyPerS = k => { const r = RECY[k]; if (!r) return 0; const l = r.log; while (l.length && clock - l[0][0] > 10) l.shift(); return l.reduce((a, e) => a + e[1], 0) / Math.min(10, Math.max(1, clock)); };
   const fmtCr = x => (x % 1 ? x.toFixed(1) : String(x));
   function renderWh() {
     const r = rateCache || {}, wf = walletFull();
@@ -1439,7 +1449,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
       const stopped = !run && n < cap && hasMaker(k) && clock > 10 && winRate(flow[k]) < 0.01;
       const st = run ? 'recycling' : n >= cap ? 'full' : stopped ? 'stopped' : '';
       const tag = run ? (n >= cap ? ' · FULL' : '') : n >= cap ? ' · FULL' : stopped ? ' · STOPPED' : '';
-      const recy = S.inv.recycler ? `<span class="recy" aria-pressed="${!!run}" title="Recycler">${RECY_SVG}${run ? `+${fmtCr(recyPerS(k))} credits/s` : wf && n >= cap ? 'wallet full' : 'starts when full'}</span>` : '';
+      const recy = S.inv.recycler ? `<span class="recy" aria-pressed="${!!run}" title="Recycler">${RECY_SVG}${run ? (wf ? 'wallet full · scrapping' : `+${fmtCr(Math.round(recyPerS(k) * 10) / 10)} credits/s`) : 'starts when full'}</span>` : '';
       return `<div class="wrow${st ? ' ' + st : ''}">${icon(k)}<div class="wmid"><b>${ITEMS[k].name}</b><span class="wct"><em>${big(n)}</em> / ${big(cap)}${tag} · <i class="${Math.abs(rt) < 0.05 ? '' : rt > 0 ? 'up' : 'down'}">${fmtRate(rt)}</i></span><div class="bar"><i style="width:${Math.min(100, n / cap * 100)}%"></i></div>${recy}</div>
         <div class="wsell">${wf ? `<button class="sellb" disabled>Wallet full<em></em></button><button class="sellb" disabled>Spend first<em></em></button>` : `<button class="sellb" data-sell="${k}" data-n="10" ${n < 10 || walletRoom() < 10 * v ? 'disabled' : ''}>Sell 10<em>+${big(10 * v)}</em></button><button class="sellb" data-sell="${k}" data-n="all" ${n < 1 || walletRoom() < v ? 'disabled' : ''}>Sell all<em>+${big(Math.min(n, Math.floor(walletRoom() / v)) * v)}</em></button>`}</div></div>`; }).join('');
     if ($('whs')._h !== rows) { $('whs')._h = rows; $('whs').innerHTML = rows; }
@@ -1486,7 +1496,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
     { id: 'sale', t: 'First sale', text: 'Sell 20 iron ore in the HUB. Credits go into your wallet.', have: () => S.sold.iron_ore || 0, need: 20, go: hub, btn: 'Open the HUB', here: () => tab === 'hub' },
     { id: 'room', t: 'Room to grow', text: 'Upgrade the iron ore warehouse to Lv 2 (300 credits) so it holds more.', up: 'wh-iron_ore', done: () => whLvOf('iron_ore') >= 2, go: () => viewMine('iron'), btn: 'Go to the Iron mine', here: () => tab === 'mine' && S.view === 'iron' },
     { id: 'smelting', t: 'Smelting', text: 'Research Smelting in the HUB: deliver 100 iron ore.', done: () => S.tier >= 2, go: hub, btn: 'Open the HUB', here: () => tab === 'hub' },
-    { id: 'fire', t: 'First fire', text: 'Build a Smelter (100 iron ore) and place it in the Iron line.', done: () => slotOn(S.lines, 'iron'), go: () => S.inv.smelter ? viewLine('iron') : showTab('craft'), btn: () => S.inv.smelter ? 'Open Iron smelting' : 'Open Buildings' },
+    { id: 'fire', t: 'First fire', text: 'Build a Smelter (50 iron ore) and place it in the Iron line.', done: () => slotOn(S.lines, 'iron'), go: () => S.inv.smelter ? viewLine('iron') : showTab('craft'), btn: () => S.inv.smelter ? 'Open Iron smelting' : 'Open Buildings' },
     { id: 'copperore', t: 'Copper', text: 'Smelters need power, and power needs batteries made with copper. Tap Copper Level 1 to mine 10 copper ore.', have: () => S.made.copper_ore || 0, need: 10,
       go: () => viewMine('copper'), btn: 'Go to the Copper mine', here: () => tab === 'mine' && S.view === 'copper' },
     { id: 'battery', t: 'Battery', text: 'Build a Battery T1 (10 copper ore + 10 iron ore). It stores the power your machines run on.', done: () => S.inv.battery >= 1 || !!crafting.battery,
@@ -1496,27 +1506,38 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
     { id: 'account', t: 'Save your factory', text: 'You are playing as a guest, so this factory lives only on this device. Sign in with Google to back it up and play anywhere, or keep playing as a guest.',
       done: () => !window.FIREBASE_CONFIG || !!S.cloudUser || !!S.guestOK || !S.guest, go: () => { $('hello-cloud').hidden = false; }, btn: 'Choose' },
     { id: 'taps', t: 'Stronger taps', text: 'Upgrade Tap power from +5 to +10 kW (200 credits).', up: 'tap', done: () => S.tapLv >= 2, go: () => showTab('power'), btn: 'Open Power', here: () => tab === 'power' },
-    { id: 'deeper', t: 'Deeper', text: 'Dig Iron Level 2 (400 credits) and put a drill on it. Level 2 carts hold 2 ore.', parts: [['Level 2 dug', () => S.mines.iron.levels.length >= 2], ['Drill on Level 2', () => drillOn('iron', 1)]], go: () => viewMine('iron'), btn: 'Go to the Iron mine', here: () => tab === 'mine' && S.view === 'iron' },
+    { id: 'deeper', t: 'Deeper', text: 'Dig Iron Level 2 (400 credits) and put a drill on it. Level 2 carts hold 2 ore, so it mines 60 a minute.', parts: [['Level 2 dug', () => S.mines.iron.levels.length >= 2], ['Drill on Level 2', () => drillOn('iron', 1)]], go: () => viewMine('iron'), btn: 'Go to the Iron mine', here: () => tab === 'mine' && S.view === 'iron' },
+    { id: 'fire2', t: 'Second fire', text: 'Iron Level 2 mines 60 ore a minute, and a Level 2 Smelter handles exactly that. Build a Smelter (50 iron ore) and place it on Iron smelting Level 2.', done: () => !!(S.lines.iron && S.lines.iron.slots[1]),
+      go: () => S.inv.smelter ? viewLine('iron') : showTab('craft'), btn: () => S.inv.smelter ? 'Open Iron smelting' : 'Open Buildings' },
     { id: 'copperdrill', t: 'Copper drill', text: 'Put a drill on Copper Level 1 so copper keeps coming without tapping. Build another Basic Drill (20 iron ore) if you need one.', done: () => drillOn('copper', 0),
       go: () => S.inv.basic ? (viewMine('copper'), openSheet(0)) : showTab('craft'), btn: () => S.inv.basic ? 'Choose a drill' : 'Open Buildings', here: () => !S.inv.basic && tab === 'craft' },
-    { id: 'copperline', t: 'Copper line', text: 'Place a Smelter in the Copper line and upgrade the copper ore warehouse to Lv 2.', up: 'wh-copper_ore', parts: [['Smelter in Copper line', () => slotOn(S.lines, 'copper')], ['Copper warehouse Lv 2 (300 credits)', () => whLvOf('copper_ore') >= 2]],
-      go: () => !slotOn(S.lines, 'copper') ? (S.inv.smelter ? viewLine('copper') : showTab('craft')) : viewMine('copper'), btn: () => !slotOn(S.lines, 'copper') ? (S.inv.smelter ? 'Open Copper smelting' : 'Open Buildings') : 'Go to the Copper mine' },
+    { id: 'copperline', t: 'Copper line', text: 'Place a Smelter on Copper smelting Level 1.', done: () => !!(S.lines.copper && S.lines.copper.slots[0]),
+      go: () => S.inv.smelter ? viewLine('copper') : showTab('craft'), btn: () => S.inv.smelter ? 'Open Copper smelting' : 'Open Buildings' },
+    { id: 'copperdeep', t: 'Copper deeper', text: 'Dig Copper Level 2 (400 credits), put a drill on it, and place a Smelter on Copper smelting Level 2.', parts: [['Copper Level 2', () => S.mines.copper && S.mines.copper.levels.length >= 2], ['Drill on it', () => drillOn('copper', 1)], ['Copper Smelter Level 2', () => !!(S.lines.copper && S.lines.copper.slots[1])]],
+      go: () => S.mines.copper && S.mines.copper.levels.length >= 2 && drillOn('copper', 1) ? (S.inv.smelter ? viewLine('copper') : showTab('craft')) : (S.mines.copper.levels.length >= 2 && !S.inv.basic ? showTab('craft') : (viewMine('copper'), S.mines.copper.levels.length >= 2 && openSheet(1))),
+      btn: () => S.mines.copper && S.mines.copper.levels.length >= 2 && drillOn('copper', 1) ? (S.inv.smelter ? 'Open Copper smelting' : 'Open Buildings') : 'Go to the Copper mine' },
     { id: 'parts', t: 'Parts', text: 'Research Parts in the HUB: deliver 50 iron ingots and 50 copper ingots.', done: () => S.tier >= 3, go: hub, btn: 'Open the HUB', here: () => tab === 'hub' },
     { id: 'build', t: 'Build', text: 'Build two Constructors (40 iron + 20 copper ingots each): one for the Plates line, one for the Wire line.', parts: [['Plates Constructor', () => slotOn(S.crafts, 'plates')], ['Wire Constructor', () => slotOn(S.crafts, 'wire')]],
       go: () => S.inv.constructor ? viewCraft(!slotOn(S.crafts, 'plates') ? 'plates' : 'wire') : showTab('craft'), btn: () => S.inv.constructor ? 'Open Crafting' : 'Open Buildings' },
-    { id: 'surface', t: 'Faster surface', text: 'Upgrade the Iron surface belt to Lv 2 (250 credits).', up: 'surf-iron', done: () => S.mines.iron.surfLv >= 2, go: () => viewMine('iron'), btn: 'Go to the Iron mine', here: () => tab === 'mine' && S.view === 'iron' },
-    { id: 'stock', t: 'Stockpile', text: 'Make 30 iron plates and 60 copper wire, and upgrade the wire warehouse to Lv 2.', up: 'wh-copper_wire', parts: [['30 plates', () => (S.made.iron_plate || 0) >= 30], ['60 wire', () => (S.made.copper_wire || 0) >= 60], ['Wire warehouse Lv 2 (600 credits)', () => whLvOf('copper_wire') >= 2]],
-      go: () => viewCraft((S.made.iron_plate || 0) < 30 ? 'plates' : 'wire'), btn: 'Open Crafting' },
-    { id: 'concrete', t: 'Concrete', text: 'Research Concrete in the HUB: 30 plates, 60 wire and 800 credits.', done: () => S.tier >= 4, go: hub, btn: 'Open the HUB', here: () => tab === 'hub' },
-    { id: 'mix', t: 'Mix', text: 'Put a drill on Limestone Level 1, place a Constructor in the Concrete line, and make 20 concrete.', parts: [['Drill on Limestone', () => drillOn('limestone', 0)], ['Concrete Constructor', () => slotOn(S.crafts, 'concrete')], ['20 concrete', () => (S.made.concrete || 0) >= 20]],
+    { id: 'stock', t: 'Stockpile', text: 'Make 10 iron plates and 30 copper wire, and upgrade the wire warehouse to Lv 2.', up: 'wh-copper_wire', parts: [['10 plates', () => (S.made.iron_plate || 0) >= 10], ['30 wire', () => (S.made.copper_wire || 0) >= 30], ['Wire warehouse Lv 2 (750 credits)', () => whLvOf('copper_wire') >= 2]],
+      go: () => viewCraft((S.made.iron_plate || 0) < 10 ? 'plates' : 'wire'), btn: 'Open Crafting' },
+    { id: 'concrete', t: 'Concrete', text: 'Research Concrete in the HUB: 10 plates, 30 wire and 800 credits.', done: () => S.tier >= 4, go: hub, btn: 'Open the HUB', here: () => tab === 'hub' },
+    { id: 'mix', t: 'Mix', text: 'Put a drill on Limestone Level 1, place a Constructor in the Concrete line, and make 10 concrete.', parts: [['Drill on Limestone', () => drillOn('limestone', 0)], ['Concrete Constructor', () => slotOn(S.crafts, 'concrete')], ['10 concrete', () => (S.made.concrete || 0) >= 10]],
       go: () => !drillOn('limestone', 0) ? viewMine('limestone') : viewCraft('concrete'), btn: () => !drillOn('limestone', 0) ? 'Go to the Limestone mine' : 'Open Concrete' },
     { id: 'bank', t: 'Bank account', text: 'Upgrade your wallet to hold 10,000 credits (800 credits).', up: 'wallet', done: () => (S.walletLv || 1) >= 2, go: hub, btn: 'Open the HUB', here: () => tab === 'hub' },
-    { id: 'coalpower', t: 'Coal Power', text: 'Research Coal Power in the HUB: plates, wire, concrete and 3,000 credits.', done: () => S.tier >= 5, go: hub, btn: 'Open the HUB', here: () => tab === 'hub' },
-    { id: 'plant', t: 'Power plant', text: 'Dig Coal Level 2, put drills on both Coal Levels, and build the Coal Power Plant.', parts: [['Coal Level 2 (400 credits)', () => S.mines.coal && S.mines.coal.levels.length >= 2], ['Drills on both', () => drillOn('coal', 0) && drillOn('coal', 1)], ['Power Plant', () => S.inv.plant >= 1]],
-      go: () => S.mines.coal && S.mines.coal.levels.length >= 2 && drillOn('coal', 0) && drillOn('coal', 1) ? showTab('craft') : viewMine('coal'), btn: () => S.mines.coal && S.mines.coal.levels.length >= 2 && drillOn('coal', 0) && drillOn('coal', 1) ? 'Open Buildings' : 'Go to the Coal mine' },
-    { id: 'electric', t: 'Go electric', text: 'Dig Level 2 in every mine and put Electric Drills on all 8 Levels.', have: () => placedDrills('electric'), need: 8, done: () => MINES.every(m => S.mines[m.id] && S.mines[m.id].levels.length >= 2) && placedDrills('electric') >= 8,
-      go: () => { const m = MINES.find(m => S.mines[m.id] && (S.mines[m.id].levels.length < 2 || S.mines[m.id].levels.some(l => l.drill !== 'electric'))); if (S.inv.electric || (m && S.mines[m.id].levels.length < 2)) viewMine(m ? m.id : 'iron'); else showTab('craft'); }, btn: () => S.inv.electric ? 'Place Electric Drills' : 'Open Buildings' },
+    { id: 'coalpower', t: 'Coal Power', text: 'Research Coal Power in the HUB: 15 plates, 30 wire, 10 concrete and 3,000 credits.', done: () => S.tier >= 5, go: hub, btn: 'Open the HUB', here: () => tab === 'hub' },
+    { id: 'plant', t: 'Power plant', text: 'Put a drill on Coal Level 1 and build the Coal Power Plant (15 plates, 40 wire, 15 concrete). It makes 10 kW/s from coal.', parts: [['Drill on Coal', () => drillOn('coal', 0)], ['Power Plant', () => S.inv.plant >= 1]],
+      go: () => drillOn('coal', 0) ? showTab('craft') : viewMine('coal'), btn: () => drillOn('coal', 0) ? 'Open Buildings' : 'Go to the Coal mine' },
     { id: 'lights', t: 'Lights on', text: 'Run for 1 minute with power green and no NO POWER alarm. Reward: the Recycler.', have: () => Math.floor(S.lightsT || 0), need: LIGHTS_T, done: () => (S.lightsT || 0) >= LIGHTS_T, go: hub, btn: 'Open the HUB', here: () => tab === 'hub' },
+    // stretch goals after the thank-you card: grow every line to 4 Levels, double the machines, upgrade the Power Plant
+    { id: 'e1', t: 'Plate Works', text: 'Stretch goal: keep 150 iron plates a minute coming for 1 minute. Dig Iron Levels 3–4, put Electric Drills on, add Smelter and Constructor Levels, tap machines to double them, and upgrade the Power Plant in the Power tab.', rate: ['iron_plate', 150], have: () => Math.floor(S.eT || 0), need: 60, done: () => (S.eT || 0) >= 60,
+      go: () => viewCraft('plates'), btn: 'Open Crafting', here: () => tab === 'build' && S.cview === 'plates' },
+    { id: 'e2', t: 'Wired', text: 'Stretch goal: keep 600 copper wire a minute coming for 1 minute. Grow copper the same way, and the Power Plant with it.', rate: ['copper_wire', 600], have: () => Math.floor(S.eT || 0), need: 60, done: () => (S.eT || 0) >= 60,
+      go: () => viewCraft('wire'), btn: 'Open Crafting', here: () => tab === 'build' && S.cview === 'wire' },
+    { id: 'e3', t: 'Full Power', text: 'Stretch goal: max out Limestone and Concrete, give Coal all 4 Levels, upgrade the Power Plant to Lv 4, then run 1 minute with power green.',
+      parts: [['Limestone: 4 Electric Drills', () => !!S.mines.limestone && S.mines.limestone.levels.length >= 4 && S.mines.limestone.levels.every(l => l.drill === 'electric')], ['Concrete: 4 Constructors ×2', () => !!S.crafts.concrete && S.crafts.concrete.slots.every(sp => sp >= 2)],
+        ['Coal: 4 Levels', () => !!S.mines.coal && S.mines.coal.levels.length >= 4 && S.mines.coal.levels.every(l => l.drill)], ['Power Plant Lv 4', () => (S.plantLv || 1) >= 4], ['1 minute green', () => (S.eT || 0) >= 60]],
+      go: () => viewMine('limestone'), btn: 'Go to the Limestone mine' },
   ];
   const Q = () => QUESTS[S.quest];
   const qOpen = id => !id || S.quest >= QUESTS.findIndex(q => q.id === id);
@@ -1531,20 +1552,24 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   const qDone = q => q.parts ? q.parts.every(([, f]) => f()) : q.done ? q.done() : (q.have() >= q.need);
   let qFlash = 0;
   function questTick(dt) {
-    if (Q() && Q().id === 'lights') { const ok = S.power >= 1 && rateCache && rateCache.power > -0.05 && !starving().length; S.lightsT = ok ? (S.lightsT || 0) + dt : 0; }
-    let moved = false; while (Q() && qDone(Q())) { S.quest++; moved = true; }
-    if (moved && !Q() && !S.t1done) { S.t1done = true; S.inv.recycler = Math.max(1, S.inv.recycler || 0); showThanks(); } // Tier 1's reward
+    const green = () => S.power >= 1 && rateCache && rateCache.power > -0.05 && !starving().length;
+    if (Q() && Q().id === 'lights') S.lightsT = green() ? (S.lightsT || 0) + dt : 0;
+    if (Q() && Q().rate) { const [k, n] = Q().rate; S.eT = madePerMin(k) >= n * 0.95 ? (S.eT || 0) + dt : Math.max(0, (S.eT || 0) - dt); } // 95%: every machine working nearly all the time
+    if (Q() && Q().id === 'e3') { const pre = Q().parts.slice(0, 4).every(([, f]) => f()); S.eT = pre && green() ? (S.eT || 0) + dt : 0; }
+    let moved = false; while (Q() && qDone(Q())) { S.quest++; S.eT = 0; moved = true; }
+    if (moved && S.quest > questAt('lights') && !S.t1done) { S.t1done = true; S.inv.recycler = Math.max(1, S.inv.recycler || 0); showThanks(); } // Tier 1's reward
     if (moved) { qFlash = 1.5; save(); refreshUnlocks(); }
     if (qFlash > 0) qFlash -= dt;
   }
   // a quest can open a tab, a mine, a line or a building: redraw whatever is on screen so it shows at once
-  function refreshUnlocks() { if (tab === 'mine') layout(); if (tab === 'smelt') flayout(); if (tab === 'craft') renderCraft(); if (tab === 'build') clayout(); if (tab === 'hub') renderHub(); sync(); }
+  function refreshUnlocks() { if (tab === 'mine') layout(); if (tab === 'smelt') flayout(); if (tab === 'craft') renderCraft(); if (tab === 'build') clayout(); if (tab === 'hub') renderHub(); if (tab === 'power') renderPlant(); sync(); }
   function objective() { const q = Q();
-    if (!q) return { head: 'TIER 1 COMPLETE', text: 'Reward: the Recycler. When a warehouse is full, it sells what keeps arriving, so your factory now earns credits on its own, even while you are away. Tier 2 arrives in a later build.', btn: tab !== 'hub' ? 'See it in the HUB' : null, dest: 'Open the HUB', act: () => showTab('hub') };
+    if (!q) return { head: 'TIER 1 MAXED', text: 'Every stretch goal done: 4 Levels everywhere and the Power Plant at Lv 4. Tier 2 arrives in a later build.', btn: tab !== 'hub' ? 'See it in the HUB' : null, dest: 'Open the HUB', act: () => showTab('hub') };
     const btn = typeof q.btn === 'function' ? q.btn() : q.btn, here = q.here && q.here();
     const o = { head: `QUEST ${S.quest + 1}/${QUESTS.length}`, title: q.t, text: q.text, btn: here ? null : btn, dest: btn, act: q.go };
     if (q.parts) { const n = q.parts.filter(([, f]) => f()).length; o.have = n; o.need = q.parts.length; o.list = q.parts.map(([l, f]) => `${f() ? '✓' : '○'} ${l}`).join('   '); }
     else if (q.need) { o.have = q.have(); o.need = q.need; }
+    if (q.rate) { const [k, n] = q.rate, r = madePerMin(k); o.list = `Now: ${Math.floor(r)} ${ITEMS[k].name.toLowerCase().replace('plate', 'plates')} a minute of ${n}${r >= n * 0.95 ? ' · holding' : ''}`; }
     return o; }
   // the square Go button shows where it takes you: an icon and a short place name
   function goDest(t) { t = t || ''; let m;
@@ -1583,7 +1608,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
     const sv = starving(), al = $('pw-alarm'); al.classList.toggle('on', sv.length > 0); al.tabIndex = sv.length ? 0 : -1;
     const o = objective(); $('goal-head').innerHTML = o.title ? `${o.head} <em>· ${o.title}</em>` : o.head; $('goal-text').textContent = o.text;
     const gl = $('goal-list'); gl.hidden = !o.list; if (o.list) gl.textContent = o.list; $('goal').classList.toggle('done-flash', qFlash > 0);
-    $('goal-num').textContent = o.need ? (Q() && Q().id === 'lights' ? `${clockTxt(o.have)} / ${clockTxt(LIGHTS_T)}` : `${big(Math.min(o.have, o.need))} / ${big(o.need)}`) : '';
+    $('goal-num').textContent = o.need ? (Q() && (Q().id === 'lights' || Q().rate) ? `${clockTxt(o.have)} / ${clockTxt(o.need)}` : `${big(Math.min(o.have, o.need))} / ${big(o.need)}`) : '';
     $('goal-bar').hidden = !o.need; if (o.need) $('goal-bar').firstElementChild.style.width = Math.min(100, o.have / o.need * 100) + '%';
     const gb = $('goal-btn'), gd = goDest(o.btn || o.dest), gk = [!!o.btn, gd.name, gd.ic].join('|');
     if (gb._k !== gk) { gb._k = gk; gb.classList.toggle('here', !o.btn); gb.disabled = !o.btn; gb.title = o.btn || "You're already here";
@@ -1600,7 +1625,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
     const id = S.view, m = S.mines[id];
     const dg = $('dig'); if (dg) { const n = m.levels.length, cost = digCost(id, n), digging = m.dig && m.dig.level === n, locked = digLocked(id, n), what = `${MINE[id].name.toLowerCase()} ×${LOAD(n)}`;
       dg.querySelector('b').textContent = digging ? `Digging Level ${n + 1}…` : `Dig Level ${n + 1}`;
-      dg.querySelector('small').textContent = digging ? `${what} · ${clockTxt((m.dig.end - Date.now()) / 1000)} left` : locked ? `${what} · opens with quest ${qNum(DIG_Q[id])}` : `${what} · takes ${clockTxt(DIG_TIME[n])}`;
+      dg.querySelector('small').textContent = digging ? `${what} · ${clockTxt((m.dig.end - Date.now()) / 1000)} left` : locked ? `${what} · opens with quest ${qNum(digQ(id, n))}` : `${what} · takes ${clockTxt(DIG_TIME[n])}`;
       const em = dg.querySelector('em'), eh = digging ? '' : locked ? `<span class="dig-lock">${LOCK_SM}</span>` : costHTML(cost); if (em._h !== eh) { em.innerHTML = eh; em._h = eh; }
       const tm = dg.querySelector('.timer'); tm.hidden = !digging; if (digging) tm.firstElementChild.style.width = Math.min(100, (1 - (m.dig.end - Date.now()) / 1000 / m.dig.len) * 100) + '%';
       dg.disabled = digging || locked || !canPay(cost); dg.classList.toggle('digging', !!digging); dg.classList.toggle('locked', !!locked && !digging); dg.classList.toggle('ready', !digging && !locked && canPay(cost)); }
@@ -1620,21 +1645,24 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
     }
     if (tab === 'hub') $('wh-card').hidden = !qOpen('sale');
     if (tab === 'hub') { const k = JSON.stringify([S.tier, S.quest, S.handed, Math.floor(S.credits)]); if ($('tiers')._k !== k) { $('tiers')._k = k; renderHub(); } else $('stats').innerHTML = renderStats(); renderWh(); }
-    if (tab === 'smelt' && S.lines[S.sview]) { const line = S.lines[S.sview], def = LINE[S.sview];
+    const plSync = kind => { const id = selOf(kind), st = plState(kind, id), d = plDef(kind, id), V = VX[kind]; if (!st || !V.X) return;
+      const r = $(kind === 'smelt' ? 'fac-run' : 'craft-run'); r.setAttribute('aria-pressed', String(st.on)); r.querySelector('img').setAttribute('src', `icons/${st.on ? 'plug_in' : 'plug_out'}.webp`); r.querySelector('span').textContent = st.on ? 'Running' : 'Off';
+      const word = d.mach === 'smelter' ? 'Smelter' : 'Constructor';
+      for (let i = 0; i < V.X.n; i++) { const b = $(`${kind}-lv-${i}`); if (!b) continue; const sp = st.slots[i];
+        if (!sp) { b.className = 'conbtn'; const has = S.inv[d.mach] > 0; b.disabled = !has; b.classList.toggle('ready', has); const tx = has ? `Place ${word.toLowerCase()}` : `Empty · build a ${word}`; if (b.textContent !== tx) b.textContent = tx; }
+        else { b.className = 'machit'; if (b.textContent) b.textContent = ''; const can = upOpen() && sp < 2; b.disabled = !can; b.title = can ? `Upgrade to ×2 (${big(UP2 * LOAD(i))} credits)` : ''; b.setAttribute('aria-label', can ? `Upgrade Level ${i + 1} ${word} to ×2` : `Level ${i + 1} ${word}`); } } };
+    if (tab === 'smelt' && S.lines[S.sview]) { const def = LINE[S.sview];
       $('line-h').textContent = `${def.name.toUpperCase()} SMELTING`;
-      $('line-note').textContent = `${ITEMS[def.ore].name} leaves the warehouse on the top belt, each smelter makes 1 ${ITEMS[def.out].name.toLowerCase()}/s and draws ${SMELT_KW} kW/s while it works, and the bottom belt brings them back.`;
-      const r = $('fac-run'); r.setAttribute('aria-pressed', String(line.on)); r.setAttribute('aria-label', `${def.name} smelting power`); r.querySelector('img').setAttribute('src', `icons/${line.on ? 'plug_in' : 'plug_out'}.webp`); r.querySelector('span').textContent = line.on ? 'Running' : 'Unplugged';
-      for (let j = 0; j < FAC_SLOTS; j++) { const b = $('slot-' + j); if (!b) continue; b.hidden = line.slots[j];
-        b.disabled = S.inv.smelter < 1; b.classList.toggle('ready', S.inv.smelter > 0); b.textContent = S.inv.smelter > 0 ? 'Place smelter' : 'Empty slot'; } }
-    if (tab === 'build' && S.crafts[S.cview]) { const c = S.crafts[S.cview], d = CRAFT[S.cview]; renderCraftNav();
+      $('line-note').textContent = `A Smelter turns 3 ore into 1 ingot every 6 s on Level 1 (30 ore a minute) and each Level down handles double, so a mine Level feeds the Smelter Level beside it.${upOpen() ? ' Tap a Smelter to double its speed.' : ''}`;
+      plSync('smelt'); }
+    if (tab === 'build' && S.crafts[S.cview]) { const d = CRAFT[S.cview]; renderCraftNav();
       $('craft-h').textContent = d.name.toUpperCase();
-      $('craft-note').textContent = `${ITEMS[d.in].name} rides down the left wall and turns off at each Level into its Constructor: ${d.nIn} in, ${d.nOut} out every ${d.T} s, ${CON_KW} kW/s while it works. ${ITEMS[d.out].name}s ride up the right wall into their warehouse.`;
-      const r = $('craft-run'); r.setAttribute('aria-pressed', String(c.on)); r.querySelector('img').setAttribute('src', `icons/${c.on ? 'plug_in' : 'plug_out'}.webp`); r.querySelector('span').textContent = c.on ? 'Running' : 'Unplugged';
-      for (let i = 0; i < CRAFT_LEVELS; i++) { const b = $('con-' + i); if (!b) continue; b.hidden = c.slots[i]; b.disabled = S.inv.constructor < 1; b.classList.toggle('ready', S.inv.constructor > 0); b.textContent = S.inv.constructor > 0 ? 'Place constructor' : 'Empty · build a Constructor'; } }
+      $('craft-note').textContent = `${d.nIn} ${plurals(d.in, d.nIn)} → ${d.nOut} ${plurals(d.out, d.nOut)} every ${d.T} s on Level 1 (${Math.round(d.nIn / d.T * 60)} in, ${Math.round(d.nOut / d.T * 60)} out a minute); each Level down handles double.${upOpen() ? ' Tap a Constructor to double its speed.' : ''}`;
+      plSync('craft'); }
     if (tab === 'power') { const cap = powerCap(), net = rateCache ? rateCache.power : 0;
       $('pw-per').textContent = cap ? `+${tapKw()} kW per tap` : 'Build a Battery first'; $('pw-tap').disabled = !cap;
       const nt = $('pw-net'); nt.textContent = `${net >= 0.05 ? '+' : net <= -0.05 ? '−' : ''}${Math.abs(net) < 0.05 ? '0.0' : Math.abs(net).toFixed(1)} kW/s`; nt.classList.toggle('up', net >= 0.05); nt.classList.toggle('down', net <= -0.05);
-      syncPowerHub(); }
+      syncPowerHub(); renderPlant(); }
   }
 
   // ---- offline progress: the factory keeps running while the game is closed, at full rate for up to 12 h ----
@@ -1646,26 +1674,24 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   function runOffline(away) {
     const secs = Math.floor(Math.min(away, OFF_CAP)); if (secs < OFF_MIN) return null;
     const made0 = { ...S.made }, cr0 = S.credits; let noPow = 0, lastUse = 0;
-    const drills = []; Object.entries(S.mines).forEach(([id, m]) => m.levels.forEach((l, i) => { if (l.drill) drills.push({ ore: MINE[id].ore, rate: LOAD(i) / DRILLS[l.drill].T, kw: DRILLS[l.drill].kw }); }));
+    const drills = []; Object.entries(S.mines).forEach(([id, m]) => m.levels.forEach((l, i) => { if (l.drill) drills.push({ ore: MINE[id].ore, rate: LOAD(i) / DRILLS[l.drill].T, kw: DRILLS[l.drill].kw * LOAD(i) }); }));
     const room = k => Math.max(0, capOf(k) - (S.items[k] || 0));
     let over = {}; // what reached a full warehouse this second: the Recycler sells up to 1 item / 2 s of it
-    const put = k => n => { const r = Math.min(n, room(k)); if (r > 0) { S.items[k] = (S.items[k] || 0) + r; S.made[k] = (S.made[k] || 0) + r; } if (n - r > 1e-9) over[k] = (over[k] || 0) + n - r; return r; };
-    const roomR = k => room(k) + (S.inv.recycler && !walletFull() ? 1 / RECYCLE_T : 0); // machines keep running while the Recycler takes their output
+    const put = k => n => { const r = Math.min(n, room(k)); if (r > 0) S.items[k] = (S.items[k] || 0) + r; const sold = S.inv.recycler ? n - r : 0; S.made[k] = (S.made[k] || 0) + r + sold; if (sold > 1e-9) over[k] = (over[k] || 0) + sold; return r; };
+    const roomR = k => S.inv.recycler ? Infinity : room(k); // with the Recycler, lines never back up: overflow is sold
     for (let t = 0; t < secs; t++) {
       let gen = 0; over = {};
-      if (S.inv.plant) { const want = Math.min(PLANT_KW, Math.max(0, powerCap() - S.power) + lastUse);
+      if (S.inv.plant) { const want = Math.min(plantKw(), Math.max(0, powerCap() - S.power) + lastUse);
         while (want - gen > 1e-9) { if (PLANT.fuel <= 1e-9) { if ((S.items.coal || 0) >= 1) { S.items.coal -= 1; PLANT.fuel += KW_PER_COAL; } else break; }
           const take = Math.min(PLANT.fuel, want - gen); PLANT.fuel -= take; gen += take; } }
       let P = S.power + gen, used = 0, short = false;
       const draw = kw => { if (kw <= 0) return 1; if (P >= kw) { P -= kw; used += kw; return 1; } const f = P / kw; used += P; P = 0; short = true; return f; };
       drills.forEach(d => { let f = 1; if (d.kw) { if (!S.drillsOn) return; f = draw(d.kw); } put(d.ore)(d.rate * f); });
-      Object.entries(S.lines).forEach(([id, line]) => { const L = LINE[id], n = line.slots.filter(Boolean).length; if (!L || !n || !line.on) return;
-        let k = Math.min(n / SMELT_T, S.items[L.ore] || 0, roomR(L.out)); if (k <= 1e-9) return;
-        k *= draw(k * SMELT_T * SMELT_KW); S.items[L.ore] -= k; put(L.out)(k); });
-      Object.entries(S.crafts).forEach(([id, c]) => { const d = CRAFT[id], n = c.slots.filter(Boolean).length; if (!d || !n || !c.on) return;
-        let k = Math.min(n / d.T, (S.items[d.in] || 0) / d.nIn, roomR(d.out) / d.nOut); if (k <= 1e-9) return;
-        k *= draw(k * d.T * CON_KW); S.items[d.in] -= k * d.nIn; put(d.out)(k * d.nOut); });
-      if (S.inv.recycler) Object.keys(over).forEach(k => { if (!walletFull()) earn(ITEMS[k].value / RECYCLE_CUT * Math.min(over[k], 1 / RECYCLE_T)); });
+      [['smelt', S.lines], ['craft', S.crafts]].forEach(([kind, lines]) => Object.entries(lines).forEach(([id, st]) => { const d = plDef(kind, id); if (!d || !st.on) return;
+        const capIn = st.slots.reduce((a, sp, i) => a + (sp ? machIn(d, i, sp) : 0), 0), kwFull = st.slots.reduce((a, sp, i) => a + (sp ? machKw(i, sp) : 0), 0); if (capIn <= 0) return;
+        let k = Math.min(capIn, S.items[d.in] || 0, roomR(d.out) * d.nIn / d.nOut); if (k <= 1e-9) return; // k = input items this second
+        k *= draw(kwFull * k / capIn); S.items[d.in] -= k; put(d.out)(k * d.nOut / d.nIn); }));
+      if (S.inv.recycler) Object.keys(over).forEach(k => earn(ITEMS[k].value / RECYCLE_CUT * over[k]));
       S.power = Math.min(powerCap(), P); lastUse = used; if (short) noPow++;
     }
     wholeItems(); // the model moves fractions of items; warehouses hold whole ones, or the last cart never fits
@@ -1690,7 +1716,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   function restoreString(str) { try { const d = JSON.parse(str); if (!d || !d.mines) return false; restoring = true; localStorage.setItem(KEY, str); setTimeout(() => location.reload(), 80); return true; } catch (e) { return false; } }
   const ago = t => { const s = Math.max(0, (Date.now() - t) / 1000); return s < 90 ? 'just now' : s < 5400 ? Math.round(s / 60) + ' min ago' : s < 129600 ? Math.round(s / 3600) + ' h ago' : Math.round(s / 86400) + ' days ago'; };
   const saveCard = (title, m) => `<b>${title}</b><div>${m.place}</div><span>${m.research} · ${big(m.credits)} credits</span><span>played ${fmtPlayed(m.played)} · saved ${ago(m.lastTick)}</span>`;
-  window.Game = { SAVE_KEY: KEY, get version() { return `${VERSION.stage} ${VERSION.semver}`; }, get S() { return S; }, saveString, saveMeta, restoreString, saveCard, ago, save,
+  window.Game = { rt: () => RT, SAVE_KEY: KEY, get version() { return `${VERSION.stage} ${VERSION.semver}`; }, get S() { return S; }, saveString, saveMeta, restoreString, saveCard, ago, save,
     setSaveHook: f => { saveHook = f; } };
   const SIL = '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><circle cx="12" cy="8.5" r="4"/><path d="M4 20.5c.8-4 4.2-6 8-6s7.2 2 8 6z"/></svg>';
   // first visit with no save: a welcome screen with sign-in or guest
@@ -1747,6 +1773,15 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
 
   // ---- run ----
   Object.values(S.mines).forEach(m => { if (m.dig && Date.now() >= m.dig.end) { m.dig = null; m.levels.push(freshLevel()); } }); // digs that finished while you were away
+  // 0.4.0: the quest list changed (Second fire, Copper deeper and the stretch goals in; Faster surface and Go electric out)
+  if (!S.qv) { const OLD = ['ore', 'landing', 'hands', 'sale', 'room', 'smelting', 'fire', 'copperore', 'battery', 'spark', 'account', 'taps', 'deeper', 'copperdrill', 'copperline', 'parts', 'build', 'surface', 'stock', 'concrete', 'mix', 'bank', 'coalpower', 'plant', 'electric', 'lights'];
+    const was = OLD[S.quest] || (S.quest >= OLD.length ? 'done' : 'ore'), map = { surface: 'stock', electric: 'lights', done: 'e1' };
+    S.quest = Math.max(0, questAt(map[was] || was)); S.qv = 4; S.eT = 0; }
+  // 0.4.0: lines stack Levels. Old smelters (true) become ×1 machines on the lowest open Levels; any past what is open go back to inventory
+  [['smelt', S.lines], ['craft', S.crafts]].forEach(([kind, lines]) => Object.entries(lines).forEach(([id, st]) => {
+    if (!LV_Q[kind][id] || (st.slots.length === PL_LV && st.slots.every(v => typeof v === 'number'))) return; const n = st.slots.filter(Boolean).length, open = lvShown(kind, id), sp = st.slots.map(Number).filter(Boolean);
+    st.slots = Array(PL_LV).fill(0); for (let i = 0; i < Math.min(n, open); i++) st.slots[i] = sp[i] || 1;
+    if (n > open) S.inv[plDef(kind, id).mach] = (S.inv[plDef(kind, id).mach] || 0) + n - open; }));
   RT = makeRT(); pops = []; fpops = []; openAll();
   if (!mineShown(S.view)) S.view = 'iron'; if (!lineShown(S.sview)) S.sview = 'iron';
   if (!S.crafts[S.cview]) S.cview = Object.keys(S.crafts)[0] || 'plates';
@@ -1760,12 +1795,12 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   let last = performance.now(), syncT = 0, saveT = 0;
   function loop(t) { const dt = Math.min(0.05, (t - last) / 1000); last = t; tick(dt);
     if ((syncT += dt) > 0.15) { syncT = 0; sync(); } if ((saveT += dt) > 5) { saveT = 0; save(); }
-    if (tab === 'mine' && W) draw(); if (tab === 'smelt' && FW && S.lines[S.sview]) drawLine(); if (tab === 'power') { ptick(dt); drawPower(); } if (tab === 'build' && CW && S.crafts[S.cview]) drawCraft(); requestAnimationFrame(loop); }
+    if (tab === 'mine' && W) draw(); if (tab === 'smelt' && VX.smelt.W && S.lines[S.sview]) drawLine(); if (tab === 'power') { ptick(dt); drawPower(); } if (tab === 'build' && VX.craft.W && S.crafts[S.cview]) drawCraft(); requestAnimationFrame(loop); }
   requestAnimationFrame(loop);
   document.addEventListener('visibilitychange', () => { if (document.hidden) { hiddenAt = Date.now(); save(); }
     else { last = performance.now(); if (hiddenAt) { const d = runOffline((Date.now() - hiddenAt) / 1000); hiddenAt = 0; if (d) { showWelcome(d); sync(); } } } });
   addEventListener('pagehide', save);
-  addEventListener('resize', () => { if (tab === 'mine' && stage.clientWidth !== W) layout(); if (tab === 'smelt' && fstage.clientWidth !== FW) flayout(); if (tab === 'power' && $('pgrid').clientWidth !== PW) playout(); if (tab === 'build' && cstage.clientWidth !== CW) clayout(); });
+  addEventListener('resize', () => { if (tab === 'mine' && stage.clientWidth !== W) layout(); if (tab === 'smelt' && fstage.clientWidth !== VX.smelt.W) flayout(); if (tab === 'power' && $('pgrid').clientWidth !== PW) playout(); if (tab === 'build' && cstage.clientWidth !== VX.craft.W) clayout(); });
 })();
 </script>
 
