@@ -14,8 +14,8 @@
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>html,body{margin:0;padding:0}img{max-width:100%}[hidden]{display:none!important}</style>
-<script src="cloud-config.js?v=0.4.0"></script>
-<script src="cloud.js?v=0.4.0" defer></script>
+<script src="cloud-config.js?v=0.4.1"></script>
+<script src="cloud.js?v=0.4.1" defer></script>
 </head>
 <body>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -639,7 +639,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   try { theme = localStorage.getItem('afk-factory.theme') || 'system'; } catch (e) {}
   const applyTheme = () => { const r = document.documentElement; if (theme === 'system') { if (hostTheme) r.setAttribute('data-theme', hostTheme); else r.removeAttribute('data-theme'); } else r.setAttribute('data-theme', theme); readColors(); };
   applyTheme(); matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => { if (theme === 'system') readColors(); });
-  const VERSION = { stage: 'Alpha', semver: '0.4.0' }; // bump with every release
+  const VERSION = { stage: 'Alpha', semver: '0.4.1' }; // bump with every release
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const $ = id => document.getElementById(id);
 
@@ -1038,7 +1038,15 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
     ctx.fillStyle = C.bed; list.forEach(b => ctx.fillRect(...rect(b, CELL / 2 + 1.5))); }
   function beltCells(b) { for (let s = 0; s <= b.len + 0.01; s += PITCH) { const p = b.pos(s); rr(p.x - CELL / 2, p.y - CELL / 2, CELL, CELL, 3); ctx.fillStyle = C.track; ctx.fill(); ctx.strokeStyle = C.line; ctx.lineWidth = 1; ctx.stroke(); } }
   const cartR = it => 4.2 + 0.45 * Math.log(it.load || 1) / Math.log(4); // richer loads ride in slightly bigger carts
-  function beltItems(b) { for (const it of b.items) { const p = b.pos(it.s); cart(p.x + (it.ox || 0), p.y + (it.oy || 0), cartR(it), ITEMS[it.item].color); } }
+  // every cart on a belt is drawn as the item it carries (its own icon, a bit bigger than a cell, with a soft shadow);
+  // a cart carrying more than one shows its count, unless it is queued nose-to-tail behind another (keeps backed-up belts readable)
+  const ICON_SZ = 17;
+  function beltItems(b) { b.items.forEach((it, k) => { const p = b.pos(it.s), x = p.x + (it.ox || 0), y = p.y + (it.oy || 0), im = img(it.item);
+    if (ready(im)) { ctx.save(); ctx.shadowColor = '#0008'; ctx.shadowBlur = 3; ctx.shadowOffsetY = 1; ctx.drawImage(im, x - ICON_SZ / 2, y - ICON_SZ / 2, ICON_SZ, ICON_SZ); ctx.restore(); }
+    else cart(x, y, cartR(it), ITEMS[it.item].color);
+    const n = it.load || 1, queued = k > 0 && b.items[k - 1].s - it.s < PITCH + 0.5;
+    if (n > 1 && !queued) { const t = '×' + big(n); ctx.font = '700 8px "Chakra Petch", system-ui, sans-serif'; const w = ctx.measureText(t).width + 5;
+      rr(x + 3, y - 12, w, 10, 3); ctx.fillStyle = C.panel; ctx.fill(); ctx.strokeStyle = C.line; ctx.lineWidth = 0.8; ctx.stroke(); ctx.fillStyle = C.text; ctx.textAlign = 'left'; ctx.fillText(t, x + 5.5, y - 4); } }); }
   function node(i, swing) { const y = rowY(i), sz = 54, cx = X.rockX + X.rockW / 2, im = img(MINE[S.view].ore); ctx.save(); if (swing > 0) ctx.translate(Math.sin(swing * 90) * 2, 0);
     if (ready(im)) ctx.drawImage(im, cx - sz / 2, y - sz / 2 + 2, sz, sz); ctx.restore(); }
   const note = (text, x, y, color, pulse, align) => { ctx.globalAlpha = pulse && !reduce ? 0.55 + 0.4 * Math.sin(clock * 4) : 0.95; ctx.textAlign = align || 'left'; ctx.fillStyle = color; ctx.font = '700 10.5px "Chakra Petch", system-ui, sans-serif'; ctx.fillText(text, x, y); ctx.globalAlpha = 1; };
