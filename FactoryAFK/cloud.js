@@ -7,6 +7,7 @@
   const LS = { device: 'fafk_device', link: 'fafk_cloud_link', backup: 'fafk_backup' };
   const $ = id => document.getElementById(id);
   const ls = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }, del(k) { try { localStorage.removeItem(k); } catch (e) {} } };
+  const ss = { get(k) { try { return sessionStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { sessionStorage.setItem(k, v); } catch (e) {} } };
 
   const C = { available: false, ready: false, user: null, status: 'off', // off | idle | syncing | ok | error | offline
     lastSync: 0, dirty: false, busy: false, hold: null };                  // hold = 'resolving' | 'choose' | 'newer': no upload until it clears
@@ -90,12 +91,17 @@
     if (!cloud || cloud.saveKey !== Game.SAVE_KEY) { C.hold = null; await push(true); return; }   // nothing in the cloud yet: this device's save goes up
     if (versionNewer(cloud.version, Game.version)) { C.hold = 'newer'; C.status = 'error'; C.error = 'Your cloud save is from a newer version. Reload the page.'; UIhook(); return; }
     const cm = Game.saveMeta(cloud.str);
-    const localFresh = local.played < 300 && local.quest <= 2;
     const linked = L && L.uid === u.uid;
     const localMovedSinceSync = !linked || (local.played - (L.played || 0)) > 60;
     const cloudMovedSinceSync = !linked || (cloud.deviceId !== deviceId && cloud.lastTick > (L.tick || 0) + 1000);
-    if (localFresh) return useCloud(cloud, false);
+    // a fresh device takes the cloud, but only when the cloud really is further along: a cloud save that is itself early
+    // would otherwise be restored, look fresh again after the reload, and be restored forever
+    const cloudAhead = (cm.played || 0) > (local.played || 0) + 30 || (cm.quest || 0) > (local.quest || 0);
+    const localFresh = local.played < 300 && local.quest <= 2 && cloudAhead;
+    const justRestored = Date.now() - (+ss.get('afk.restoredAt') || 0) < 60000;                // never restore twice in a row
     if (linked && !cloudMovedSinceSync) { C.hold = null; await push(true); return; }          // the cloud is just our last upload
+    if (justRestored) { C.hold = null; C.status = 'ok'; C.error = ''; UIhook(); return; }
+    if (localFresh) return useCloud(cloud, false);
     if (linked && !localMovedSinceSync) return useCloud(cloud, false);                          // only the other device played
     chooseSave(local, cm, cloud);                                                               // both have real progress: ask
   }
@@ -104,6 +110,7 @@
     C.hold = null;
     if (backupLocal) ls.set(LS.backup, JSON.stringify({ at: Date.now(), key: Game.SAVE_KEY, save: Game.saveString() }));
     const m = Game.saveMeta(cloud.str); setLink(C.user.uid, cloud.lastTick, m.played || 0);
+    ss.set('afk.restoredAt', String(Date.now()));
     if (!Game.restoreString(cloud.str)) { C.status = 'error'; C.error = 'That cloud save could not be loaded.'; UIhook(); return; }   // reloads the page with the cloud save
     C.lastSync = Date.now(); C.dirty = false; C.status = 'ok'; C.error = ''; UIhook();
   }
