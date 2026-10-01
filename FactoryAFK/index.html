@@ -14,8 +14,8 @@
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>html,body{margin:0;padding:0}img{max-width:100%}[hidden]{display:none!important}</style>
-<script src="cloud-config.js?v=0.3.6"></script>
-<script src="cloud.js?v=0.3.6" defer></script>
+<script src="cloud-config.js?v=0.3.7"></script>
+<script src="cloud.js?v=0.3.7" defer></script>
 </head>
 <body>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -566,7 +566,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   try { theme = localStorage.getItem('afk-factory.theme') || 'system'; } catch (e) {}
   const applyTheme = () => { const r = document.documentElement; if (theme === 'system') { if (hostTheme) r.setAttribute('data-theme', hostTheme); else r.removeAttribute('data-theme'); } else r.setAttribute('data-theme', theme); readColors(); };
   applyTheme(); matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => { if (theme === 'system') readColors(); });
-  const VERSION = { stage: 'Alpha', semver: '0.3.6' }; // bump with every release
+  const VERSION = { stage: 'Alpha', semver: '0.3.7' }; // bump with every release
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const $ = id => document.getElementById(id);
 
@@ -1403,6 +1403,8 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
       done: () => !window.FIREBASE_CONFIG || !!S.cloudUser || !!S.guestOK || !S.guest, go: () => { $('hello-cloud').hidden = false; }, btn: 'Choose' },
     { id: 'taps', t: 'Stronger taps', text: 'Upgrade Tap power from +5 to +20 kW (200 credits).', up: 'tap', done: () => S.tapLv >= 2, go: () => showTab('power'), btn: 'Open Power', here: () => tab === 'power' },
     { id: 'deeper', t: 'Deeper', text: 'Dig Iron Level 2 (400 credits) and put a drill on it. Level 2 carts hold 2 ore.', parts: [['Level 2 dug', () => S.mines.iron.levels.length >= 2], ['Drill on Level 2', () => drillOn('iron', 1)]], go: () => viewMine('iron'), btn: 'Go to the Iron mine', here: () => tab === 'mine' && S.view === 'iron' },
+    { id: 'copperdrill', t: 'Copper drill', text: 'Put a drill on Copper Level 1 so copper keeps coming without tapping. Build another Basic Drill (20 iron ore) if you need one.', done: () => drillOn('copper', 0),
+      go: () => S.inv.basic ? (viewMine('copper'), openSheet(0)) : showTab('craft'), btn: () => S.inv.basic ? 'Choose a drill' : 'Open Buildings', here: () => !S.inv.basic && tab === 'craft' },
     { id: 'copperline', t: 'Copper line', text: 'Place a Smelter in the Copper line and upgrade the copper ore warehouse to Lv 2.', up: 'wh-copper_ore', parts: [['Smelter in Copper line', () => slotOn(S.lines, 'copper')], ['Copper warehouse Lv 2 (300 credits)', () => whLvOf('copper_ore') >= 2]],
       go: () => !slotOn(S.lines, 'copper') ? (S.inv.smelter ? viewLine('copper') : showTab('craft')) : viewMine('copper'), btn: () => !slotOn(S.lines, 'copper') ? (S.inv.smelter ? 'Open Copper smelting' : 'Open Buildings') : 'Go to the Copper mine' },
     { id: 'parts', t: 'Parts', text: 'Research Parts in the HUB: deliver 50 iron ingots and 50 copper ingots.', done: () => S.tier >= 3, go: hub, btn: 'Open the HUB', here: () => tab === 'hub' },
