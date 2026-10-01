@@ -14,8 +14,8 @@
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>html,body{margin:0;padding:0}img{max-width:100%}[hidden]{display:none!important}</style>
-<script src="cloud-config.js?v=0.3.3"></script>
-<script src="cloud.js?v=0.3.3" defer></script>
+<script src="cloud-config.js?v=0.3.4"></script>
+<script src="cloud.js?v=0.3.4" defer></script>
 </head>
 <body>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -171,6 +171,8 @@ canvas { width: 100%; display: block; }
 .dig em { font-style: normal; font-weight: 800; font-size: 14px; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .dig em img { width: 16px; height: 16px; vertical-align: -3px; }
 .dig:disabled { cursor: default; opacity: .6; }
+.dig.locked { opacity: .45; border-color: var(--line); } .dig.locked b { color: var(--dim); } .dig.locked > img { filter: grayscale(1); }
+.dig-lock .lk { width: 16px; height: 16px; color: var(--dim); }
 .dig.ready { border-style: solid; border-color: var(--grass); box-shadow: 0 0 14px #74dc5c33; }
 .dig.ready > img { opacity: 1; }
 .dig:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
@@ -563,7 +565,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   try { theme = localStorage.getItem('afk-factory.theme') || 'system'; } catch (e) {}
   const applyTheme = () => { const r = document.documentElement; if (theme === 'system') { if (hostTheme) r.setAttribute('data-theme', hostTheme); else r.removeAttribute('data-theme'); } else r.setAttribute('data-theme', theme); readColors(); };
   applyTheme(); matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => { if (theme === 'system') readColors(); });
-  const VERSION = { stage: 'Alpha', semver: '0.3.3' }; // bump with every release
+  const VERSION = { stage: 'Alpha', semver: '0.3.4' }; // bump with every release
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const $ = id => document.getElementById(id);
 
@@ -807,7 +809,8 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
     m.levels.push(freshLevel()); M.levels.push(newLevelRT()); M.tunnels.push(makeTunnel(M, n));
     layout(); if (id === S.view) pop(W / 2, rowY(n) - 30, `Level ${n + 1} open`, C.grass); sync(); save(); }
   const digCost = (id, n) => ({ [CR]: DIG_COST[n] });
-  const digLocked = (id, n) => S.tier < digLevelTier(n) || !qOpen('deeper');
+  const DIG_Q = { iron: 'deeper', coal: 'plant', copper: 'electric', limestone: 'electric' }; // the quest that first digs each mine deeper
+  const digLocked = (id, n) => S.tier < digLevelTier(n) || !qOpen(DIG_Q[id]);
   function startDig() { const id = S.view, m = S.mines[id], n = m.levels.length; if (n >= MAX_LEVELS || m.dig || digLocked(id, n) || !canPay(digCost(id, n))) return;
     pay(digCost(id, n)); m.dig = { level: n, end: Date.now() + DIG_TIME[n] * 1000, len: DIG_TIME[n] }; sync(); save(); }
   const pop = (x, y, text, color) => pops.push({ x, y, text, color, t: 0 });
@@ -1472,10 +1475,10 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
     const id = S.view, m = S.mines[id];
     const dg = $('dig'); if (dg) { const n = m.levels.length, cost = digCost(id, n), digging = m.dig && m.dig.level === n, locked = digLocked(id, n), what = `${MINE[id].name.toLowerCase()} ×${LOAD(n)}`;
       dg.querySelector('b').textContent = digging ? `Digging Level ${n + 1}…` : `Dig Level ${n + 1}`;
-      dg.querySelector('small').textContent = digging ? `${what} · ${clockTxt((m.dig.end - Date.now()) / 1000)} left` : locked ? `${what} · opens with quest ${qNum('deeper')}` : `${what} · takes ${clockTxt(DIG_TIME[n])}`;
-      const em = dg.querySelector('em'), eh = digging || locked ? '' : costHTML(cost); if (em._h !== eh) { em.innerHTML = eh; em._h = eh; }
+      dg.querySelector('small').textContent = digging ? `${what} · ${clockTxt((m.dig.end - Date.now()) / 1000)} left` : locked ? `${what} · opens with quest ${qNum(DIG_Q[id])}` : `${what} · takes ${clockTxt(DIG_TIME[n])}`;
+      const em = dg.querySelector('em'), eh = digging ? '' : locked ? `<span class="dig-lock">${LOCK_SM}</span>` : costHTML(cost); if (em._h !== eh) { em.innerHTML = eh; em._h = eh; }
       const tm = dg.querySelector('.timer'); tm.hidden = !digging; if (digging) tm.firstElementChild.style.width = Math.min(100, (1 - (m.dig.end - Date.now()) / 1000 / m.dig.len) * 100) + '%';
-      dg.disabled = digging || locked || !canPay(cost); dg.classList.toggle('digging', !!digging); dg.classList.toggle('ready', !digging && !locked && canPay(cost)); }
+      dg.disabled = digging || locked || !canPay(cost); dg.classList.toggle('digging', !!digging); dg.classList.toggle('locked', !!locked && !digging); dg.classList.toggle('ready', !digging && !locked && canPay(cost)); }
     m.levels.forEach((lv, i) => { const d = $('drill-' + i); if (!d) return; d.querySelector('b').textContent = lv.drill ? DRILLS[lv.drill].name : 'Drill: none';
       d.querySelector('small').textContent = lv.drill ? `${LOAD(i)} ${MINE[id].name.toLowerCase()} / ${DRILLS[lv.drill].T} s · auto` : S.inv.basic || S.inv.electric ? 'Tap to assign' : 'Assign a drill';
       d.classList.toggle('has', !!lv.drill); d.classList.toggle('ready', (!lv.drill && S.inv.basic > 0) || (lv.drill !== 'electric' && S.inv.electric > 0)); });
