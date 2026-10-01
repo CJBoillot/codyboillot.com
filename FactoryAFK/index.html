@@ -14,8 +14,8 @@
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>html,body{margin:0;padding:0}img{max-width:100%}[hidden]{display:none!important}</style>
-<script src="cloud-config.js?v=0.3.20"></script>
-<script src="cloud.js?v=0.3.20" defer></script>
+<script src="cloud-config.js?v=0.3.21"></script>
+<script src="cloud.js?v=0.3.21" defer></script>
 </head>
 <body>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -629,7 +629,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   try { theme = localStorage.getItem('afk-factory.theme') || 'system'; } catch (e) {}
   const applyTheme = () => { const r = document.documentElement; if (theme === 'system') { if (hostTheme) r.setAttribute('data-theme', hostTheme); else r.removeAttribute('data-theme'); } else r.setAttribute('data-theme', theme); readColors(); };
   applyTheme(); matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => { if (theme === 'system') readColors(); });
-  const VERSION = { stage: 'Alpha', semver: '0.3.20' }; // bump with every release
+  const VERSION = { stage: 'Alpha', semver: '0.3.21' }; // bump with every release
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const $ = id => document.getElementById(id);
 
@@ -657,8 +657,8 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   const CR = 'credits'; // the currency: upgrades and research cost Credits; crafting still costs items
   const nameOf = k => k === CR ? 'Credits' : ITEMS[k] ? ITEMS[k].name : k;
   const costHTML = c => Object.entries(c).map(([k, n]) => `${big(n)} ${icon(k, '', nameOf(k))}`).join(' ');
-  // Recycler (one per factory): sells from every warehouse that is 90%+ full, 1 item every 2 s each, at a tenth of the price
-  const RECYCLE_T = 2, RECYCLE_CUT = 10, RECYCLE_AT = 0.9;
+  // Recycler (one per factory): sells only from a FULL warehouse, 1 item every 2 s each, at a tenth of the price
+  const RECYCLE_T = 2, RECYCLE_CUT = 10, RECYCLE_AT = 1, RECYCLE_HOLD = 6;
   // Wallet: credits are capped. Tier 1 starts at 1,000 and one quest upgrade takes it to 10,000
   const WALLET = [0, 1000, 10000], walletCap = () => WALLET[Math.min(S.walletLv || 1, WALLET.length - 1)];
   const perS = r => `${(Math.round(r * 10) / 10).toFixed(1)}/s`;
@@ -725,7 +725,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   const INTRO = { basic: 'hands', smelter: 'fire', battery: 'battery', constructor: 'build', plant: 'plant', electric: 'electric' }; // the quest that teaches each building
   const RECIPES = [
     { id: 'basic', sq: 'Drill', name: 'Basic Drill', icon: 'basic_drill', cost: { iron_ore: 20 }, T: 1.5, tier: 1, desc: 'Digs one cart every 2 s on any Level of any mine, no power needed.' },
-    { id: 'recycler', sq: 'Recycler', name: 'Recycler', icon: 'merger', cost: { iron_ore: 30 }, T: 2, tier: 1, max: 1, reward: true, desc: `One per factory. Sells from every warehouse that is ${Math.round(RECYCLE_AT * 100)}% full: 1 item every ${RECYCLE_T} s from each, at a tenth of its price.` },
+    { id: 'recycler', sq: 'Recycler', name: 'Recycler', icon: 'merger', cost: { iron_ore: 30 }, T: 2, tier: 1, max: 1, reward: true, desc: `One per factory. Sells from every full warehouse: 1 item every ${RECYCLE_T} s from each, at a tenth of its price.` },
     { id: 'smelter', sq: 'Smelter', name: 'Smelter', icon: 'basic_smelter', cost: { iron_ore: 100 }, T: 3, tier: 2, desc: `Turns 1 ore into 1 ingot every ${SMELT_T} s in any Smelt line. Draws ${SMELT_KW} kW/s while it works.` },
     { id: 'battery', sq: 'Battery', name: 'Battery T1', icon: 'battery_t1', get cost() { return batteryCost(); }, T: 2, tier: 2, desc: `Stores ${BATTERY_W} kW. Tap in the Power tab to charge it. Each extra battery costs a lot more.` },
     { id: 'constructor', sq: 'Constructor', name: 'Constructor', icon: 'auto_constructor', cost: { iron_ingot: 40, copper_ingot: 20 }, T: 4, tier: 3, desc: `Makes plates, wire or concrete on one Level of a Crafting line. Draws ${CON_KW} kW/s while it works.` },
@@ -978,10 +978,13 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
         const take = Math.min(PLANT.fuel, want - made); PLANT.fuel -= take; made += take; }
       S.power += made; powerIn.add(made); plantMeter.add(made); PLANT.starved = made < want - 1e-6 ? PLANT.starved + dt : 0;
       PLANT.genAcc += made; while (PLANT.genAcc >= 1) { PLANT.genAcc -= 1; genDot(); } }
-    // the Recycler sells a trickle from every warehouse that is nearly full
-    if (S.inv.recycler) Object.keys(ITEMS).forEach(k => { const r = RECY[k] = RECY[k] || { acc: 0 };
-      if ((S.items[k] || 0) < Math.max(1, capOf(k) * RECYCLE_AT) || walletFull()) { r.acc = 0; r.on = false; return; }
-      r.on = true; r.acc += dt / RECYCLE_T; if (r.acc >= 1) { r.acc -= 1; S.items[k] -= 1; earn(ITEMS[k].value / RECYCLE_CUT, true); } });
+    // the Recycler sells a trickle from every FULL warehouse. Each sale drops it to 99/100 until the next cart arrives,
+    // so it counts as "recycling" for a few seconds after it was last full; otherwise the row would flicker on every sale
+    if (S.inv.recycler) Object.keys(ITEMS).forEach(k => { const r = RECY[k] = RECY[k] || { acc: 0, hold: 0 };
+      if (walletFull()) { r.acc = 0; r.hold = 0; r.on = false; return; }
+      if ((S.items[k] || 0) >= capOf(k)) { r.hold = RECYCLE_HOLD; r.acc += dt / RECYCLE_T; if (r.acc >= 1) { r.acc -= 1; S.items[k] -= 1; earn(ITEMS[k].value / RECYCLE_CUT, true); } }
+      else { r.hold = Math.max(0, (r.hold || 0) - dt); r.acc = Math.min(r.acc, 1); if (!r.hold) r.acc = 0; }
+      r.on = r.hold > 0; });
     RECIPES.forEach(r => { const c = crafting[r.id]; if (c) { c.p += dt / r.T; if (c.p >= 1) { delete crafting[r.id]; S.inv[r.id] = (S.inv[r.id] || 0) + 1; S.crafted[r.id] = (S.crafted[r.id] || 0) + 1; if (r.id === 'battery' && tab === 'craft') renderCraft(); save(); } } });
     questTick(dt);
   }
@@ -1431,7 +1434,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
       const stopped = !run && n < cap && hasMaker(k) && clock > 10 && winRate(flow[k]) < 0.01;
       const st = run ? 'recycling' : n >= cap ? 'full' : stopped ? 'stopped' : '';
       const tag = run ? (n >= cap ? ' · FULL' : '') : n >= cap ? ' · FULL' : stopped ? ' · STOPPED' : '';
-      const recy = S.inv.recycler ? `<span class="recy" aria-pressed="${!!run}" title="Recycler">${RECY_SVG}${run ? `+${fmtCr(recyPerS(k))} credits/s` : wf && n >= cap * RECYCLE_AT ? 'wallet full' : `starts at ${Math.round(RECYCLE_AT * 100)}%`}</span>` : '';
+      const recy = S.inv.recycler ? `<span class="recy" aria-pressed="${!!run}" title="Recycler">${RECY_SVG}${run ? `+${fmtCr(recyPerS(k))} credits/s` : wf && n >= cap ? 'wallet full' : 'starts when full'}</span>` : '';
       return `<div class="wrow${st ? ' ' + st : ''}">${icon(k)}<div class="wmid"><b>${ITEMS[k].name}</b><span class="wct"><em>${big(n)}</em> / ${big(cap)}${tag} · <i class="${Math.abs(rt) < 0.05 ? '' : rt > 0 ? 'up' : 'down'}">${fmtRate(rt)}</i></span><div class="bar"><i style="width:${Math.min(100, n / cap * 100)}%"></i></div>${recy}</div>
         <div class="wsell">${wf ? `<button class="sellb" disabled>Wallet full<em></em></button><button class="sellb" disabled>Spend first<em></em></button>` : `<button class="sellb" data-sell="${k}" data-n="10" ${n < 10 || walletRoom() < 10 * v ? 'disabled' : ''}>Sell 10<em>+${big(10 * v)}</em></button><button class="sellb" data-sell="${k}" data-n="all" ${n < 1 || walletRoom() < v ? 'disabled' : ''}>Sell all<em>+${big(Math.min(n, Math.floor(walletRoom() / v)) * v)}</em></button>`}</div></div>`; }).join('');
     if ($('whs')._h !== rows) { $('whs')._h = rows; $('whs').innerHTML = rows; }
@@ -1532,7 +1535,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   // a quest can open a tab, a mine, a line or a building: redraw whatever is on screen so it shows at once
   function refreshUnlocks() { if (tab === 'mine') layout(); if (tab === 'smelt') flayout(); if (tab === 'craft') renderCraft(); if (tab === 'build') clayout(); if (tab === 'hub') renderHub(); sync(); }
   function objective() { const q = Q();
-    if (!q) return { head: 'TIER 1 COMPLETE', text: 'Reward: the Recycler. It sells a trickle from every warehouse that is 90% full, so your factory now earns credits on its own, even while you are away. Tier 2 arrives in a later build.', btn: tab !== 'hub' ? 'See it in the HUB' : null, dest: 'Open the HUB', act: () => showTab('hub') };
+    if (!q) return { head: 'TIER 1 COMPLETE', text: 'Reward: the Recycler. It sells a trickle from every full warehouse, so your factory now earns credits on its own, even while you are away. Tier 2 arrives in a later build.', btn: tab !== 'hub' ? 'See it in the HUB' : null, dest: 'Open the HUB', act: () => showTab('hub') };
     const btn = typeof q.btn === 'function' ? q.btn() : q.btn, here = q.here && q.here();
     const o = { head: `QUEST ${S.quest + 1}/${QUESTS.length}`, title: q.t, text: q.text, btn: here ? null : btn, dest: btn, act: q.go };
     if (q.parts) { const n = q.parts.filter(([, f]) => f()).length; o.have = n; o.need = q.parts.length; o.list = q.parts.map(([l, f]) => `${f() ? '✓' : '○'} ${l}`).join('   '); }
@@ -1655,7 +1658,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
       Object.entries(S.crafts).forEach(([id, c]) => { const d = CRAFT[id], n = c.slots.filter(Boolean).length; if (!d || !n || !c.on) return;
         let k = Math.min(n / d.T, (S.items[d.in] || 0) / d.nIn, room(d.out) / d.nOut); if (k <= 1e-9) return;
         k *= draw(k * d.T * CON_KW); S.items[d.in] -= k * d.nIn; put(d.out)(k * d.nOut); });
-      if (S.inv.recycler) Object.keys(ITEMS).forEach(k => { if ((S.items[k] || 0) >= Math.max(1, capOf(k) * RECYCLE_AT) && !walletFull()) { const n = 1 / RECYCLE_T; S.items[k] -= n; earn(ITEMS[k].value / RECYCLE_CUT * n); } });
+      if (S.inv.recycler) Object.keys(ITEMS).forEach(k => { if ((S.items[k] || 0) >= capOf(k) - 1e-6 && !walletFull()) { const n = 1 / RECYCLE_T; S.items[k] -= n; earn(ITEMS[k].value / RECYCLE_CUT * n); } });
       S.power = Math.min(powerCap(), P); lastUse = used; if (short) noPow++;
     }
     wholeItems(); // the model moves fractions of items; warehouses hold whole ones, or the last cart never fits
