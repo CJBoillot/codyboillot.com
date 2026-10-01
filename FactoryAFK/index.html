@@ -14,8 +14,8 @@
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>html,body{margin:0;padding:0}img{max-width:100%}[hidden]{display:none!important}</style>
-<script src="cloud-config.js?v=0.4.7"></script>
-<script src="cloud.js?v=0.4.7" defer></script>
+<script src="cloud-config.js?v=0.4.8"></script>
+<script src="cloud.js?v=0.4.8" defer></script>
 </head>
 <body>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -639,7 +639,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   try { theme = localStorage.getItem('afk-factory.theme') || 'system'; } catch (e) {}
   const applyTheme = () => { const r = document.documentElement; if (theme === 'system') { if (hostTheme) r.setAttribute('data-theme', hostTheme); else r.removeAttribute('data-theme'); } else r.setAttribute('data-theme', theme); readColors(); };
   applyTheme(); matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => { if (theme === 'system') readColors(); });
-  const VERSION = { stage: 'Alpha', semver: '0.4.7' }; // bump with every release
+  const VERSION = { stage: 'Alpha', semver: '0.4.8' }; // bump with every release
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const $ = id => document.getElementById(id);
 
@@ -1678,7 +1678,8 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
       $('recipes').querySelectorAll('.cst').forEach(e => e.classList.toggle('short', (S.items[e.dataset.k] || 0) < +e.dataset.n));
     }
     if (tab === 'hub') $('wh-card').hidden = !qOpen('sale');
-    if (tab === 'hub') { const k = JSON.stringify([S.tier, S.quest, S.handed, Math.floor(S.credits)]); if ($('tiers')._k !== k) { $('tiers')._k = k; renderHub(); } else $('stats').innerHTML = renderStats(); renderWh(); }
+    // the key includes what you can deliver right now, so the research button is always current
+    if (tab === 'hub') { const T = TIERS[S.tier], k = JSON.stringify([S.tier, S.quest, S.handed, Math.floor(S.credits), T ? Object.entries(T.need).map(([q, v]) => Math.min(Math.floor(bal(q)), v - (S.handed[q] || 0))) : 0]); if ($('tiers')._k !== k) { $('tiers')._k = k; renderHub(); } else $('stats').innerHTML = renderStats(); renderWh(); }
     const plSync = kind => { const id = selOf(kind), st = plState(kind, id), d = plDef(kind, id), V = VX[kind]; if (!st || !V.X) return;
       const r = $(kind === 'smelt' ? 'fac-run' : 'craft-run'); r.setAttribute('aria-pressed', String(st.on)); r.querySelector('img').setAttribute('src', `icons/${st.on ? 'plug_in' : 'plug_out'}.webp`); r.querySelector('span').textContent = st.on ? 'Running' : 'Off';
       const word = d.mach === 'smelter' ? 'Smelter' : 'Constructor';
