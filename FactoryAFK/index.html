@@ -14,8 +14,8 @@
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>html,body{margin:0;padding:0}img{max-width:100%}[hidden]{display:none!important}</style>
-<script src="cloud-config.js?v=0.3.19"></script>
-<script src="cloud.js?v=0.3.19" defer></script>
+<script src="cloud-config.js?v=0.3.20"></script>
+<script src="cloud.js?v=0.3.20" defer></script>
 </head>
 <body>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -365,6 +365,8 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
 .recy { font: inherit; font-size: 11px; font-weight: 700; color: var(--dim); background: none; border: 1px dashed var(--line); border-radius: 8px; padding: 3px 8px 3px 3px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; align-self: stretch; }
 .recy img { width: 18px; height: 18px; }
 .recy { white-space: nowrap; }
+.recy .rcy { width: 18px; height: 18px; flex: none; margin-left: 2px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; }
+.recy .rcy .h { fill: currentColor; stroke: none; }
 .recy[aria-pressed="true"] { color: var(--sky); border: 1px solid var(--sky2); background: var(--box); }
 .recy:disabled { opacity: .5; cursor: default; }
 #bld .unl { margin-top: 4px; }
@@ -627,7 +629,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   try { theme = localStorage.getItem('afk-factory.theme') || 'system'; } catch (e) {}
   const applyTheme = () => { const r = document.documentElement; if (theme === 'system') { if (hostTheme) r.setAttribute('data-theme', hostTheme); else r.removeAttribute('data-theme'); } else r.setAttribute('data-theme', theme); readColors(); };
   applyTheme(); matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => { if (theme === 'system') readColors(); });
-  const VERSION = { stage: 'Alpha', semver: '0.3.19' }; // bump with every release
+  const VERSION = { stage: 'Alpha', semver: '0.3.20' }; // bump with every release
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const $ = id => document.getElementById(id);
 
@@ -1419,6 +1421,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
   const hasMaker = k => MINES.some(m => m.ore === k && S.mines[m.id] && S.mines[m.id].levels.some(l => l.drill))
     || LINES.some(l => l.out === k && S.lines[l.id] && S.lines[l.id].on && S.lines[l.id].slots.some(Boolean))
     || CRAFTS.some(c => c.out === k && S.crafts[c.id] && S.crafts[c.id].on && S.crafts[c.id].slots.some(Boolean));
+  const RECY_SVG = '<svg class="rcy" viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 6.1L17.9 13.4"/><path class="h" d="M15.3 15.0L19.9 16.9L20.5 11.9Z"/><path d="M18.5 19.5L9.7 19.5"/><path class="h" d="M9.7 16.5L5.7 19.5L9.7 22.5Z"/><path d="M4.0 16.9L8.4 9.6"/><path class="h" d="M11.0 11.1L10.4 6.1L5.8 8.0Z"/></svg>'; // recycling logo: three chasing arrows
   const recyPerS = k => ITEMS[k].value / RECYCLE_CUT / RECYCLE_T;
   const fmtCr = x => (x % 1 ? x.toFixed(1) : String(x));
   function renderWh() {
@@ -1428,7 +1431,7 @@ button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
       const stopped = !run && n < cap && hasMaker(k) && clock > 10 && winRate(flow[k]) < 0.01;
       const st = run ? 'recycling' : n >= cap ? 'full' : stopped ? 'stopped' : '';
       const tag = run ? (n >= cap ? ' · FULL' : '') : n >= cap ? ' · FULL' : stopped ? ' · STOPPED' : '';
-      const recy = S.inv.recycler ? `<span class="recy" aria-pressed="${!!run}"><img src="icons/merger.webp" alt="">${run ? `Recycling · +${fmtCr(recyPerS(k))}/s` : wf && n >= cap * RECYCLE_AT ? 'Waits: wallet full' : `Recycles at ${Math.round(RECYCLE_AT * 100)}% full`}</span>` : '';
+      const recy = S.inv.recycler ? `<span class="recy" aria-pressed="${!!run}" title="Recycler">${RECY_SVG}${run ? `+${fmtCr(recyPerS(k))} credits/s` : wf && n >= cap * RECYCLE_AT ? 'wallet full' : `starts at ${Math.round(RECYCLE_AT * 100)}%`}</span>` : '';
       return `<div class="wrow${st ? ' ' + st : ''}">${icon(k)}<div class="wmid"><b>${ITEMS[k].name}</b><span class="wct"><em>${big(n)}</em> / ${big(cap)}${tag} · <i class="${Math.abs(rt) < 0.05 ? '' : rt > 0 ? 'up' : 'down'}">${fmtRate(rt)}</i></span><div class="bar"><i style="width:${Math.min(100, n / cap * 100)}%"></i></div>${recy}</div>
         <div class="wsell">${wf ? `<button class="sellb" disabled>Wallet full<em></em></button><button class="sellb" disabled>Spend first<em></em></button>` : `<button class="sellb" data-sell="${k}" data-n="10" ${n < 10 || walletRoom() < 10 * v ? 'disabled' : ''}>Sell 10<em>+${big(10 * v)}</em></button><button class="sellb" data-sell="${k}" data-n="all" ${n < 1 || walletRoom() < v ? 'disabled' : ''}>Sell all<em>+${big(Math.min(n, Math.floor(walletRoom() / v)) * v)}</em></button>`}</div></div>`; }).join('');
     if ($('whs')._h !== rows) { $('whs')._h = rows; $('whs').innerHTML = rows; }
