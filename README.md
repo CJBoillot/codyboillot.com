@@ -18,7 +18,7 @@ See [SkillTrainer](#skilltrainer) below.
 | `games/` | A shareable page with just the games (codyboillot.com/games). Its styles and game cards are copied from `index.html`; update both when a card changes. |
 | `SkillTrainer/` | The training-engine demo. |
 | `ClickToConquer/` | Click to Conquer, an idle survival-crafting game (Firebase cloud saves). |
-| `BattlePass/` | Battle Pass: MTX (Maximum Transaction eXtraction), a satirical idle game about live-service monetization. Copied from its own project. Cloud saves use the `click-to-conquer` Firebase project, collection `battlepass_saves/{uid}` (needs its own Firestore rule; see BattlePass README in the game project). |
+| `BattlePass/` | Battle Pass: MTX (Maximum Transaction eXtraction), a satirical idle game about live-service monetization. Copied from its own project. `cloud.js` + `cloud-config.js` add Google sign-in and Firestore saves (Firebase project `battlepass-mtx`). |
 | `FactoryAFK/` | Factory A.F.K., an idle factory game. Built from one game file; `cloud.js` + `cloud-config.js` add Google sign-in and Firestore saves (Firebase project `factory-afk`). |
 | `CNAME` | Tells GitHub Pages to serve `codyboillot.com`. |
 | `.nojekyll` | Tells GitHub Pages to serve files as-is. |
