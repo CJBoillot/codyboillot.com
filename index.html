@@ -298,6 +298,8 @@
   .game { background: var(--bg-soft); border: 1px solid var(--line); border-radius: var(--radius); padding: clamp(1.2rem, 3vw, 2rem); margin-top: 1.6rem; position: relative; overflow: hidden; }
   .game::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 3px; background: var(--grad); }
   .game-factory::before { background: linear-gradient(90deg, #74dc5c, #5ab8e8); }
+  .game-bp::before { background: linear-gradient(90deg, #ff7ac3, #7a4bff, #33d6ff); }
+  .game-bp .game-logo { border-radius: 22%; }
   .game-head { display: flex; align-items: center; gap: clamp(1rem, 3vw, 1.6rem); }
   .game-logo { width: clamp(96px, 18vw, 150px); height: auto; flex: none; filter: drop-shadow(0 8px 20px rgba(0,0,0,.5)); }
   .game-head h3 { font-family: "Sora", sans-serif; font-size: clamp(1.3rem, 3.2vw, 1.8rem); font-weight: 800; margin-top: .55rem; }
@@ -646,9 +648,29 @@
     <div class="wrap">
       <div class="sec-head reveal">
         <div class="sec-tag sec-tag-new">Games I've Made</div>
-        <h2>Two idle games, built from scratch and playable now</h2>
-        <p>Both run in the browser on phone or desktop, keep working while the game is closed, and back up your progress to the cloud with one-tap Google sign-in. Each is a single page of vanilla JavaScript with no build step, on a serverless Firebase backend that runs on the free tier.</p>
+        <h2>Three idle games, built from scratch and playable now</h2>
+        <p>All three run in the browser on phone or desktop and keep working while the game is closed. Each is a single page of vanilla JavaScript with no build step. Click to Conquer and Factory A.F.K. back up your progress to the cloud with one-tap Google sign-in, on a serverless Firebase backend that runs on the free tier.</p>
       </div>
+
+      <article class="game game-bp reveal" id="battlepass">
+        <header class="game-head">
+          <img class="game-logo" src="BattlePass/assets/icon.svg" alt="Battle Pass: The Game" width="150" height="150">
+          <div>
+            <div class="badge-row"><span class="pill">New · Playable alpha</span><span class="pill ghost">Offline progress</span><span class="pill ghost">Mobile first</span></div>
+            <h3>Battle Pass: The Game</h3>
+            <p class="game-sub">A satire of live-service games. You run the studio, and the score is your player count.</p>
+          </div>
+        </header>
+        <p>You start with $5,000 and a story-heavy single-player RPG called Extraction Royale. Write code, fix bugs, set a price, run sales and reply to reviews. Then follow the money: relaunch it as Co-op, then Online, then Free-to-Play with a cash shop and a Battle Pass, and finally as a mobile port ("Don't you guys have phones?"). Each relaunch reaches more players and upsets the ones who liked the old game. Server outages, review bombs and investor calls land one at a time, and you fix each one by hand.</p>
+        <div class="shots" role="list">
+          <a class="shot" href="assets/games/bp-1.webp" target="_blank" rel="noopener"><img src="assets/games/bp-1.webp" alt="Development tab: the Write Code tap, Quality against what players expect, and the bug count" loading="lazy" width="600" height="1100"></a>
+          <a class="shot" href="assets/games/bp-2.webp" target="_blank" rel="noopener"><img src="assets/games/bp-2.webp" alt="Finance tab: four prices with players and money per minute, and a 50% sale running" loading="lazy" width="600" height="1100"></a>
+          <a class="shot" href="assets/games/bp-3.webp" target="_blank" rel="noopener"><img src="assets/games/bp-3.webp" alt="Community tab: a review bomb with a timer, defused by replying to comments" loading="lazy" width="600" height="1100"></a>
+          <a class="shot" href="assets/games/bp-4.webp" target="_blank" rel="noopener"><img src="assets/games/bp-4.webp" alt="The co-op relaunch: announcing Extraction Royale: Co-op" loading="lazy" width="600" height="1100"></a>
+        </div>
+        <div class="chips"><span class="chip">Vanilla JS</span><span class="chip">Mobile first</span><span class="chip">Five eras</span><span class="chip">24-quest tutorial</span><span class="chip">Bot-tested pacing</span><span class="chip">Simulated ads only</span></div>
+        <a class="btn btn-primary game-cta" href="BattlePass/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3l14 9-14 9z"/></svg>Try the demo</a>
+      </article>
 
       <article class="game reveal" id="clicktoconquer">
         <header class="game-head">

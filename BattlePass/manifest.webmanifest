@@ -1,0 +1,10 @@
+{
+  "name": "Battle Pass: The Game",
+  "short_name": "Battle Pass",
+  "start_url": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#140a2e",
+  "theme_color": "#1b0f3a",
+  "icons": [{ "src": "assets/icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+}

@@ -35,7 +35,7 @@
      working tree. This catches the same mistake from one place instead, and
      covers every known path rather than just one. */
   (function () {
-    var KNOWN = ["/SkillTrainer/", "/ClickToConquer/", "/FactoryAFK/"];
+    var KNOWN = ["/SkillTrainer/", "/ClickToConquer/", "/FactoryAFK/", "/BattlePass/"];
     var here = location.pathname.replace(/\/+$/, "").toLowerCase();
     for (var i = 0; i < KNOWN.length; i++) {
       var target = KNOWN[i];
