@@ -11,10 +11,11 @@ See [SkillTrainer](#skilltrainer) below.
 | File | Purpose |
 |------|---------|
 | `index.html` | The home page, in full. |
-| `404.html` | Site-wide not-found page. Also redirects wrong-case URLs to `/SkillTrainer/`, `/ClickToConquer/`, `/FactoryAFK/` and `/BattlePass/`. |
+| `404.html` | Site-wide not-found page. Also redirects wrong-case URLs to `/SkillTrainer/`, `/ClickToConquer/`, `/FactoryAFK/`, `/BattlePass/` and `/games/`. |
 | `assets/headshot.jpg` | The portrait on the hero. Falls back to a "CB" monogram if missing. |
 | `assets/favicon.svg` | Browser tab icon, used by both the home page and SkillTrainer. |
 | `resume.pdf` | Backs the résumé button. |
+| `games/` | A shareable page with just the games (codyboillot.com/games). Its styles and game cards are copied from `index.html`; update both when a card changes. |
 | `SkillTrainer/` | The training-engine demo. |
 | `ClickToConquer/` | Click to Conquer, an idle survival-crafting game (Firebase cloud saves). |
 | `BattlePass/` | Battle Pass: MTX (Maximum Transaction eXtraction), a satirical idle game about live-service monetization. Copied from its own project; local saves only for now (`cloud-config.js` is empty on purpose). |

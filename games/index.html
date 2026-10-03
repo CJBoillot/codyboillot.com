@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Games by Cody J. Boillot</title>
+<meta name="description" content="Three idle games by Cody J. Boillot, playable free in the browser on phone or desktop: Battle Pass: MTX, Click to Conquer and Factory A.F.K." />
+<meta name="author" content="Cody J. Boillot" />
+
+<!-- Open Graph / social preview -->
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Games by Cody J. Boillot" />
+<meta property="og:description" content="Three idle games by Cody J. Boillot, playable free in the browser on phone or desktop: Battle Pass: MTX, Click to Conquer and Factory A.F.K." />
+<meta property="og:image" content="https://codyboillot.com/BattlePass/assets/logo.webp" />
+<meta property="og:url" content="https://codyboillot.com/games/" />
+<meta name="twitter:card" content="summary_large_image" />
+
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml" />
+<link rel="canonical" href="https://codyboillot.com/games/" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet" />
+<!-- Styles are copied from the home page (index.html) so this page can be shared on its own. Keep them in sync when the game cards change. -->
+<style>
+  :root {
+    --bg:        #0b0f17;
+    --bg-soft:   #111725;
+    --card:      #141b2b;
+    --card-2:    #182032;
+    --line:      rgba(255,255,255,0.08);
+    --line-2:    rgba(255,255,255,0.14);
+    --text:      #eef2f9;
+    --muted:     #9aa6bd;
+    --muted-2:   #6b768e;
+    --accent:    #ff8a3d;
+    --accent-2:  #ffc24b;
+    --accent-3:  #ff5e62;
+    --grad:      linear-gradient(100deg, #ffc24b 0%, #ff8a3d 45%, #ff5e62 100%);
+    --shadow:    0 18px 50px -20px rgba(0,0,0,0.65);
+    --radius:    18px;
+    --maxw:      1080px;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  /* Ambient glow background */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background:
+      radial-gradient(720px 480px at 78% -8%, rgba(255,138,61,0.16), transparent 60%),
+      radial-gradient(640px 520px at 0% 22%, rgba(255,94,98,0.12), transparent 55%),
+      radial-gradient(900px 600px at 50% 120%, rgba(255,194,75,0.08), transparent 60%);
+  }
+
+  a { color: inherit; text-decoration: none; }
+  h1, h2, h3 { font-family: "Sora", "Inter", sans-serif; line-height: 1.12; letter-spacing: -0.02em; margin: 0; }
+  p { margin: 0; }
+  ul { margin: 0; padding: 0; list-style: none; }
+
+  .wrap { width: min(100% - 2.5rem, var(--maxw)); margin-inline: auto; }
+  .gradient-text {
+    background: var(--grad);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* ---------- Nav ---------- */
+  header.nav {
+    position: sticky; top: 0; z-index: 50;
+    backdrop-filter: blur(12px);
+    background: rgba(11,15,23,0.72);
+    border-bottom: 1px solid var(--line);
+  }
+  .nav-inner { display: flex; align-items: center; justify-content: space-between; height: 64px; }
+  .brand { font-family: "Sora"; font-weight: 800; font-size: 1.05rem; letter-spacing: -0.01em; }
+  .brand .dot { color: var(--accent); }
+  .nav-links { display: flex; gap: 1.2rem; align-items: center; }
+  .nav-links a { color: var(--muted); font-size: 0.92rem; font-weight: 500; transition: color .2s; }
+  .nav-links a:hover { color: var(--text); }
+  .nav-new { display: inline-flex; align-items: center; gap: .4rem; }
+
+  /* ---------- Hero promo strip ---------- */
+  .hero-promo {
+    display: flex; align-items: center; gap: .75rem;
+    margin-top: 1.6rem; padding: .8rem 1rem;
+    border: 1px solid var(--line-2); border-radius: 14px;
+    background: linear-gradient(100deg, rgba(255,138,61,.10), rgba(255,94,98,.05));
+    color: var(--muted); font-size: .92rem; line-height: 1.45;
+    transition: transform .2s ease, border-color .2s ease, background .2s ease;
+  }
+  .hero-promo:hover {
+    transform: translateY(-2px); border-color: var(--accent);
+    background: linear-gradient(100deg, rgba(255,138,61,.16), rgba(255,94,98,.08));
+  }
+  .hero-promo .badge-new { flex: 0 0 auto; }
+  .hero-promo-text { flex: 1; min-width: 0; }
+  .hero-promo-text strong { color: var(--text); }
+  .hero-promo-go { color: var(--accent-2); font-weight: 600; white-space: nowrap; }
+  .hero-promo-arrow { width: 18px; height: 18px; flex: 0 0 auto; color: var(--accent); transition: transform .2s ease; }
+  .hero-promo:hover .hero-promo-arrow { transform: translateX(3px); }
+  @media (max-width: 620px) { .hero-promo { font-size: .86rem; padding: .7rem .8rem; } }
+  .badge-new {
+    font-size: .6rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
+    color: #1a1206; background: var(--grad); padding: .12rem .4rem; border-radius: 999px;
+    animation: badge-pulse 2.6s ease-in-out infinite;
+  }
+  @keyframes badge-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255,138,61,0.55); }
+    50%      { box-shadow: 0 0 0 5px rgba(255,138,61,0); }
+  }
+  .nav-cta {
+    padding: 0.5rem 1rem; border-radius: 999px; font-weight: 600; font-size: 0.88rem;
+    background: var(--grad); color: #1a1206 !important;
+  }
+  @media (max-width: 720px) { .nav-links a:not(.nav-cta) { display: none; } }
+
+  /* ---------- Buttons ---------- */
+  .btn {
+    display: inline-flex; align-items: center; gap: .55rem;
+    padding: 0.85rem 1.4rem; border-radius: 999px; font-weight: 600; font-size: 0.95rem;
+    border: 1px solid transparent; cursor: pointer; transition: transform .18s ease, box-shadow .2s ease, background .2s;
+    white-space: nowrap;
+  }
+  .btn-primary { background: var(--grad); color: #1a1206; box-shadow: 0 10px 30px -10px rgba(255,138,61,0.6); }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 16px 36px -10px rgba(255,138,61,0.7); }
+  .btn-ghost { background: rgba(255,255,255,0.04); border-color: var(--line-2); color: var(--text); }
+  .btn-ghost:hover { transform: translateY(-2px); background: rgba(255,255,255,0.08); }
+  .btn svg { width: 18px; height: 18px; }
+
+  /* ---------- Hero ---------- */
+  .hero { padding: clamp(3rem, 8vw, 6rem) 0 clamp(2.5rem, 6vw, 4rem); }
+  .hero-grid { display: grid; grid-template-columns: 1.35fr 0.85fr; gap: clamp(2rem, 5vw, 4rem); align-items: center; }
+  @media (max-width: 860px) { .hero-grid { grid-template-columns: 1fr; text-align: left; } }
+
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: .5rem;
+    font-size: 0.8rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;
+    color: var(--accent-2); border: 1px solid var(--line-2); border-radius: 999px;
+    padding: .4rem .85rem; margin-bottom: 1.4rem; background: rgba(255,194,75,0.06);
+  }
+  .eyebrow .pulse { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 0 0 rgba(34,197,94,.6); animation: pulse 2.2s infinite; }
+  @keyframes pulse { 0%{box-shadow:0 0 0 0 rgba(34,197,94,.55)} 70%{box-shadow:0 0 0 10px rgba(34,197,94,0)} 100%{box-shadow:0 0 0 0 rgba(34,197,94,0)} }
+
+  .hero h1 { font-size: clamp(2.4rem, 6vw, 4rem); font-weight: 800; }
+  .hero .creds { color: var(--muted-2); font-family: "Sora"; font-weight: 700; font-size: 0.5em; vertical-align: middle; }
+  .hero .role { margin-top: 1rem; font-size: clamp(1.02rem, 2.2vw, 1.3rem); font-weight: 600; color: var(--text); }
+  .hero .role span { color: var(--muted); font-weight: 500; }
+  .hero .pitch { margin-top: 1.3rem; color: var(--muted); font-size: 1.06rem; max-width: 36ch; }
+  .hero-cta { display: flex; flex-wrap: wrap; gap: .8rem; margin-top: 2rem; }
+
+  .portrait-wrap { justify-self: center; position: relative; }
+  .portrait {
+    width: clamp(220px, 32vw, 320px); aspect-ratio: 4/5; border-radius: 24px; object-fit: cover;
+    border: 1px solid var(--line-2); box-shadow: var(--shadow); position: relative; z-index: 2;
+    background: var(--card);
+  }
+  .portrait-wrap::after {
+    content: ""; position: absolute; inset: -14px -14px auto auto; width: 70%; height: 70%;
+    border-radius: 26px; background: var(--grad); filter: blur(38px); opacity: .35; z-index: 1;
+  }
+  /* Monogram fallback shown if no photo file is present */
+  .portrait-fallback {
+    width: clamp(220px, 32vw, 320px); aspect-ratio: 4/5; border-radius: 24px;
+    border: 1px solid var(--line-2); box-shadow: var(--shadow); position: relative; z-index: 2;
+    display: none; align-items: center; justify-content: center;
+    background: radial-gradient(120% 120% at 30% 20%, #1c2740, #0e1320);
+    font-family: "Sora"; font-weight: 800; font-size: clamp(4rem, 9vw, 6rem);
+  }
+
+  /* ---------- Stats ---------- */
+  .stats { padding: 1rem 0 0; }
+  .stats-grid {
+    display: grid; grid-template-columns: repeat(6, 1fr); gap: 1px;
+    background: var(--line); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden;
+  }
+  @media (max-width: 860px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+  .stat { background: var(--bg-soft); padding: 1.4rem 1rem; text-align: center; }
+  .stat .num { font-family: "Sora"; font-weight: 800; font-size: clamp(1.5rem, 3.4vw, 2.1rem); }
+  .stat .lbl { color: var(--muted); font-size: 0.82rem; margin-top: .25rem; }
+
+  /* ---------- Sections ---------- */
+  section.block { padding: clamp(3.5rem, 8vw, 6rem) 0 0; }
+  .sec-head { margin-bottom: 2.5rem; }
+  .sec-tag { font-size: 0.8rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); }
+  .sec-head h2 { font-size: clamp(1.7rem, 4vw, 2.5rem); margin-top: .6rem; font-weight: 800; }
+  .sec-head p { color: var(--muted); margin-top: .8rem; max-width: 60ch; }
+
+  .about-text { font-size: clamp(1.05rem, 2.2vw, 1.25rem); color: var(--text); max-width: 70ch; }
+  .about-text strong { color: var(--accent-2); font-weight: 700; }
+
+  /* ---------- Timeline ---------- */
+  .timeline { position: relative; margin-left: .5rem; }
+  .timeline::before { content: ""; position: absolute; left: 7px; top: 6px; bottom: 6px; width: 2px; background: linear-gradient(var(--accent), transparent); }
+  .tl-item { position: relative; padding: 0 0 2.2rem 2.4rem; }
+  .tl-item::before {
+    content: ""; position: absolute; left: 0; top: 6px; width: 16px; height: 16px; border-radius: 50%;
+    background: var(--bg); border: 3px solid var(--accent); box-shadow: 0 0 0 4px rgba(255,138,61,0.12);
+  }
+  .tl-top { display: flex; flex-wrap: wrap; align-items: baseline; gap: .25rem .8rem; }
+  .tl-role { font-family: "Sora"; font-weight: 700; font-size: 1.12rem; }
+  .tl-co { color: var(--accent-2); font-weight: 600; }
+  .tl-date { color: var(--muted-2); font-size: 0.85rem; font-weight: 500; margin-left: auto; }
+  @media (max-width: 620px){ .tl-date { margin-left: 0; flex-basis: 100%; } }
+  .tl-bullets { margin-top: .7rem; display: grid; gap: .5rem; }
+  .tl-bullets li { color: var(--muted); padding-left: 1.2rem; position: relative; font-size: 0.98rem; }
+  .tl-bullets li::before { content: "▹"; position: absolute; left: 0; color: var(--accent); }
+  .tl-item.featured .tl-role::after {
+    content: "Veteran"; font-family: "Inter"; font-size: .68rem; font-weight: 700; letter-spacing: .04em;
+    text-transform: uppercase; color: #1a1206; background: var(--grad); padding: .15rem .5rem; border-radius: 999px; margin-left: .6rem; vertical-align: middle;
+  }
+
+  /* ---------- Cards grid (platforms) ---------- */
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.1rem; }
+  .card {
+    background: linear-gradient(180deg, var(--card), var(--card-2));
+    border: 1px solid var(--line); border-radius: var(--radius); padding: 1.5rem 1.4rem;
+    transition: transform .2s ease, border-color .2s ease; position: relative; overflow: hidden;
+  }
+  .card:hover { transform: translateY(-4px); border-color: var(--line-2); }
+  .card::after { content:""; position:absolute; inset: 0 0 auto 0; height: 3px; background: var(--grad); transform: scaleX(0); transform-origin: left; transition: transform .25s ease; }
+  .card:hover::after { transform: scaleX(1); }
+  .card .ic { width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; background: rgba(255,138,61,0.12); margin-bottom: 1rem; }
+  .card .ic svg { width: 22px; height: 22px; color: var(--accent-2); }
+  .card h3 { font-size: 1.1rem; font-weight: 700; }
+  .card p { color: var(--muted); margin-top: .55rem; font-size: 0.96rem; }
+
+  /* ---------- Skills ---------- */
+  .skills-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.1rem; }
+  .skill-group { background: var(--bg-soft); border: 1px solid var(--line); border-radius: var(--radius); padding: 1.4rem; }
+  .skill-group h3 { font-size: .82rem; text-transform: uppercase; letter-spacing: .08em; color: var(--accent); margin-bottom: 1rem; }
+  .chips { display: flex; flex-wrap: wrap; gap: .5rem; }
+  .chip { font-size: 0.85rem; padding: .4rem .8rem; border-radius: 999px; background: rgba(255,255,255,0.04); border: 1px solid var(--line-2); color: var(--text); }
+
+  /* ---------- Education ---------- */
+  .edu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.1rem; }
+  .edu { background: var(--bg-soft); border: 1px solid var(--line); border-radius: var(--radius); padding: 1.3rem; }
+  .edu .deg { font-family: "Sora"; font-weight: 700; }
+  .edu .school { color: var(--muted); font-size: .92rem; margin-top: .3rem; }
+
+  /* ---------- Contact / footer ---------- */
+  .contact { margin-top: clamp(4rem, 9vw, 7rem); padding: clamp(3rem, 7vw, 5rem) 0; border-top: 1px solid var(--line);
+    background: radial-gradient(700px 400px at 50% -40%, rgba(255,138,61,0.12), transparent 70%); text-align: center; }
+  .contact h2 { font-size: clamp(1.9rem, 5vw, 3rem); font-weight: 800; }
+  .contact p { color: var(--muted); margin: 1rem auto 2rem; max-width: 48ch; }
+  .contact-cta { display: flex; flex-wrap: wrap; gap: .9rem; justify-content: center; }
+  footer.foot { padding: 2rem 0 3rem; text-align: center; color: var(--muted-2); font-size: .85rem; }
+
+  /* ---------- Scroll reveal ---------- */
+  .reveal { opacity: 0; transform: translateY(22px); transition: opacity .7s ease, transform .7s ease; }
+  .reveal.in { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) {
+    .reveal { opacity: 1 !important; transform: none !important; transition: none; }
+    html { scroll-behavior: auto; }
+    .pulse, .badge-new { animation: none !important; }
+  }
+  :focus-visible { outline: 2px solid var(--accent-2); outline-offset: 3px; border-radius: 6px; }
+
+  /* ---------- Featured project (engine) ---------- */
+  .feature-grid { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: clamp(1.5rem, 4vw, 2.6rem); align-items: center; }
+  @media (max-width: 880px) { .feature-grid { grid-template-columns: 1fr; } }
+  .video-embed { position: relative; width: 100%; aspect-ratio: 16 / 9; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--line-2); box-shadow: var(--shadow); background: #000; }
+  .video-embed::after { content: ""; position: absolute; inset: 0 0 auto 0; height: 3px; background: var(--grad); z-index: 2; }
+  .video-embed iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+  .feature-meta .badge-row { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: 1.1rem; }
+  .pill { font-size: .72rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: #1a1206; background: var(--grad); padding: .32rem .72rem; border-radius: 999px; }
+  .pill.ghost { background: rgba(255,255,255,0.05); color: var(--accent-2); border: 1px solid var(--line-2); }
+  .feature-meta p { color: var(--muted); margin-top: 1.1rem; }
+
+  /* ---------- New demo: Click to Conquer ---------- */
+  .game-preview {
+    display: flex; align-items: center; justify-content: center; padding: 1.25rem;
+    background: radial-gradient(120% 90% at 50% 0%, #2a1a12 0%, #0d0a08 70%);
+    text-decoration: none; cursor: pointer; transition: transform .2s ease, border-color .2s ease;
+  }
+  .game-preview:hover { transform: translateY(-3px); border-color: var(--accent); }
+  .game-preview img { width: min(360px, 90%); height: auto; filter: drop-shadow(0 10px 30px rgba(0,0,0,.6)); }
+  .game-preview .tp-hint { position: absolute; right: .9rem; bottom: .7rem; }
+
+  /* ---------- New game: Factory A.F.K. ---------- */
+  .factory-preview { background: radial-gradient(120% 90% at 50% 0%, #15425c 0%, #0b1713 62%, #08110e 100%); }
+  .factory-preview img { width: auto; height: 100%; max-width: 90%; object-fit: contain; }
+
+  /* ---------- Games I've Made ---------- */
+  .game { background: var(--bg-soft); border: 1px solid var(--line); border-radius: var(--radius); padding: clamp(1.2rem, 3vw, 2rem); margin-top: 1.6rem; position: relative; overflow: hidden; }
+  .game::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 3px; background: var(--grad); }
+  .game-factory::before { background: linear-gradient(90deg, #74dc5c, #5ab8e8); }
+  .game-bp::before { background: linear-gradient(90deg, #ff7ac3, #7a4bff, #33d6ff); }
+  .game-bp .game-logo { border-radius: 14px; }
+  .game-head { display: flex; align-items: center; gap: clamp(1rem, 3vw, 1.6rem); }
+  .game-logo { width: clamp(96px, 18vw, 150px); height: auto; flex: none; filter: drop-shadow(0 8px 20px rgba(0,0,0,.5)); }
+  .game-head h3 { font-family: "Sora", sans-serif; font-size: clamp(1.3rem, 3.2vw, 1.8rem); font-weight: 800; margin-top: .55rem; }
+  .game-sub { color: var(--accent-2); font-weight: 600; margin-top: .2rem; }
+  .game .badge-row { display: flex; flex-wrap: wrap; gap: .4rem; }
+  .game > p { color: var(--muted); margin-top: 1.1rem; max-width: 75ch; }
+  .shots { display: flex; gap: .9rem; overflow-x: auto; scroll-snap-type: x mandatory; padding: 1.3rem .1rem 1rem; margin: 0 -.1rem; scrollbar-width: thin; }
+  .shot { flex: 0 0 clamp(170px, 42vw, 230px); scroll-snap-align: start; border-radius: 18px; overflow: hidden; border: 1px solid var(--line-2); box-shadow: var(--shadow); background: #000; transition: transform .2s ease, border-color .2s ease; }
+  .shot:hover { transform: translateY(-3px); border-color: var(--accent); }
+  .shot img { display: block; width: 100%; height: auto; aspect-ratio: 600 / 1100; object-fit: cover; object-position: top; }
+  .game .chips { margin-top: .3rem; }
+  .game-cta { margin-top: 1.3rem; }
+  @media (max-width: 520px) { .game-head { flex-direction: column; align-items: flex-start; } }
+
+  /* ---------- New demo: SkillTrainer ---------- */
+  .sec-tag-new { color: var(--accent-2); }
+  /* A live miniature of the lattice, so the panel never goes stale the way a
+     screenshot would. It reuses .video-embed's frame for visual parity with the
+     two video sections below it. */
+  .tree-preview {
+    display: flex; flex-direction: column; gap: .5rem; padding: 1.1rem;
+    background: #0d1220; text-decoration: none; cursor: pointer;
+    transition: transform .2s ease, border-color .2s ease;
+  }
+  .tree-preview:hover { transform: translateY(-3px); border-color: var(--accent); }
+  .tp-cap {
+    flex: 0 0 auto; align-self: center; width: min(230px, 55%); text-align: center;
+    padding: .5rem; border-radius: 10px; background: var(--card-2); border: 1px solid var(--line-2);
+    font-family: "Sora", sans-serif; font-weight: 700; font-size: clamp(.62rem, 1.4vw, .8rem);
+    color: var(--muted);
+  }
+  .tp-band { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: .5rem; }
+  .tp-col { position: relative; display: grid; grid-template-rows: repeat(4, 1fr); gap: .35rem; }
+  .tp-col::before {
+    content: ""; position: absolute; left: 50%; top: -.25rem; bottom: -.25rem;
+    width: 1px; background: rgba(255,255,255,.16);
+  }
+  .tp-col i { position: relative; border-radius: 7px; border: 1px solid var(--line-2); background: var(--card); }
+  .tp-col .tp-done { border-color: #4ade80; background: rgba(74,222,128,.16); }
+  .tp-col .tp-open { border-color: var(--accent); background: rgba(255,138,61,.14); }
+  .tp-col .tp-lock { background: rgba(255,255,255,.02); border-color: var(--line); }
+  .tp-hint {
+    position: absolute; inset: auto 0 .7rem 0; text-align: center;
+    font-size: .72rem; font-weight: 600; color: var(--accent-2); opacity: 0; transition: opacity .2s;
+  }
+  .tree-preview:hover .tp-hint { opacity: 1; }
+  @media (max-width: 620px) { .tree-preview { padding: .7rem; gap: .35rem; } .tp-cap { padding: .35rem; } }
+</style>
+<style>
+  .games-page #games { padding-top: clamp(1.5rem, 4vw, 3rem); }
+  .games-h1 { font-family: Sora, Inter, sans-serif; font-size: clamp(1.7rem, 4.5vw, 2.6rem); line-height: 1.15; margin: .4rem 0 .8rem; }
+  .games-foot-links { display: flex; flex-wrap: wrap; gap: .8rem; margin-top: 2rem; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<header class="nav">
+  <div class="wrap nav-inner">
+    <a href="../" class="brand">Cody&nbsp;Boillot<span class="dot">.</span></a>
+    <nav class="nav-links" aria-label="Primary">
+      <a href="#battlepass">Battle Pass: MTX</a>
+      <a href="#clicktoconquer">Click to Conquer</a>
+      <a href="#factoryafk">Factory A.F.K.</a>
+      <a href="../" class="nav-cta">About me</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top" class="games-page">
+  <!-- GAMES I'VE MADE -->
+  <section class="block" id="games">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <div class="sec-tag sec-tag-new">Games by Cody Boillot</div>
+        <h1 class="games-h1">Three idle games, built from scratch and playable now</h1>
+        <p>All three run in the browser on phone or desktop and keep working while the game is closed. Each is a single page of vanilla JavaScript with no build step. Click to Conquer and Factory A.F.K. back up your progress to the cloud with one-tap Google sign-in, on a serverless Firebase backend that runs on the free tier.</p>
+      </div>
+
+      <article class="game game-bp reveal" id="battlepass">
+        <header class="game-head">
+          <img class="game-logo" src="../BattlePass/assets/logo.webp" alt="Battle Pass: MTX, Maximum Transaction eXtraction" width="150" height="150">
+          <div>
+            <div class="badge-row"><span class="pill">New · Playable alpha</span><span class="pill ghost">Offline progress</span><span class="pill ghost">Mobile first</span></div>
+            <h3>Battle Pass: MTX</h3>
+            <p class="game-sub">A satire of live-service games. You run the studio, and the score is your player count.</p>
+          </div>
+        </header>
+        <p>You start with $5,000 and a story-heavy single-player RPG called Extraction Royale. Write code, fix bugs, set a price, run sales and reply to reviews. Then follow the money: relaunch it as Co-op, then Online, then Free-to-Play with a cash shop and a Battle Pass, and finally as a mobile port ("Don't you guys have phones?"). Each relaunch reaches more players and upsets the ones who liked the old game. Server outages, review bombs and investor calls land one at a time, and you fix each one by hand.</p>
+        <div class="shots" role="list">
+          <a class="shot" href="../assets/games/bp-1.webp" target="_blank" rel="noopener"><img src="../assets/games/bp-1.webp" alt="Development tab: the Write Code tap, Quality against what players expect, and the bug count" loading="lazy" width="600" height="1100"></a>
+          <a class="shot" href="../assets/games/bp-2.webp" target="_blank" rel="noopener"><img src="../assets/games/bp-2.webp" alt="Finance tab: four prices with players and money per minute, and a 50% sale running" loading="lazy" width="600" height="1100"></a>
+          <a class="shot" href="../assets/games/bp-3.webp" target="_blank" rel="noopener"><img src="../assets/games/bp-3.webp" alt="Community tab: a review bomb with a timer, defused by replying to comments" loading="lazy" width="600" height="1100"></a>
+          <a class="shot" href="../assets/games/bp-4.webp" target="_blank" rel="noopener"><img src="../assets/games/bp-4.webp" alt="The co-op relaunch: announcing Extraction Royale: Co-op" loading="lazy" width="600" height="1100"></a>
+        </div>
+        <div class="chips"><span class="chip">Vanilla JS</span><span class="chip">Mobile first</span><span class="chip">Five eras</span><span class="chip">24-quest tutorial</span><span class="chip">Bot-tested pacing</span><span class="chip">Simulated ads only</span></div>
+        <a class="btn btn-primary game-cta" href="../BattlePass/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3l14 9-14 9z"/></svg>Try the demo</a>
+      </article>
+
+      <article class="game reveal" id="clicktoconquer">
+        <header class="game-head">
+          <img class="game-logo" src="../ClickToConquer/assets/logo.png" alt="Click to Conquer">
+          <div>
+            <div class="badge-row"><span class="pill">Playable beta</span><span class="pill ghost">Cloud saves</span><span class="pill ghost">Offline progress</span></div>
+            <h3>Click to Conquer</h3>
+            <p class="game-sub">A survival-crafting idle game: from bare knuckles to a kingdom.</p>
+          </div>
+        </header>
+        <p>Start with nothing, punch rats with your bare fists, and fight your way up to a kingdom. Your hero fights and gathers on his own, then you settle a capital and run nine production chains, from logging, mining and farming through sawmills, forges and mills to lumber, arms and bread. Every stage of every chain shows its own rate and its bottleneck, and your army spends what the kingdom makes to besiege one land after another.</p>
+        <div class="shots" role="list">
+          <a class="shot" href="../assets/games/ctc-buildings.webp" target="_blank" rel="noopener"><img src="../assets/games/ctc-buildings.webp" alt="Kingdom view: nine production buildings for wood, arms and food" loading="lazy" width="600" height="1100"></a>
+          <a class="shot" href="../assets/games/ctc-mine.webp" target="_blank" rel="noopener"><img src="../assets/games/ctc-mine.webp" alt="Mine, Forge and Armory chains with upgrades and a highlighted bottleneck" loading="lazy" width="600" height="1100"></a>
+          <a class="shot" href="../assets/games/ctc-quest.webp" target="_blank" rel="noopener"><img src="../assets/games/ctc-quest.webp" alt="A quest card and a siege in progress" loading="lazy" width="600" height="1100"></a>
+          <a class="shot" href="../assets/games/ctc-hero.webp" target="_blank" rel="noopener"><img src="../assets/games/ctc-hero.webp" alt="The hero fighting a rat in the first quest" loading="lazy" width="600" height="1100"></a>
+        </div>
+        <div class="chips"><span class="chip">Vanilla JS</span><span class="chip">Desktop &amp; mobile</span><span class="chip">Quest-driven tutorial</span><span class="chip">Bot-tested pacing</span><span class="chip">Firebase Auth &amp; Firestore</span></div>
+        <a class="btn btn-primary game-cta" href="../ClickToConquer/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3l14 9-14 9z"/></svg>Try the demo</a>
+      </article>
+
+      <article class="game game-factory reveal" id="factoryafk">
+        <header class="game-head">
+          <img class="game-logo" src="../FactoryAFK/icons/logo.webp" alt="Factory A.F.K.: Automated Fabrication Komplex">
+          <div>
+            <div class="badge-row"><span class="pill">Playable alpha</span><span class="pill ghost">Cloud saves</span><span class="pill ghost">Offline progress</span></div>
+            <h3>Factory A.F.K.</h3>
+            <p class="game-sub">An idle factory you wire up yourself, Level by Level.</p>
+          </div>
+        </header>
+        <p>Tap ore out of a mine, build drills on it, and dig deeper: every Level down doubles the flow. Smelters turn ore into ingots and Constructors turn ingots into plates, wire and concrete. Every screen shows supply against demand, so the next thing to build is always in view. It all runs on power you store in batteries, tapped by hand at first, then from a Coal Power Plant that keeps the factory running while you're away.</p>
+        <div class="shots" role="list">
+          <a class="shot" href="../assets/games/factory-smelt.webp" target="_blank" rel="noopener"><img src="../assets/games/factory-smelt.webp" alt="Copper smelting: ore flows in, ingots flow out, each Smelter showing its efficiency" loading="lazy" width="600" height="1100"></a>
+          <a class="shot" href="../assets/games/factory-power.webp" target="_blank" rel="noopener"><img src="../assets/games/factory-power.webp" alt="The power grid: tap power, battery bank, and the machines it feeds" loading="lazy" width="600" height="1100"></a>
+          <a class="shot" href="../assets/games/factory-settings.webp" target="_blank" rel="noopener"><img src="../assets/games/factory-settings.webp" alt="Settings with Google sign-in for cloud saves" loading="lazy" width="600" height="1100"></a>
+        </div>
+        <div class="chips"><span class="chip">Vanilla JS &amp; Canvas</span><span class="chip">Mobile first</span><span class="chip">29-quest Tier 1</span><span class="chip">Light &amp; dark themes</span><span class="chip">Firebase Auth &amp; Firestore</span></div>
+        <a class="btn btn-primary game-cta" href="../FactoryAFK/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3l14 9-14 9z"/></svg>Try the demo</a>
+      </article>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="wrap games-foot-links">
+      <a class="btn btn-primary" href="../">More about Cody</a>
+      <a class="btn btn-ghost" href="../#contact">Get in touch</a>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <div class="wrap">© <span id="yr">2026</span> Cody J. Boillot · Built simple, built to ship.</div>
+  </footer>
+
+</main>
+
+<script>
+  // Scroll reveal
+  (function () {
+    var els = document.querySelectorAll(".reveal");
+    if (!("IntersectionObserver" in window)) { els.forEach(function (e) { e.classList.add("in"); }); return; }
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) { en.target.classList.add("in"); io.unobserve(en.target); }
+      });
+    }, { threshold: 0.12, rootMargin: "0px 0px -40px 0px" });
+    els.forEach(function (e) { io.observe(e); });
+  })();
+  // Footer year (Date is fine in the browser)
+  document.getElementById("yr").textContent = new Date().getFullYear();
+</script>
+</body>
+</html>
