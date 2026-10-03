@@ -61,8 +61,8 @@ const UI = (() => {
   function ask(title, html, yes, cb) { show($('settings'), false); /* never open behind the settings panel */ setText($('confirm-title'), title); $('confirm-text').innerHTML = html; setText($('confirm-yes'), yes || 'Yes'); confirmCb = cb; show($('confirm-modal'), true); }
   function closeAsk() { confirmCb = null; show($('confirm-modal'), false); }
   const storyQueue = [];
-  function story(kicker, title, html, btn) { storyQueue.push({ kicker, title, html, btn }); if ($('story').classList.contains('hidden')) nextStory(); }
-  function nextStory() { const s = storyQueue.shift(); if (!s) { show($('story'), false); return; } setText($('story-kicker'), s.kicker); setText($('story-title'), s.title); $('story-text').innerHTML = s.html; setText($('story-go'), s.btn || 'Continue'); show($('story'), true); }
+  function story(kicker, title, html, btn, logo) { storyQueue.push({ kicker, title, html, btn, logo }); if ($('story').classList.contains('hidden')) nextStory(); }
+  function nextStory() { const s = storyQueue.shift(); if (!s) { show($('story'), false); return; } setText($('story-kicker'), s.kicker); setText($('story-title'), s.title); $('story-text').innerHTML = s.html; setText($('story-go'), s.btn || 'Continue'); show($('story-logo'), !!s.logo); show($('story'), true); }
   const ERA_STORY = {
     2: ['It is co-op now.', 'Same game, with a friend. Co-op needs an account, a launcher and servers, and servers cost money every second.<br><br>New: <b>ads</b> (in a game people paid for: they cost double the rating), a <b>Season Pass</b>, more streamers, <b>ToobVOD</b>, Community Managers, and more things to go wrong.', 'Put ads in ▶'],
     3: ['It is an online game now.', 'A hub town, raids and ranked. The story is now "lore", available on the wiki.<br><br>New: <b>subscriptions</b>, a Deluxe Edition, Ranked Mode, <b>corporate decisions</b>, managers and dev teams, and <b>Streamly Live</b> (subathons, drops, announcements).', 'Log in ▶'],
@@ -827,7 +827,7 @@ const UI = (() => {
     $('cloud-restore').addEventListener('click', () => ask('Restore previous save?', 'Swaps your current save with the one set aside on this device.', 'Restore', () => { if (Cloud.restoreBackup()) toast('Restored.', 'good'); }));
     // fake timer chip in the cluttered header
     setInterval(() => { fakeT = fakeT <= 0 ? 7199 : fakeT - 1; setText($('fake-timer'), G.clock(fakeT)); }, 1000);
-    if (!st.story.intro) { st.story.intro = 1; story('Day one', 'You made a game.', `It is called <b>${G.gameTitle()}</b>, and you want it to be good. You write the code yourself.<br><br>The goal is <b>players</b>: a thousand, then a million. You'll price the game, then give it away, then sell everything inside it. Every way of making money costs a little of what players think of you. Quests at the top of the screen walk you through it, one at a time.<br><br><span class="small dim">Everything here is simulated. No real money, no real ads, no real layoffs.</span>`, 'Open the editor ▶'); }
+    if (!st.story.intro) { st.story.intro = 1; story('Day one', 'You made a game.', `It is called <b>${G.gameTitle()}</b>, and you want it to be good. You write the code yourself.<br><br>The goal is <b>players</b>: a thousand, then a million. You'll price the game, then give it away, then sell everything inside it. Every way of making money costs a little of what players think of you. The quest card walks you through it, one step at a time.<br><br><span class="small dim">Everything here is simulated. No real money, no real ads, no real layoffs.</span>`, 'Open the editor ▶', true); }
     render(true);
   }
   let last = 0;

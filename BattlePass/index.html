@@ -8,18 +8,19 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
-  <title>Battle Pass: The Game</title>
+  <link rel="icon" href="assets/icon-96.png" type="image/png">
+  <link rel="apple-touch-icon" href="assets/icon-192.png">
+  <title>Battle Pass: MTX</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Inter:wght@400;600;700;800&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=a101">
+  <link rel="stylesheet" href="style.css?v=a102">
 </head>
 <body class="clutter-1">
 
 <div class="sticky-head">
   <header class="top">
     <div class="brand">
-      <div class="app-icon" id="app-icon" aria-hidden="true">🪂</div>
+      <div class="app-icon" id="app-icon" aria-hidden="true"><img src="assets/icon-96.png" alt=""></div>
       <div class="brand-txt"><div class="company" id="company">Untitled Game Studio</div><div class="sub"><span id="game-title">Extraction Royale</span> · <span id="stage-name">Indie Developer</span> · <span id="version" class="version"></span></div></div>
       <div class="head-btns">
         <button id="avatar-btn" class="icon-btn avatar-btn" title="Account &amp; cloud save" aria-label="Account"><span id="avatar-img" class="avatar-img"></span><span id="avatar-dot" class="avatar-dot hidden"></span></button>
@@ -274,6 +275,7 @@
 </div>
 <div id="story" class="modal hidden">
   <div class="modal-box story-box">
+    <img class="story-logo hidden" id="story-logo" src="assets/logo.webp" alt="Battle Pass: MTX. Maximum Transaction eXtraction. Every player has untapped revenue potential." width="600" height="600">
     <div class="kicker" id="story-kicker">A message from the founder</div>
     <div class="modal-title" id="story-title"></div>
     <div class="story-text" id="story-text"></div>
@@ -346,15 +348,15 @@
       <div class="dev-row"><button data-dev="cash">+$ ×1000</button><button data-dev="code">+Code ×1000</button><button data-dev="players">Players ×10</button><button data-dev="bomb">Review bomb</button><button data-dev="gems">+500 Gems</button><button data-dev="crystals">+20 Crystals</button></div>
       <div class="dev-row"><button data-dev="afk">AFK test 4h</button><button data-dev="whale">Spawn whale</button><button data-dev="event">Random event</button><button data-dev="sc">+10 SC</button><button data-dev="bp">+5 Pass levels</button></div>
     </details>
-    <div class="dim small credits">Battle Pass: The Game — created by <b>Cody J. Boillot</b>. © 2026, all rights reserved.<br>Contains simulated microtransactions. Does not contain simulated fun.<br>Experience thousands of dollars of microtransactions without spending thousands of dollars.</div>
+    <div class="dim small credits">Battle Pass: MTX (Maximum Transaction eXtraction™) — created by <b>Cody J. Boillot</b>. © 2026, all rights reserved.<br>Contains simulated microtransactions. Does not contain simulated fun.<br>Experience thousands of dollars of microtransactions without spending thousands of dollars.</div>
   </div>
 </div>
 
-<script src="config.js?v=a101"></script>
-<script src="cloud-config.js?v=a101"></script>
-<script src="game.js?v=a101"></script>
-<script src="ui.js?v=a101"></script>
-<script src="cloud.js?v=a101"></script>
+<script src="config.js?v=a102"></script>
+<script src="cloud-config.js?v=a102"></script>
+<script src="game.js?v=a102"></script>
+<script src="ui.js?v=a102"></script>
+<script src="cloud.js?v=a102"></script>
 <script>window.addEventListener("error", e => { const d = document.getElementById("err"); if (d) { d.textContent = "Error: " + e.message; d.classList.remove("hidden"); } });</script>
 </body>
 </html>

@@ -1,7 +1,7 @@
 // Battle Pass: The Game — all numbers live here (same split as Click to Conquer: config → game → ui).
 // Every in-game ad, sale, whale and purchase is SIMULATED. No real money moves anywhere in this file.
 const CONFIG = {
-  version: 'Alpha 0.1.1',
+  version: 'Alpha 0.1.2',
   saveKey: 'bp_alpha_save_v4', // 0.1.0: the five eras, fresh saves
   tickMs: 100,
   startCash: 5000,      // startup money: your savings, your mom's savings, a credit card
@@ -684,6 +684,7 @@ const CONFIG = {
 
 
   changelog: [
+    ['Alpha 0.1.2', 'New name and logo: Battle Pass: MTX (Maximum Transaction eXtraction™).'],
     ['Alpha 0.1.1', 'Fixes from the playthrough audit. The co-op relaunch unlocks at 8,000 players whatever quest you are on, and a lighter player gets there too: players who bought the story game stay longer, and Community opens at 600 players. New: QA Testers, who fix bugs every second. "Get bugs under 10%" is now "Ship 4 bug fixes". Milestones come in sets per era, in any order. The mobile ad channels cost what a mobile studio can pay. Goodwill can add at most +1.5 stars. "Players settle at" is smoothed. When the rating starts to fall, a message says why. Each DLC level launches with a burst of sales.'],
     ['Alpha 0.1.0', 'The five eras. Extraction Royale starts as a single-player story RPG and relaunches as Co-op, Online, Free-to-Play and finally Mobile ("Don\'t you guys have phones?"). Each relaunch is your call, on the players card: a bigger audience, new systems, and some upset fans. The tutorial is 24 quests, one new thing each, and each stays up long enough to read; after it, milestones by era. Story DLC replaces ads in the single-player game. Random events are now opportunities on the incident card, and fixing an incident pays off. Goodwill moved into ToobVOD and announcements into Streamly Live. New saves.'],
     ['Alpha 0.0.18', 'Bug Fixes and New Content are separate. New Content (guns, maps, modes) raises Quality and adds bugs. Bug Fixes remove a share of your bugs. Bugs, as a share of the game, make players quit faster and lower the rating, and players keep finding more. Put the game on sale: 25%, 50% or 75% off for a few minutes, with a burst of installs at a lower price. Each sale teaches players to wait for the next one.'],

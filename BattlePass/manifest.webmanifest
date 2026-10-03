@@ -1,10 +1,10 @@
 {
-  "name": "Battle Pass: The Game",
-  "short_name": "Battle Pass",
+  "name": "Battle Pass: MTX",
+  "short_name": "Battle Pass MTX",
   "start_url": "./",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#140a2e",
   "theme_color": "#1b0f3a",
-  "icons": [{ "src": "assets/icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+  "icons": [{ "src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png" }, { "src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png" }]
 }

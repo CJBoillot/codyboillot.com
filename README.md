@@ -17,7 +17,7 @@ See [SkillTrainer](#skilltrainer) below.
 | `resume.pdf` | Backs the résumé button. |
 | `SkillTrainer/` | The training-engine demo. |
 | `ClickToConquer/` | Click to Conquer, an idle survival-crafting game (Firebase cloud saves). |
-| `BattlePass/` | Battle Pass: The Game, a satirical idle game about live-service monetization. Copied from its own project; local saves only for now (`cloud-config.js` is empty on purpose). |
+| `BattlePass/` | Battle Pass: MTX (Maximum Transaction eXtraction), a satirical idle game about live-service monetization. Copied from its own project; local saves only for now (`cloud-config.js` is empty on purpose). |
 | `FactoryAFK/` | Factory A.F.K., an idle factory game. Built from one game file; `cloud.js` + `cloud-config.js` add Google sign-in and Firestore saves (Firebase project `factory-afk`). |
 | `CNAME` | Tells GitHub Pages to serve `codyboillot.com`. |
 | `.nojekyll` | Tells GitHub Pages to serve files as-is. |
