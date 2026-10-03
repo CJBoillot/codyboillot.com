@@ -753,14 +753,20 @@ const UI = (() => {
     setHtml($('avatar-img'), pic || sil);
     const dot = $('avatar-dot'); dot.className = 'avatar-dot ' + (u ? ({ ok: 'ok', syncing: 'busy', error: 'bad', offline: 'off', idle: 'off' }[Cl.status] || 'off') : 'hidden');
     show($('cloud-out'), !u); show($('cloud-in'), !!u);
-    const sb = $('cloud-signin'); sb.disabled = !Cl.ready; sb.querySelector('span').textContent = !Cl.available ? 'Cloud saves — coming soon' : Cl.ready ? 'Sign in with Google' : Cl.status === 'error' ? 'Cloud unavailable right now' : 'Connecting…';
+    const sb = $('cloud-signin'); sb.disabled = !Cl.ready; sb.querySelector('span').textContent = !Cl.available ? 'Cloud saves: play at codyboillot.com/BattlePass' : Cl.ready ? 'Sign in with Google' : Cl.status === 'error' ? 'Cloud unavailable right now' : 'Connecting…';
     if (u) { setHtml($('cloud-pic'), pic || sil); setHtml($('cloud-name'), `<b>${esc(u.displayName || 'Signed in')}</b>`);
       setText($('cloud-sync'), Cl.status === 'syncing' ? 'Syncing…' : Cl.status === 'offline' ? 'Offline — saved on this device' : Cl.lastSync ? `Synced ${Cl.ago(Cl.lastSync)}` : 'Signed in'); }
     const er = $('cloud-err'); show(er, !!Cl.error); setText(er, Cl.error || '');
+    show($('cloud-guest'), !u && Cl.available && !S().settings.guest);
+    // the welcome screen (0.1.4): sign in or guest, once
+    const fs = $('first-signin'); show(fs, !!Cl.available); fs.disabled = !Cl.ready; fs.querySelector('span').textContent = Cl.ready ? 'Sign in with Google' : Cl.status === 'error' ? 'Cloud unavailable right now' : 'Connecting…';
+    if (!Cl.available) setText($('first-note'), 'Cloud saves work at codyboillot.com/BattlePass. Here, your studio is saved on this device.');
+    if (u && !$('first').classList.contains('hidden') && !Cl.hold && Cl.status !== 'syncing') { show($('first'), false); S().settings.cloudUser = true; introStory(); }
     const b = Cl.backupInfo && Cl.backupInfo(), rb = $('cloud-restore'); show(rb, !!b);
     if (b && b.meta) setText(rb, `Restore previous save (${b.meta.title}, ${b.meta.stage}, set aside ${Cl.ago(b.at)})`);
   }
 
+  function introStory() { const st = S().settings; if (st.story.intro) return; st.story.intro = 1; story('Day one', 'You made a game.', `It is called <b>${G.gameTitle()}</b>, and you want it to be good. You write the code yourself.<br><br>The goal is <b>players</b>: a thousand, then a million. You'll price the game, then give it away, then sell everything inside it. Every way of making money costs a little of what players think of you. The quest card walks you through it, one step at a time.<br><br><span class="small dim">Everything here is simulated. No real money, no real ads, no real layoffs.</span>`, 'Open the editor ▶', true); }
   // ---------- init ----------
   function init() {
     buildHeader();
@@ -821,13 +827,17 @@ const UI = (() => {
     document.querySelectorAll('[data-dev]').forEach(b => b.addEventListener('click', () => { DEV[b.dataset.dev](); render(true); }));
     // cloud buttons (handlers live in cloud.js)
     $('cloud-signin').addEventListener('click', () => window.Cloud && Cloud.signIn());
+    $('first-signin').addEventListener('click', () => window.Cloud && Cloud.signIn());
+    const goGuest = () => { S().settings.guest = true; G.save(); show($('first'), false); introStory(); renderCloud(); render(true); };
+    $('first-guest').addEventListener('click', goGuest); $('cloud-guest').addEventListener('click', goGuest);
     $('cloud-signout').addEventListener('click', () => window.Cloud && Cloud.signOut());
     $('cloud-now').addEventListener('click', () => window.Cloud && Cloud.push(true));
     $('cloud-delete').addEventListener('click', () => ask('Delete cloud save?', 'Removes your cloud save and signs you out. Progress on this device is kept.', 'Delete', () => Cloud.deleteCloud()));
     $('cloud-restore').addEventListener('click', () => ask('Restore previous save?', 'Swaps your current save with the one set aside on this device.', 'Restore', () => { if (Cloud.restoreBackup()) toast('Restored.', 'good'); }));
     // fake timer chip in the cluttered header
     setInterval(() => { fakeT = fakeT <= 0 ? 7199 : fakeT - 1; setText($('fake-timer'), G.clock(fakeT)); }, 1000);
-    if (!st.story.intro) { st.story.intro = 1; story('Day one', 'You made a game.', `It is called <b>${G.gameTitle()}</b>, and you want it to be good. You write the code yourself.<br><br>The goal is <b>players</b>: a thousand, then a million. You'll price the game, then give it away, then sell everything inside it. Every way of making money costs a little of what players think of you. The quest card walks you through it, one step at a time.<br><br><span class="small dim">Everything here is simulated. No real money, no real ads, no real layoffs.</span>`, 'Open the editor ▶', true); }
+    if (!st.story.intro && !st.guest && !st.cloudUser) show($('first'), true); // first visit: sign in or guest, then the intro
+    else introStory();
     render(true);
   }
   let last = 0;

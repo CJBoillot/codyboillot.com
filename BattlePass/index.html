@@ -13,7 +13,7 @@
   <title>Battle Pass: MTX</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Inter:wght@400;600;700;800&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=a103">
+  <link rel="stylesheet" href="style.css?v=a104">
 </head>
 <body class="clutter-1">
 
@@ -273,6 +273,16 @@
     <button id="wb-ok" class="big primary">Continue</button>
   </div>
 </div>
+<div id="first" class="first hidden">
+  <div class="first-box">
+    <img src="assets/logo.webp" alt="Battle Pass: MTX. Maximum Transaction eXtraction." width="600" height="600">
+    <p class="first-tag">Every player has untapped revenue potential.</p>
+    <p class="fnote">Run a game studio. Ship a story game, then relaunch it as co-op, online, free-to-play and finally mobile, and watch the players (and the reviews) follow the money.</p>
+    <button class="gsi-btn" id="first-signin"><svg viewBox="0 0 48 48" width="18" height="18"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg><span>Sign in with Google</span></button>
+    <button class="first-guest" id="first-guest">Continue as guest</button>
+    <p class="fnote" id="first-note">Signing in backs up your studio so you can play on any device. As a guest, it is saved on this device only.</p>
+  </div>
+</div>
 <div id="story" class="modal hidden">
   <div class="modal-box story-box">
     <img class="story-logo hidden" id="story-logo" src="assets/logo.webp" alt="Battle Pass: MTX. Maximum Transaction eXtraction. Every player has untapped revenue potential." width="600" height="600">
@@ -329,6 +339,7 @@
       <div id="cloud-in" class="hidden"><div class="cloud-user"><span id="cloud-pic" class="avatar-img big"></span><div><div id="cloud-name"><b></b></div><div class="small dim" id="cloud-sync"></div></div></div>
         <div class="btn-row"><button id="cloud-now">Sync now</button><button id="cloud-signout">Sign out</button></div>
         <button id="cloud-delete" class="link-btn small">Delete cloud save</button></div>
+      <button id="cloud-guest" class="wide small hidden">Continue as guest · save on this device only</button>
       <div id="cloud-err" class="small warn hidden"></div>
       <button id="cloud-restore" class="wide small hidden"></button>
       <a href="privacy.html" target="_blank" rel="noopener" class="small dim">Privacy</a>
@@ -352,11 +363,11 @@
   </div>
 </div>
 
-<script src="config.js?v=a103"></script>
-<script src="cloud-config.js?v=a103"></script>
-<script src="game.js?v=a103"></script>
-<script src="ui.js?v=a103"></script>
-<script src="cloud.js?v=a103"></script>
+<script src="config.js?v=a104"></script>
+<script src="cloud-config.js?v=a104"></script>
+<script src="game.js?v=a104"></script>
+<script src="ui.js?v=a104"></script>
+<script src="cloud.js?v=a104"></script>
 <script>window.addEventListener("error", e => { const d = document.getElementById("err"); if (d) { d.textContent = "Error: " + e.message; d.classList.remove("hidden"); } });</script>
 </body>
 </html>

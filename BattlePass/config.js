@@ -1,7 +1,7 @@
 // Battle Pass: The Game — all numbers live here (same split as Click to Conquer: config → game → ui).
 // Every in-game ad, sale, whale and purchase is SIMULATED. No real money moves anywhere in this file.
 const CONFIG = {
-  version: 'Alpha 0.1.3',
+  version: 'Alpha 0.1.4',
   saveKey: 'bp_alpha_save_v4', // 0.1.0: the five eras, fresh saves
   tickMs: 100,
   startCash: 5000,      // startup money: your savings, your mom's savings, a credit card
@@ -684,6 +684,7 @@ const CONFIG = {
 
 
   changelog: [
+    ['Alpha 0.1.4', 'Cloud saves. On your first visit, sign in with Google to back up your studio and play on any device, or continue as a guest (saved on this device only). Sign in later from Settings or the avatar. Same system as Click to Conquer and Factory A.F.K.'],
     ['Alpha 0.1.3', 'Quests complete the moment you finish them (they used to wait up to 20 seconds). A quest that is already done when it appears shows a green Done! for a moment, then moves on.'],
     ['Alpha 0.1.2', 'New name and logo: Battle Pass: MTX (Maximum Transaction eXtraction™).'],
     ['Alpha 0.1.1', 'Fixes from the playthrough audit. The co-op relaunch unlocks at 8,000 players whatever quest you are on, and a lighter player gets there too: players who bought the story game stay longer, and Community opens at 600 players. New: QA Testers, who fix bugs every second. "Get bugs under 10%" is now "Ship 4 bug fixes". Milestones come in sets per era, in any order. The mobile ad channels cost what a mobile studio can pay. Goodwill can add at most +1.5 stars. "Players settle at" is smoothed. When the rating starts to fall, a message says why. Each DLC level launches with a burst of sales.'],

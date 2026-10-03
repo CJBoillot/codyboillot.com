@@ -511,3 +511,13 @@ body:not(.rep-on) .rep-tag, body:not(.rep-on) .aggr { display: none; }
 /* 0.1.3: a finished quest flashes green before the next one */
 .tut-card.done { box-shadow: 0 0 0 3px #3ee08f, 0 8px 24px #3ee08f44; }
 .tut-card.done #tut-count { color: #12804e; font-weight: 800; }
+
+/* 0.1.4: welcome screen: sign in or play as a guest (same flow as Click to Conquer and Factory A.F.K.) */
+.first { position: fixed; inset: 0; z-index: 60; background: radial-gradient(120% 80% at 50% 0%, #2a1660, #0d061f 70%); display: flex; align-items: center; justify-content: center; padding: 24px 16px; overflow-y: auto; }
+.first.hidden { display: none; }
+.first-box { width: min(400px, 100%); display: flex; flex-direction: column; align-items: stretch; gap: 12px; text-align: center; }
+.first-box img { width: min(300px, 82%); height: auto; align-self: center; border-radius: 20px; filter: drop-shadow(0 10px 30px #00ff8a33); }
+.first-tag { margin: 0; font-family: var(--font-head); font-size: 20px; color: var(--gold2, #ffd76a); }
+.first-box .fnote { margin: 0; font-size: 13px; line-height: 1.45; color: #c9bde8; }
+.first-box .gsi-btn { justify-content: center; padding: 12px; font-size: 15px; }
+.first-guest { padding: 12px; border-radius: 12px; border: 1px solid #ffffff30; background: #ffffff10; color: #fff; font-weight: 700; font-size: 15px; }
