@@ -1,7 +1,7 @@
 // Battle Pass: The Game — all numbers live here (same split as Click to Conquer: config → game → ui).
 // Every in-game ad, sale, whale and purchase is SIMULATED. No real money moves anywhere in this file.
 const CONFIG = {
-  version: 'Alpha 0.1.2',
+  version: 'Alpha 0.1.3',
   saveKey: 'bp_alpha_save_v4', // 0.1.0: the five eras, fresh saves
   tickMs: 100,
   startCash: 5000,      // startup money: your savings, your mom's savings, a credit card
@@ -594,11 +594,11 @@ const CONFIG = {
   // ---------- quests: one on screen at a time, all the way to the first sequel (Alpha 0.0.4) ----------
   // Each quest opens the next system (has() keys off quest ids). Kept in meta, so sequels skip finished quests.
   // Quests (Alpha 0.1.0). The first 24 are the tutorial: the single-player era, one new thing each. After that, milestones grouped by era (ms).
-  // A quest can't complete until it has been on screen for CONFIG.questMinSecs, so the player reads each one.
+  // A quest completes the moment you do it. One that is already done when it appears stays up for questMinSecs, so it isn't skipped unseen.
   // goal: 'taps' | 'gf:<id>' | 'priced' | 'sales' | 'devs' | 'players' | 'adTaps' | 'ft:<id>' (create the epic + first level) | 'stage' | 'replies'
   //       | 'stars' | 'ch:<id>' | 'bombs' | 'upg' | 'teams' | 'rps' | 'p2w' | 'whales' | 'offers' | 'seasons' | 'sequel' | 'named' | 'acct'
   //       | 'saleRuns' | 'dlcSold' | 'bugsUnder' (bugs < need % of the game) | 'incidents' | 'era' | 'cms' | 'videos' | 'subathons'
-  questMinSecs: 20,
+  questMinSecs: 2.5,
   tutorial: [
     { id: 'code', title: 'Write some code', goal: 'taps', need: 15, tab: 'dev', target: '#code-btn',
       text: 'You are making Extraction Royale, a story-heavy action RPG. You have $5,000 of startup money and an editor. Tap Write Code 15 times.', unlocks: 'Bug fixes' },
@@ -684,6 +684,7 @@ const CONFIG = {
 
 
   changelog: [
+    ['Alpha 0.1.3', 'Quests complete the moment you finish them (they used to wait up to 20 seconds). A quest that is already done when it appears shows a green Done! for a moment, then moves on.'],
     ['Alpha 0.1.2', 'New name and logo: Battle Pass: MTX (Maximum Transaction eXtraction™).'],
     ['Alpha 0.1.1', 'Fixes from the playthrough audit. The co-op relaunch unlocks at 8,000 players whatever quest you are on, and a lighter player gets there too: players who bought the story game stay longer, and Community opens at 600 players. New: QA Testers, who fix bugs every second. "Get bugs under 10%" is now "Ship 4 bug fixes". Milestones come in sets per era, in any order. The mobile ad channels cost what a mobile studio can pay. Goodwill can add at most +1.5 stars. "Players settle at" is smoothed. When the rating starts to fall, a message says why. Each DLC level launches with a burst of sales.'],
     ['Alpha 0.1.0', 'The five eras. Extraction Royale starts as a single-player story RPG and relaunches as Co-op, Online, Free-to-Play and finally Mobile ("Don\'t you guys have phones?"). Each relaunch is your call, on the players card: a bigger audience, new systems, and some upset fans. The tutorial is 24 quests, one new thing each, and each stays up long enough to read; after it, milestones by era. Story DLC replaces ads in the single-player game. Random events are now opportunities on the incident card, and fixing an incident pays off. Goodwill moved into ToobVOD and announcements into Streamly Live. New saves.'],

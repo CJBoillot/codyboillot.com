@@ -606,8 +606,8 @@ const UI = (() => {
     if (!st) { if (glowSel) { document.querySelectorAll('.tut-glow').forEach(e => e.classList.remove('tut-glow')); glowSel = ''; } return; }
     const i = M().tut || 0, g = G.tutGoal(st);
     const nT = C.tutorial.filter(x => !x.ms).length, msAll = C.tutorial.filter(x => x.ms === st.ms).length; setText($('tut-kicker'), st.ms ? `Milestones · ${G.eraDef(st.ms).name} · ${msAll - G.msLeft(st.ms).length} of ${msAll} done` : `Quest ${i + 1} of ${nT}`); card.classList.toggle('ms', !!st.ms); setText($('tut-title'), st.title); setText($('tut-text'), st.text);
-    $('tut-bar').style.width = (100 * g.have / g.need) + '%';
-    setText($('tut-count'), st.goal === 'stage' ? `${f(R().peak)} / ${f(C.stages[st.need - 1].need)} players` : st.goal === 'stars' ? `${G.stars().toFixed(1)} / ${st.need}★` : st.goal === 'rps' ? `${$$(G.revenuePerSec())} / ${$$(st.need)} a second` : st.goal === 'bugsUnder' ? `Bugs: ${G.pct(G.bugRatio())} of the game (under ${st.need}%)` : st.goal === 'era' ? (G.canRelaunch() ? 'Ready: tap Announce on the players card' : `Unlocks at ${f(G.eraDef().next)} players`) : g.label ? g.label : `${f(g.have)} / ${f(g.need)}`);
+    $('tut-bar').style.width = (100 * g.have / g.need) + '%'; card.classList.toggle('done', !!g.done);
+    if (g.done) setText($('tut-count'), '✓ Done!'); else setText($('tut-count'), st.goal === 'stage' ? `${f(R().peak)} / ${f(C.stages[st.need - 1].need)} players` : st.goal === 'stars' ? `${G.stars().toFixed(1)} / ${st.need}★` : st.goal === 'rps' ? `${$$(G.revenuePerSec())} / ${$$(st.need)} a second` : st.goal === 'bugsUnder' ? `Bugs: ${G.pct(G.bugRatio())} of the game (under ${st.need}%)` : st.goal === 'era' ? (G.canRelaunch() ? 'Ready: tap Announce on the players card' : `Unlocks at ${f(G.eraDef().next)} players`) : g.label ? g.label : `${f(g.have)} / ${f(g.need)}`);
     setText($('tut-unlocks'), st.unlocks ? `Unlocks: ${st.unlocks}` : '');
     setText($('tut-go'), st.name ? 'Name it' : 'Show me');
     show($('tut-go'), true);
