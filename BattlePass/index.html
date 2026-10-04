@@ -13,7 +13,7 @@
   <title>Battle Pass: MTX</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Inter:wght@400;600;700;800&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=a104">
+  <link rel="stylesheet" href="style.css?v=a105">
 </head>
 <body class="clutter-1">
 
@@ -72,8 +72,8 @@
       <div class="last-action" id="code-line"><b>Your editor is open.</b> <span class="dim">The cursor blinks. The game could be good.</span></div>
       <div class="kpis">
         <div class="kpi" title="Lines of code to spend on game features and monetization features."><span>Lines of code</span><b id="k-code">0</b></div>
-        <div class="kpi" title="Lines of code your developers write every second, if payroll is met."><span>Developers</span><b id="k-devcode">0/s</b></div>
-        <div class="kpi" title="Salaries per second. If you can't pay them, developers stop working."><span>Payroll</span><b id="k-payroll">$0/s</b></div>
+        <div class="kpi" title="Lines of code your developers write every second. If you can only pay part of payroll, they work that much slower."><span>Developers</span><b id="k-devcode">0/s</b></div>
+        <div class="kpi" title="Salaries per second. Short on cash? You pay what you can and they slow down to match."><span>Payroll</span><b id="k-payroll">$0/s</b></div>
       </div>
       <div class="qbar-wrap hidden" id="qbar-wrap"><div class="row-between small"><span>Game Quality <b id="q-n">0</b></span><span>Players expect <b id="e-n">0</b></span></div><div class="qbar"><i id="q-fill"></i><span id="e-mark" class="e-mark"></span></div><div class="small dim" id="q-note"></div><div class="bug-row small" id="bug-row"></div></div>
     </div>
@@ -108,7 +108,7 @@
       <div class="last-action" id="ad-line"><b>Nobody knows your game exists.</b> <span class="dim">Yet.</span></div>
       <div class="kpis">
         <div class="kpi" title="Money that arrives every second on its own: ads and the shop. Copy sales are paid once, when each one sells."><span>Recurring</span><b id="k-rev">$0/s</b></div>
-        <div class="kpi" title="Recurring revenue minus payroll."><span>Net</span><b id="k-net">$0/s</b></div>
+        <div class="kpi" title="Average income per second, including copy sales, minus payroll."><span>Net</span><b id="k-net">$0/s</b></div>
         <div class="kpi" title="How many ads are in the game right now. They earn while they last, and players hate them while they last."><span>Ad Load</span><b id="k-load">0</b></div>
       </div>
     </div>
@@ -363,11 +363,11 @@
   </div>
 </div>
 
-<script src="config.js?v=a104"></script>
-<script src="cloud-config.js?v=a104"></script>
-<script src="game.js?v=a104"></script>
-<script src="ui.js?v=a104"></script>
-<script src="cloud.js?v=a104"></script>
+<script src="config.js?v=a105"></script>
+<script src="cloud-config.js?v=a105"></script>
+<script src="game.js?v=a105"></script>
+<script src="ui.js?v=a105"></script>
+<script src="cloud.js?v=a105"></script>
 <script>window.addEventListener("error", e => { const d = document.getElementById("err"); if (d) { d.textContent = "Error: " + e.message; d.classList.remove("hidden"); } });</script>
 </body>
 </html>

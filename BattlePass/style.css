@@ -521,3 +521,6 @@ body:not(.rep-on) .rep-tag, body:not(.rep-on) .aggr { display: none; }
 .first-box .fnote { margin: 0; font-size: 13px; line-height: 1.45; color: #c9bde8; }
 .first-box .gsi-btn { justify-content: center; padding: 12px; font-size: 15px; }
 .first-guest { padding: 12px; border-radius: 12px; border: 1px solid #ffffff30; background: #ffffff10; color: #fff; font-weight: 700; font-size: 15px; }
+/* 0.1.5: let staff go */
+.letgo { margin-top: 4px; padding: 2px 8px; font-size: 11px; background: transparent; border: 1px solid var(--line, #444); color: var(--dim, #999); border-radius: 6px; min-width: 0; }
+.letgo:hover { color: var(--red); border-color: currentColor; }

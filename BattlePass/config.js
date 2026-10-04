@@ -1,7 +1,7 @@
 // Battle Pass: The Game — all numbers live here (same split as Click to Conquer: config → game → ui).
 // Every in-game ad, sale, whale and purchase is SIMULATED. No real money moves anywhere in this file.
 const CONFIG = {
-  version: 'Alpha 0.1.4',
+  version: 'Alpha 0.1.5',
   saveKey: 'bp_alpha_save_v4', // 0.1.0: the five eras, fresh saves
   tickMs: 100,
   startCash: 5000,      // startup money: your savings, your mom's savings, a credit card
@@ -684,6 +684,7 @@ const CONFIG = {
 
 
   changelog: [
+    ['Alpha 0.1.5', 'Money fixes. The money rate at the top now shows your real average (copy sales included, minus payroll), not just the ads-and-shop part. Short on payroll? You pay what you can and developers work that much slower, instead of flickering on and off. New: "Let one go" on each developer tier and QA, so a payroll you cannot afford is never a trap.'],
     ['Alpha 0.1.4', 'Cloud saves. On your first visit, sign in with Google to back up your studio and play on any device, or continue as a guest (saved on this device only). Sign in later from Settings or the avatar. Same system as Click to Conquer and Factory A.F.K.'],
     ['Alpha 0.1.3', 'Quests complete the moment you finish them (they used to wait up to 20 seconds). A quest that is already done when it appears shows a green Done! for a moment, then moves on.'],
     ['Alpha 0.1.2', 'New name and logo: Battle Pass: MTX (Maximum Transaction eXtraction™).'],

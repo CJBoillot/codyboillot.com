@@ -106,8 +106,8 @@ const UI = (() => {
     const r = R(), m = M(), st = G.stageDef();
     setText($('company'), G.studioName()); setText($('stage-name'), st.name); setText($('game-title'), G.gameTitle());
     const cell = (k, v, rate) => { const e = $('res-' + k); setText(e.querySelector('[data-f=v]'), v); setText(e.querySelector('[data-f=r]'), rate); };
-    const dc = G.devCodePerSec(); cell('code', f(r.code), dc > 0 ? '+' + f(dc) + '/s' : r.unpaid ? 'unpaid' : '');
-    const net = G.recurringNetPerSec(); show($('res-cash'), G.has('finance') || r.cash > 10); cell('cash', $$(r.cash), (net || r.devs) ? sgn(net) + $$(Math.abs(net)) + '/s' : '');
+    const dc = G.devCodePerSec(); const paid = Math.round(G.payShare() * 100); cell('code', f(r.code), dc > 0 ? '+' + f(dc) + '/s' : r.unpaid ? 'unpaid' : '');
+    const net = G.netCashPerSec(); show($('res-cash'), G.has('finance') || r.cash > 10); cell('cash', $$(r.cash), r.unpaid ? `⚠ pay ${paid}%` : (net || r.devs) ? sgn(net) + $$(Math.abs(net)) + '/s' : ''); // 0.1.5: average net, including copy sales
     const dp = G.installsPerSec() - G.churnRate() * r.players; cell('players', f(r.players), sgn(dp) + f(Math.abs(dp)) + '/s');
     show($('res-rep'), G.has('reputation')); show($('res-players'), true);
     const tgt = G.repTarget(); cell('rep', G.stars().toFixed(1) + '★', tgt > r.rep + 0.5 ? '↑ ' + G.stars(tgt).toFixed(1) : tgt < r.rep - 0.5 ? '↓ ' + G.stars(tgt).toFixed(1) : '');
@@ -201,7 +201,7 @@ const UI = (() => {
     const r = R(), TRI = C.triangle;
     renderDevBoard();
     setText($('code-n'), '+' + f(G.codePerTap())); setText($('code-unit'), G.codePerTap() === 1 ? 'line of code' : 'lines of code');
-    setText($('k-code'), f(r.code)); setText($('k-devcode'), r.unpaid ? 'Unpaid!' : f(G.devCodePerSec()) + ' lines/s'); setText($('k-payroll'), $$(G.payrollPerSec()) + '/s');
+    setText($('k-code'), f(r.code)); setText($('k-devcode'), f(G.devCodePerSec()) + ' lines/s' + (r.unpaid ? ` (${Math.round(G.payShare() * 100)}% paid)` : '')); setText($('k-payroll'), $$(G.payrollPerSec()) + '/s');
     $('k-devcode').classList.toggle('bad', !!r.unpaid);
     // Quality vs Expectations
     const gfOn = G.has('gamefeatures'); show($('qbar-wrap'), gfOn);
@@ -232,19 +232,19 @@ const UI = (() => {
     // Developers (salaried) and staff
     const hire = G.has('hiring'); show($('hire-wrap'), hire);
     if (hire) {
-      setText($('dev-head'), r.unpaid ? '⚠️ Payroll missed: nobody is coding' : `${f(r.devs)} on payroll`);
+      setText($('dev-head'), r.unpaid ? `⚠️ Payroll short: you can pay ${Math.round(G.payShare() * 100)}%, so they work ${Math.round(G.payShare() * 100)}% as fast. Earn more or let someone go.` : `${f(r.devs)} on payroll`);
       const rows = []; let teaser = null;
       for (const t of TRI.devTiers) {
         if (!G.devTierVisible(t.id)) { if (!teaser) teaser = t; continue; }
-        rows.push({ key: t.id, html: `<div class="ico">${t.icon || '🧑‍💻'}</div><div class="main"><div class="name">${esc(t.name)} <span class="lv" data-f="lv"></span></div><div class="small dim" data-f="i"></div><div class="mbar"><i data-f="mb"></i></div></div><button class="buy" data-act="dev-hire" data-id="${t.id}" data-f="b"><span data-f="bn"></span><b data-f="bc"></b><i data-f="bg"></i><i data-f="bs" class="sal"></i></button>`,
+        rows.push({ key: t.id, html: `<div class="ico">${t.icon || '🧑‍💻'}</div><div class="main"><div class="name">${esc(t.name)} <span class="lv" data-f="lv"></span></div><div class="small dim" data-f="i"></div><div class="mbar"><i data-f="mb"></i></div><button class="letgo" data-act="dev-fire" data-id="${t.id}" data-f="lg">Let one go</button></div><button class="buy" data-act="dev-hire" data-id="${t.id}" data-f="b"><span data-f="bn"></span><b data-f="bc"></b><i data-f="bg"></i><i data-f="bs" class="sal"></i></button>`,
           up: row => { const lv = r.dev[t.id] || 0, n = G.buyCount(t.cost, TRI.devGrowth, lv, r.cash, amt()), cost = G.devCost(t.id, n), ms = G.nextMilestone(lv), sal = t.salary * Math.pow(TRI.salaryGrowth, lv);
-            T(row, 'lv', lv ? '×' + lv : ''); T(row, 'i', `+${f(t.code * G.milestoneMult(lv) * G.mults().code)} lines/s each · next salary ${$$(sal)}/s${lv ? ` · team: ${f(G.tierCode(t.id) * G.mults().code)} lines/s for ${$$(G.tierPayroll(t.id))}/s` : ''}`);
+            T(row, 'lv', lv ? '×' + lv : ''); show(fld(row, 'lg'), lv > 0); T(row, 'i', `+${f(t.code * G.milestoneMult(lv) * G.mults().code)} lines/s each · next salary ${$$(sal)}/s${lv ? ` · team: ${f(G.tierCode(t.id) * G.mults().code)} lines/s for ${$$(G.tierPayroll(t.id))}/s` : ''}`);
             fld(row, 'mb').style.width = ms ? (100 * lv / ms) + '%' : '100%';
             T(row, 'bn', 'Hire ' + amtLabel(n)); T(row, 'bc', `+${f(G.devGain(t.id, n))} lines/s`); T(row, 'bg', '−' + $$(cost) + ' fee'); T(row, 'bs', `−${$$(sal * (Math.pow(C.triangle.salaryGrowth, n) - 1) / (C.triangle.salaryGrowth - 1))}/s pay`); D(row, 'b', r.cash < cost); } });
       }
       if (teaser) rows.push(r.stage < teaser.stage ? lockRow(teaser.id, teaser.name, teaser.stage) : { key: 'next-' + teaser.id, cls: 'locked', html: `<div class="ico">🔒</div><div class="main"><div class="name">${esc(teaser.name)}</div><div class="small dim">Hire one of the tier above first.</div></div>` });
-      if (G.has('qa')) { const Q = TRI.qa; rows.push({ key: 'qa', html: `<div class="ico">${Q.icon}</div><div class="main"><div class="name">${esc(Q.name)} <span class="lv" data-f="lv"></span></div><div class="small dim" data-f="i"></div></div><button class="buy" data-act="qa" data-f="b"><span data-f="bn">Hire ×1</span><b data-f="bc"></b><i data-f="bg"></i><i class="sal" data-f="bs"></i></button>`,
-        up: row => { const n = r.qa || 0, sal = Q.salary * Math.pow(Q.salaryGrowth, n); T(row, 'lv', n ? '×' + n : ''); T(row, 'i', n ? `The team fixes ${G.pct(G.qaFixPerSec() * 60)} of your bugs a minute, for ${$$(G.qaPayroll())}/s.` : Q.desc); T(row, 'bc', `−${G.pct(Q.fix * 60)}/min`); T(row, 'bg', '−' + $$(G.qaCost()) + ' fee'); T(row, 'bs', `−${$$(sal)}/s pay`); D(row, 'b', r.cash < G.qaCost()); } }); }
+      if (G.has('qa')) { const Q = TRI.qa; rows.push({ key: 'qa', html: `<div class="ico">${Q.icon}</div><div class="main"><div class="name">${esc(Q.name)} <span class="lv" data-f="lv"></span></div><div class="small dim" data-f="i"></div><button class="letgo" data-act="qa-fire" data-f="lg">Let one go</button></div><button class="buy" data-act="qa" data-f="b"><span data-f="bn">Hire ×1</span><b data-f="bc"></b><i data-f="bg"></i><i class="sal" data-f="bs"></i></button>`,
+        up: row => { const n = r.qa || 0, sal = Q.salary * Math.pow(Q.salaryGrowth, n); T(row, 'lv', n ? '×' + n : ''); show(fld(row, 'lg'), n > 0); T(row, 'i', n ? `The team fixes ${G.pct(G.qaFixPerSec() * 60)} of your bugs a minute, for ${$$(G.qaPayroll())}/s.` : Q.desc); T(row, 'bc', `−${G.pct(Q.fix * 60)}/min`); T(row, 'bg', '−' + $$(G.qaCost()) + ' fee'); T(row, 'bs', `−${$$(sal)}/s pay`); D(row, 'b', r.cash < G.qaCost()); } }); }
       sync($('devtier-list'), rows);
       const sf = G.has('staff');
       sync($('staff-list'), !sf ? [] : [
@@ -316,7 +316,7 @@ const UI = (() => {
       sync($('acct-list'), [{ key: 'acct', html: `<div class="ico">🧮</div><div class="main"><div class="name">Accountant <span class="lv" data-f="lv"></span></div><div class="small dim" data-f="i"></div></div><button class="buy" data-act="acct" data-f="b"><span data-f="bn">Hire</span><b data-f="bc"></b><i data-f="bg"></i></button>`,
         up: row => { T(row, 'lv', r.acct ? 'on staff' : ''); T(row, 'i', r.acct ? 'Watches the runway. Has opinions about ads.' : 'Tells you how long your cash will last. Will suggest ads. Accountants always suggest ads.');
           T(row, 'bn', r.acct ? 'Hired' : 'Hire'); T(row, 'bc', r.acct ? '' : 'Runway + ads'); T(row, 'bg', r.acct ? '' : '−' + $$(C.accountant.cost)); D(row, 'b', r.acct || r.cash < C.accountant.cost); K(row, 'owned', r.acct); } }]); }
-    setText($('k-rev'), $$(G.recurringPerSec()) + '/s'); const net = G.recurringNetPerSec(); setText($('k-net'), sgn(net) + $$(Math.abs(net)) + '/s'); $('k-net').classList.toggle('bad', net < 0);
+    setText($('k-rev'), $$(G.recurringPerSec()) + '/s'); const net = G.netCashPerSec(); setText($('k-net'), sgn(net) + $$(Math.abs(net)) + '/s'); $('k-net').classList.toggle('bad', net < 0);
     setText($('k-load'), `${f(r.adLoad)} ads · −${repStars(G.adPenalty())}`);
     // Monetization shelves: Ads, Cash Shop, Pay to Win (built with Code)
     const mon = C.features.some(ft => G.shelfOpen(ft.shelf) || r.devd[ft.id]); show($('mon-wrap'), mon);
@@ -717,6 +717,8 @@ const UI = (() => {
     team: () => { if (G.hireTeam()) { beep('big'); toast(`👩‍💻 Hired a new dev team. ${R().staff.teams} epics can be in progress at once.`, 'good'); } },
     goto: d => setTab(d.tab),
     qa: () => G.hireQA() && beep('buy'),
+    'dev-fire': d => { if (G.fireDev(d.id)) toast('👋 Let one go. Their salary stops; the hiring fee is gone.'); },
+    'qa-fire': () => { if (G.fireQA()) toast('👋 Let a QA tester go.'); },
     relaunch: () => { const nx = G.nextEraDef(); if (!nx || !G.canRelaunch()) return; ask(`Announce ${C.sequel.baseTitle}: ${nx.sub}?`, `${esc(nx.pitch)}<br><br>${ERA_ASK[nx.id] || ''}<br><br>The players who liked the old game will be upset for a while. Up to <b>${f(nx.market)}</b> people could play the new version.`, 'Announce it', () => { G.relaunch(); G.save(); render(true); }); },
     sale: d => { if (G.startSale(+d.k)) beep('coin'); },
     pander: d => G.pander(d.id),

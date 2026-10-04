@@ -48,7 +48,7 @@ function freshRun(meta) {
   const m = meta || freshMeta(), r = {
     // the three resources of the triangle (plus players, who are the point of all three)
     code: 0, bugs: TR0().bugs.start, sale: { off: 0, until: 0, cd: 0, ended: true }, saleFatigue: 0, cash: CONFIG.startCash * Math.pow(10, boardRankOf(m, 'parachute')), acct: false, rep: C0.startRep, players: 0,
-    adLoad: 0, trust: 1, replyBuf: 0, unpaid: false, autoAdAcc: 0, autoReplyAcc: 0,
+    adLoad: 0, trust: 1, replyBuf: 0, unpaid: false, payFrac: 1, payEma: 1, autoAdAcc: 0, autoReplyAcc: 0,
     era: 1, dlcSold: 0, qa: 0, price: -1, f2p: false, peak: 0, sales: 0, bomb: null, nextBomb: 0, inc: null, nextInc: 0, incTab: '',
     live: { sub: 0, subCd: 0, drops: 0, dropsCd: 0, prize: '' }, videos: [], vodCd: {}, vodN: 0, // Streamly Live / ToobVOD // price = index into CONFIG.price.ladder; -1 = not on the store yet
     data: 0, life: 0, lifeCode: 0, lifeInstalls: 0, adImpressions: 0, stage: 1, scandal: 0,
@@ -375,10 +375,12 @@ function tierPayroll(id, n = R().dev[id] || 0) { const g = TR.salaryGrowth; retu
 function qaPayroll(n = R().qa || 0) { const Q = TR.qa; return Q.salary * (Math.pow(Q.salaryGrowth, n) - 1) / (Q.salaryGrowth - 1); }
 function payrollPerSec() { let s = qaPayroll(); for (const t of TR.devTiers) s += tierPayroll(t.id); return s; }
 function qaCost() { const Q = TR.qa; return Q.cost * Math.pow(Q.growth, R().qa || 0); }
-function qaFixPerSec() { return R().unpaid ? 0 : (R().qa || 0) * TR.qa.fix; } // share of bugs fixed per second
+function payShare() { const e = R().payEma; return e == null ? 1 : Math.max(0, Math.min(1, e)); } // 0.1.5: share of payroll you actually paid (smoothed); staff work that much
+function qaFixPerSec() { return payShare() * (R().qa || 0) * TR.qa.fix; } // share of bugs fixed per second
+function fireQA() { const r = R(); if (!(r.qa > 0)) return false; r.qa--; dirty(); log('Let a QA tester go.'); return true; }
 function hireQA() { const r = R(); if (!has('qa') || r.cash < qaCost()) return false; r.cash -= qaCost(); r.qa = (r.qa || 0) + 1; dirty(); log('Hired a QA tester.'); return true; }
 function tierCode(id) { const lv = R().dev[id] || 0; return lv * DT[id].code * milestoneMult(lv); }
-function devCodePerSec() { if (R().unpaid) return 0; let s = 0; for (const t of TR.devTiers) s += tierCode(t.id); return s * mults().code; }
+function devCodePerSec() { const ps = payShare(); if (ps <= 0) return 0; let s = 0; for (const t of TR.devTiers) s += tierCode(t.id); return s * mults().code * ps; }
 function codePerTap() { return Math.max(TR.codePerTap, CONFIG.tapBurst.codeSecs * devCodePerSec()) * mults().codeTap; } // a tap = 2 s of your developers
 function replyPower() { return TR.reply.power * mults().reply * R().trust; }
 function autoRepliesPerSec() { return R().cms * TR.cm.repliesPerSec; }
@@ -529,6 +531,7 @@ function hireDev(id = 'jr', amt = 1) {
   const n = buyCount(DT[id].cost, TR.devGrowth, r.dev[id] || 0, r.cash, amt), cost = devCost(id, n);
   if (r.cash < cost) return 0; r.cash -= cost; r.dev[id] = (r.dev[id] || 0) + n; r.devs += n; dirty(); return n;
 }
+function fireDev(id) { const r = R(); if (!DT[id] || !(r.dev[id] > 0)) return false; r.dev[id]--; r.devs = Math.max(0, r.devs - 1); dirty(); log(`Let one ${DT[id].name} go.`); return true; } // 0.1.5: no refund, but the salary stops
 function adNetCost() { return TR.adNetwork.cost * Math.pow(TR.adNetwork.growth, R().adNet); }
 function buyAdNet() { if (!has('adnetwork') || R().cash < adNetCost()) return false; R().cash -= adNetCost(); R().adNet++; dirty(); return true; }
 function cmCost() { return TR.cm.cost * Math.pow(TR.cm.growth, R().cms); }
@@ -846,7 +849,9 @@ function simulate(dt, offline = false) {
   const pay = payrollPerSec() * dt;
   earn((featureRevenuePerSec() + adsInGamePerSec()) * dt);
   r.autoAdAcc += autoAdsPerSec() * dt; while (r.autoAdAcc >= 1) { r.autoAdAcc -= 1; placeAd(true); }
-  if (r.devs > 0 || r.qa > 0) { if (r.cash >= pay) { r.cash -= pay; r.unpaid = false; } else r.unpaid = true; } else r.unpaid = false;
+  if (pay > 0) { const paid = Math.min(pay, Math.max(0, r.cash)); r.cash -= paid; r.payFrac = paid / pay; } else r.payFrac = 1; // 0.1.5: pay what you can; staff work in proportion
+  r.payEma = r.payEma == null ? r.payFrac : r.payEma + (r.payFrac - r.payEma) * (1 - Math.exp(-dt / 4)); if (r.payEma > 0.995) r.payEma = Math.max(r.payEma, r.payFrac);
+  r.unpaid = r.payEma < 0.98;
   const cd = devCodePerSec() * dt; r.code += cd; r.lifeCode += cd;
   if (r.qa) r.bugs *= Math.exp(-qaFixPerSec() * dt); // QA testers
   r.bugs += TR.bugs.discover * ((r.era || 1) < 4 ? TR.bugs.earlyDiscover : 1) * quality() * (r.players / (r.players + 200)) * dt; // players find bugs (fewer before free-to-play)
@@ -963,7 +968,7 @@ const Game = {
   repTarget, repParts, repInstallMult, repChurnMult, featurePressure, channelPressure, goodwillGain,
   channelRate, womRate, installMult, installsPerSec, churnRate, featureRate, revenuePerSec, featureRevenuePerSec, engagementPerSec, dataPerSec, coinsPerSec, adImpressionsPerSec, bpXpPerSec,
   liveOn, liveBoost, liveCost, liveReadyIn, canLive, startLive, videoSentiment, videoWeight, videoInstalls, videoRepPenalty, videoCost, videoReadyIn, canVideo, postVideo, scamVideo, baseInterest, priceKeep, settlesAtPrice, promote, promoteGain, hireAccountant, runway, paidAdMult, recurringPerSec, recurringNetPerSec, onStore, priceNow, demand, installsAt, salesPerSec, setPrice, goF2P, settlesAt, retentionMult, interestPerSec, shopFactor, shelfRevenue, shelfOpen, adIncomePerSec, p2wCount, p2wPenalty,
-  startBomb, defuseBomb, bombLeft, questDone, goodwillCap, msLeft, msGroup, qaCost, hireQA, qaFixPerSec, qaPayroll, eraDef, nextEraDef, canRelaunch, relaunch, incNeed, incReasons, fixGain, bugRatio, bugPenalty, bugChurn, isFix, saleOn, saleMult, saleBoost, saleLeft, saleReadyIn, canSale, startSale, salePreview, incDef, incActive, incFx, startIncident, fixIncident, incTap,
+  startBomb, defuseBomb, bombLeft, questDone, goodwillCap, msLeft, msGroup, qaCost, hireQA, fireQA, fireDev, payShare, qaFixPerSec, qaPayroll, eraDef, nextEraDef, canRelaunch, relaunch, incNeed, incReasons, fixGain, bugRatio, bugPenalty, bugChurn, isFix, saleOn, saleMult, saleBoost, saleLeft, saleReadyIn, canSale, startSale, salePreview, incDef, incActive, incFx, startIncident, fixIncident, incTap,
   quality, expectations, qualityTerm, adPenalty, adsInGamePerSec, tierPayroll, tierCode, devTierVisible, replyTerm, stars, adTapValue, autoAdsPerSec, payrollPerSec, devCodePerSec, codePerTap, replyPower, autoRepliesPerSec, netCashPerSec,
   tap, placeAd, reply, gameFeatureVisible, gameFeatureCost, buyGameFeature, devCost, hireDev, adNetCost, buyAdNet, cmCost, hireCM, channelVisible, channelCost, buyChannel, featureVisible, nextFeature, canDevelop, develop, featureCost, buyFeature, featureName, toggleAggr,
   goodwillVisible, goodwillCost, buyGoodwill, upgradeVisible, canUpgrade, buyUpgrade, canResearch, research, gameCost, buyGame,
