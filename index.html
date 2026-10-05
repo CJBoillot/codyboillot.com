@@ -300,6 +300,10 @@
   .game-factory::before { background: linear-gradient(90deg, #74dc5c, #5ab8e8); }
   .game-bp::before { background: linear-gradient(90deg, #ff7ac3, #7a4bff, #33d6ff); }
   .game-bp .game-logo { border-radius: 14px; }
+  .game-czc::before { background: linear-gradient(90deg, #2f5fe0, #f2c14e, #d8352a); }
+  .game-czc .game-logo { border-radius: 18px; }
+  .game-czc .game-cta + .game-cta { margin-left: .6rem; }
+  @media (max-width: 520px) { .game-czc .game-cta + .game-cta { margin-left: 0; } }
   .game-head { display: flex; align-items: center; gap: clamp(1rem, 3vw, 1.6rem); }
   .game-logo { width: clamp(96px, 18vw, 150px); height: auto; flex: none; filter: drop-shadow(0 8px 20px rgba(0,0,0,.5)); }
   .game-head h3 { font-family: "Sora", sans-serif; font-size: clamp(1.3rem, 3.2vw, 1.8rem); font-weight: 800; margin-top: .55rem; }
@@ -649,8 +653,8 @@
     <div class="wrap">
       <div class="sec-head reveal">
         <div class="sec-tag sec-tag-new">Games I've Made</div>
-        <h2>Three idle games, built from scratch and playable now</h2>
-        <p>All three run in the browser on phone or desktop, keep working while the game is closed, and back up your progress to the cloud with one-tap Google sign-in. Each is a single page of vanilla JavaScript with no build step, on a serverless Firebase backend that runs on the free tier.</p>
+        <h2>Three idle games and a World of Warcraft addon, all built from scratch</h2>
+        <p>The three idle games run in the browser on phone or desktop, keep working while the game is closed, and back up your progress to the cloud with one-tap Google sign-in. Each is a single page of vanilla JavaScript with no build step, on a serverless Firebase backend that runs on the free tier.</p>
         <p class="games-share"><a href="games/">Just the games: codyboillot.com/games →</a></p>
       </div>
 
@@ -711,6 +715,22 @@
         </div>
         <div class="chips"><span class="chip">Vanilla JS &amp; Canvas</span><span class="chip">Mobile first</span><span class="chip">29-quest Tier 1</span><span class="chip">Light &amp; dark themes</span><span class="chip">Firebase Auth &amp; Firestore</span></div>
         <a class="btn btn-primary game-cta" href="FactoryAFK/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3l14 9-14 9z"/></svg>Try the demo</a>
+      </article>
+
+      <article class="game game-czc reveal" id="cozyzonecollector">
+        <header class="game-head">
+          <img class="game-logo" src="assets/games/czc-logo.webp" alt="Cozy Zone Collector" width="150" height="150">
+          <div>
+            <div class="badge-row"><span class="pill">New · Beta</span><span class="pill ghost">World of Warcraft addon</span><span class="pill ghost">Free &amp; open source</span></div>
+            <h3>Cozy Zone Collector</h3>
+            <p class="game-sub">Finish Azeroth one zone at a time.</p>
+          </div>
+        </header>
+        <p>An addon for World of Warcraft (Retail, Midnight) that turns every zone into a checklist you can actually finish. Open any of 169 zones across 15 continents and see one completion number, then exactly what's left: quests, rares, treasures, exploration, flight paths, achievements, battle pets, recipes, transmog appearances and housing decor. Switch between your whole account and the character you're playing for a one-character 100% run, and anything that character can't do (another class, the other faction, a holiday, a removed quest) is set aside with the reason shown, so the number you chase is one you can reach.</p>
+        <p>Alliance and Horde zones are tinted royal blue and Horde red, the window can follow you as you travel, and a drag-to-hotbar button opens it in one click. Zone data is extracted once from AllTheThings (MIT) and bundled, so it needs no other addon to run.</p>
+        <div class="chips"><span class="chip">Lua</span><span class="chip">WoW API</span><span class="chip">Blizzard-native UI</span><span class="chip">169 zones</span><span class="chip">Account &amp; character views</span><span class="chip">Offline data pipeline</span><span class="chip">MIT licence</span></div>
+        <a class="btn btn-primary game-cta" href="downloads/CozyZoneCollector-1.0.0-beta1.zip" download><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-5-5m5 5l5-5M4 21h16"/></svg>Download the beta</a>
+        <a class="btn btn-ghost game-cta" href="https://www.curseforge.com/wow/addons/cozy-zone-collector" target="_blank" rel="noopener">Get it on CurseForge</a>
       </article>
     </div>
   </section>

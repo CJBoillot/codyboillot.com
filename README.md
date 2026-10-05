@@ -20,6 +20,7 @@ See [SkillTrainer](#skilltrainer) below.
 | `ClickToConquer/` | Click to Conquer, an idle survival-crafting game (Firebase cloud saves). |
 | `BattlePass/` | Battle Pass: MTX (Maximum Transaction eXtraction), a satirical idle game about live-service monetization. Copied from its own project. `cloud.js` + `cloud-config.js` add Google sign-in and Firestore saves (Firebase project `battlepass-mtx`). |
 | `FactoryAFK/` | Factory A.F.K., an idle factory game. Built from one game file; `cloud.js` + `cloud-config.js` add Google sign-in and Firestore saves (Firebase project `factory-afk`). |
+| `downloads/` | Release zips served from the site, e.g. the Cozy Zone Collector WoW addon beta. Its card on the home page and `/games` links here and to CurseForge. |
 | `CNAME` | Tells GitHub Pages to serve `codyboillot.com`. |
 | `.nojekyll` | Tells GitHub Pages to serve files as-is. |
 
