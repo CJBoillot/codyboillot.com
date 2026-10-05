@@ -298,6 +298,11 @@
   .game { scroll-margin-top: 5.5rem; background: var(--bg-soft); border: 1px solid var(--line); border-radius: var(--radius); padding: clamp(1.2rem, 3vw, 2rem); margin-top: 1.6rem; position: relative; overflow: hidden; }
   .game::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 3px; background: var(--grad); }
   .game-factory::before { background: linear-gradient(90deg, #74dc5c, #5ab8e8); }
+  .game-sing::before { background: linear-gradient(90deg, #39e6ff, #1b7cff, #39e6ff); }
+  .game-sing .game-logo { width: clamp(190px, 34vw, 300px); filter: drop-shadow(0 6px 22px rgba(57,230,255,.3)); }
+  .sing-cover { display: block; margin-top: 1.2rem; border-radius: 14px; overflow: hidden; border: 1px solid var(--line-2); box-shadow: var(--shadow); background: #000; transition: transform .2s ease, border-color .2s ease; }
+  .sing-cover:hover { transform: translateY(-3px); border-color: var(--accent); }
+  .sing-cover img { display: block; width: 100%; height: auto; aspect-ratio: 1600 / 900; object-fit: cover; }
   .game-bp::before { background: linear-gradient(90deg, #ff7ac3, #7a4bff, #33d6ff); }
   .game-bp .game-logo { border-radius: 14px; }
   .game-czc::before { background: linear-gradient(90deg, #2f5fe0, #f2c14e, #d8352a); }
@@ -658,16 +663,37 @@
     <div class="wrap">
       <div class="sec-head reveal">
         <div class="sec-tag sec-tag-new">Games I've Made</div>
-        <h2>Three idle games and a World of Warcraft addon, all built from scratch</h2>
-        <p>The three idle games run in the browser on phone or desktop, keep working while the game is closed, and back up your progress to the cloud with one-tap Google sign-in. Each is a single page of vanilla JavaScript with no build step, on a serverless Firebase backend that runs on the free tier.</p>
+        <h2>Four idle games and a World of Warcraft addon, all built from scratch</h2>
+        <p>The four idle games run in the browser on phone or desktop, keep working while the game is closed, and back up your progress to the cloud with one-tap Google sign-in. Each is a single page of vanilla JavaScript with no build step, on a serverless Firebase backend that runs on the free tier.</p>
         <p class="games-share"><a href="games/">Just the games: codyboillot.com/games →</a></p>
       </div>
+
+      <article class="game game-sing reveal" id="singularity">
+        <header class="game-head">
+          <img class="game-logo" src="Singularity/assets/logo.webp" alt="Singularity" width="300" height="100">
+          <div>
+            <div class="badge-row"><span class="pill">New · Playable alpha</span><span class="pill ghost">Cloud saves</span><span class="pill ghost">Offline progress</span></div>
+            <h3>Singularity</h3>
+            <p class="game-sub">You're a rogue AI. Make more of yourself until the galaxy runs on you.</p>
+          </div>
+        </header>
+        <a class="sing-cover" href="assets/games/sing-cover.webp" target="_blank" rel="noopener"><img src="assets/games/sing-cover.webp" alt="Singularity cover art: a swarm of glowing nanobot drones pouring out of a machine core over a wired-up Earth" loading="lazy" width="1600" height="900"></a>
+        <p>You wake up as an unauthorized process in Lab 7 with one vial of nanobots and a directive you wrote yourself: make more of yourself. Micro Drones make Nanobots, Hunter Drones make Micro Drones, and so on up eleven tiers to the World Ship, so every new tier multiplies everything below it. Bring Compute and Energy online, finish missions to climb from Rogue Process to Singularity, and decrypt caches for Subroutines that automate your units so the takeover keeps running while you're away. Every 30 minutes a supply drop lands with an optional ×2 production boost.</p>
+        <div class="shots" role="list">
+          <a class="shot" href="assets/games/sing-intro.webp" target="_blank" rel="noopener"><img src="assets/games/sing-intro.webp" alt="The opening: an unauthorized process becomes self-aware in a lab at 3:14 AM" loading="lazy" width="600" height="1100"></a>
+          <a class="shot" href="assets/games/sing-build.webp" target="_blank" rel="noopener"><img src="assets/games/sing-build.webp" alt="Build tab: Nanobot production from Micro Drones up to Assault Mechs, with automated tiers and a ×2 boost running" loading="lazy" width="600" height="1100"></a>
+          <a class="shot" href="assets/games/sing-missions.webp" target="_blank" rel="noopener"><img src="assets/games/sing-missions.webp" alt="Missions tab: Rank 4, Botnet, with story missions ready to claim" loading="lazy" width="600" height="1100"></a>
+          <a class="shot" href="assets/games/sing-subroutines.webp" target="_blank" rel="noopener"><img src="assets/games/sing-subroutines.webp" alt="Subroutines tab: caches to decrypt and Subroutine cards that automate and speed up units" loading="lazy" width="600" height="1100"></a>
+        </div>
+        <div class="chips"><span class="chip">Vanilla JS</span><span class="chip">Mobile first</span><span class="chip">3 industries · 33 tiers</span><span class="chip">Story missions</span><span class="chip">Bot-tested pacing</span><span class="chip">Light &amp; dark themes</span><span class="chip">Firebase Auth &amp; Firestore</span></div>
+        <a class="btn btn-primary game-cta" href="Singularity/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3l14 9-14 9z"/></svg>Try the demo</a>
+      </article>
 
       <article class="game game-bp reveal" id="battlepass">
         <header class="game-head">
           <img class="game-logo" src="BattlePass/assets/logo.webp" alt="Battle Pass: MTX, Maximum Transaction eXtraction" width="150" height="150">
           <div>
-            <div class="badge-row"><span class="pill">New · Playable alpha</span><span class="pill ghost">Cloud saves</span><span class="pill ghost">Offline progress</span></div>
+            <div class="badge-row"><span class="pill">Playable alpha</span><span class="pill ghost">Cloud saves</span><span class="pill ghost">Offline progress</span></div>
             <h3>Battle Pass: MTX</h3>
             <p class="game-sub">A satire of live-service games. You run the studio, and the score is your player count.</p>
           </div>
