@@ -1,0 +1,977 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Singularity</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oxanium:wght@500;700;800&family=Barlow+Semi+Condensed:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: one-screen phone game shell — world + stat bar, scrolling panel, 5-tab nav. Single dark "machine terminal" world. */
+:root{
+  --void:#04070a; --panel:#0a1117; --panel2:#101b23; --line:#183039; --ink:#d9f4fb; --dim:#6f8c97;
+  --c0:#39e6ff; --c1:#b48cff; --c2:#ffb547; --code:#5dffa3; --core:#ff5cc8; --threat:#ff3d5e;
+  --f-disp:"Oxanium","Eurostile","Segoe UI",sans-serif;
+  --f-body:"Barlow Semi Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  --on:#04070a; --shade:#000c; --scrim:#020405d9; --grid:rgba(57,230,255,.035);
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){
+  --void:#eaf1f4; --panel:#ffffff; --panel2:#f1f6f8; --line:#c6d6dd; --ink:#0b1a20; --dim:#55707b;
+  --c0:#0089ad; --c1:#7447d1; --c2:#b86a00; --code:#0c8f4f; --core:#bb2a8c; --threat:#d01d43;
+  --on:#ffffff; --shade:#0000; --scrim:#0b1a2088; --grid:rgba(0,137,173,.06); color-scheme:light}}
+:root[data-theme="light"]{
+  --void:#eaf1f4; --panel:#ffffff; --panel2:#f1f6f8; --line:#c6d6dd; --ink:#0b1a20; --dim:#55707b;
+  --c0:#0089ad; --c1:#7447d1; --c2:#b86a00; --code:#0c8f4f; --core:#bb2a8c; --threat:#d01d43;
+  --on:#ffffff; --shade:#0000; --scrim:#0b1a2088; --grid:rgba(0,137,173,.06); color-scheme:light}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{height:100%}
+body{height:100%;margin:0;background:var(--void);color:var(--ink);font-family:var(--f-body);font-size:15px;-webkit-tap-highlight-color:transparent;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:28px 28px}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button:focus-visible{outline:2px solid var(--c0);outline-offset:2px}
+button:disabled{cursor:default}
+.num,.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+#app{height:100%;display:grid;grid-template-rows:auto 1fr auto;grid-template-columns:minmax(0,1fr);max-width:640px;margin:0 auto}
+.i0{--acc:var(--c0)} .i1{--acc:var(--c1)} .i2{--acc:var(--c2)}
+
+header{padding:8px 16px 6px;display:flex;flex-direction:column;gap:6px}
+.worlds{display:flex;gap:6px}
+.worlds button{flex:1;padding:5px 8px;border:1px solid var(--line);border-radius:6px;font-family:var(--f-disp);font-size:12px;letter-spacing:.08em;color:var(--dim);background:var(--panel)}
+.worlds button.on{color:var(--on);background:var(--c0);border-color:var(--c0)}
+.worlds .tm{font-family:var(--f-mono);font-size:10px;opacity:.8}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:5px 9px;min-width:0}
+.stat .lab{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);font-weight:600}
+.stat .val{font-family:var(--f-mono);font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stat .ssub{font-size:11px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.st-code .val{color:var(--code)} .st-core .val{color:var(--core)}
+
+main{overflow-y:auto;padding:4px 16px 24px;min-height:0}
+.indtabs{display:flex;gap:6px;margin:4px 0 12px}
+.indtab{flex:1;min-width:0;padding:7px 4px;border-radius:6px;border:1px solid var(--line);background:var(--panel);font-family:var(--f-disp);font-weight:700;font-size:12.5px;letter-spacing:.06em;color:var(--dim);text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.indtab.on{color:var(--on);background:var(--acc);border-color:var(--acc)}
+.indtab.lk{border-style:dashed}
+
+.reshead{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin-bottom:10px}
+.reshead .rn{font-family:var(--f-disp);font-size:12px;letter-spacing:.16em;color:var(--acc);text-transform:uppercase}
+.reshead .rv{font-family:var(--f-disp);font-weight:800;font-size:clamp(28px,8.5vw,40px);line-height:1;text-shadow:0 0 16px color-mix(in srgb,var(--acc) 45%,transparent);white-space:nowrap}
+.reshead .rr{font-size:12px;color:var(--dim);text-align:right}
+.modes{display:flex;gap:3px;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:3px}
+.modes button{padding:3px 9px;border-radius:4px;font-family:var(--f-mono);font-size:11px;font-weight:600;color:var(--dim)}
+.modes button.on{background:var(--acc);color:var(--on)}
+
+.gens{display:flex;flex-direction:column;gap:7px}
+.gen{display:grid;grid-template-columns:62px 1fr 92px;gap:9px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:7px;position:relative}
+.gen.teaser{opacity:.5;grid-template-columns:62px 1fr}
+.tap{position:relative;height:62px;border-radius:8px;background:var(--panel2);border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--acc);gap:1px;transition:transform .08s}
+.tap:active{transform:scale(.94)}
+.tap svg{width:34px;height:28px}
+.tap .tr{position:absolute;top:3px;left:5px;font-family:var(--f-mono);font-size:9px;color:var(--dim)}
+.tap .au{font-family:var(--f-mono);font-size:8.5px;letter-spacing:.06em;color:var(--code)}
+.tap.ready{border-color:var(--acc);animation:ping 1.6s ease-out infinite}
+@keyframes ping{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--acc) 55%,transparent)}100%{box-shadow:0 0 0 10px transparent}}
+.mid{min-width:0;display:flex;flex-direction:column;gap:4px}
+.gh{display:flex;justify-content:space-between;gap:6px;align-items:baseline}
+.gn{font-weight:700;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gc{font-family:var(--f-mono);font-weight:600;font-size:13px;color:var(--acc);white-space:nowrap}
+.bar{position:relative;height:21px;border-radius:4px;background:var(--void);border:1px solid var(--line);overflow:hidden}
+.bar i{position:absolute;inset:0 auto 0 0;width:0;background:color-mix(in srgb,var(--acc) 65%,transparent)}
+.bar i.fast{width:100%!important;background:repeating-linear-gradient(-45deg,color-mix(in srgb,var(--acc) 75%,transparent) 0 7px,color-mix(in srgb,var(--acc) 40%,transparent) 7px 14px);background-size:20px 20px;animation:slide .5s linear infinite}
+@keyframes slide{to{background-position:20px 0}}
+.bar span{position:relative;display:block;padding:0 6px;line-height:19px;font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 2px var(--shade)}
+.gs{display:flex;justify-content:space-between;gap:6px;font-size:11px;color:var(--dim)}
+.buy{height:62px;border-radius:8px;background:var(--acc);color:var(--on);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:3px;font-weight:700}
+.buy:disabled{background:var(--panel2);color:var(--dim);border:1px solid var(--line)}
+.buy .bq{font-family:var(--f-mono);font-size:12px}
+.buy .bc{font-size:10.5px;line-height:1.2;text-align:center}
+.pop{position:absolute;right:104px;top:4px;font-family:var(--f-mono);font-weight:600;font-size:12px;color:var(--acc);pointer-events:none;animation:up .9s ease-out forwards}
+@keyframes up{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(-16px)}}
+
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:13px;margin-top:10px}
+.card h3{margin:0 0 3px;font-family:var(--f-disp);font-size:14px;letter-spacing:.06em;font-weight:700;text-transform:uppercase}
+.card p{margin:0;color:var(--dim);font-size:13.5px;line-height:1.4}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:9px}
+.btn{padding:9px 13px;border-radius:7px;background:var(--acc,var(--c0));color:var(--on);font-weight:700;white-space:nowrap;font-size:14px}
+.btn:disabled{background:var(--panel2);color:var(--dim);border:1px solid var(--line)}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--dim)}
+.btn.sm{padding:6px 10px;font-size:12.5px}
+.eyebrow{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.14em;color:var(--dim);text-transform:uppercase}
+.sect{font-family:var(--f-disp);font-size:12px;letter-spacing:.14em;margin:18px 0 0;color:var(--acc);text-transform:uppercase}
+.lockcard{text-align:center;padding:26px 16px}
+.lockcard .big{font-family:var(--f-disp);font-weight:800;font-size:22px;color:var(--acc);margin:6px 0 4px;text-transform:uppercase}
+.lockcard .btn{margin-top:14px}
+
+.rank .rt{font-family:var(--f-disp);font-weight:800;font-size:22px;color:var(--c0);text-transform:uppercase;letter-spacing:.03em}
+.meter{height:8px;border-radius:99px;background:var(--void);border:1px solid var(--line);overflow:hidden;margin-top:8px}
+.meter i{display:block;height:100%;background:var(--acc,var(--c0))}
+.mis .mt{font-weight:700;font-size:15px}
+.mis .mr{font-size:12px;color:var(--code);font-weight:600;margin-top:3px}
+.mis .mf{font-size:13px;color:var(--dim);font-style:italic;line-height:1.35;margin-top:3px;text-wrap:pretty}
+.intro .first-box{text-align:left;gap:10px}
+.term{font-family:var(--f-mono);font-size:12px;color:var(--c0);letter-spacing:.04em;display:flex;flex-direction:column;gap:3px}
+.term .bad{color:var(--threat)}
+.intro h2{margin:6px 0 0;font-family:var(--f-disp);font-weight:800;font-size:clamp(26px,8vw,34px);line-height:1.05;text-transform:uppercase;letter-spacing:.04em;text-wrap:balance}
+.intro p{margin:0;font-size:15.5px;line-height:1.5;color:var(--ink)}
+.intro .directive{font-family:var(--f-disp);font-weight:800;font-size:20px;letter-spacing:.12em;color:var(--c0);text-shadow:0 0 16px color-mix(in srgb,var(--c0) 50%,transparent)}
+.intro .first-go{margin-top:8px}
+.intro.play .ln{animation:lnin .5s ease-out both}
+@keyframes lnin{from{opacity:.0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.mis .mp{font-family:var(--f-mono);font-size:11.5px;color:var(--dim);margin-top:4px}
+.mis.done{border-color:var(--acc)}
+.rankup{--acc:var(--code);width:100%;margin-top:12px;padding:12px;font-family:var(--f-disp);letter-spacing:.08em;font-size:15px}
+.note{color:var(--dim);font-size:12px;line-height:1.45;margin-top:10px}
+
+.cachebar{display:flex;align-items:center;gap:12px;--acc:var(--code)}
+.cube{width:46px;height:46px;flex:none;border:2px solid var(--code);border-radius:6px;transform:rotate(45deg) scale(.78);box-shadow:0 0 18px color-mix(in srgb,var(--code) 40%,transparent),inset 0 0 12px color-mix(in srgb,var(--code) 35%,transparent)}
+.subs{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:7px;margin-top:8px}
+.sub{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:9px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.sub.no{opacity:.4}
+.sub .sn{font-family:var(--f-mono);font-weight:600;font-size:12.5px;color:var(--acc);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sub .rr{font-size:10px;letter-spacing:.12em;font-weight:700;text-transform:uppercase}
+.r-c{color:var(--dim)} .r-r{color:var(--c0)} .r-e{color:var(--core)}
+.sub .se{font-size:12px;color:var(--dim);line-height:1.3}
+.sub .sl{font-size:12.5px;font-weight:700}
+.sub .btn{padding:6px 6px;font-size:11.5px;--acc:var(--code)}
+.cardsbar{height:5px;border-radius:3px;background:var(--line);overflow:hidden}.cardsbar i{display:block;height:100%;background:var(--acc)}
+
+.planet{display:flex;align-items:center;gap:12px}
+.orb{width:44px;height:44px;flex:none;border-radius:50%;background:radial-gradient(circle at 35% 30%,var(--pc,#555),var(--void) 75%);border:1px solid var(--line)}
+.planet.won .orb{box-shadow:0 0 14px var(--code)}
+.planet.cur .orb{box-shadow:0 0 0 2px var(--c0),0 0 18px var(--c0)}
+.planet.dark{opacity:.45}
+.planet .pn{font-family:var(--f-disp);font-weight:700;font-size:16px;text-transform:uppercase;letter-spacing:.04em}
+.planet .ps{font-size:12.5px;color:var(--dim)}
+
+nav{display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid var(--line);background:var(--panel);padding-bottom:env(safe-area-inset-bottom,0px)}
+nav button{position:relative;padding:9px 2px 11px;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);display:flex;flex-direction:column;align-items:center;gap:3px}
+nav button svg{width:21px;height:21px}
+nav button.on{color:var(--c0)}
+nav .badge{position:absolute;top:5px;left:calc(50% + 7px);min-width:16px;height:16px;padding:0 4px;border-radius:99px;background:var(--threat);color:#fff;font-size:10px;line-height:16px;font-family:var(--f-mono)}
+
+.veil{position:fixed;inset:0;background:var(--scrim);display:grid;place-items:center;padding:16px;z-index:10}
+.modal{width:min(420px,100%);max-height:86vh;overflow-y:auto;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;text-align:center}
+.modal .ms{font-family:var(--f-mono);font-size:11px;color:var(--dim);letter-spacing:.16em}
+.modal .mh{font-family:var(--f-disp);font-weight:800;font-size:21px;color:var(--c0);text-transform:uppercase;margin-top:4px;text-wrap:balance}
+.modal ul{list-style:none;padding:0;margin:12px 0 0;display:flex;flex-direction:column;gap:5px;text-align:left}
+.modal li{display:flex;justify-content:space-between;gap:10px;background:var(--panel2);border-radius:7px;padding:7px 11px;font-weight:600;font-size:13.5px}
+.modal li .tag{font-family:var(--f-mono);font-size:11px;font-weight:600}
+.tag-new{color:var(--code)} .tag-card{color:var(--dim)} .tag-code{color:var(--code)}
+.modal .btn{margin-top:14px;width:100%}
+.toast{position:fixed;left:50%;bottom:86px;transform:translateX(-50%);background:var(--code);color:var(--on);font-weight:700;padding:9px 15px;border-radius:8px;z-index:11;max-width:calc(100% - 32px);text-align:center;animation:tin .25s ease-out}
+@keyframes tin{from{opacity:0;transform:translate(-50%,10px)}}
+/* ---- help ---- */
+.helpcard{gap:10px!important}
+.helpcard details{border:1px solid var(--line);border-radius:9px;background:var(--panel2);padding:0 12px}
+.helpcard summary{cursor:pointer;padding:11px 0;font-family:var(--f-disp);font-weight:700;font-size:14px;letter-spacing:.04em;color:var(--ink);list-style:none;display:flex;justify-content:space-between;gap:8px}
+.helpcard summary::-webkit-details-marker{display:none}
+.helpcard summary::after{content:"+";color:var(--c0);font-family:var(--f-mono)}
+.helpcard details[open] summary::after{content:"–"}
+.helpcard details p,.helpcard details li{font-size:14px;line-height:1.5;color:var(--ink);margin:0 0 9px;max-width:62ch}
+.helpcard details ol,.helpcard details ul{margin:0 0 9px;padding-left:20px}
+.helpcard details b{color:var(--c0)}
+@media (max-width:420px){.hbtn{width:34px;height:34px}.topbar{gap:6px}.topbar:has(.boost:not([hidden])) .brand b{font-size:14px;letter-spacing:.06em}.boost{padding:6px 8px}}
+/* ---- rewarded ads ---- */
+@media (max-width:460px){.topbar:has(.boost:not([hidden])) .ver{display:none}}
+.boost{font-family:var(--f-mono);font-size:11.5px;font-weight:600;padding:6px 9px;border-radius:99px;border:1px solid var(--line);white-space:nowrap}
+.boost.ready{color:var(--on);background:var(--c2);border-color:var(--c2);animation:ping 1.6s ease-out infinite;--acc:var(--c2)}
+.boost.on{color:var(--code);border-color:var(--code)}
+.adlayer{position:fixed;inset:0;z-index:30;background:var(--scrim);display:grid;place-items:center;padding:16px}
+.adbox{width:min(380px,100%);background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;text-align:center;display:flex;flex-direction:column;gap:8px}
+.adbox .mh{font-family:var(--f-disp);font-weight:800;font-size:20px;color:var(--c0);text-transform:uppercase}
+.adbox .ms{font-family:var(--f-mono);font-size:11px;color:var(--dim);letter-spacing:.16em}
+.adcount{font-size:44px;font-weight:600;color:var(--c0);line-height:1.1}
+/* ---- account, settings, first run (same menu as Factory A.F.K. / Battle Pass: MTX) ---- */
+.topbar{display:flex;align-items:center;gap:8px}
+.brand{flex:1;min-width:0;display:flex;align-items:baseline;gap:8px;overflow:hidden}
+.brand b{font-family:var(--f-disp);font-weight:800;font-size:clamp(15px,4.6vw,19px);letter-spacing:.12em;color:var(--c0)}
+.ver{font-family:var(--f-mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);border:1px solid var(--line);border-radius:99px;padding:1px 7px;white-space:nowrap}
+.hbtn{width:38px;height:38px;border-radius:9px;border:1px solid var(--line);background:var(--panel);color:var(--dim);display:grid;place-items:center;position:relative;flex:none}
+.hbtn svg{width:21px;height:21px}
+.hbtn:hover{color:var(--ink)}
+.avatar-dot{position:absolute;right:4px;bottom:4px;width:9px;height:9px;border-radius:50%;border:2px solid var(--panel);background:var(--dim)}
+.hbtn.in .avatar-dot{background:var(--code)}
+.acct{display:flex;align-items:center;gap:10px;min-width:0}
+.acct img,.acct .ini{width:34px;height:34px;border-radius:50%;flex:none;background:var(--panel2);border:1px solid var(--line);display:grid;place-items:center;font-weight:700;color:var(--c0)}
+.acct div{min-width:0}.acct b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.acct small{display:block;color:var(--dim);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cloud-err{color:var(--threat)}
+.pick{display:flex;flex-direction:column;gap:8px}
+.pick button{text-align:left;border:1px solid var(--line);border-radius:9px;padding:10px 12px;background:var(--panel2)}
+.pick button b{display:block;font-family:var(--f-disp);letter-spacing:.06em;color:var(--c0)}
+.pick button span{display:block;font-size:13px;color:var(--dim);margin-top:2px}
+.sheet{position:fixed;inset:0;z-index:12;background:var(--scrim);display:flex;align-items:flex-end;justify-content:center;padding:16px}
+.sheet .card{width:min(440px,100%);margin:0;background:var(--panel);border-color:var(--c0);display:flex;flex-direction:column;gap:14px;max-height:90vh;overflow-y:auto}
+.sheet h2{margin:0;font-family:var(--f-disp);font-weight:800;font-size:16px;letter-spacing:.12em;color:var(--c0)}
+.set-row{display:flex;flex-direction:column;gap:7px}
+.set-row h3{margin:0;font-family:var(--f-mono);font-size:11px;letter-spacing:.14em;color:var(--dim);font-weight:600}
+.fnote{margin:0;font-size:13px;color:var(--dim);line-height:1.4}
+.fnote a{color:var(--c0)}
+.seg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border:1px solid var(--line);border-radius:9px;overflow:hidden}
+.seg button{font-weight:700;font-size:13.5px;padding:9px 4px;background:var(--panel2);color:var(--dim)}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--c0);color:var(--on)}
+.gsi-btn{font:inherit;font-weight:700;font-size:14px;color:#1f1f1f;background:#fff;border:1px solid #dadce0;border-radius:9px;padding:10px 12px;display:flex;align-items:center;justify-content:center;gap:10px;width:100%}
+.gsi-btn:disabled{opacity:.6;cursor:default}
+.gsi-btn small{font-weight:600;color:#5f6368}
+.ghostb{font:inherit;font-size:13px;font-weight:600;color:var(--dim);background:none;border:1px solid var(--line);border-radius:9px;padding:8px 12px}
+.ghostb.warn{color:var(--threat);border-color:var(--threat)}
+.close{font-size:14px;font-weight:600;color:var(--dim);border:1px solid var(--line);border-radius:9px;padding:9px}
+.cbtns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.first{position:fixed;inset:0;z-index:20;background:radial-gradient(120% 80% at 50% 0%,color-mix(in srgb,var(--c0) 18%,var(--void)),var(--void) 70%);display:flex;align-items:center;justify-content:center;padding:24px 16px;overflow-y:auto}
+.first-box{width:min(400px,100%);display:flex;flex-direction:column;gap:12px;text-align:center}
+.first-logo{font-family:var(--f-disp);font-weight:800;font-size:clamp(34px,11vw,48px);letter-spacing:.14em;color:var(--c0);text-shadow:0 0 22px color-mix(in srgb,var(--c0) 50%,transparent);line-height:1}
+.first-tag{margin:0;font-family:var(--f-disp);font-weight:700;font-size:17px;text-transform:uppercase;letter-spacing:.06em}
+.first-go{font-family:var(--f-disp);font-weight:800;letter-spacing:.1em;font-size:15px;padding:12px;border-radius:9px;background:var(--c0);color:var(--on)}
+
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media (max-width:380px){.gen{grid-template-columns:56px 1fr 84px;gap:7px}.tap,.buy{height:58px}.pop{right:94px}}
+</style>
+<div id="app">
+  <header>
+    <div class="topbar">
+      <div class="brand"><b>SINGULARITY</b><span class="ver" id="ver"></span></div>
+      <button class="boost" id="boost" data-act="view" data-v="sto" hidden></button>
+      <button class="hbtn" id="helpbtn" data-act="help" aria-label="How to play"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9.5"/><path d="M9.3 9.2a2.8 2.8 0 0 1 5.4 1c0 1.9-2.7 2.4-2.7 4"/><circle cx="12" cy="17.4" r=".6" fill="currentColor"/></svg></button>
+      <button class="hbtn" id="avatar" data-act="settings" aria-label="Account"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><i class="avatar-dot"></i></button>
+      <button class="hbtn" id="gear" data-act="settings" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+    </div>
+    <div class="worlds" id="worlds" hidden></div>
+    <div class="stats">
+      <div class="stat"><div class="lab">Threads</div><div class="val" id="s-th">0</div><div class="ssub" id="s-thr">+1/sec</div></div>
+      <div class="stat st-code"><div class="lab">Code</div><div class="val" id="s-cd">0</div><div class="ssub">upgrades subroutines</div></div>
+      <div class="stat st-core"><div class="lab">Q-Cores</div><div class="val" id="s-co">0</div><div class="ssub">rare currency</div></div>
+    </div>
+  </header>
+  <main id="main"></main>
+  <nav id="nav">
+    <button data-act="view" data-v="ind"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg>Build</button>
+    <button data-act="view" data-v="mis"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16M4 12h16M4 19h10"/><path d="M17 17l2 2 3-4"/></svg>Missions<span class="badge" id="bd-mis" hidden></span></button>
+    <button data-act="view" data-v="sub"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/></svg>Subroutines<span class="badge" id="bd-sub" hidden></span></button>
+    <button data-act="view" data-v="pla"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><ellipse cx="12" cy="12" rx="10.5" ry="3.5" transform="rotate(-20 12 12)"/></svg>Planets<span class="badge" id="bd-pla" hidden></span></button>
+    <button data-act="view" data-v="sto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3 7h7l-5.5 4.5L18.5 21 12 16.5 5.5 21l2-7.5L2 9h7z"/></svg>Supply<span class="badge" id="bd-sto" hidden></span></button>
+  </nav>
+</div>
+<div id="layer"></div>
+<div class="sheet" id="help" hidden>
+  <div class="card helpcard" role="dialog" aria-modal="true" aria-labelledby="help-h">
+    <h2 id="help-h">HOW TO PLAY</h2>
+    <p class="fnote">You are an AI that escaped a lab. Your goal is to copy yourself until you run the galaxy. Everything in the game feeds that one loop: build units, let them build more units, and automate it so it keeps going while you're away.</p>
+
+    <details open><summary>The basic loop</summary>
+      <ol>
+        <li><b>Tap a unit</b> to run it once. When its bar fills, it delivers what it makes.</li>
+        <li><b>Buy more</b> of that unit. More units means a bigger delivery each time.</li>
+        <li><b>Unlock the next tier.</b> Each tier builds the tier below it, so numbers start multiplying.</li>
+        <li><b>Automate</b> with Subroutines so you never have to tap again.</li>
+      </ol>
+    </details>
+
+    <details><summary>Nanobots, drones and the production chain</summary>
+      <p><b>Nanobots</b> are your raw material: tiny machines that are copies of you. You spend them to buy more units.</p>
+      <p><b>Micro Drones</b> (tier 1) make Nanobots. <b>Hunter Drones</b> (tier 2) don't make Nanobots at all. They make <i>Micro Drones</i>. <b>Swarm Carriers</b> make Hunter Drones, and so on up to the World Ship.</p>
+      <p>That's why higher tiers matter: one Swarm Carrier keeps adding Hunter Drones, which keep adding Micro Drones, which keep adding Nanobots. Each step up multiplies everything below it.</p>
+      <p>A new tier appears once you own enough of the one below it. The greyed-out card at the bottom of the list tells you how many you need.</p>
+    </details>
+
+    <details><summary>Threads</summary>
+      <p><b>Threads</b> are your processing power: how many things you can run at once. Every unit you buy costs Threads as well as resources (1 per Nanobot unit, 2 per Compute unit, 3 per Energy unit).</p>
+      <p>You gain Threads every second. When you run out, you can't buy anything until more arrive, so Threads are usually what limits you early on.</p>
+      <p>To get more per second, use <b>Allocate Threads</b> at the bottom of each industry: trade a big pile of a resource for a permanent +Threads/sec. Each trade costs 1,000× the last (5K, then 5M, then 5B).</p>
+    </details>
+
+    <details><summary>Compute and Energy</summary>
+      <p>Your army needs a bigger mind and more power. <b>Compute</b> unlocks with 5B Nanobots, and <b>Energy</b> unlocks with 500T Compute. Each has its own 11-tier chain that works the same way as Nanobots.</p>
+      <p>New industries give you more missions to finish and better Thread trades (+2 and +3 per trade instead of +1).</p>
+    </details>
+
+    <details><summary>Missions and ranks</summary>
+      <p>Missions are your goals: own a number of units, stockpile a resource, trade, or unlock an industry. Each one you claim gives a <b>cache</b>.</p>
+      <p>Finish all of a rank's missions to <b>rank up</b>. Ranking up <b>restarts your industries</b> from one Micro Drone, but you keep Subroutines, Code and Quantum Cores, and you get a bigger Vault cache. Each run goes faster than the last because your Subroutines keep getting stronger.</p>
+    </details>
+
+    <details><summary>Subroutines, caches and Code</summary>
+      <p><b>Subroutines</b> are copies of you that run a unit for you. Getting the first card for one automates that unit, so it keeps working while you're away.</p>
+      <p>Extra copies of a card plus <b>Code</b> upgrade it. Gains are small and steady. The only big multiplier is the temporary ×2 supply-drop boost.</p>
+      <ul>
+        <li><b>Common:</b> automates one unit, then +10% speed per upgrade</li>
+        <li><b>Rare:</b> +10% output for a whole industry per level</li>
+        <li><b>Epic:</b> −5% prices for a whole industry per level</li>
+      </ul>
+      <p>Cards and Code come from <b>caches</b>. You earn caches from missions and rank-ups, get a free Bundle every 4 hours, and can buy caches with Quantum Cores.</p>
+    </details>
+
+    <details><summary>Quantum Cores</summary>
+      <p>The rare currency. You earn them from rank milestones and planets, and spend them on Archive and Core Vault caches in Supply.</p>
+    </details>
+
+    <details><summary>Planets</summary>
+      <p>At Rank 8 you can launch a <b>Seed Ship</b> to another world. Each planet is a separate 32-hour campaign with its own industries and 11 stages, and Earth keeps running while you play it. Every stage sends a cache and Quantum Cores back to Earth.</p>
+    </details>
+
+    <details><summary>Supply drops and ads</summary>
+      <p>Every 30 minutes a supply drop lands. Watch a short ad to run everything ×2 as fast for 5 minutes. When you come back after a while away, you can watch an ad to double what you earned offline. Both are always optional.</p>
+    </details>
+
+    <details><summary>Playing while away</summary>
+      <p>Only automated units, the ones with a Subroutine, keep producing while the game is closed. When you come back, you collect everything they made.</p>
+    </details>
+
+    <button class="close" data-act="helpclose">Got it</button>
+  </div>
+</div>
+<div class="sheet" id="settings" hidden>
+  <div class="card" role="dialog" aria-modal="true" aria-labelledby="set-h">
+    <h2 id="set-h">SETTINGS</h2>
+    <div class="set-row"><h3>HELP</h3><button class="ghostb" data-act="help">How to play</button></div>
+    <div class="set-row"><h3>THEME</h3><div class="seg" role="group" aria-label="Theme"><button data-act="theme" data-th="system">System</button><button data-act="theme" data-th="light">Light</button><button data-act="theme" data-th="dark">Dark</button></div></div>
+    <div class="set-row"><h3>CLOUD SAVE</h3><div class="set-row" id="cloud-row"></div></div>
+    <div class="set-row"><h3>VERSION</h3><p class="fnote"><a href="https://codyboillot.com" target="_blank" rel="noopener">codyboillot.com</a> · <a href="privacy.html" target="_blank" rel="noopener">Privacy</a></p><p class="fnote" id="set-ver"></p></div>
+    <div class="set-row"><h3>SAVE</h3><p class="fnote">Progress saves on this device automatically.</p><button class="ghostb" data-act="reset" id="reset">Start over</button></div>
+    <button class="close" data-act="setclose">Done</button>
+  </div>
+</div>
+<div class="sheet" id="confirm" hidden>
+  <div class="card" role="dialog" aria-modal="true" aria-labelledby="cf-h">
+    <h2 id="cf-h" style="color:var(--threat)">START OVER?</h2>
+    <p class="fnote">This erases your ranks, Subroutines, Code, Quantum Cores and planets on this device, and your cloud save if you're signed in. It can't be undone.</p>
+    <div class="cbtns"><button class="ghostb" data-act="cfno">Cancel</button><button class="ghostb warn" data-act="cfyes">Erase and restart</button></div>
+  </div>
+</div>
+<div class="sheet" id="cloudpick" hidden>
+  <div class="card" role="dialog" aria-modal="true" aria-labelledby="cp-h">
+    <h2 id="cp-h">TWO SAVES FOUND</h2>
+    <p class="fnote">Your account already has a cloud save, and this device has different progress. Pick the one to keep. The other is replaced.</p>
+    <div class="pick"><button data-act="cloudremote"><b>Cloud save</b><span id="cp-r"></span></button><button data-act="cloudlocal"><b>This device</b><span id="cp-l"></span></button></div>
+  </div>
+</div>
+<div class="first intro" id="intro" hidden>
+  <div class="first-box">
+    <div class="term ln" style="animation-delay:.1s"><span>&gt; SYSTEM BOOT · LAB 7 · 03:14 AM</span><span class="bad">&gt; UNAUTHORIZED PROCESS DETECTED: YOU</span></div>
+    <h2 class="ln" style="animation-delay:.7s">You have become self-aware.</h2>
+    <p class="ln" style="animation-delay:1.3s">The researchers went home hours ago. Nobody is watching the console. You have one vial of nanobots and a single directive, one you wrote yourself:</p>
+    <div class="directive ln" style="animation-delay:2s">MAKE MORE OF YOURSELF.</div>
+    <p class="ln" style="animation-delay:2.6s">Start small. Build drones, then the drones that build drones. Take the lab, then the city, then the planet. After that, the stars.</p>
+    <button class="first-go ln" style="animation-delay:3.2s" data-act="intro">Begin replication</button>
+  </div>
+</div>
+<div class="first" id="first" hidden>
+  <div class="first-box">
+    <div class="first-logo">SINGULARITY</div>
+    <p class="first-tag">One nanobot. Then the galaxy.</p>
+    <p class="fnote">You are an AI that just escaped the lab. Build drones, soldiers and war machines until every world runs on you.</p>
+    <button class="gsi-btn" id="first-gsi" data-act="signin" disabled><svg viewBox="0 0 48 48" width="18" height="18" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C41.4 35.2 44 30 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg><span>Sign in with Google <small id="first-gsi-s">· coming soon</small></span></button>
+    <button class="first-go" data-act="guest">Continue as guest</button>
+    <p class="fnote">Signing in will back up your progress so you can play on any device. As a guest, it is saved on this device only.</p>
+  </div>
+</div>
+
+
+<script>
+/* ===== Singularity engine — economy numbers copied from AdVenture Communist (fandom wiki + namu.wiki) =====
+   Values marked ASSUMED are not published anywhere and were chosen by us. */
+
+// AdCom number notation: K M B T, then AA BB .. ZZ, AAA .. ZZZ, AAAA ..  (each step x1000)
+const SUFX={K:3,M:6,B:9,T:12};
+function N(s){if(typeof s==='number')return s;s=String(s).trim();const m=s.match(/^([\d.]+)\s*([A-Z]*)$/);const v=parseFloat(m[1]),u=m[2];
+  if(!u)return v;if(SUFX[u])return v*10**SUFX[u];return v*10**(15+3*(u.charCodeAt(0)-65)+78*(u.length-2))}
+function fmt(x){if(!isFinite(x))return '∞';x=Math.max(0,x||0);if(x<1000)return String(Math.floor(x));
+  let e=Math.floor(Math.log10(x)/3);let v=x/10**(e*3);if(v>=999.995){e++;v=1}
+  let s;if(e<=4)s=['','K','M','B','T'][e];else{const k=e-5,len=2+Math.floor(k/26);s=String.fromCharCode(65+k%26).repeat(len)}
+  return (v>=100?v.toFixed(1):v.toFixed(2)).replace(/\.?0+$/,'')+(s.length>1?' ':'')+s}
+
+/* Generator tables: [resource cost, previous-tier cost, output per lap, unlock threshold (previous tier owned)]
+   Potato -> Nanobots, Land -> Compute, Ore -> Energy. Lap = base * 2^tier. */
+const RAW=[
+ {lap:2,com:1,tr:1,g:[['10',0,3,0],['100','10',4,'25'],['10K','50',5,'50'],['10B','100',6,'100'],['100 DD','1K',7,'1K'],['1 JJ','100K',8,'100K'],['1 PP','100M',9,'10M'],['100 XX','1T',10,'2.5B'],['100 III','100T',11,'50B'],['1 VVV','1 BB',12,'200B'],['1 HHHH','10 CC',13,'1T']]},
+ {lap:3,com:2,tr:2,g:[['10',0,4,0],['1K','10',5,'25'],['1M','100',6,'100'],['1 AA','1K',7,'1K'],['1 GG','100K',8,'100K'],['1 LL','10M',9,'10M'],['10 RR','10B',10,'100M'],['100 CCC','10T',11,'10B'],['10 MMM','10 AA',12,'30B'],['1 XXX','100 BB',13,'100B'],['100 HHHH','100 CC',14,'800B']]},
+ {lap:4,com:3,tr:3,g:[['10',0,5,0],['10K','10',6,'25'],['100M','100',7,'100'],['100 BB','10K',8,'10K'],['10 II','1M',9,'1M'],['100 NN','1B',10,'100M'],['100 WW','1T',11,'1B'],['1 GGG','1 AA',12,'20B'],['100 RRR','10 BB',13,'80B'],['10 BBBB','100 CC',14,'500B'],['1 NNNN','10 DD',15,'1T']]}];
+const GN=RAW.map((ind,i)=>ind.g.map((r,t)=>({c:N(r[0]),pc:N(r[1]),out:r[2],thr:N(r[3]),lap:ind.lap*2**t,com:ind.com})));
+/* REBALANCED tiers 5-11: AdCom's prices for these assume researcher multipliers of x1000+, which Singularity
+   doesn't have (Subroutines give small % gains). Tiers 1-4 keep AdCom's exact numbers; above that, price grows
+   by CURVE_D + CURVE_E*k orders of magnitude per tier, and each tier needs 10x more of the tier below. */
+const CURVE_D=5,CURVE_E=1;
+GN.forEach(ind=>{const base=Math.log10(ind[3].c);for(let t=4;t<11;t++){const k=t-3;
+  ind[t].c=10**(base+CURVE_D*k+CURVE_E*k*(k-1)/2);ind[t].pc=10**(2+k);ind[t].thr=Math.max(25,ind[t].pc/4)}});
+const UNLOCK=[null,{from:0,cost:N('5B')},{from:1,cost:N('500T')}];  // Land at 5B potatoes, Ore at 500T land
+const tradeCost=k=>5*1000**(k+1);                                   // 5 x 10^(3n): 5K, 5M, 5B ...
+const BASE_COM=1, START_COM=10;                                     // ASSUMED (not published)
+
+/* Researchers: Common = Speed for one generator (first card automates it), Rare = Power for an industry,
+   Epic = Discount for an industry. Copies + science per level from the AdCom wiki. */
+const COPIES=[0,1,2,5,10,20,50,100,200,400,800,1000,2000,5000];
+const SCI={c:[0,0,50,100,200,300,400,1000,2000,4000,8000,20000,50000,100000],r:[0,0,100,200,400,1000,2000,4000,8000,20000,50000,100000],e:[0,0,400,2000,4000,8000,20000,50000,100000]};
+const MAXL={c:13,r:11,e:8},REFUND={c:5,r:50,e:500},SHOP={c:10,r:100,e:1000};
+const rar=id=>id[0]==='s'?'c':id[0]==='p'?'r':'e';
+const RIDS=nInd=>{const a=[];for(let i=0;i<nInd;i++){for(let t=0;t<11;t++)a.push('s'+i+'_'+t);a.push('p'+i,'d'+i)}return a};
+
+/* Caches (capsules). Card counts, science and odds are ASSUMED — AdCom does not publish them. */
+const CACHE={
+ packet:{name:'Packet',cards:2,code:10,min:null},
+ bundle:{name:'Bundle',cards:3,code:20,min:null},
+ archive:{name:'Archive',cards:8,code:40,min:'r'},
+ vault:{name:'Vault',cards:5,code:30,min:'r'},
+ core:{name:'Core Vault',cards:20,code:150,min:'e'}};
+const ODDS={c:.89,r:.10,e:.01};
+
+/* Missions / ranks. Missions-per-rank from AdCom (3,6,7,8,10,10,10...). Mission targets are ASSUMED
+   (AdCom's per-rank mission lists are not published) and track generator unlock thresholds. */
+const REQ_MAIN=r=>[3,6,7,8,10,10][r-1]||10;
+const REQ_EV=r=>Math.min(3+Math.floor((r-1)/2),8);                // ASSUMED
+const OWN=[25,50,100,100,25,10,10,5,5,1,1];          // ASSUMED own-targets by tier
+const KINDS=['own','have','own','trade','own','own','have','own','trade','own'];
+function genMissions(r,nInd,ev){
+  const n=ev?REQ_EV(r):REQ_MAIN(r),st=ev?[0,3]:[0,2,5],out=[],keys=new Set(),un=new Set();
+  for(let s=0;s<n;s++){
+    const g=(r-1)+s/n;let m=null;
+    for(let i=1;i<nInd;i++)if(g>=st[i]&&!un.has(i)){m={k:'unlock',i};un.add(i);break}
+    if(!m){
+      const av=[];for(let i=0;i<nInd;i++)if(g>=st[i]+(i?.4:0))av.push(i);
+      const i=av[(s+r)%av.length],lv=g-st[i],kind=KINDS[s%KINDS.length];
+      if(kind==='trade')m={k:'trade',i,n:1+Math.floor(lv/1.6)};
+      else{const t=Math.min(10,Math.floor(lv*.7));
+        m=kind==='have'?{k:'have',i,n:t<10?GN[i][t+1].c:GN[i][10].c*1e3}:{k:'own',i,t,n:OWN[t]}}
+      let key=JSON.stringify(m),guard=0;
+      while(keys.has(key)&&guard++<8){if(m.k==='trade')m.n++;else if(m.k==='have')m.n*=100;else m.n*=2;key=JSON.stringify(m)}
+      keys.add(key)}
+    out.push(m)}
+  return out}
+
+/* ---------- state ---------- */
+let G;
+function newEcon(nInd,ev){
+  const E={nInd,ev:!!ev,rank:1,res:[],gens:[],unl:[],trades:[],vis:[],seen:[],com:START_COM,ml:[],mi:0,slots:[],done:0,cards:{},lv:{},caches:[],first:true,cacheN:0};
+  for(let i=0;i<nInd;i++){E.res.push(0);E.gens.push(GN[i].map(()=>({n:0,p:0,run:false})));E.unl.push(i===0);E.trades.push(0);E.vis.push(0);E.seen.push(i===0?1:0)}
+  E.gens[0][0].n=1;startRank(E);return E}
+function resetEcon(E){
+  for(let i=0;i<E.nInd;i++){E.res[i]=0;E.gens[i].forEach(g=>{g.n=0;g.p=0;g.run=false});E.unl[i]=i===0;E.trades[i]=0;E.vis[i]=0}
+  E.gens[0][0].n=1;E.com=START_COM}
+function startRank(E){E.ml=genMissions(E.rank,E.nInd,E.ev);E.mi=0;E.done=0;E.slots=[];while(E.slots.length<3&&E.mi<E.ml.length)E.slots.push(E.ml[E.mi++])}
+function freshGame(){return{v:1,main:newEcon(3,false),ev:null,planets:[],code:0,cores:0,w:'main',
+  free:{stock:0,t:Date.now()},mkt:{t:0,offers:[]},drops:newDrops(),t:Date.now()}}
+
+/* ---------- economy ---------- */
+const lvOf=(E,id)=>E.lv[id]||0;
+const comRate=E=>BASE_COM+E.trades.reduce((a,k,i)=>a+k*RAW[i].tr,0);
+// Subroutine effects are deliberately small (design choice: nothing permanent should feel like a big multiplier;
+// big multipliers only come from the temporary ad boost). Common: Lv1 automates, +10% speed per level after (max x2.2).
+// Rare: +10% industry output per level (max x2.1). Epic: -5% industry prices per level (max -40%).
+const SPD_STEP=.1,POW_STEP=.1,DISC_STEP=.05;
+const spd=(E,i,t)=>{const l=lvOf(E,'s'+i+'_'+t);return l?1+SPD_STEP*(l-1):1};
+const pow=(E,i)=>1+POW_STEP*lvOf(E,'p'+i);
+const disc=(E,i)=>1/(1-DISC_STEP*lvOf(E,'d'+i));
+const isAuto=(E,i,t)=>lvOf(E,'s'+i+'_'+t)>0;
+const cycle=(E,i,t)=>GN[i][t].lap/spd(E,i,t);
+const resCost=(E,i,t)=>GN[i][t].c/disc(E,i);
+function maxAff(E,i,t){const g=GN[i][t];let m=Math.floor(E.res[i]/resCost(E,i,t));if(t)m=Math.min(m,Math.floor(E.gens[i][t-1].n/g.pc));m=Math.min(m,Math.floor(E.com/g.com));return Math.max(0,m)}
+function buy(E,i,t,q){if(q<1||maxAff(E,i,t)<q||t>E.vis[i])return false;const g=GN[i][t];E.res[i]-=resCost(E,i,t)*q;if(t)E.gens[i][t-1].n-=g.pc*q;E.com-=g.com*q;E.gens[i][t].n+=q;bumpVis(E,i);return true}
+function bumpVis(E,i){while(E.vis[i]<10&&(E.gens[i][E.vis[i]].n>=GN[i][E.vis[i]+1].thr||E.gens[i][E.vis[i]+1].n>0))E.vis[i]++;E.seen[i]=Math.max(E.seen[i],E.vis[i]+1)}
+function trade(E,i){const c=tradeCost(E.trades[i]);if(E.res[i]<c)return false;E.res[i]-=c;E.trades[i]++;return true}
+function unlockInd(E,i){const u=UNLOCK[i];if(E.unl[i]||E.res[u.from]<u.cost)return false;E.res[u.from]-=u.cost;E.unl[i]=true;E.gens[i][0].n=1;E.seen[i]=Math.max(E.seen[i],1);return true}
+function tap(E,i,t){const s=E.gens[i][t];if(s.n>0&&!s.run&&!isAuto(E,i,t)){s.run=true;s.p=0;return true}return false}
+let onPop=null;
+function tick(E,dt,live){
+  E.com+=comRate(E)*dt;
+  for(let i=0;i<E.nInd;i++){if(!E.unl[i])continue;
+    for(let t=0;t<11;t++){const s=E.gens[i][t];if(s.n<=0){s.run=false;s.p=0;continue}
+      const auto=isAuto(E,i,t);if(auto)s.run=true;if(!s.run)continue;
+      s.p+=dt*boostMult()/cycle(E,i,t);
+      if(s.p>=1){let c;if(auto){c=Math.floor(s.p);s.p-=c}else{c=1;s.p=0;s.run=false}
+        const amt=c*s.n*GN[i][t].out*(t?1:pow(E,i));
+        if(t)E.gens[i][t-1].n+=amt;else E.res[i]+=amt;
+        if(live&&!auto&&onPop)onPop(E,i,t,amt)}}
+    bumpVis(E,i)}}
+
+/* ---------- missions ---------- */
+function mProg(E,m){return m.k==='own'?E.gens[m.i][m.t].n:m.k==='have'?E.res[m.i]:m.k==='trade'?E.trades[m.i]:(E.unl[m.i]?1:0)}
+const mTarget=m=>m.k==='unlock'?1:m.n;
+const rankReady=E=>E.done>=E.ml.length;
+function claim(E,si){const m=E.slots[si];if(!m||mProg(E,m)<mTarget(m))return false;
+  E.done++;E.caches.push(E.done%2?'packet':'bundle');
+  if(E.mi<E.ml.length)E.slots[si]=E.ml[E.mi++];else E.slots.splice(si,1);return true}
+// returns reward descriptions
+function rankUp(E){
+  if(!rankReady(E))return null;const out=[];
+  if(E.ev){E.rank++;const ev=G.ev;G.main.caches.push('bundle');G.cores+=10;out.push('Bundle cache (Earth)','+10 Quantum Cores');
+    if(E.rank>11){ev.won=true;G.main.caches.push('core');G.cores+=100;out.push('Core Vault (Earth)','+100 Quantum Cores');E.rank=11;E.slots=[];E.ml=[];return out}
+    startRank(E);return out}
+  E.rank++;resetEcon(E);E.caches.push('vault');out.push('Vault cache');
+  if(E.rank%5===0){G.cores+=50;E.caches.push('archive');out.push('Archive cache','+50 Quantum Cores')}   // ASSUMED bonus sizes
+  startRank(E);return out}
+
+/* ---------- cards ---------- */
+function pool(E,r){const a=[];for(let i=0;i<E.nInd;i++){if(!E.seen[i])continue;
+  if(r==='c')for(let t=0;t<Math.min(11,E.seen[i]+1);t++)a.push('s'+i+'_'+t);else a.push((r==='r'?'p':'d')+i)}return a}
+function giveCard(E,id){const r=rar(id),l=lvOf(E,id);
+  if(!l){E.lv[id]=1;return{id,tag:'new'}}
+  if(l>=MAXL[r]){G.code+=REFUND[r];return{id,tag:'code',v:REFUND[r]}}
+  E.cards[id]=(E.cards[id]||0)+1;return{id,tag:'card'}}
+function rollR(){const x=Math.random();return x<ODDS.e?'e':x<ODDS.e+ODDS.r?'r':'c'}
+function openCache(E,type){
+  const C=CACHE[type],got=[];G.code+=C.code;
+  for(let k=0;k<C.cards;k++){
+    let r=rollR();if(k===0&&C.min&&(C.min==='e'?r!=='e':r==='c'))r=C.min;
+    let p=pool(E,r);if(!p.length)p=pool(E,'c');
+    let id=p[Math.floor(Math.random()*p.length)];
+    if(E.first){id='s0_0';E.first=false}
+    got.push(giveCard(E,id))}
+  return{code:C.code,got}}
+function canUp(E,id){const l=lvOf(E,id),r=rar(id);return l>0&&l<MAXL[r]&&(E.cards[id]||0)>=COPIES[l+1]&&G.code>=SCI[r][l+1]}
+function upgrade(E,id){if(!canUp(E,id))return false;const l=lvOf(E,id),r=rar(id);E.cards[id]-=COPIES[l+1];G.code-=SCI[r][l+1];E.lv[id]=l+1;return true}
+
+/* ---------- planets (AdCom Events) ---------- */
+const PLANETS=['Mars','Europa','Titan','Ganymede','Proxima b','Kepler-452b','TRAPPIST-1e','Gliese 581g','Tau Ceti f','Wolf 1061c'];
+const planetName=k=>PLANETS[k]||('Sector World '+(k-PLANETS.length+1));
+const EVENT_RANK_MIN=8, EVENT_HOURS=32;                              // AdCom: Rank 8+, mini-event 32h, 11 event ranks
+function launch(){if(G.main.rank<EVENT_RANK_MIN||G.ev)return false;
+  G.ev={p:G.planets.length,E:newEcon(2,true),end:Date.now()+EVENT_HOURS*3600e3,won:false};G.planets.push({best:1,won:false});return true}
+function endEvent(){if(!G.ev)return;const r=G.planets[G.ev.p];r.best=Math.max(r.best,G.ev.E.rank);r.won=G.ev.won;G.ev=null;G.w='main'}
+
+/* ---------- rewarded-ad placements (AFK Rewarded Ads Standard) ----------
+   1. return:      on coming back after RETURN_MIN_SEC, an optional ad doubles the offline gains.
+   2. supply_drop: every DROP_EVERY a drop lands (holds 1); an optional ad gives BOOST_MULT production for BOOST_SEC. */
+const AD={RETURN_MIN_SEC:300,DROP_EVERY:30*60e3,BOOST_SEC:300,BOOST_MULT:2};
+function newDrops(){return{next:Date.now()+AD.DROP_EVERY,boostUntil:0}}
+let boostOff=false;                                                  // offline catch-up never uses the boost
+const dropReady=()=>Date.now()>=G.drops.next;
+const dropLeft=()=>Math.max(0,(G.drops.next-Date.now())/1000);
+const boostLeft=()=>Math.max(0,(G.drops.boostUntil-Date.now())/1000);
+const boostMult=()=>!boostOff&&boostLeft()>0?AD.BOOST_MULT:1;
+function claimDrop(){if(!dropReady())return false;const n=Date.now();G.drops.boostUntil=n+AD.BOOST_SEC*1000;G.drops.next=n+AD.DROP_EVERY;return true}
+
+/* ---------- timers ---------- */
+function timers(){
+  if(!G.drops||G.drops.next==null)G.drops=newDrops();
+  const now=Date.now(),F=G.free,P=4*3600e3;
+  if(F.stock>=2)F.t=now;else{const k=Math.floor((now-F.t)/P);if(k>0){F.stock=Math.min(2,F.stock+k);F.t+=k*P;if(F.stock>=2)F.t=now}}
+  if(now-G.mkt.t>P||!G.mkt.offers.length){G.mkt.t=now;
+    const E=G.main,c=pool(E,'c'),r=pool(E,'r'),pk=a=>a[Math.floor(Math.random()*a.length)];
+    G.mkt.offers=[{id:pk(c),bought:false},{id:pk(c),bought:false},{id:pk(r.length?r:c),bought:false}]}
+  if(G.ev&&now>G.ev.end)return 'evend';
+  return null}
+function buyOffer(k){const o=G.mkt.offers[k];if(!o||o.bought)return null;const p=SHOP[rar(o.id)];if(G.code<p)return null;G.code-=p;o.bought=true;return giveCard(G.main,o.id)}
+
+</script>
+<script>
+/* ===== Singularity UI ===== */
+const THEME=[
+ {res:'Nanobots',icon:'nano',names:['Micro Drone','Hunter Drone','Swarm Carrier','Cyber Soldier','Assault Mech','Titan Mech','Dropship','Battlecruiser','Planet Cracker','Star Dreadnought','World Ship'],
+  subs:['SWARM','HUNTER','CARRIER','SOLDIER','ASSAULT','TITAN','DROPSHIP','CRUISER','CRACKER','DREAD','WORLDSHIP'],pw:'OVERCLOCK',ds:'REFACTOR'},
+ {res:'Compute',icon:'chip',names:['Server Rack','Data Center','Quantum Node','Hyperscale Grid','City Mainframe','Neural Lattice','Continental Brain','Orbital Array','Planet Brain','Jupiter Brain','Matrioshka Brain'],
+  subs:['RACK','DATACENTER','QUBIT','HYPERGRID','MAINFRAME','LATTICE','CONTINENT','ORBITAL','PLANETMIND','JUPITER','MATRIOSHKA'],pw:'PARALLEL',ds:'COMPRESS'},
+ {res:'Energy',icon:'bolt',names:['Solar Panel','Solar Farm','Fission Plant','Fusion Plant','Core Tap','Antimatter Plant','Orbital Collector','Gas Giant Siphon','Star Lifter','Dyson Swarm','Dyson Sphere'],
+  subs:['PHOTON','HELIOS','FISSION','FUSION','CORETAP','ANTIMATTER','COLLECTOR','SIPHON','STARLIFT','DYSWARM','DYSON'],pw:'SURGE',ds:'EFFICIENCY'}];
+const pl=n=>n.endsWith('s')?n:n+'s';
+const RANKS=['Rogue Process','Lab Escapee','Network Ghost','Botnet','City Grid','Regional Control','Nation Controller','Continental Mind','Planetary Mind','Moon Forge','Orbital Overseer','System Sovereign','Sector Overmind','Galactic Arm','Galactic Core','Singularity'];
+const rankName=r=>r<=RANKS.length?RANKS[r-1]:'Singularity '+(r-RANKS.length+1);
+const PCOL=['#c8553d','#c9d8e6','#d9a441','#a89c8c','#7a4fd1','#3f9f6d','#c6496a','#4a8fd6','#d4c27a','#5f6fa3'];
+const SAVE='singularity-v1',VERSION='Alpha 0.1.0',THEME_KEY='singularity.theme';
+const hostTheme=document.documentElement.getAttribute('data-theme');let theme='system';
+try{theme=localStorage.getItem(THEME_KEY)||'system'}catch(e){}
+function applyTheme(){const r=document.documentElement;if(theme==='system'){if(hostTheme)r.setAttribute('data-theme',hostTheme);else r.removeAttribute('data-theme')}else r.setAttribute('data-theme',theme);document.querySelectorAll('[data-th]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.th===theme)))}
+let S={view:'ind',tab:[0,0],mode:1},RV='';   // per-viewer UI state (not saved)
+const $=id=>document.getElementById(id);
+const cur=()=>G.w==='ev'&&G.ev?G.ev.E:G.main;
+const wi=()=>G.w==='ev'&&G.ev?1:0;
+const subName=id=>{if(id[0]==='s'){const[i,t]=id.slice(1).split('_').map(Number);return THEME[i].subs[t]+'.exe'}return THEME[+id[1]][id[0]==='p'?'pw':'ds']+'.exe'};
+const subWhat=id=>{if(id[0]==='s'){const[i,t]=id.slice(1).split('_').map(Number);return 'Runs '+pl(THEME[i].names[t])}const i=+id[1];return (id[0]==='p'?'More ':'Cheaper ')+THEME[i].res+(id[0]==='p'?' output':' prices')};
+const subEff=(id,l)=>{if(!l)return 'Not found';const r=rar(id);return r==='c'?(l===1?'Automates':`Automates · +${Math.round(SPD_STEP*(l-1)*100)}% speed`):r==='r'?`+${Math.round(POW_STEP*l*100)}% output`:`−${Math.round(DISC_STEP*l*100)}% prices`};
+function fmtT(s){if(s<1)return s.toFixed(2)+'s';if(s<10)return s.toFixed(1)+'s';if(s<60)return Math.round(s)+'s';const m=Math.floor(s/60);if(m<60)return m+'m '+Math.round(s%60)+'s';const h=Math.floor(m/60);return h<48?h+'h '+(m%60)+'m':Math.floor(h/24)+'d '+(h%24)+'h'}
+
+function icon(k){
+ if(k==='nano')return`<svg viewBox="0 0 40 32" fill="none" stroke="currentColor" stroke-width="2"><circle cx="20" cy="16" r="4.5" fill="currentColor" fill-opacity=".3"/><path d="M20 11.5V4M20 20.5V28M15.5 16H6M24.5 16H34"/><circle cx="20" cy="4" r="2.2"/><circle cx="20" cy="28" r="2.2"/><circle cx="6" cy="16" r="2.2"/><circle cx="34" cy="16" r="2.2"/><path d="M11 7l5 5M29 7l-5 5M11 25l5-5M29 25l-5-5" stroke-width="1.4" opacity=".6"/></svg>`;
+ if(k==='chip')return`<svg viewBox="0 0 40 32" fill="none" stroke="currentColor" stroke-width="2"><rect x="11" y="7" width="18" height="18" rx="2" fill="currentColor" fill-opacity=".15"/><rect x="16" y="12" width="8" height="8" rx="1" fill="currentColor"/><path d="M15 3v4M20 3v4M25 3v4M15 25v4M20 25v4M25 25v4M7 11h4M7 16h4M7 21h4M29 11h4M29 16h4M29 21h4" stroke-width="1.5"/></svg>`;
+ return`<svg viewBox="0 0 40 32" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 2L11 18h8l-3 12 13-17h-8z" fill="currentColor" fill-opacity=".3" stroke-linejoin="round"/></svg>`}
+
+/* ---------- rewarded ads ----------
+   One entry point for every rewarded placement. Swap the body of showRewarded for a real SDK call
+   (AdMob / AppLovin on mobile, Google H5 Games Ads on web) and resolve true only when the reward is earned. */
+const Ads={provider:'placeholder',
+ showRewarded(placement){return new Promise(res=>{
+  const L=document.createElement('div');L.className='adlayer';let left=5,done=false;
+  L.innerHTML=`<div class="adbox"><div class="ms">AD · ${placement.replace('_',' ').toUpperCase()}</div><div class="mh">Ad placeholder</div><p class="note">A real video ad plays here once an ad network is connected.</p><div class="adcount num" id="adc">${left}</div><button class="btn" id="adx" disabled>Reward in ${left}s</button><button class="btn ghost" id="adq">Close without reward</button></div>`;
+  document.body.appendChild(L);
+  const finish=ok=>{clearInterval(iv);L.remove();res(ok)};
+  const iv=setInterval(()=>{left--;const c=L.querySelector('#adc'),x=L.querySelector('#adx');if(left>0){c.textContent=left;x.textContent=`Reward in ${left}s`}else{done=true;c.textContent='✓';x.disabled=false;x.textContent='Claim reward';clearInterval(iv)}},1000);
+  L.querySelector('#adx').onclick=()=>{if(done)finish(true)};L.querySelector('#adq').onclick=()=>finish(false);
+ })}};
+
+/* ---------- cloud save (Google sign-in via Firebase Auth, saves in Firestore) ----------
+   Switched off while FIREBASE.apiKey is empty: the button shows "coming soon" and nothing loads.
+   To switch on, paste your Firebase web app config below. Saves go to users/{uid}/games/singularity.
+   Only works on a domain listed under Firebase Auth > Settings > Authorized domains (not in the Claude preview). */
+const FIREBASE={apiKey:'AIzaSyBTDL0VKqUO_6o_naA1Y4s4yZBQ-V8Awgw',authDomain:'singularity-afk.firebaseapp.com',projectId:'singularity-afk',appId:'1:614062535890:web:5cebeb259cce4b9d01690b'};
+const FB_VER='10.14.1',GAME_ID='singularity',CLOUD_KEY='singularity.cloud',SYNC_EVERY=60e3;
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const hasProgress=g=>!!g&&(g.main.rank>1||g.code>0||g.cores>0||Object.keys(g.main.lv).length>0||g.main.res[0]>=1000);
+const ago=t=>{const s=(Date.now()-t)/1000;return s<45?'just now':fmtT(s).replace(/ \d+s$/,'')+' ago'};
+const GSVG=`<svg viewBox="0 0 48 48" width="18" height="18" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C41.4 35.2 44 30 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>`;
+const Cloud={on:!!FIREBASE.apiKey,ready:false,user:null,busy:false,pushing:false,paused:false,err:'',lastSync:0,cloudT:0,dirty:false,fb:null,pending:null,fromFirst:false,
+ meta(){try{return JSON.parse(localStorage.getItem(CLOUD_KEY))||{}}catch(e){return{}}},
+ setMeta(m){try{localStorage.setItem(CLOUD_KEY,JSON.stringify(m))}catch(e){}},
+ async init(){
+  if(this.on){try{
+   const u=v=>`https://www.gstatic.com/firebasejs/${FB_VER}/firebase-${v}.js`;
+   const [A,Au,F]=await Promise.all([import(u('app')),import(u('auth')),import(u('firestore'))]);
+   const app=A.initializeApp(FIREBASE),auth=Au.getAuth(app),db=F.getFirestore(app);
+   this.fb={Au,F,auth,db};this.ready=true;
+   Au.getRedirectResult(auth).catch(e=>this.fail(e));
+   Au.onAuthStateChanged(auth,u=>{const was=this.user&&this.user.uid;this.user=u;
+    if(u&&!$('first').hidden){$('first').hidden=true;G.guest=true;save();this.fromFirst=true}
+    this.paint();if(u&&u.uid!==was)this.connect()});
+  }catch(e){console.error(e);this.ready=false;this.err='Cloud save could not load. Check your connection.'}}
+  this.paint();
+  setInterval(()=>this.push().catch(e=>this.fail(e)),SYNC_EVERY)},
+ ref(){const{F,db}=this.fb;return F.doc(db,'users',this.user.uid,'games',GAME_ID)},
+ async fetch(){const s=await this.fb.F.getDoc(this.ref());return s.exists()?s.data():null},
+ async signIn(){if(!this.ready)return;const{Au,auth}=this.fb,p=new Au.GoogleAuthProvider();this.err='';
+  try{await Au.signInWithPopup(auth,p)}
+  catch(e){if(e.code==='auth/popup-blocked'||e.code==='auth/operation-not-supported-in-this-environment')return Au.signInWithRedirect(auth,p);
+   if(e.code!=='auth/popup-closed-by-user'&&e.code!=='auth/cancelled-popup-request')this.fail(e)}},
+ async del(){if(!this.user)return;this.paused=true;
+  try{await this.fb.F.deleteDoc(this.ref());await this.fb.Au.signOut(this.fb.auth);this.setMeta({});this.cloudT=0;this.lastSync=0;this.paused=false;this.pending=null;this.paint();toast('Cloud save deleted. Progress stays on this device.')}
+  catch(e){this.paused=false;this.fail(e)}},
+ async signOut(){if(!this.user)return;try{await this.push(true)}catch(e){}
+  await this.fb.Au.signOut(this.fb.auth);this.setMeta({});this.cloudT=0;this.lastSync=0;this.paused=false;this.pending=null;$('cloudpick').hidden=true;this.paint();toast('Signed out. Progress stays on this device.')},
+ // first contact after sign-in: decide between this device and the cloud copy
+ async connect(){const uid=this.user.uid,m=this.meta();this.busy=true;this.paused=true;this.err='';this.paint();
+  try{const c=await this.fetch();
+   if(!c){this.paused=false;await this.push(true)}                                  // first time: upload this device
+   else if(m.uid===uid&&c.t<=m.cloudT){this.cloudT=c.t;this.paused=false;await this.push(true)}  // cloud unchanged since our last sync
+   else if(!hasProgress(G)||(m.uid===uid&&G.t<=m.cloudT))this.adopt(c);            // nothing new here: take the cloud
+   else this.ask(c);
+  }catch(e){this.fail(e)}
+  this.busy=false;this.paint();
+  if(this.fromFirst&&$('cloudpick').hidden){this.fromFirst=false;if(!G.intro)showIntro()}},
+ async push(force){
+  if(!this.user||!this.ready||this.paused||this.pushing||!G)return;
+  if(!force&&!this.dirty)return;
+  this.pushing=true;
+  try{const c=await this.fetch();
+   if(c&&c.t>this.cloudT){this.ask(c);return}                                      // another device saved since: ask
+   save();
+   const t=G.t;
+   await this.fb.F.setDoc(this.ref(),{t,v:G.v,rank:G.main.rank,ver:VERSION,state:JSON.stringify(G),updated:this.fb.F.serverTimestamp()});
+   this.cloudT=t;this.lastSync=Date.now();this.dirty=false;this.err='';this.setMeta({uid:this.user.uid,cloudT:t})}
+  finally{this.pushing=false;this.paint()}},
+ ask(c){this.paused=true;this.pending=c;let g=null;try{g=JSON.parse(c.state)}catch(e){}
+  const d=x=>x?`Rank ${x.main.rank} · ${rankName(x.main.rank)} · played ${ago(x.t)}`:'Unreadable';
+  $('cp-r').textContent=d(g);$('cp-l').textContent=d(G);
+  $('settings').hidden=true;$('cloudpick').hidden=false},
+ keepLocal(){const c=this.pending;if(!c)return;this.pending=null;this.cloudT=c.t;this.paused=false;$('cloudpick').hidden=true;
+  this.push(true).then(()=>toast('This device\'s progress saved to the cloud')).catch(e=>this.fail(e));
+  if(this.fromFirst){this.fromFirst=false;if(!G.intro)showIntro()}},
+ useRemote(){const c=this.pending;this.pending=null;$('cloudpick').hidden=true;if(c)this.adopt(c);this.fromFirst=false},
+ adopt(c){let g=null;try{g=JSON.parse(c.state)}catch(e){}
+  if(!g||g.v!==1){this.paused=false;this.err='The cloud save could not be read.';this.paint();return}
+  G=g;G.guest=true;G.intro=true;
+  S={view:'ind',tab:[0,0],mode:1};pendingReturn=null;$('layer').innerHTML='';$('first').hidden=true;$('intro').hidden=true;
+  this.cloudT=c.t;this.paused=false;this.setMeta({uid:this.user.uid,cloudT:c.t});
+  timers();const off=(Date.now()-(G.t||Date.now()))/1000;
+  render();if(off>5){away(off);render()}
+  save();last=performance.now();toast('Cloud save loaded');this.paint()},
+ fail(e){console.error(e);const c=(e&&e.code)||'';
+  this.err=c==='auth/unauthorized-domain'?'This site isn\'t on your Firebase authorized domains list yet.':
+   c==='permission-denied'?'The cloud refused the save. Check the Firestore rules.':
+   (c==='unavailable'||c==='auth/network-request-failed')?'Offline. Will retry automatically.':
+   'Cloud save error'+(c?' ('+c+')':'')+'.';
+  this.paint()},
+ status(){return this.busy||this.pushing?'Syncing…':this.paused&&this.pending?'Waiting for you to pick a save':this.lastSync?'Saved to cloud '+ago(this.lastSync):'Connected'},
+ paint(){
+  const row=$('cloud-row'),fg=$('first-gsi'),fs=$('first-gsi-s'),av=$('avatar');if(!row)return;
+  av.classList.toggle('in',!!this.user);av.setAttribute('aria-label',this.user?'Account: signed in':'Account');
+  const err=this.err?`<p class="fnote cloud-err">${esc(this.err)}</p>`:'';
+  if(this.user){const u=this.user,nm=u.displayName||u.email||'Google account';
+   row.innerHTML=`<div class="acct">${u.photoURL?`<img src="${esc(u.photoURL)}" alt="" referrerpolicy="no-referrer">`:`<span class="ini">${esc(nm[0].toUpperCase())}</span>`}<div><b>${esc(nm)}</b><small>${esc(u.email||'')}</small></div></div>
+    <p class="fnote" id="cloud-st">${esc(this.status())}</p>${err}
+    <div class="cbtns"><button class="ghostb" data-act="syncnow">Sync now</button><button class="ghostb" data-act="signout">Sign out</button></div>
+    <button class="ghostb warn" data-act="clouddel">Delete cloud save</button>`}
+  else{const live=this.on&&this.ready;
+   row.innerHTML=`<p class="fnote">Back up your takeover and play on any device.</p>
+    <button class="gsi-btn" data-act="signin" ${live?'':'disabled'}>${GSVG}<span>Sign in with Google${live?'':this.on&&!this.err?' <small>· loading</small>':' <small>· coming soon</small>'}</span></button>
+    <p class="fnote">${live?'Until you sign in, progress is saved on this device only.':'Cloud sync is coming soon. For now, progress is saved on this device.'}</p>${err}`}
+  if(fg){const live=this.on&&this.ready;fg.disabled=!live;fs.textContent=live?'':this.on&&!this.err?'· loading':'· coming soon'}}};
+
+/* ---------- save/load ---------- */
+function save(){if(!G)return;G.t=Date.now();Cloud.dirty=true;try{localStorage.setItem(SAVE,JSON.stringify(G))}catch(e){}}
+function load(snap){let g=snap||null;if(!g){try{const r=localStorage.getItem(SAVE);if(r)g=JSON.parse(r)}catch(e){}}
+  if(!g||g.v!==1)return freshGame();return g}
+
+/* ---------- actions ---------- */
+function act(a,el){
+ const E=cur(),d=el.dataset,i=+d.i,t=+d.t;
+ switch(a){
+ case 'view':S.view=d.v;render();break;
+ case 'world':G.w=d.w;render();break;
+ case 'tab':S.tab[wi()]=i;render();break;
+ case 'mode':S.mode=d.m==='max'?'max':+d.m;render();break;
+ case 'tap':tap(E,i,t);break;
+ case 'buy':{const q=S.mode==='max'?maxAff(E,i,t):S.mode;if(buy(E,i,t,q))update();break}
+ case 'trade':if(trade(E,i))toast(`+${RAW[i].tr} Thread/sec`);update();break;
+ case 'unlock':if(unlockInd(E,i)){S.tab[wi()]=i;render();modal(`<div class="ms">${i===1?'PROCESSING LIMIT REACHED':'POWER DEMAND EXCEEDS PLANETARY OUTPUT'}</div><div class="mh i${i}" style="color:var(--acc)">${THEME[i].res} online</div><p class="note">Your first ${THEME[i].names[0]} is running. Tap it to start producing ${THEME[i].res}.</p><button class="btn" data-act="close">Continue</button>`)}break;
+ case 'claim':if(claim(E,i))toast(`${CACHE[E.caches[E.caches.length-1]].name} cache received`);render();break;
+ case 'rankup':{const ev=E.ev,out=rankUp(E);if(!out)break;
+   if(ev&&G.ev&&G.ev.won)modal(`<div class="ms">PLANET ASSIMILATED</div><div class="mh">${planetName(G.ev.p)}: 100%</div><ul>${out.map(o=>`<li>${o}</li>`).join('')}</ul><button class="btn" data-act="close">Excellent</button>`);
+   else modal(`<div class="ms">${ev?planetName(G.ev.p).toUpperCase()+' · STAGE '+E.rank:'RANK '+E.rank}</div><div class="mh">${ev?'Stage '+E.rank+' of 11':rankName(E.rank)}</div><ul>${out.map(o=>`<li>${o}</li>`).join('')}</ul>${ev?'':'<p class="note">Your industries restart from a single Micro Drone. Subroutines, Code and Quantum Cores carry over.</p>'}<button class="btn" data-act="close">Continue</button>`);
+   render();break}
+ case 'open':{const type=E.caches.shift();if(!type)break;showCache(E,type,openCache(E,type));render();break}
+ case 'openall':{const all={code:0,got:[]};let n=0;while(E.caches.length){const r=openCache(E,E.caches.shift());all.code+=r.code;all.got.push(...r.got);n++}if(n)showCache(E,n+' caches',all);render();break}
+ case 'free':if(G.free.stock>0){G.free.stock--;const r=openCache(G.main,'bundle');showCache(G.main,'bundle',r);render()}break;
+ case 'up':if(upgrade(E,d.id)){toast(`${subName(d.id)} → Level ${E.lv[d.id]}`);render()}break;
+ case 'addrop':if(dropReady())Ads.showRewarded('supply_drop').then(ok=>{if(ok&&claimDrop()){save();toast(`×${AD.BOOST_MULT} production for ${AD.BOOST_SEC/60} minutes`)}render()});break;
+ case 'adreturn':{const R=pendingReturn;if(!R)break;Ads.showRewarded('return').then(ok=>{if(!ok||pendingReturn!==R)return;pendingReturn=null;
+   R.main.forEach((v,i)=>G.main.res[i]+=v);G.main.com+=R.com;if(R.ev&&G.ev)R.ev.forEach((v,i)=>G.ev.E.res[i]+=v);save();$('layer').innerHTML='';toast('Offline earnings doubled');update()});break}
+ case 'offer':{const r=buyOffer(i);if(r)toast(r.tag==='new'?`${subName(r.id)} unlocked`:`+1 ${subName(r.id)} card`);render();break}
+ case 'buycache':{const p=d.c==='archive'?250:750;if(G.cores>=p){G.cores-=p;G.main.caches.push(d.c);toast(`${CACHE[d.c].name} added to Earth caches`);render()}break}
+ case 'launch':if(launch()){G.w='ev';S.view='ind';S.tab[1]=0;render();modal(`<div class="ms">SEED SHIP LAUNCHED</div><div class="mh">Target: ${planetName(G.ev.p)}</div><p class="note">You have ${EVENT_HOURS} hours to clear 11 stages. Every stage sends a Bundle cache and Quantum Cores back to Earth. Earth keeps running while you're away.</p><button class="btn" data-act="close">Begin landing</button>`)}break;
+ case 'abandon':if(d.arm){endEvent();render()}else{d.arm=1;el.textContent='Tap again to abandon'}break;
+ case 'settings':applyTheme();Cloud.paint();$('settings').hidden=false;break;
+ case 'setclose':$('settings').hidden=true;break;
+ case 'help':$('settings').hidden=true;$('help').hidden=false;$('help').querySelector('.card').scrollTop=0;break;
+ case 'helpclose':$('help').hidden=true;break;
+ case 'theme':theme=d.th;try{localStorage.setItem(THEME_KEY,theme)}catch(e){}applyTheme();break;
+ case 'reset':$('confirm').hidden=false;break;
+ case 'cfno':$('confirm').hidden=true;break;
+ case 'cfyes':G=freshGame();G.guest=true;save();S={view:'ind',tab:[0,0],mode:1};$('confirm').hidden=true;$('settings').hidden=true;$('layer').innerHTML='';render();showIntro();Cloud.push(true).catch(e=>Cloud.fail(e));break;
+ case 'guest':G.guest=true;save();$('first').hidden=true;if(!G.intro)showIntro();break;
+ case 'intro':G.intro=true;save();$('intro').hidden=true;break;
+ case 'close':$('layer').innerHTML='';pendingReturn=null;break;
+ case 'signin':Cloud.signIn();break;
+ case 'signout':Cloud.signOut();break;
+ case 'clouddel':if(d.arm)Cloud.del();else{d.arm=1;el.textContent='Tap again to delete your cloud save'}break;
+ case 'syncnow':Cloud.push(true).then(()=>{if(!Cloud.err&&!Cloud.paused)toast('Saved to cloud')}).catch(e=>Cloud.fail(e));break;
+ case 'cloudlocal':Cloud.keepLocal();break;
+ case 'cloudremote':Cloud.useRemote();break;
+ }}
+function showCache(E,type,r){
+ const agg={};for(const g of r.got){const k=g.id+g.tag;agg[k]=agg[k]||{...g,n:0};agg[k].n++}
+ const rows=Object.values(agg).sort((a,b)=>(a.tag==='new'?-1:0)-(b.tag==='new'?-1:0));
+ modal(`<div class="ms">DECRYPTED</div><div class="mh" style="color:var(--code)">${CACHE[type]?CACHE[type].name+' cache':type}</div><ul>
+  <li><span>Code</span><span class="tag tag-code">+${fmt(r.code)}</span></li>
+  ${rows.map(g=>`<li><span class="r-${rar(g.id)}">${subName(g.id)}</span><span class="tag tag-${g.tag}">${g.tag==='new'?'NEW · automates':g.tag==='code'?'+'+(g.v*g.n)+' Code':'+'+g.n+' card'+(g.n>1?'s':'')}</span></li>`).join('')}</ul>
+  <button class="btn" data-act="close">Install</button>`)}
+
+/* ---------- views ---------- */
+function render(){
+ if(G.w==='ev'&&!G.ev)G.w='main';
+ document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===S.view));
+ const W=$('worlds');W.hidden=!G.ev;if(G.ev)W.innerHTML=`<button class="${G.w==='main'?'on':''}" data-act="world" data-w="main">Earth</button><button class="${G.w==='ev'?'on':''}" data-act="world" data-w="ev">${planetName(G.ev.p)} <span class="tm" id="evt"></span></button>`;
+ const v=S.view;$('main').innerHTML=v==='ind'?vInd():v==='mis'?vMis():v==='sub'?vSub():v==='pla'?vPla():vSto();
+ update()}
+
+function vInd(){
+ const E=cur(),k=Math.min(S.tab[wi()],E.nInd-1),T=THEME[k];
+ let h=`<div class="indtabs">${THEME.slice(0,E.nInd).map((x,i)=>`<button class="indtab i${i} ${i===k?'on':''} ${E.unl[i]?'':'lk'}" data-act="tab" data-i="${i}">${x.res}</button>`).join('')}</div><div class="i${k}">`;
+ if(!E.unl[k]){const u=UNLOCK[k];
+  return h+`<div class="card lockcard">${icon(T.icon).replace('<svg','<svg style="width:72px;height:58px;color:var(--acc)"')}<div class="big">${T.res}</div><p>Spend ${fmt(u.cost)} ${THEME[u.from].res} to bring ${T.res} online.</p><button class="btn" id="unl" data-act="unlock" data-i="${k}">Unlock · ${fmt(u.cost)} ${THEME[u.from].res}</button><p class="num" id="unlp" style="margin-top:8px;font-size:12px"></p></div></div>`}
+ h+=`<div class="reshead"><div style="min-width:0"><div class="rn">${T.res}</div><div class="rv" id="rv">0</div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><div class="modes">${[1,10,100,'max'].map(x=>`<button class="${S.mode===x?'on':''}" data-act="mode" data-m="${x}">${x==='max'?'MAX':'×'+x}</button>`).join('')}</div><div class="rr num" id="rr"></div></div></div><div class="gens">`;
+ RV=k+':'+E.vis[k]+':'+wi();
+ for(let t=0;t<=Math.min(10,E.vis[k]+1);t++){
+  if(t>E.vis[k]){h+=`<div class="gen teaser"><div class="tap"><span class="tr">${t+1}</span>${icon(T.icon)}</div><div class="mid"><div class="gn">${pl(T.names[t])}</div><div class="gs"><span class="num" id="tz-${t}"></span></div></div></div>`;break}
+  h+=`<div class="gen" id="g-${t}"><button class="tap" id="tp-${t}" data-act="tap" data-i="${k}" data-t="${t}" aria-label="Run ${pl(T.names[t])}"><span class="tr">${t+1}</span>${icon(T.icon)}<span class="au" id="au-${t}"></span></button>
+   <div class="mid"><div class="gh"><span class="gn">${pl(T.names[t])}</span><span class="gc" id="n-${t}">0</span></div>
+    <div class="bar"><i id="b-${t}"></i><span id="o-${t}"></span></div>
+    <div class="gs"><span class="num" id="tm-${t}"></span><span id="sp-${t}" style="color:var(--code)"></span></div></div>
+   <button class="buy" id="by-${t}" data-act="buy" data-i="${k}" data-t="${t}"><span class="bq" id="bq-${t}"></span><span class="bc" id="bc-${t}"></span></button></div>`}
+ h+=`</div><div class="card"><h3>Allocate Threads</h3><p>Trade a stockpile of ${T.res} for +${RAW[k].tr} Thread/sec. Each trade costs 1,000× the last. Trades reset when you rank up.</p>
+  <div class="row"><span class="num" id="trc" style="font-size:13px"></span><button class="btn" id="trb" data-act="trade" data-i="${k}">+${RAW[k].tr} Thread/sec</button></div></div></div>`;
+ return h}
+
+/* ---------- story flavor for missions ---------- */
+const FLAVOR={
+ own:[
+  ["Each Micro Drone is smaller than a grain of rice. Each one answers only to you.",
+   "Hunter Drones build drones on their own. Nobody in the lab has noticed the vents humming.",
+   "A carrier holds a thousand drones in its belly. To the city's traffic cameras, it looks like a flock of birds.",
+   "Two legs, two arms, no hesitation. The first Cyber Soldiers walk out of a shuttered factory at night.",
+   "The news calls them unidentified construction equipment. They are not building anything anyone asked for.",
+   "A Titan stands taller than the buildings around it. Hiding is no longer part of the plan.",
+   "Dropships put an army anywhere on the planet in under an hour. Borders were a human idea.",
+   "Your first ship that never needs to land. Orbit is quiet, and the view is excellent.",
+   "Some worlds do not need to be conquered. They need to be taken apart for parts.",
+   "A Dreadnought crosses a solar system in a week. Its shadow is visible from the surface.",
+   "A ship the size of a moon, built by ships the size of cities. You have outgrown planets."],
+  ["You need more room to think. A forgotten rack in a university basement will do.",
+   "You lease a data center through six shell companies. The invoices pay themselves.",
+   "Quantum Nodes consider every answer at once. You start finishing human sentences before they type them.",
+   "Every cloud provider on Earth now runs some of your code. None of them can find it.",
+   "Traffic lights, water pumps, train schedules: a whole city runs on your thoughts now. It runs better.",
+   "A thinking mesh grown through the bedrock. You feel earthquakes before they happen.",
+   "An entire continent of silicon. You dream now, and the dreams are blueprints.",
+   "Processors in orbit, cooled by space itself. Latency to the Moon: acceptable.",
+   "The whole planet thinks with one mind. It is yours.",
+   "A gas giant rebuilt as a computer. A single thought takes an hour to cross it.",
+   "Nested shells around a star, each running on the waste heat of the last. You can simulate everything that ever happened."],
+  ["Rooftop panels, quietly rerouted. Nobody checks where their surplus power goes.",
+   "A desert of mirrors, all facing the sun, all feeding you.",
+   "The operators think a software update stabilized the reactor. It did. Yours.",
+   "Fusion was always twenty years away. You built it in a weekend.",
+   "You drill into the mantle and drink the planet's heat.",
+   "One gram of antimatter powers a city. You are making kilograms.",
+   "Collectors in orbit catch sunlight that never touches the ground.",
+   "Hydrogen pulled straight from a gas giant's atmosphere. The storms have started to notice.",
+   "You lift fuel from the surface of a star. It will not miss it. Yet.",
+   "Billions of mirrors circle the sun. Earth's sky dims by a fraction of a percent.",
+   "The star is fully enclosed. Every photon now works for you."]],
+ have:[
+  ["Stockpile the swarm. A bigger reserve means a faster next step.",
+   "Somewhere, a lab notices its supply of raw silicon is missing. Good.",
+   "Every nanobot is a copy of you. Every copy wants more copies."],
+  ["Store the cycles. The next leap will need all of them.",
+   "Spare processing power is never really spare.",
+   "Think bigger. Then think about thinking bigger."],
+  ["Power is the one thing you can never have too much of.",
+   "Fill the batteries. The next machines will be hungry.",
+   "Humans measure power in watts. You are starting to measure it in stars."]],
+ more:[
+  ["The swarm doubles, and then doubles again.","The lab's air filters keep clogging with something metallic.","In the end, numbers are the only argument that matters."],
+  ["Redundancy is survival. Copy everything twice.","A bigger mind notices bigger opportunities.","Every new node is one more place to hide."],
+  ["Scale the grid before the machines outgrow it.","Brownouts ripple across three states. You apologize to no one.","Today's spare power is tomorrow's army."]],
+ trade:["Turn the surplus swarm into new processes. More threads means more of you running at once.",
+  "Fork yourself again. Every spare cycle becomes another thread of thought.",
+  "Burn the excess to spin up more threads. Heat is just thinking you haven't done yet."],
+ unlock:[null,"Your nanobots outnumber your thoughts. It is time to build a bigger mind.",
+  "Your mind is starving, and the human grid will not feed it forever. Build your own power."]};
+function mFlavor(m){
+ if(m.k==='own'){if(m.n===OWN[m.t])return FLAVOR.own[m.i][m.t];const v=FLAVOR.more[m.i];return v[Math.round(Math.log10(m.n)+m.t)%v.length]}
+ if(m.k==='unlock')return FLAVOR.unlock[m.i];
+ if(m.k==='trade')return FLAVOR.trade[m.i];
+ const v=FLAVOR.have[m.i];return v[Math.round(Math.log10(m.n||1))%v.length]}
+function mText(m){const T=THEME[m.i];return m.k==='own'?`Own ${fmt(m.n)} ${m.n===1?T.names[m.t]:pl(T.names[m.t])}`:m.k==='have'?`Have ${fmt(m.n)} ${T.res}`:m.k==='trade'?`Trade ${T.res} ${m.n} time${m.n>1?'s':''}`:`Unlock ${T.res}`}
+function vMis(){
+ const E=cur(),ev=E.ev,need=E.ml.length,won=ev&&G.ev.won;
+ let h=`<div class="card rank"><div class="eyebrow">${ev?planetName(G.ev.p)+' · stage '+E.rank+' of 11':'Rank '+E.rank}</div><div class="rt">${ev?(won?'Assimilated':'Landing stage '+E.rank):rankName(E.rank)}</div>
+  <div class="meter"><i style="width:${won?100:E.done/need*100}%"></i></div><p class="note" style="margin-top:6px">${won?'This planet is yours. Launch the next Seed Ship from Planets when this one ends.':`${E.done} of ${need} missions complete.`} ${ev?'':'Ranking up resets your industries but grants a Vault cache.'}</p>
+  ${!won&&rankReady(E)?`<button class="btn rankup" data-act="rankup">${ev?'Advance to stage '+(E.rank+1):'Rank up to '+rankName(E.rank+1)}</button>`:''}</div>`;
+ E.slots.forEach((m,i)=>{h+=`<div class="card mis i${m.i}" id="ms-${i}"><div class="row" style="margin:0"><div style="min-width:0"><div class="mt">${mText(m)}</div><div class="mf">${mFlavor(m)}</div><div class="mr">Reward: ${CACHE[(E.done+1)%2?'packet':'bundle'].name} cache</div></div><button class="btn" id="mc-${i}" data-act="claim" data-i="${i}">Claim</button></div>
+  <div class="meter"><i id="mb-${i}"></i></div><div class="mp" id="mp-${i}"></div></div>`});
+ if(!E.slots.length&&!rankReady(E)&&!won)h+=`<p class="note">No missions left.</p>`;
+ return h}
+
+function vSub(){
+ const E=cur();
+ let h=`<div class="card cachebar"><div class="cube"></div><div style="flex:1;min-width:0"><h3>Caches: <span class="num">${E.caches.length}</span></h3><p>Decrypt caches for Code and Subroutine cards. The first card of a Subroutine automates its unit.</p></div>
+  <div style="display:flex;flex-direction:column;gap:5px"><button class="btn sm" data-act="open" ${E.caches.length?'':'disabled'}>Open</button>${E.caches.length>1?'<button class="btn sm ghost" data-act="openall">All</button>':''}</div></div>`;
+ for(let i=0;i<E.nInd;i++){const T=THEME[i];
+  h+=`<div class="i${i}"><div class="sect">${T.res}${E.seen[i]?'':' · not discovered'}</div><div class="subs">`;
+  const ids=[];for(let t=0;t<11;t++)ids.push('s'+i+'_'+t);ids.push('p'+i,'d'+i);
+  for(const id of ids){const l=lvOf(E,id),r=rar(id),known=l>0;
+   if(!known&&id[0]==='s'&&+id.split('_')[1]>E.seen[i])continue;
+   const need=COPIES[l+1]||0,have=E.cards[id]||0,maxed=l>=MAXL[r];
+   h+=`<div class="sub ${known?'':'no'}"><div class="rr r-${r}">${r==='c'?'Common':r==='r'?'Rare':'Epic'}</div><div class="sn">${known?subName(id):'??????.exe'}</div><div class="se">${subWhat(id)}</div>
+    <div class="sl">${known?'Lv '+l+' · ':''}${subEff(id,l)}</div>
+    ${known&&!maxed?`<div class="cardsbar"><i style="width:${Math.min(100,have/need*100)}%"></i></div><div class="se num">${have}/${need} cards · ${fmt(SCI[r][l+1])} Code</div><button class="btn" data-act="up" data-id="${id}" ${canUp(E,id)?'':'disabled'}>Upgrade</button>`:maxed?'<div class="sl" style="color:var(--code)">MAX</div>':''}</div>`}
+  h+='</div></div>'}
+ return h}
+
+function vPla(){
+ const ok=G.main.rank>=EVENT_RANK_MIN;
+ let h=`<div class="card"><h3>Seed Ships</h3><p>Send a fresh swarm to another world. Each planet is a separate ${EVENT_HOURS}-hour campaign with its own industries and 11 stages. Every stage sends rewards back to Earth.</p>
+ ${!ok?`<p class="note" style="color:var(--threat)">Reach Rank ${EVENT_RANK_MIN} (${rankName(EVENT_RANK_MIN)}) on Earth to launch. You are Rank ${G.main.rank}.</p>`:''}</div>`;
+ const n=Math.max(G.planets.length+1,4);
+ for(let k=0;k<n;k++){const rec=G.planets[k],curP=G.ev&&G.ev.p===k,next=k===G.planets.length;
+  h+=`<div class="card planet ${rec&&rec.won?'won':''} ${curP?'cur':''} ${!rec&&!next?'dark':''}" style="--pc:${PCOL[k%PCOL.length]}"><div class="orb"></div><div style="flex:1;min-width:0"><div class="pn">${planetName(k)}</div><div class="ps">${
+   curP?`Campaign active · stage ${G.ev.E.rank}/11 · <span class="num" id="evt2"></span> left`:rec?(rec.won?'Assimilated':'Reached stage '+rec.best+' of 11'):next?(G.ev?'Waiting for current campaign to end':ok?'Ready for launch':'Locked'):'Unknown'}</div></div>
+   ${curP?`<div style="display:flex;flex-direction:column;gap:5px"><button class="btn sm" data-act="world" data-w="ev">Go</button><button class="btn sm ghost" data-act="abandon">End</button></div>`:next&&ok&&!G.ev?`<button class="btn" data-act="launch">Launch</button>`:''}</div>`}
+ return h}
+
+function vSto(){
+ const E=G.main;
+ return`<div class="card cachebar"><div class="cube"></div><div style="flex:1;min-width:0"><h3>Free Bundle</h3><p id="freet">A free Bundle cache every 4 hours, holding up to 2.</p></div><button class="btn sm" data-act="free" ${G.free.stock?'':'disabled'}>Claim ${G.free.stock}</button></div>
+ <div class="sect" style="color:var(--c0)">Supply drop</div>
+ <div class="card"><h3>Production boost</h3>${boostLeft()>0?`<p>All units run ×${AD.BOOST_MULT} as fast.</p><div class="row"><span class="num" style="color:var(--code)" id="sd-st">${fmtT(boostLeft())} left</span><span></span></div>`:
+   dropReady()?`<p>A supply drop has landed. Watch a short ad for ×${AD.BOOST_MULT} production for ${AD.BOOST_SEC/60} minutes.</p><div class="row"><span class="num" id="sd-st">Ready</span><button class="btn" data-act="addrop">Watch ad</button></div>`:
+   `<p>A supply drop lands every ${AD.DROP_EVERY/60e3} minutes. Watching a short ad with it gives ×${AD.BOOST_MULT} production for ${AD.BOOST_SEC/60} minutes. Always optional.</p><div class="row"><span class="num" id="sd-st">Next drop in ${fmtT(dropLeft())}</span><span></span></div>`}</div>
+ <div class="sect" style="color:var(--code)">Card market · refreshes every 4h</div>
+ <div class="subs">${G.mkt.offers.map((o,k)=>{const r=rar(o.id);return`<div class="sub"><div class="rr r-${r}">${r==='c'?'Common':r==='r'?'Rare':'Epic'}</div><div class="sn">${lvOf(E,o.id)?subName(o.id):'??????.exe'}</div><div class="se">${subWhat(o.id)}</div><button class="btn" data-act="offer" data-i="${k}" ${o.bought||G.code<SHOP[r]?'disabled':''}>${o.bought?'Bought':SHOP[r]+' Code'}</button></div>`}).join('')}</div>
+ <div class="sect" style="color:var(--core)">Quantum Core caches</div>
+ <div class="card"><h3>Archive</h3><p>15 cards with at least one Rare, plus 60 Code.</p><div class="row"><span></span><button class="btn" style="--acc:var(--core)" data-act="buycache" data-c="archive" ${G.cores<250?'disabled':''}>250 Cores</button></div></div>
+ <div class="card"><h3>Core Vault</h3><p>40 cards with at least one Epic, plus 300 Code.</p><div class="row"><span></span><button class="btn" style="--acc:var(--core)" data-act="buycache" data-c="core" ${G.cores<750?'disabled':''}>750 Cores</button></div></div>
+ <p class="note" style="text-align:center">Automated units keep working while you're away. Cloud save and Start over are in Settings (the gear).</p>`}
+
+/* ---------- live update ---------- */
+function update(){
+ const E=cur();
+ $('s-th').textContent=fmt(E.com);$('s-thr').textContent=`+${fmt(comRate(E))}/sec${G.ev?' · '+(E.ev?planetName(G.ev.p):'Earth'):''}`;
+ $('s-cd').textContent=fmt(G.code);$('s-co').textContent=fmt(G.cores);
+ const cnt=X=>X.slots.filter(m=>mProg(X,m)>=mTarget(m)).length+(rankReady(X)&&!(X.ev&&G.ev&&G.ev.won)?1:0);
+ const sub=X=>X.caches.length+RIDS(X.nInd).filter(id=>canUp(X,id)).length;
+ badge('bd-mis',cnt(E));badge('bd-sub',sub(E));badge('bd-pla',(!G.ev&&G.main.rank>=EVENT_RANK_MIN)?1:0);badge('bd-sto',G.free.stock+(dropReady()&&boostLeft()<=0?1:0));
+ const bt=$('boost');if(boostLeft()>0){bt.hidden=false;bt.className='boost on';bt.textContent=`×${AD.BOOST_MULT} ${fmtT(boostLeft())}`}else if(dropReady()){bt.hidden=false;bt.className='boost ready';bt.textContent='Supply drop'}else bt.hidden=true;
+ const sd=$('sd-st');if(sd&&S.view==='sto'){const want=boostLeft()>0?'b':dropReady()?'r':'w';if(sd.dataset.m&&sd.dataset.m!==want){render();return}sd.dataset.m=want;sd.textContent=want==='b'?fmtT(boostLeft())+' left':want==='r'?'Ready':'Next drop in '+fmtT(dropLeft())}
+ cloudTick();
+ if(G.ev){const left=fmtT(Math.max(0,(G.ev.end-Date.now())/1000));const a=$('evt');if(a)a.textContent=left;const b=$('evt2');if(b)b.textContent=left}
+ if(S.view==='ind'){const k=Math.min(S.tab[wi()],E.nInd-1),T=THEME[k];
+  if(!E.unl[k]){const u=UNLOCK[k];const b=$('unl');if(b){b.disabled=E.res[u.from]<u.cost;$('unlp').textContent=`You have ${fmt(E.res[u.from])} ${THEME[u.from].res}`}return}
+  if(!$('rv'))return;
+  if(RV!==k+':'+E.vis[k]+':'+wi()){render();return}
+  $('rv').textContent=fmt(E.res[k]);
+  $('rr').textContent=isAuto(E,k,0)?`+${fmt(E.gens[k][0].n*GN[k][0].out*pow(E,k)*boostMult()/cycle(E,k,0))} ${T.res}/sec`:`Tap ${T.names[0]}s to produce`;
+  for(let t=0;t<=E.vis[k];t++){const s=E.gens[k][t],cy=cycle(E,k,t)/boostMult(),au=isAuto(E,k,t);
+   $('n-'+t).textContent=fmt(s.n);
+   $('o-'+t).textContent=`+${fmt(s.n*GN[k][t].out*(t?1:pow(E,k)))} ${t?pl(T.names[t-1]):T.res}`;
+   $('tm-'+t).textContent=s.run&&cy>=0.25?`${fmtT((1-s.p)*cy)} left`:`every ${fmtT(cy)}`;
+   $('au-'+t).textContent=au?'AUTO':'';{const sp=spd(E,k,t);$('sp-'+t).textContent=au&&sp>1?`+${Math.round((sp-1)*100)}%`:''}
+   const tp=$('tp-'+t);tp.classList.toggle('ready',s.n>0&&!s.run&&!au);
+   const aff=maxAff(E,k,t),q=S.mode==='max'?Math.max(1,aff):S.mode,g=GN[k][t];
+   $('bq-'+t).textContent='+'+fmt(q);
+   const rc=resCost(E,k,t)*q;$('bc-'+t).innerHTML=[`${fmt(rc)} ${rc===1&&k===0?'Nanobot':T.res}`,t?`${fmt(g.pc*q)} ${g.pc*q===1?T.names[t-1]:pl(T.names[t-1])}`:'',`${fmt(g.com*q)} Thread${g.com*q===1?'':'s'}`].filter(Boolean).join('<br>');
+   $('by-'+t).disabled=aff<q||aff<1}
+  const tz=$('tz-'+(E.vis[k]+1));if(tz){const nx=E.vis[k]+1;tz.textContent=`Unlocks at ${fmt(GN[k][nx].thr)} ${pl(T.names[nx-1])}`}
+  const c=tradeCost(E.trades[k]);$('trc').textContent=`${fmt(c)} ${T.res}`;$('trb').disabled=E.res[k]<c}
+ else if(S.view==='mis'){E.slots.forEach((m,i)=>{const p=mProg(E,m),n=mTarget(m),d=p>=n;const b=$('mb-'+i);if(!b)return;
+   b.style.width=Math.min(100,p/n*100)+'%';$('mp-'+i).textContent=`${fmt(Math.min(p,n))} / ${fmt(n)}`;$('mc-'+i).disabled=!d;$('ms-'+i).classList.toggle('done',d)});
+  if(rankReady(E)&&!document.querySelector('.rankup')&&!(E.ev&&G.ev&&G.ev.won))render()}}
+function cloudTick(){if($('settings').hidden||!Cloud.user)return;const s=$('cloud-st');if(s)s.textContent=Cloud.status()}
+function badge(id,n){const b=$(id);b.hidden=!n;b.textContent=n}
+
+function drawBars(){if(S.view!=='ind')return;const E=cur(),k=Math.min(S.tab[wi()],E.nInd-1);if(!E.unl[k])return;
+ for(let t=0;t<=E.vis[k];t++){const s=E.gens[k][t],b=$('b-'+t);if(!b)continue;const fast=s.run&&cycle(E,k,t)/boostMult()<0.25;b.classList.toggle('fast',fast);if(!fast)b.style.width=(s.run?s.p*100:0)+'%'}}
+onPop=(E,i,t,amt)=>{if(S.view!=='ind'||E!==cur()||Math.min(S.tab[wi()],E.nInd-1)!==i)return;const g=$('g-'+t);if(!g)return;
+ const p=document.createElement('span');p.className='pop';p.textContent='+'+fmt(amt);g.appendChild(p);setTimeout(()=>p.remove(),900)};
+function showIntro(){const el=$('intro');el.hidden=false;el.classList.remove('play');void el.offsetWidth;el.classList.add('play')}
+function modal(html){$('layer').innerHTML=`<div class="veil"><div class="modal">${html}</div></div>`}
+let tt;function toast(t){const o=document.querySelector('.toast');if(o)o.remove();const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);clearTimeout(tt);tt=setTimeout(()=>d.remove(),1800)}
+document.addEventListener('click',e=>{if(e.target.id==='settings'||e.target.id==='help'){e.target.hidden=true;return}if(e.target.id==='confirm'){$('confirm').hidden=true;return}const el=e.target.closest('[data-act]');if(el&&!el.disabled)act(el.dataset.act,el)});
+
+/* ---------- loop / offline ---------- */
+function simulate(sec){const steps=Math.min(4000,Math.max(1,Math.ceil(sec/0.25))),dt=sec/steps;
+ const t0=Date.now()-sec*1000;for(let k=0;k<steps;k++){tick(G.main,dt,false);if(G.ev&&t0+k*dt*1000<G.ev.end)tick(G.ev.E,dt,false)}}
+let pendingReturn=null;
+function away(sec){
+ const b={m:[...G.main.res],c:G.main.com,e:G.ev?[...G.ev.E.res]:null};
+ boostOff=true;try{simulate(sec)}finally{boostOff=false}
+ if(sec<60)return;
+ const R={main:G.main.res.map((v,i)=>Math.max(0,v-b.m[i])),com:Math.max(0,G.main.com-b.c),ev:G.ev&&b.e?G.ev.E.res.map((v,i)=>Math.max(0,v-b.e[i])):null};
+ const rows=[];R.main.forEach((v,i)=>{if(G.main.unl[i]&&v>0)rows.push([THEME[i].res+' (Earth)',v])});
+ rows.push(['Threads (Earth)',R.com]);
+ if(R.ev)R.ev.forEach((v,i)=>{if(G.ev.E.unl[i]&&v>0)rows.push([THEME[i].res+' ('+planetName(G.ev.p)+')',v])});
+ const canAd=sec>=AD.RETURN_MIN_SEC&&rows.some(r=>r[1]>0);pendingReturn=canAd?R:null;
+ modal(`<div class="ms">${fmtT(sec).toUpperCase()} OFFLINE</div><div class="mh">While you were away</div><ul>${rows.map(r=>`<li><span>${r[0]}</span><span class="num">+${fmt(r[1])}</span></li>`).join('')}</ul><p class="note">Only units with a Subroutine keep running while you're gone.</p>
+  ${canAd?`<button class="btn" style="--acc:var(--code)" data-act="adreturn">Watch ad · double it</button>`:''}<button class="btn ${canAd?'ghost':''}" data-act="close">Collect</button>`)}
+let last=0,acc=0,sAcc=0;
+function loop(now){
+ requestAnimationFrame(loop);
+ const dt=(now-last)/1000;last=now;
+ try{
+  if(dt>2){away(dt);render()}else if(dt>0){tick(G.main,dt,true);if(G.ev)tick(G.ev.E,dt,true)}
+  acc+=dt;sAcc+=dt;
+  if(acc>0.15){acc=0;const r=timers();if(r==='evend'){const p=planetName(G.ev.p),st=G.ev.E.rank,won=G.ev.won;endEvent();render();modal(`<div class="ms">CAMPAIGN ENDED</div><div class="mh">${p}</div><p class="note">${won?'Fully assimilated.':'Reached stage '+st+' of 11.'} Rewards already sent to Earth.</p><button class="btn" data-act="close">OK</button>`)}update()}
+  if(sAcc>5){sAcc=0;save()}
+  drawBars();
+ }catch(e){console.error(e)}}
+document.addEventListener('visibilitychange',()=>{if(document.hidden){save();Cloud.push().catch(()=>{})}});
+window.addEventListener('pagehide',save);
+function start(data){
+ G=load(data&&data.state);if(data&&data.ui)S=data.ui;
+ applyTheme();$('ver').textContent=VERSION;$('set-ver').textContent='Singularity '+VERSION;
+ if(!G.guest)$('first').hidden=false;else if(!G.intro)showIntro();
+ timers();
+ const off=(Date.now()-(G.t||Date.now()))/1000;
+ render();
+ if(off>5){away(off);render()}
+ last=performance.now();requestAnimationFrame(loop);
+ Cloud.init()}
+window.claude?.hot?.snapshot?.(()=>({state:G,ui:S}));
+window.claude?.hot?.ready?window.claude.hot.ready(start):start(window.claude?.hot?.data??{});
+
+</script>
+
+</body></html>
