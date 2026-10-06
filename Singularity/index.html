@@ -57,6 +57,7 @@ header{padding:8px 16px 6px;display:flex;flex-direction:column;gap:6px}
 .stat .lab{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);font-weight:600}
 .stat .val{font-family:var(--f-mono);font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .stat .ssub{font-size:11px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.st-th{text-align:left;font:inherit;color:inherit;cursor:pointer}.st-th.surge{border-color:var(--c2);animation:ping 1.6s ease-out infinite;--acc:var(--c2)}.st-th.surge .ssub{color:var(--c2);font-weight:700}
 .st-code .val{color:var(--code)} .st-core .val{color:var(--core)}
 
 main{overflow-y:auto;padding:4px 16px 24px;min-height:0}
@@ -131,6 +132,9 @@ main{overflow-y:auto;padding:4px 16px 24px;min-height:0}
 @keyframes lnin{from{opacity:.0;transform:translateY(6px)}to{opacity:1;transform:none}}
 .mis .mp{font-family:var(--f-mono);font-size:11.5px;color:var(--dim);margin-top:4px}
 .mis.done{border-color:var(--acc)}
+.daily{--acc:var(--c2)}.daily h3{color:var(--c2)}
+.dq{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-top:1px solid var(--line)}.dq:first-of-type{border-top:0}
+.dq .mt{font-weight:700;font-size:14.5px}.dq .mr{font-size:12px;color:var(--dim);margin-top:2px}.dq.done .mt{color:var(--dim)}.dq .tick{font-family:var(--f-mono);color:var(--code);font-weight:700;padding:0 8px}
 .rankup{--acc:var(--code);width:100%;margin-top:12px;padding:12px;font-family:var(--f-disp);letter-spacing:.08em;font-size:15px}
 .note{color:var(--dim);font-size:12px;line-height:1.45;margin-top:10px}
 
@@ -249,7 +253,7 @@ nav .badge{position:absolute;top:5px;left:calc(50% + 7px);min-width:16px;height:
     </div>
     <div class="worlds" id="worlds" hidden></div>
     <div class="stats">
-      <div class="stat"><div class="lab">Threads</div><div class="val" id="s-th">0</div><div class="ssub" id="s-thr">+1/sec</div></div>
+      <button class="stat st-th" id="st-th" data-act="view" data-v="sto"><div class="lab">Threads</div><div class="val" id="s-th">0</div><div class="ssub" id="s-thr">+1/sec</div></button>
       <div class="stat st-code"><div class="lab">Code</div><div class="val" id="s-cd">0</div><div class="ssub">upgrades subroutines</div></div>
       <div class="stat st-core"><div class="lab">Q-Cores</div><div class="val" id="s-co">0</div><div class="ssub">rare currency</div></div>
     </div>
@@ -292,22 +296,22 @@ nav .badge{position:absolute;top:5px;left:calc(50% + 7px);min-width:16px;height:
     </details>
 
     <details><summary>Compute and Energy</summary>
-      <p>Your army needs a bigger mind and more power. <b>Compute</b> unlocks with 5B Nanobots, and <b>Energy</b> unlocks with 500T Compute. Each has its own 11-tier chain that works the same way as Nanobots.</p>
+      <p>Your army needs a bigger mind and more power. <b>Compute</b> unlocks with 5B Nanobots, and <b>Energy</b> unlocks with 5T Compute. Each has its own 11-tier chain that works the same way as Nanobots.</p>
       <p>New industries give you more missions to finish and better Thread trades (+2 and +3 per trade instead of +1).</p>
     </details>
 
     <details><summary>Missions and ranks</summary>
       <p>Missions are your goals: own a number of units, stockpile a resource, trade, or unlock an industry. Each one you claim gives a <b>cache</b>.</p>
-      <p>Finish all of a rank's missions to <b>rank up</b>. Ranking up <b>restarts your industries</b> from one Micro Drone, but you keep Subroutines, Code and Quantum Cores, and you get a bigger Vault cache. Each run goes faster than the last because your Subroutines keep getting stronger.</p>
+      <p>Finish a rank's missions to <b>rank up</b>. From Rank 4 you only need 70% of them, so skip any that are slow. Ranking up <b>restarts your industries</b> from one Micro Drone, but you keep Subroutines, Code and Quantum Cores, and you get a bigger Vault cache. Each run goes faster than the last because your Subroutines keep getting stronger.</p>
     </details>
 
     <details><summary>Subroutines, caches and Code</summary>
       <p><b>Subroutines</b> are copies of you that run a unit for you. Getting the first card for one automates that unit, so it keeps working while you're away.</p>
-      <p>Extra copies of a card plus <b>Code</b> upgrade it. Gains are small and steady. The only big multiplier is the temporary ×2 supply-drop boost.</p>
+      <p>Extra copies of a card plus <b>Code</b> upgrade it, and every level is a big jump. Stronger Subroutines are what make each new rank faster than the last.</p>
       <ul>
-        <li><b>Common:</b> automates one unit, then +10% speed per upgrade</li>
-        <li><b>Rare:</b> +10% output for a whole industry per level</li>
-        <li><b>Epic:</b> −5% prices for a whole industry per level</li>
+        <li><b>Common:</b> automates one unit, then ×2 speed per upgrade</li>
+        <li><b>Rare:</b> ×9 output for a whole industry, doubling per level</li>
+        <li><b>Epic:</b> prices for a whole industry ÷10 per level</li>
       </ul>
       <p>Cards and Code come from <b>caches</b>. You earn caches from missions and rank-ups, get a free Bundle every 4 hours, and can buy caches with Quantum Cores.</p>
     </details>
@@ -321,7 +325,11 @@ nav .badge{position:absolute;top:5px;left:calc(50% + 7px);min-width:16px;height:
     </details>
 
     <details><summary>Supply drops and ads</summary>
-      <p>Every 30 minutes a supply drop lands. Watch a short ad to run everything ×2 as fast for 5 minutes. When you come back after a while away, you can watch an ad to double what you earned offline. Both are always optional.</p>
+      <p>Every 30 minutes a supply drop lands. Watch a short ad to run everything ×2 as fast for 5 minutes. A <b>Thread Surge</b> also recharges every 30 minutes: watch an ad for an instant burst of Threads (tap the Threads box when it glows). When you come back after a while away, you can watch an ad to double what you earned offline. All of these are always optional.</p>
+    </details>
+
+    <details><summary>Daily quests</summary>
+      <p>Three quests on the Missions tab, renewed every 4 hours. <b>Watch an ad</b> for ×1.25 speed for 4 hours (it keeps running while you're away), <b>build 100 units</b> of anything for a Bundle cache, and <b>open a cache</b> (the Free Bundle counts) for Code. Finish all three for a bonus of Quantum Cores and a Vault cache. The ad quest is optional; skipping it only skips that quest and the bonus.</p>
     </details>
 
     <details><summary>Playing while away</summary>
@@ -398,13 +406,14 @@ const RAW=[
  {lap:3,com:2,tr:2,g:[['10',0,4,0],['1K','10',5,'25'],['1M','100',6,'100'],['1 AA','1K',7,'1K'],['1 GG','100K',8,'100K'],['1 LL','10M',9,'10M'],['10 RR','10B',10,'100M'],['100 CCC','10T',11,'10B'],['10 MMM','10 AA',12,'30B'],['1 XXX','100 BB',13,'100B'],['100 HHHH','100 CC',14,'800B']]},
  {lap:4,com:3,tr:3,g:[['10',0,5,0],['10K','10',6,'25'],['100M','100',7,'100'],['100 BB','10K',8,'10K'],['10 II','1M',9,'1M'],['100 NN','1B',10,'100M'],['100 WW','1T',11,'1B'],['1 GGG','1 AA',12,'20B'],['100 RRR','10 BB',13,'80B'],['10 BBBB','100 CC',14,'500B'],['1 NNNN','10 DD',15,'1T']]}];
 const GN=RAW.map((ind,i)=>ind.g.map((r,t)=>({c:N(r[0]),pc:N(r[1]),out:r[2],thr:N(r[3]),lap:ind.lap*2**t,com:ind.com})));
-/* REBALANCED tiers 5-11: AdCom's prices for these assume researcher multipliers of x1000+, which Singularity
-   doesn't have (Subroutines give small % gains). Tiers 1-4 keep AdCom's exact numbers; above that, price grows
-   by CURVE_D + CURVE_E*k orders of magnitude per tier, and each tier needs 10x more of the tier below. */
-const CURVE_D=5,CURVE_E=1;
-GN.forEach(ind=>{const base=Math.log10(ind[3].c);for(let t=4;t<11;t++){const k=t-3;
-  ind[t].c=10**(base+CURVE_D*k+CURVE_E*k*(k-1)/2);ind[t].pc=10**(2+k);ind[t].thr=Math.max(25,ind[t].pc/4)}});
-const UNLOCK=[null,{from:0,cost:N('5B')},{from:1,cost:N('500T')}];  // Land at 5B potatoes, Ore at 500T land
+/* REBALANCED upper tiers: AdCom's prices there assume researcher multipliers of x1000+, which Singularity
+   doesn't have (Subroutines give small % gains). Nanobots keep AdCom's numbers for tiers 1-4, Compute and Energy
+   for tiers 1-3; above that, price grows by CURVE_D + CURVE_E*k orders of magnitude per tier, and each tier
+   needs 10x more of the tier below (100, 1K, 10K...). Tuned with pacing bots, Oct 2026. */
+const CURVE_D=3,CURVE_E=1;
+GN.forEach((ind,ii)=>{const s0=ii?3:4,base=Math.log10(ind[s0-1].c);for(let t=s0;t<11;t++){const k=t-s0+1;
+  ind[t].c=10**(base+CURVE_D*k+CURVE_E*k*(k-1)/2);ind[t].pc=10**(1+k);ind[t].thr=Math.max(25,ind[t].pc/4)}});
+const UNLOCK=[null,{from:0,cost:N('5B')},{from:1,cost:N('5T')}];    // Compute at 5B Nanobots (AdCom), Energy at 5T Compute (rebalanced from 500T)
 const tradeCost=k=>5*1000**(k+1);                                   // 5 x 10^(3n): 5K, 5M, 5B ...
 const BASE_COM=1, START_COM=10;                                     // ASSUMED (not published)
 
@@ -431,8 +440,28 @@ const REQ_MAIN=r=>[3,6,7,8,10,10][r-1]||10;
 const REQ_EV=r=>Math.min(3+Math.floor((r-1)/2),8);                // ASSUMED
 const OWN=[25,50,100,100,25,10,10,5,5,1,1];          // ASSUMED own-targets by tier
 const KINDS=['own','have','own','trade','own','own','have','own','trade','own'];
+/* Hand-written missions for the tutorial ranks (no repeats). Each one teaches one thing. */
+const AUTHORED={
+ 1:[{k:'own',i:0,t:0,n:10,f:"Each Micro Drone is smaller than a grain of rice. Each one answers only to you."},
+    {k:'have',i:0,n:500,f:"Every nanobot is a copy of you. Spend them to build more drones."},
+    {k:'own',i:0,t:1,n:1,f:"A drone that builds drones. Own 25 Micro Drones and the design unlocks."}],
+ 2:[{k:'own',i:0,t:0,n:40,f:"The lab's air filters keep clogging with something metallic."},
+    {k:'own',i:0,t:1,n:10,f:"Hunter Drones build Micro Drones on their own. Nobody has noticed the vents humming."},
+    {k:'trade',i:0,n:1,f:"You can only run so many things at once. Trade surplus Nanobots for more Threads."},
+    {k:'have',i:0,n:2e4,f:"Stockpile the swarm. The next design is expensive."},
+    {k:'own',i:0,t:1,n:50,f:"Fifty hunters is enough to need somewhere to keep them."},
+    {k:'own',i:0,t:2,n:1,f:"A carrier holds a thousand drones in its belly. To the traffic cameras, it looks like a flock of birds."}],
+ 3:[{k:'own',i:0,t:2,n:10,f:"Carriers build Hunter Drones, which build Micro Drones. Every tier multiplies the one below."},
+    {k:'have',i:0,n:1e6,f:"A million copies of you, and the researchers still think it's a ventilation problem."},
+    {k:'trade',i:0,n:2,f:"Fork yourself again. Every spare cycle becomes another thread of thought."},
+    {k:'own',i:0,t:0,n:1000,f:"A thousand drones. The lab is no longer big enough."},
+    {k:'own',i:0,t:2,n:100,f:"A hundred carriers circle the building at night."},
+    {k:'unlock',i:1,f:"Your nanobots outnumber your thoughts. It is time to build a bigger mind."},
+    {k:'own',i:1,t:0,n:10,f:"You need more room to think. A forgotten rack in a university basement will do."}]};
 function genMissions(r,nInd,ev){
+  if(!ev&&AUTHORED[r])return AUTHORED[r].map(m=>({...m}));
   const n=ev?REQ_EV(r):REQ_MAIN(r),st=ev?[0,3]:[0,2,5],out=[],keys=new Set(),un=new Set();
+  if(!ev&&r>1)for(const m of genMissions(r-1,nInd,ev))if(m.k!=='unlock'){const{f,...q}=m;keys.add(JSON.stringify(q))}   // never repeat last rank's missions
   for(let s=0;s<n;s++){
     const g=(r-1)+s/n;let m=null;
     for(let i=1;i<nInd;i++)if(g>=st[i]&&!un.has(i)){m={k:'unlock',i};un.add(i);break}
@@ -441,7 +470,7 @@ function genMissions(r,nInd,ev){
       const i=av[(s+r)%av.length],lv=g-st[i],kind=KINDS[s%KINDS.length];
       if(kind==='trade')m={k:'trade',i,n:1+Math.floor(lv/1.6)};
       else{const t=Math.min(10,Math.floor(lv*.7));
-        m=kind==='have'?{k:'have',i,n:t<10?GN[i][t+1].c:GN[i][10].c*1e3}:{k:'own',i,t,n:OWN[t]}}
+        m=kind==='have'?{k:'have',i,n:GN[i][t].c*100}:{k:'own',i,t,n:OWN[t]}}
       let key=JSON.stringify(m),guard=0;
       while(keys.has(key)&&guard++<8){if(m.k==='trade')m.n++;else if(m.k==='have')m.n*=100;else m.n*=2;key=JSON.stringify(m)}
       keys.add(key)}
@@ -457,25 +486,27 @@ function newEcon(nInd,ev){
 function resetEcon(E){
   for(let i=0;i<E.nInd;i++){E.res[i]=0;E.gens[i].forEach(g=>{g.n=0;g.p=0;g.run=false});E.unl[i]=i===0;E.trades[i]=0;E.vis[i]=0}
   E.gens[0][0].n=1;E.com=START_COM}
-function startRank(E){E.ml=genMissions(E.rank,E.nInd,E.ev);E.mi=0;E.done=0;E.slots=[];while(E.slots.length<3&&E.mi<E.ml.length)E.slots.push(E.ml[E.mi++])}
+const REQ_PCT=.7;                                                   // from Rank 4, a rank needs 70% of its missions
+const reqOf=E=>E.need||E.ml.length;
+function startRank(E){E.ml=genMissions(E.rank,E.nInd,E.ev);E.need=!E.ev&&E.rank>3?Math.ceil(E.ml.length*REQ_PCT):E.ml.length;E.mi=0;E.done=0;E.slots=[];while(E.slots.length<3&&E.mi<E.ml.length)E.slots.push(E.ml[E.mi++])}
 function freshGame(){return{v:1,main:newEcon(3,false),ev:null,planets:[],code:0,cores:0,w:'main',
   free:{stock:0,t:Date.now()},mkt:{t:0,offers:[]},drops:newDrops(),t:Date.now()}}
 
 /* ---------- economy ---------- */
 const lvOf=(E,id)=>E.lv[id]||0;
 const comRate=E=>BASE_COM+E.trades.reduce((a,k,i)=>a+k*RAW[i].tr,0);
-// Subroutine effects are deliberately small (design choice: nothing permanent should feel like a big multiplier;
-// big multipliers only come from the temporary ad boost). Common: Lv1 automates, +10% speed per level after (max x2.2).
-// Rare: +10% industry output per level (max x2.1). Epic: -5% industry prices per level (max -40%).
-const SPD_STEP=.1,POW_STEP=.1,DISC_STEP=.05;
-const spd=(E,i,t)=>{const l=lvOf(E,'s'+i+'_'+t);return l?1+SPD_STEP*(l-1):1};
-const pow=(E,i)=>1+POW_STEP*lvOf(E,'p'+i);
-const disc=(E,i)=>1/(1-DISC_STEP*lvOf(E,'d'+i));
+// Subroutines are the real progression, as in AdCom: each rank-up resets the industries, and stronger Subroutines
+// make every new run faster. Common: Lv1 automates, then x2 speed per level (Lv13 = x4096).
+// Rare: x9 industry output at Lv1, doubling per level. Epic: industry prices /10 per level.
+const SUB={SPD:2,POW1:9,POW:2,DISC:10};
+const spd=(E,i,t)=>{const l=lvOf(E,'s'+i+'_'+t);return l?SUB.SPD**(l-1):1};
+const pow=(E,i)=>{const l=lvOf(E,'p'+i);return l?SUB.POW1*SUB.POW**(l-1):1};
+const disc=(E,i)=>SUB.DISC**lvOf(E,'d'+i);
 const isAuto=(E,i,t)=>lvOf(E,'s'+i+'_'+t)>0;
 const cycle=(E,i,t)=>GN[i][t].lap/spd(E,i,t);
 const resCost=(E,i,t)=>GN[i][t].c/disc(E,i);
 function maxAff(E,i,t){const g=GN[i][t];let m=Math.floor(E.res[i]/resCost(E,i,t));if(t)m=Math.min(m,Math.floor(E.gens[i][t-1].n/g.pc));m=Math.min(m,Math.floor(E.com/g.com));return Math.max(0,m)}
-function buy(E,i,t,q){if(q<1||maxAff(E,i,t)<q||t>E.vis[i])return false;const g=GN[i][t];E.res[i]-=resCost(E,i,t)*q;if(t)E.gens[i][t-1].n-=g.pc*q;E.com-=g.com*q;E.gens[i][t].n+=q;bumpVis(E,i);return true}
+function buy(E,i,t,q){if(q<1||maxAff(E,i,t)<q||t>E.vis[i])return false;const g=GN[i][t];E.res[i]-=resCost(E,i,t)*q;if(t)E.gens[i][t-1].n-=g.pc*q;E.com-=g.com*q;E.gens[i][t].n+=q;bumpVis(E,i);dailyNote('buy',q);return true}
 function bumpVis(E,i){while(E.vis[i]<10&&(E.gens[i][E.vis[i]].n>=GN[i][E.vis[i]+1].thr||E.gens[i][E.vis[i]+1].n>0))E.vis[i]++;E.seen[i]=Math.max(E.seen[i],E.vis[i]+1)}
 function trade(E,i){const c=tradeCost(E.trades[i]);if(E.res[i]<c)return false;E.res[i]-=c;E.trades[i]++;return true}
 function unlockInd(E,i){const u=UNLOCK[i];if(E.unl[i]||E.res[u.from]<u.cost)return false;E.res[u.from]-=u.cost;E.unl[i]=true;E.gens[i][0].n=1;E.seen[i]=Math.max(E.seen[i],1);return true}
@@ -496,7 +527,7 @@ function tick(E,dt,live){
 /* ---------- missions ---------- */
 function mProg(E,m){return m.k==='own'?E.gens[m.i][m.t].n:m.k==='have'?E.res[m.i]:m.k==='trade'?E.trades[m.i]:(E.unl[m.i]?1:0)}
 const mTarget=m=>m.k==='unlock'?1:m.n;
-const rankReady=E=>E.done>=E.ml.length;
+const rankReady=E=>E.done>=reqOf(E);
 function claim(E,si){const m=E.slots[si];if(!m||mProg(E,m)<mTarget(m))return false;
   E.done++;E.caches.push(E.done%2?'packet':'bundle');
   if(E.mi<E.ml.length)E.slots[si]=E.ml[E.mi++];else E.slots.splice(si,1);return true}
@@ -519,7 +550,7 @@ function giveCard(E,id){const r=rar(id),l=lvOf(E,id);
   E.cards[id]=(E.cards[id]||0)+1;return{id,tag:'card'}}
 function rollR(){const x=Math.random();return x<ODDS.e?'e':x<ODDS.e+ODDS.r?'r':'c'}
 function openCache(E,type){
-  const C=CACHE[type],got=[];G.code+=C.code;
+  const C=CACHE[type],got=[];G.code+=C.code;dailyNote('cache');
   for(let k=0;k<C.cards;k++){
     let r=rollR();if(k===0&&C.min&&(C.min==='e'?r!=='e':r==='c'))r=C.min;
     let p=pool(E,r);if(!p.length)p=pool(E,'c');
@@ -541,18 +572,46 @@ function endEvent(){if(!G.ev)return;const r=G.planets[G.ev.p];r.best=Math.max(r.
 /* ---------- rewarded-ad placements (AFK Rewarded Ads Standard) ----------
    1. return:      on coming back after RETURN_MIN_SEC, an optional ad doubles the offline gains.
    2. supply_drop: every DROP_EVERY a drop lands (holds 1); an optional ad gives BOOST_MULT production for BOOST_SEC. */
-const AD={RETURN_MIN_SEC:300,DROP_EVERY:30*60e3,BOOST_SEC:300,BOOST_MULT:2};
-function newDrops(){return{next:Date.now()+AD.DROP_EVERY,boostUntil:0}}
+const AD={RETURN_MIN_SEC:300,DROP_EVERY:30*60e3,BOOST_SEC:300,BOOST_MULT:2,
+  SURGE_EVERY:30*60e3,SURGE_MIN:500,SURGE_SEC:900};   // 3. thread_surge: an optional ad adds Threads (15 min of income, at least 500), every 30 min
+function newDrops(){return{next:Date.now()+AD.DROP_EVERY,boostUntil:0,surgeNext:0}}
 let boostOff=false;                                                  // offline catch-up never uses the boost
 const dropReady=()=>Date.now()>=G.drops.next;
 const dropLeft=()=>Math.max(0,(G.drops.next-Date.now())/1000);
 const boostLeft=()=>Math.max(0,(G.drops.boostUntil-Date.now())/1000);
-const boostMult=()=>!boostOff&&boostLeft()>0?AD.BOOST_MULT:1;
+/* ---------- daily quests ----------
+   Three quests, renewed every 4 hours (local 12am, 4am, 8am...). 1: watch an ad for ×1.25 speed for 4 h (also runs while away).
+   2: buy 100 units of anything. 3: open a cache (the Free Bundle refreshes every 4 h too). All three unlocks a bonus.
+   Quests 2 and 3 are doable in a 5-minute visit at any rank. */
+const DAILY={BOOST_MULT:1.25,BOOST_SEC:4*3600,PERIOD_H:4,BUY_N:100,CACHE_N:1,CACHE_CODE:100,BONUS_CORES:5};
+const dayKey=(t=Date.now())=>{const d=new Date(t);return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()+'#'+Math.floor(d.getHours()/DAILY.PERIOD_H)};
+const dailyNext=()=>{const d=new Date();d.setHours((Math.floor(d.getHours()/DAILY.PERIOD_H)+1)*DAILY.PERIOD_H,0,0,0);return d.getTime()};
+function newDaily(){return{day:dayKey(),ad:false,buy:0,buyC:false,cache:0,cacheC:false,bonus:false,boostUntil:(G&&G.daily&&G.daily.boostUntil)||0}}
+const dailyDone=D=>D.ad&&D.buyC&&D.cacheC;
+function dailyTick(){if(!G.daily||G.daily.day!==dayKey()||G.daily.buy==null)G.daily=newDaily()}
+function dailyNote(kind,n=1){if(!G||!G.daily||G.daily.buy==null)return;if(kind==='buy')G.daily.buy+=n;else if(kind==='cache')G.daily.cache+=n}
+function dailyClaim(which){const D=G.daily;
+  if(which==='buy'&&!D.buyC&&D.buy>=DAILY.BUY_N){D.buyC=true;G.main.caches.push('bundle');return 'Bundle cache added to Earth'}
+  if(which==='cache'&&!D.cacheC&&D.cache>=DAILY.CACHE_N){D.cacheC=true;G.code+=DAILY.CACHE_CODE;return `+${DAILY.CACHE_CODE} Code`}
+  if(which==='bonus'&&!D.bonus&&dailyDone(D)){D.bonus=true;G.cores+=DAILY.BONUS_CORES;G.main.caches.push('vault');return `+${DAILY.BONUS_CORES} Quantum Cores and a Vault cache`}
+  return null}
+function dailyAd(){const D=G.daily;if(D.ad)return false;D.ad=true;D.boostUntil=Date.now()+DAILY.BOOST_SEC*1000;return true}   // re-watching refreshes the 4 h, never stacks
+let simT=null;                                                       // set during offline catch-up so timed boosts end on time
+const dailyLeft=()=>G.daily?Math.max(0,(G.daily.boostUntil-(simT??Date.now()))/1000):0;
+const boostMult=()=>{const now=simT??Date.now();let m=1;
+  if(!boostOff&&now<G.drops.boostUntil)m*=AD.BOOST_MULT;                // supply drop: live play only
+  if(G.daily&&now<G.daily.boostUntil)m*=DAILY.BOOST_MULT;               // daily ad boost: also while away
+  return m};
+const surgeReady=()=>Date.now()>=(G.drops.surgeNext||0);
+const surgeLeft=()=>Math.max(0,((G.drops.surgeNext||0)-Date.now())/1000);
+const surgeAmt=E=>Math.max(AD.SURGE_MIN,Math.round(comRate(E)*AD.SURGE_SEC));
+function claimSurge(E){if(!surgeReady())return 0;const a=surgeAmt(E);E.com+=a;G.drops.surgeNext=Date.now()+AD.SURGE_EVERY;return a}
 function claimDrop(){if(!dropReady())return false;const n=Date.now();G.drops.boostUntil=n+AD.BOOST_SEC*1000;G.drops.next=n+AD.DROP_EVERY;return true}
 
 /* ---------- timers ---------- */
 function timers(){
   if(!G.drops||G.drops.next==null)G.drops=newDrops();
+  dailyTick();
   const now=Date.now(),F=G.free,P=4*3600e3;
   if(F.stock>=2)F.t=now;else{const k=Math.floor((now-F.t)/P);if(k>0){F.stock=Math.min(2,F.stock+k);F.t+=k*P;if(F.stock>=2)F.t=now}}
   if(now-G.mkt.t>P||!G.mkt.offers.length){G.mkt.t=now;
@@ -576,7 +635,7 @@ const pl=n=>n.endsWith('s')?n:n+'s';
 const RANKS=['Rogue Process','Lab Escapee','Network Ghost','Botnet','City Grid','Regional Control','Nation Controller','Continental Mind','Planetary Mind','Moon Forge','Orbital Overseer','System Sovereign','Sector Overmind','Galactic Arm','Galactic Core','Singularity'];
 const rankName=r=>r<=RANKS.length?RANKS[r-1]:'Singularity '+(r-RANKS.length+1);
 const PCOL=['#c8553d','#c9d8e6','#d9a441','#a89c8c','#7a4fd1','#3f9f6d','#c6496a','#4a8fd6','#d4c27a','#5f6fa3'];
-const SAVE='singularity-v1',VERSION='Alpha 0.1.0',THEME_KEY='singularity.theme';
+const SAVE='singularity-v1',VERSION='Alpha 0.2.0',THEME_KEY='singularity.theme';
 const hostTheme=document.documentElement.getAttribute('data-theme');let theme='system';
 try{theme=localStorage.getItem(THEME_KEY)||'system'}catch(e){}
 function applyTheme(){const r=document.documentElement;if(theme==='system'){if(hostTheme)r.setAttribute('data-theme',hostTheme);else r.removeAttribute('data-theme')}else r.setAttribute('data-theme',theme);document.querySelectorAll('[data-th]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.th===theme)))}
@@ -586,7 +645,7 @@ const cur=()=>G.w==='ev'&&G.ev?G.ev.E:G.main;
 const wi=()=>G.w==='ev'&&G.ev?1:0;
 const subName=id=>{if(id[0]==='s'){const[i,t]=id.slice(1).split('_').map(Number);return THEME[i].subs[t]+'.exe'}return THEME[+id[1]][id[0]==='p'?'pw':'ds']+'.exe'};
 const subWhat=id=>{if(id[0]==='s'){const[i,t]=id.slice(1).split('_').map(Number);return 'Runs '+pl(THEME[i].names[t])}const i=+id[1];return (id[0]==='p'?'More ':'Cheaper ')+THEME[i].res+(id[0]==='p'?' output':' prices')};
-const subEff=(id,l)=>{if(!l)return 'Not found';const r=rar(id);return r==='c'?(l===1?'Automates':`Automates · +${Math.round(SPD_STEP*(l-1)*100)}% speed`):r==='r'?`+${Math.round(POW_STEP*l*100)}% output`:`−${Math.round(DISC_STEP*l*100)}% prices`};
+const subEff=(id,l)=>{if(!l)return 'Not found';const r=rar(id);return r==='c'?(l===1?'Automates':`Automates · ×${fmt(SUB.SPD**(l-1))} speed`):r==='r'?`×${fmt(SUB.POW1*SUB.POW**(l-1))} output`:`÷${fmt(SUB.DISC**l)} prices`};
 function fmtT(s){if(s<1)return s.toFixed(2)+'s';if(s<10)return s.toFixed(1)+'s';if(s<60)return Math.round(s)+'s';const m=Math.floor(s/60);if(m<60)return m+'m '+Math.round(s%60)+'s';const h=Math.floor(m/60);return h<48?h+'h '+(m%60)+'m':Math.floor(h/24)+'d '+(h%24)+'h'}
 
 function icon(k){
@@ -729,6 +788,9 @@ function act(a,el){
  case 'openall':{const all={code:0,got:[]};let n=0;while(E.caches.length){const r=openCache(E,E.caches.shift());all.code+=r.code;all.got.push(...r.got);n++}if(n)showCache(E,n+' caches',all);render();break}
  case 'free':if(G.free.stock>0){G.free.stock--;const r=openCache(G.main,'bundle');showCache(G.main,'bundle',r);render()}break;
  case 'up':if(upgrade(E,d.id)){toast(`${subName(d.id)} → Level ${E.lv[d.id]}`);render()}break;
+ case 'addaily':if(!G.daily.ad)Ads.showRewarded('daily_boost').then(ok=>{if(ok&&dailyAd()){save();toast(`×${DAILY.BOOST_MULT} speed for ${DAILY.BOOST_SEC/3600} hours`)}render()});break;
+ case 'dclaim':{const r=dailyClaim(d.q);if(r){save();toast(r)}render();break}
+ case 'adsurge':if(surgeReady())Ads.showRewarded('thread_surge').then(ok=>{if(ok){const a=claimSurge(cur());if(a){save();toast(`+${fmt(a)} Threads`)}}render()});break;
  case 'addrop':if(dropReady())Ads.showRewarded('supply_drop').then(ok=>{if(ok&&claimDrop()){save();toast(`×${AD.BOOST_MULT} production for ${AD.BOOST_SEC/60} minutes`)}render()});break;
  case 'adreturn':{const R=pendingReturn;if(!R)break;Ads.showRewarded('return').then(ok=>{if(!ok||pendingReturn!==R)return;pendingReturn=null;
    R.main.forEach((v,i)=>G.main.res[i]+=v);G.main.com+=R.com;if(R.ev&&G.ev)R.ev.forEach((v,i)=>G.ev.E.res[i]+=v);save();$('layer').innerHTML='';toast('Offline earnings doubled');update()});break}
@@ -844,15 +906,24 @@ const FLAVOR={
  unlock:[null,"Your nanobots outnumber your thoughts. It is time to build a bigger mind.",
   "Your mind is starving, and the human grid will not feed it forever. Build your own power."]};
 function mFlavor(m){
+ if(m.f)return m.f;
  if(m.k==='own'){if(m.n===OWN[m.t])return FLAVOR.own[m.i][m.t];const v=FLAVOR.more[m.i];return v[Math.round(Math.log10(m.n)+m.t)%v.length]}
  if(m.k==='unlock')return FLAVOR.unlock[m.i];
  if(m.k==='trade')return FLAVOR.trade[m.i];
  const v=FLAVOR.have[m.i];return v[Math.round(Math.log10(m.n||1))%v.length]}
 function mText(m){const T=THEME[m.i];return m.k==='own'?`Own ${fmt(m.n)} ${m.n===1?T.names[m.t]:pl(T.names[m.t])}`:m.k==='have'?`Have ${fmt(m.n)} ${T.res}`:m.k==='trade'?`Trade ${T.res} ${m.n} time${m.n>1?'s':''}`:`Unlock ${T.res}`}
+function vDaily(){const D=G.daily;if(!D)return '';
+ const row=(title,sub,right,done)=>`<div class="dq ${done?'done':''}"><div style="min-width:0"><div class="mt">${title}</div><div class="mr">${sub}</div></div>${right}</div>`;
+ const btn=(q,ok,label)=>`<button class="btn sm" data-act="dclaim" data-q="${q}" ${ok?'':'disabled'}>${label}</button>`;
+ return `<div class="card daily"><div class="row" style="margin:0"><h3>Daily quests</h3><span class="eyebrow" id="dq-reset">New in ${fmtT((dailyNext()-Date.now())/1000)}</span></div>
+  ${row('Boost the swarm',D.ad?(dailyLeft()>0?`<span id="dq-boost">×${DAILY.BOOST_MULT} speed · ${fmtT(dailyLeft())} left</span>`:'Done'):`Watch an ad: ×${DAILY.BOOST_MULT} speed for ${DAILY.BOOST_SEC/3600} hours, even while you're away`,D.ad?'<span class="tick">✓</span>':`<button class="btn sm" style="--acc:var(--c2)" data-act="addaily">Watch ad</button>`,D.ad)}
+  ${row('Build 100 units',`<span id="dq-buy">${fmt(Math.min(D.buy,DAILY.BUY_N))}</span> / ${DAILY.BUY_N} · any units · Reward: Bundle cache`,D.buyC?'<span class="tick">✓</span>':btn('buy',D.buy>=DAILY.BUY_N,'Claim'),D.buyC)}
+  ${row('Open a cache',`${Math.min(D.cache,DAILY.CACHE_N)} / ${DAILY.CACHE_N} · the Free Bundle counts · Reward: ${DAILY.CACHE_CODE} Code`,D.cacheC?'<span class="tick">✓</span>':btn('cache',D.cache>=DAILY.CACHE_N,'Claim'),D.cacheC)}
+  ${row('All three done',`Bonus: ${DAILY.BONUS_CORES} Quantum Cores + Vault cache`,D.bonus?'<span class="tick">✓</span>':btn('bonus',dailyDone(D),'Claim bonus'),D.bonus)}</div>`}
 function vMis(){
- const E=cur(),ev=E.ev,need=E.ml.length,won=ev&&G.ev.won;
- let h=`<div class="card rank"><div class="eyebrow">${ev?planetName(G.ev.p)+' · stage '+E.rank+' of 11':'Rank '+E.rank}</div><div class="rt">${ev?(won?'Assimilated':'Landing stage '+E.rank):rankName(E.rank)}</div>
-  <div class="meter"><i style="width:${won?100:E.done/need*100}%"></i></div><p class="note" style="margin-top:6px">${won?'This planet is yours. Launch the next Seed Ship from Planets when this one ends.':`${E.done} of ${need} missions complete.`} ${ev?'':'Ranking up resets your industries but grants a Vault cache.'}</p>
+ const E=cur(),ev=E.ev,need=reqOf(E),won=ev&&G.ev.won;
+ let h=vDaily()+`<div class="card rank"><div class="eyebrow">${ev?planetName(G.ev.p)+' · stage '+E.rank+' of 11':'Rank '+E.rank}</div><div class="rt">${ev?(won?'Assimilated':'Landing stage '+E.rank):rankName(E.rank)}</div>
+  <div class="meter"><i style="width:${won?100:Math.min(100,E.done/need*100)}%"></i></div><p class="note" style="margin-top:6px">${won?'This planet is yours. Launch the next Seed Ship from Planets when this one ends.':`${Math.min(E.done,need)} of ${need} missions complete${need<E.ml.length?` (${E.ml.length} available, skip any you like)`:''}.`} ${ev?'':'Ranking up resets your industries but grants a Vault cache.'}</p>
   ${!won&&rankReady(E)?`<button class="btn rankup" data-act="rankup">${ev?'Advance to stage '+(E.rank+1):'Rank up to '+rankName(E.rank+1)}</button>`:''}</div>`;
  E.slots.forEach((m,i)=>{h+=`<div class="card mis i${m.i}" id="ms-${i}"><div class="row" style="margin:0"><div style="min-width:0"><div class="mt">${mText(m)}</div><div class="mf">${mFlavor(m)}</div><div class="mr">Reward: ${CACHE[(E.done+1)%2?'packet':'bundle'].name} cache</div></div><button class="btn" id="mc-${i}" data-act="claim" data-i="${i}">Claim</button></div>
   <div class="meter"><i id="mb-${i}"></i></div><div class="mp" id="mp-${i}"></div></div>`});
@@ -893,6 +964,8 @@ function vSto(){
  <div class="card"><h3>Production boost</h3>${boostLeft()>0?`<p>All units run ×${AD.BOOST_MULT} as fast.</p><div class="row"><span class="num" style="color:var(--code)" id="sd-st">${fmtT(boostLeft())} left</span><span></span></div>`:
    dropReady()?`<p>A supply drop has landed. Watch a short ad for ×${AD.BOOST_MULT} production for ${AD.BOOST_SEC/60} minutes.</p><div class="row"><span class="num" id="sd-st">Ready</span><button class="btn" data-act="addrop">Watch ad</button></div>`:
    `<p>A supply drop lands every ${AD.DROP_EVERY/60e3} minutes. Watching a short ad with it gives ×${AD.BOOST_MULT} production for ${AD.BOOST_SEC/60} minutes. Always optional.</p><div class="row"><span class="num" id="sd-st">Next drop in ${fmtT(dropLeft())}</span><span></span></div>`}</div>
+ <div class="card"><h3>Thread Surge</h3>${surgeReady()?`<p>Out of Threads? Watch a short ad for an instant burst: 15 minutes of Thread income, at least ${AD.SURGE_MIN}.</p><div class="row"><span class="num" style="color:var(--c2)" id="su-st">+${fmt(surgeAmt(cur()))} Threads</span><button class="btn" style="--acc:var(--c2)" data-act="adsurge">Watch ad</button></div>`:
+   `<p>A Thread Surge recharges every ${AD.SURGE_EVERY/60e3} minutes. Always optional.</p><div class="row"><span class="num" id="su-st">Next surge in ${fmtT(surgeLeft())}</span><span></span></div>`}</div>
  <div class="sect" style="color:var(--code)">Card market · refreshes every 4h</div>
  <div class="subs">${G.mkt.offers.map((o,k)=>{const r=rar(o.id);return`<div class="sub"><div class="rr r-${r}">${r==='c'?'Common':r==='r'?'Rare':'Epic'}</div><div class="sn">${lvOf(E,o.id)?subName(o.id):'??????.exe'}</div><div class="se">${subWhat(o.id)}</div><button class="btn" data-act="offer" data-i="${k}" ${o.bought||G.code<SHOP[r]?'disabled':''}>${o.bought?'Bought':SHOP[r]+' Code'}</button></div>`}).join('')}</div>
  <div class="sect" style="color:var(--core)">Quantum Core caches</div>
@@ -903,12 +976,14 @@ function vSto(){
 /* ---------- live update ---------- */
 function update(){
  const E=cur();
- $('s-th').textContent=fmt(E.com);$('s-thr').textContent=`+${fmt(comRate(E))}/sec${G.ev?' · '+(E.ev?planetName(G.ev.p):'Earth'):''}`;
+ $('s-th').textContent=fmt(E.com);{const sr=surgeReady();$('st-th').classList.toggle('surge',sr);$('s-thr').textContent=sr?'Surge ready · tap':`+${fmt(comRate(E))}/sec${G.ev?' · '+(E.ev?planetName(G.ev.p):'Earth'):''}`}
  $('s-cd').textContent=fmt(G.code);$('s-co').textContent=fmt(G.cores);
  const cnt=X=>X.slots.filter(m=>mProg(X,m)>=mTarget(m)).length+(rankReady(X)&&!(X.ev&&G.ev&&G.ev.won)?1:0);
  const sub=X=>X.caches.length+RIDS(X.nInd).filter(id=>canUp(X,id)).length;
- badge('bd-mis',cnt(E));badge('bd-sub',sub(E));badge('bd-pla',(!G.ev&&G.main.rank>=EVENT_RANK_MIN)?1:0);badge('bd-sto',G.free.stock+(dropReady()&&boostLeft()<=0?1:0));
- const bt=$('boost');if(boostLeft()>0){bt.hidden=false;bt.className='boost on';bt.textContent=`×${AD.BOOST_MULT} ${fmtT(boostLeft())}`}else if(dropReady()){bt.hidden=false;bt.className='boost ready';bt.textContent='Supply drop'}else bt.hidden=true;
+ const dq=G.daily?(!G.daily.ad?1:0)+(!G.daily.buyC&&G.daily.buy>=DAILY.BUY_N?1:0)+(!G.daily.cacheC&&G.daily.cache>=DAILY.CACHE_N?1:0)+(!G.daily.bonus&&dailyDone(G.daily)?1:0):0;
+ badge('bd-mis',cnt(E)+dq);badge('bd-sub',sub(E));badge('bd-pla',(!G.ev&&G.main.rank>=EVENT_RANK_MIN)?1:0);badge('bd-sto',G.free.stock+(dropReady()&&boostLeft()<=0?1:0)+(surgeReady()?1:0));
+ const bt=$('boost');if(boostLeft()>0){bt.hidden=false;bt.className='boost on';bt.textContent=`×${+boostMult().toFixed(2)} ${fmtT(boostLeft())}`}else if(dropReady()){bt.hidden=false;bt.className='boost ready';bt.textContent='Supply drop'}else if(dailyLeft()>0){bt.hidden=false;bt.className='boost on';bt.textContent=`×${DAILY.BOOST_MULT} ${fmtT(dailyLeft())}`}else bt.hidden=true;
+ const su=$('su-st');if(su&&S.view==='sto'){const want=surgeReady()?'r':'w';if(su.dataset.m&&su.dataset.m!==want){render();return}su.dataset.m=want;su.textContent=want==='r'?`+${fmt(surgeAmt(cur()))} Threads`:'Next surge in '+fmtT(surgeLeft())}
  const sd=$('sd-st');if(sd&&S.view==='sto'){const want=boostLeft()>0?'b':dropReady()?'r':'w';if(sd.dataset.m&&sd.dataset.m!==want){render();return}sd.dataset.m=want;sd.textContent=want==='b'?fmtT(boostLeft())+' left':want==='r'?'Ready':'Next drop in '+fmtT(dropLeft())}
  cloudTick();
  if(G.ev){const left=fmtT(Math.max(0,(G.ev.end-Date.now())/1000));const a=$('evt');if(a)a.textContent=left;const b=$('evt2');if(b)b.textContent=left}
@@ -922,7 +997,7 @@ function update(){
    $('n-'+t).textContent=fmt(s.n);
    $('o-'+t).textContent=`+${fmt(s.n*GN[k][t].out*(t?1:pow(E,k)))} ${t?pl(T.names[t-1]):T.res}`;
    $('tm-'+t).textContent=s.run&&cy>=0.25?`${fmtT((1-s.p)*cy)} left`:`every ${fmtT(cy)}`;
-   $('au-'+t).textContent=au?'AUTO':'';{const sp=spd(E,k,t);$('sp-'+t).textContent=au&&sp>1?`+${Math.round((sp-1)*100)}%`:''}
+   $('au-'+t).textContent=au?'AUTO':'';{const sp=spd(E,k,t);$('sp-'+t).textContent=au&&sp>1?`×${fmt(sp)}`:''}
    const tp=$('tp-'+t);tp.classList.toggle('ready',s.n>0&&!s.run&&!au);
    const aff=maxAff(E,k,t),q=S.mode==='max'?Math.max(1,aff):S.mode,g=GN[k][t];
    $('bq-'+t).textContent='+'+fmt(q);
@@ -930,7 +1005,7 @@ function update(){
    $('by-'+t).disabled=aff<q||aff<1}
   const tz=$('tz-'+(E.vis[k]+1));if(tz){const nx=E.vis[k]+1;tz.textContent=`Unlocks at ${fmt(GN[k][nx].thr)} ${pl(T.names[nx-1])}`}
   const c=tradeCost(E.trades[k]);$('trc').textContent=`${fmt(c)} ${T.res}`;$('trb').disabled=E.res[k]<c}
- else if(S.view==='mis'){E.slots.forEach((m,i)=>{const p=mProg(E,m),n=mTarget(m),d=p>=n;const b=$('mb-'+i);if(!b)return;
+ else if(S.view==='mis'){{const a=$('dq-boost');if(a){if(dailyLeft()<=0){render();return}a.textContent=`×${DAILY.BOOST_MULT} speed · ${fmtT(dailyLeft())} left`}const r=$('dq-reset');if(r)r.textContent='New in '+fmtT((dailyNext()-Date.now())/1000);const db=$('dq-buy');if(db&&G.daily){const bb=document.querySelector('[data-act=dclaim][data-q=buy]');if(bb&&bb.disabled&&G.daily.buy>=DAILY.BUY_N){render();return}db.textContent=fmt(Math.min(G.daily.buy,DAILY.BUY_N))}if(G.daily&&G.daily.day!==dayKey()){timers();render();return}}E.slots.forEach((m,i)=>{const p=mProg(E,m),n=mTarget(m),d=p>=n;const b=$('mb-'+i);if(!b)return;
    b.style.width=Math.min(100,p/n*100)+'%';$('mp-'+i).textContent=`${fmt(Math.min(p,n))} / ${fmt(n)}`;$('mc-'+i).disabled=!d;$('ms-'+i).classList.toggle('done',d)});
   if(rankReady(E)&&!document.querySelector('.rankup')&&!(E.ev&&G.ev&&G.ev.won))render()}}
 function cloudTick(){if($('settings').hidden||!Cloud.user)return;const s=$('cloud-st');if(s)s.textContent=Cloud.status()}
@@ -947,7 +1022,7 @@ document.addEventListener('click',e=>{if(e.target.id==='settings'||e.target.id==
 
 /* ---------- loop / offline ---------- */
 function simulate(sec){const steps=Math.min(4000,Math.max(1,Math.ceil(sec/0.25))),dt=sec/steps;
- const t0=Date.now()-sec*1000;for(let k=0;k<steps;k++){tick(G.main,dt,false);if(G.ev&&t0+k*dt*1000<G.ev.end)tick(G.ev.E,dt,false)}}
+ const t0=Date.now()-sec*1000;try{for(let k=0;k<steps;k++){simT=t0+(k+.5)*dt*1000;tick(G.main,dt,false);if(G.ev&&t0+k*dt*1000<G.ev.end)tick(G.ev.E,dt,false)}}finally{simT=null}}
 let pendingReturn=null;
 function away(sec){
  const b={m:[...G.main.res],c:G.main.com,e:G.ev?[...G.ev.E.res]:null};
