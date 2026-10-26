@@ -21,7 +21,7 @@ See [SkillTrainer](#skilltrainer) below.
 | `BattlePass/` | Battle Pass: MTX (Maximum Transaction eXtraction), a satirical idle game about live-service monetization. Copied from its own project. `cloud.js` + `cloud-config.js` add Google sign-in and Firestore saves (Firebase project `battlepass-mtx`). |
 | `FactoryAFK/` | Factory A.F.K., an idle factory game. Built from one game file; `cloud.js` + `cloud-config.js` add Google sign-in and Firestore saves (Firebase project `factory-afk`). |
 | `Singularity/` | Singularity, an idle game about a rogue AI taking over the galaxy. One self-contained `index.html`; Google sign-in and Firestore saves are built in (Firebase project `singularity-afk`, saves at `users/{uid}/games/singularity`). |
-| `downloads/` | Files served from the site, e.g. the resume. Cozy Zone Collector is not hosted here; its card on the home page and `/games` links to CurseForge. |
+| `downloads/` | Files served from the site, e.g. the resume. Cozy Zone Compendium (formerly Cozy Zone Collector) is not hosted here; its card on the home page and `/games` links to CurseForge. |
 | `CNAME` | Tells GitHub Pages to serve `codyboillot.com`. |
 | `.nojekyll` | Tells GitHub Pages to serve files as-is. |
 

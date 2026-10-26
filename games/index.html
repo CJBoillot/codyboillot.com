@@ -4,13 +4,13 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Games by Cody J. Boillot</title>
-<meta name="description" content="Games by Cody J. Boillot: four idle games playable free in the browser (Singularity, Battle Pass: MTX, Click to Conquer and Factory A.F.K.) and Cozy Zone Collector, a World of Warcraft addon." />
+<meta name="description" content="Games by Cody J. Boillot: four idle games playable free in the browser (Singularity, Battle Pass: MTX, Click to Conquer and Factory A.F.K.) and Cozy Zone Compendium, a World of Warcraft: Forever addon." />
 <meta name="author" content="Cody J. Boillot" />
 
 <!-- Open Graph / social preview -->
 <meta property="og:type" content="website" />
 <meta property="og:title" content="Games by Cody J. Boillot" />
-<meta property="og:description" content="Games by Cody J. Boillot: four idle games playable free in the browser (Singularity, Battle Pass: MTX, Click to Conquer and Factory A.F.K.) and Cozy Zone Collector, a World of Warcraft addon." />
+<meta property="og:description" content="Games by Cody J. Boillot: four idle games playable free in the browser (Singularity, Battle Pass: MTX, Click to Conquer and Factory A.F.K.) and Cozy Zone Compendium, a World of Warcraft: Forever addon." />
 <meta property="og:image" content="https://codyboillot.com/assets/share/games.jpg" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
@@ -364,6 +364,26 @@
   }
   .tree-preview:hover .tp-hint { opacity: 1; }
   @media (max-width: 620px) { .tree-preview { padding: .7rem; gap: .35rem; } .tp-cap { padding: .35rem; } }
+
+  /* Cozy Zone Compendium gallery + lightbox */
+  .anchor-alias { position: relative; top: -80px; display: block; height: 0; }
+  .czc-cover { display: block; margin: 1.3rem 0 .4rem; border-radius: 14px; overflow: hidden; border: 1px solid var(--line-2); box-shadow: var(--shadow); background: #000; }
+  .czc-cover img { display: block; width: 100%; height: auto; }
+  .czc-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: .7rem; padding: 1rem 0 .3rem; }
+  .czc-gallery .czc-thumb { display: block; border-radius: 12px; overflow: hidden; border: 1px solid var(--line-2); box-shadow: var(--shadow); background: #000; aspect-ratio: 3 / 2; }
+  .czc-gallery .czc-thumb img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top left; }
+  .czc-thumb { cursor: zoom-in; transition: transform .2s ease, border-color .2s ease; }
+  .czc-thumb:hover, .czc-thumb:focus-visible { transform: translateY(-3px); border-color: var(--accent); }
+  .czc-hint { font-size: .85rem; opacity: .7; margin: .2rem 0 .6rem; }
+  .lightbox { position: fixed; inset: 0; z-index: 1000; display: none; align-items: center; justify-content: center; background: rgba(5, 6, 10, .92); padding: 3.2rem 1rem 2.4rem; }
+  .lightbox.open { display: flex; }
+  .lightbox img { max-width: 100%; max-height: 100%; border-radius: 10px; box-shadow: 0 20px 60px rgba(0,0,0,.6); }
+  .lightbox figcaption { position: absolute; left: 0; right: 0; bottom: .7rem; text-align: center; color: #ddd; font-size: .9rem; padding: 0 3.5rem; }
+  .lightbox button { position: absolute; background: rgba(255,255,255,.1); color: #fff; border: 1px solid rgba(255,255,255,.25); border-radius: 999px; width: 2.6rem; height: 2.6rem; font-size: 1.3rem; cursor: pointer; line-height: 1; }
+  .lightbox button:hover { background: rgba(255,255,255,.22); }
+  .lightbox .lb-close { top: .8rem; right: .8rem; }
+  .lightbox .lb-prev { left: .8rem; top: 50%; transform: translateY(-50%); }
+  .lightbox .lb-next { right: .8rem; top: 50%; transform: translateY(-50%); }
 </style>
 <style>
   .games-page #games { padding-top: clamp(1.5rem, 4vw, 3rem); }
@@ -382,7 +402,7 @@
       <a href="#battlepass">Battle Pass: MTX</a>
       <a href="#clicktoconquer">Click to Conquer</a>
       <a href="#factoryafk">Factory A.F.K.</a>
-      <a href="#cozyzonecollector">Cozy Zone Collector</a>
+      <a href="#cozyzonecompendium">Cozy Zone Compendium</a>
       <a href="../" class="nav-cta">About me</a>
     </nav>
   </div>
@@ -478,22 +498,28 @@
         <a class="btn btn-primary game-cta" href="../FactoryAFK/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3l14 9-14 9z"/></svg>Try the demo</a>
       </article>
 
-      <article class="game game-czc reveal" id="cozyzonecollector">
+      <article class="game game-czc reveal" id="cozyzonecompendium">
+        <span id="cozyzonecollector" class="anchor-alias" aria-hidden="true"></span>
         <header class="game-head">
-          <img class="game-logo" src="../assets/games/czc-logo.webp" alt="Cozy Zone Collector" width="150" height="150">
+          <img class="game-logo" src="../assets/games/czc-logo.webp" alt="Cozy Zone Compendium" width="150" height="150">
           <div>
-            <div class="badge-row"><span class="pill">New · Beta</span><span class="pill ghost">World of Warcraft addon</span><span class="pill ghost">Free &amp; open source</span></div>
-            <h3>Cozy Zone Collector</h3>
-            <p class="game-sub">Finish Azeroth one zone at a time.</p>
+            <div class="badge-row"><span class="pill">New · 1.0</span><span class="pill ghost">World of Warcraft: Forever addon</span><span class="pill ghost">Free &amp; open source</span></div>
+            <h3>Cozy Zone Compendium</h3>
+            <p class="game-sub">Your story through Azeroth.</p>
           </div>
         </header>
-        <p>An addon for World of Warcraft (Retail, Midnight) that turns every zone into a checklist you can actually finish. Open any of 169 zones across 15 continents and see one completion number, then exactly what's left: quests, rares, treasures, exploration, flight paths, achievements, battle pets, recipes, transmog appearances and housing decor. Switch between your whole account and the character you're playing for a one-character 100% run, and anything that character can't do (another class, the other faction, a holiday, a removed quest) is set aside with the reason shown, so the number you chase is one you can reach.</p>
-        <p>Alliance and Horde zones are tinted royal blue and Horde red, the window can follow you as you travel, and a drag-to-hotbar button opens it in one click. Zone data is extracted once from AllTheThings (MIT) and bundled, so it needs no other addon to run.</p>
-        <div class="shots-wide">
-          <a href="../assets/games/czc-cover.webp" target="_blank" rel="noopener"><img src="../assets/games/czc-cover.webp" alt="Cozy Zone Collector cover art: a hunter with her pets, an orc carrying armor and weapons, and a dwarf pulling a cart of housing decor" loading="lazy" width="1600" height="900"></a>
-          <a href="../assets/games/czc-window.webp" target="_blank" rel="noopener"><img src="../assets/games/czc-window.webp" alt="The addon window in game: Elwynn Forest at 82% character completion, with progress per category and the Eastern Kingdoms summary" loading="lazy" width="1042" height="678"></a>
+        <a class="czc-cover czc-thumb" href="../assets/games/czcomp-cover.webp" data-full="../assets/games/czcomp-cover.webp" aria-label="Expand the cover art"><img src="../assets/games/czcomp-cover.webp" alt="Cozy Zone Compendium cover art: a ranger with her wolf writing in a field journal above a valley at sunset" loading="lazy" width="1600" height="900"></a>
+        <p>Cozy Zone Collector grew into a field journal of your whole adventure, built for World of Warcraft: Forever. It still shows every zone's completion and exactly what's left to collect, and now it also keeps the story you've lived: a Main Story Quest told in seven acts, plus Race and Class Questlines, with every chapter appearing only once you discover it, so nothing is spoiled.</p>
+        <p>A Bestiary studies each creature you fight, from Observer to Master Hunter, opening its habitat, habits and loot as you go, with trophies and a Field Guide for every zone. Tabs for People, Gear with a dressing-room preview, Gathering and the history of Azeroth fill out the book, all in a hand-painted look with over 100 original banners, crests and act cards.</p>
+        <div class="czc-gallery" role="list">
+          <a class="czc-thumb" href="../assets/games/czcomp-zones.webp" data-full="../assets/games/czcomp-zones.webp" aria-label="Expand: Zones tab: Elwynn Forest at 55% complete, with progress for quests, exploration, transmog, flight paths, treasures and hunter pets"><img src="../assets/games/czcomp-zones.webp" alt="Zones tab: Elwynn Forest at 55% complete, with progress for quests, exploration, transmog, flight paths, treasures and hunter pets" loading="lazy" width="1400" height="942"></a>
+          <a class="czc-thumb" href="../assets/games/czcomp-bestiary.webp" data-full="../assets/games/czcomp-bestiary.webp" aria-label="Expand: Bestiary: a Blackrock Worg at Hunter rank, its field study, kin and full drop table, with critters set apart under Wildlife and Townsfolk"><img src="../assets/games/czcomp-bestiary.webp" alt="Bestiary: a Blackrock Worg at Hunter rank, its field study, kin and full drop table, with critters set apart under Wildlife and Townsfolk" loading="lazy" width="1600" height="840"></a>
+          <a class="czc-thumb" href="../assets/games/czcomp-gear.webp" data-full="../assets/games/czcomp-gear.webp" aria-label="Expand: Gear tab: a Duskwood shortsword previewed on the character in a dressing room"><img src="../assets/games/czcomp-gear.webp" alt="Gear tab: a Duskwood shortsword previewed on the character in a dressing room" loading="lazy" width="1395" height="942"></a>
+          <a class="czc-thumb" href="../assets/games/czcomp-pets.webp" data-full="../assets/games/czcomp-pets.webp" aria-label="Expand: Hunter Pets: tameable beasts of Elwynn Forest by family, with a Young Forest Bear in view"><img src="../assets/games/czcomp-pets.webp" alt="Hunter Pets: tameable beasts of Elwynn Forest by family, with a Young Forest Bear in view" loading="lazy" width="1400" height="944"></a>
+          <a class="czc-thumb" href="../assets/games/czcomp-story.webp" data-full="../assets/games/czcomp-story.webp" aria-label="Expand: Story tab: era cards from the Ancient World to World of Warcraft, and the Second War timeline with its games and novels"><img src="../assets/games/czcomp-story.webp" alt="Story tab: era cards from the Ancient World to World of Warcraft, and the Second War timeline with its games and novels" loading="lazy" width="1400" height="934"></a>
         </div>
-        <div class="chips"><span class="chip">Lua</span><span class="chip">WoW API</span><span class="chip">Blizzard-native UI</span><span class="chip">169 zones</span><span class="chip">Account &amp; character views</span><span class="chip">Offline data pipeline</span><span class="chip">MIT licence</span></div>
+        <p class="czc-hint">Click any picture to expand it.</p>
+        <div class="chips"><span class="chip">Lua</span><span class="chip">WoW API</span><span class="chip">Custom painted UI</span><span class="chip">Spoiler-safe story engine</span><span class="chip">52 zones · 38 dungeons</span><span class="chip">Offline data pipeline</span><span class="chip">56 automated tests</span><span class="chip">GPL-3.0 licence</span></div>
         <a class="btn btn-primary game-cta" href="https://www.curseforge.com/wow/addons/cozy-zone-collector" target="_blank" rel="noopener">Get it on CurseForge</a>
       </article>
     </div>
@@ -512,6 +538,14 @@
 
 </main>
 
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Expanded image">
+  <button class="lb-close" type="button" aria-label="Close">✕</button>
+  <button class="lb-prev" type="button" aria-label="Previous image">‹</button>
+  <img alt="">
+  <button class="lb-next" type="button" aria-label="Next image">›</button>
+  <figcaption></figcaption>
+</div>
+
 <script>
   // Scroll reveal
   (function () {
@@ -526,6 +560,33 @@
   })();
   // Footer year (Date is fine in the browser)
   document.getElementById("yr").textContent = new Date().getFullYear();
+  // Lightbox for the addon's pictures: click to expand, arrows to browse, Esc to close
+  (function () {
+    var box = document.getElementById("lightbox");
+    if (!box) return;
+    var img = box.querySelector("img"), cap = box.querySelector("figcaption");
+    var items = Array.prototype.slice.call(document.querySelectorAll(".czc-thumb"));
+    var i = 0, last = null;
+    function show(n) {
+      i = (n + items.length) % items.length;
+      var a = items[i], t = a.querySelector("img");
+      img.src = a.getAttribute("data-full") || a.href; img.alt = t ? t.alt : "";
+      cap.textContent = t ? t.alt : "";
+    }
+    function open(n) { last = document.activeElement; show(n); box.classList.add("open"); document.body.style.overflow = "hidden"; box.querySelector(".lb-close").focus(); }
+    function close() { box.classList.remove("open"); document.body.style.overflow = ""; if (last) last.focus(); }
+    items.forEach(function (a, n) { a.addEventListener("click", function (e) { e.preventDefault(); open(n); }); });
+    box.querySelector(".lb-close").addEventListener("click", close);
+    box.querySelector(".lb-prev").addEventListener("click", function () { show(i - 1); });
+    box.querySelector(".lb-next").addEventListener("click", function () { show(i + 1); });
+    box.addEventListener("click", function (e) { if (e.target === box) close(); });
+    document.addEventListener("keydown", function (e) {
+      if (!box.classList.contains("open")) return;
+      if (e.key === "Escape") close();
+      else if (e.key === "ArrowLeft") show(i - 1);
+      else if (e.key === "ArrowRight") show(i + 1);
+    });
+  })();
 </script>
 </body>
 </html>
