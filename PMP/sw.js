@@ -1,5 +1,5 @@
 // Offline cache for PMP Rapid-Fire. Bump VERSION when cards.json or index.html change.
-const VERSION = 'pmp-rf-2026-10-27d';
+const VERSION = 'pmp-rf-2026-10-27e';
 const FILES = ['./', './index.html', './cards.json', './scenarios.json', './manifest.json', './icon.svg'];
 self.addEventListener('install', e => e.waitUntil(caches.open(VERSION).then(c => c.addAll(FILES)).then(() => self.skipWaiting())));
 self.addEventListener('activate', e => e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== VERSION).map(k => caches.delete(k)))).then(() => self.clients.claim())));
