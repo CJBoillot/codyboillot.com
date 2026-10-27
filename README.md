@@ -17,6 +17,7 @@ See [SkillTrainer](#skilltrainer) below.
 | `resume.pdf` | Backs the résumé button. |
 | `games/` | A shareable page with just the games (codyboillot.com/games). Its styles and game cards are copied from `index.html`; update both when a card changes. |
 | `SkillTrainer/` | The training-engine demo. |
+| `PMP/` | PMP Rapid-Fire, a PMP 2026 study app: themed 20-card flashcard sets, exam-style quizzes, scenario practice and progress tracking. Plain HTML/JS; optional Google sign-in syncs progress to Firestore (Firebase project `pmp-rapid-fire`, data at `users/{uid}/pmp/state` and `users/{uid}/quizzes/{id}`). |
 | `ClickToConquer/` | Click to Conquer, an idle survival-crafting game (Firebase cloud saves). |
 | `BattlePass/` | Battle Pass: MTX (Maximum Transaction eXtraction), a satirical idle game about live-service monetization. Copied from its own project. `cloud.js` + `cloud-config.js` add Google sign-in and Firestore saves (Firebase project `battlepass-mtx`). |
 | `FactoryAFK/` | Factory A.F.K., an idle factory game. Built from one game file; `cloud.js` + `cloud-config.js` add Google sign-in and Firestore saves (Firebase project `factory-afk`). |

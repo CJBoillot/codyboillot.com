@@ -1,0 +1,1042 @@
+<meta charset="utf-8">
+<title>PMP Rapid-Fire</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="theme-color" content="#0d1330">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Sora:wght@500;600;700&display=swap">
+<style>
+/* Layout: one-column phone app; fixed top bar + scrolling content + fixed bottom tab bar. Dark-first, frosted glass on navy. */
+:root{
+  --bg:#0c1230; --bg-2:#1b1648; --glass:rgba(255,255,255,.065); --glass-2:rgba(255,255,255,.11); --line:rgba(255,255,255,.13);
+  --fg:#eef0ff; --muted:#a9aed3; --accent:#8d7dff; --accent-2:#6f5cf5; --on-accent:#ffffff;
+  --good:#2ed3b7; --bad:#ff6f6f; --warn:#f6b44a; --new:#7d84aa; --mast:#b49bff;
+  --good-bg:rgba(46,211,183,.14); --bad-bg:rgba(255,111,111,.13); --warn-bg:rgba(246,180,74,.13);
+  --shadow:0 10px 30px rgba(0,0,0,.35);
+  --display:'Sora',ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif;
+  --body:'Atkinson Hyperlegible',ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif;
+  --mono:ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+  --r:16px; --tab:64px;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){
+  --bg:#eef0fa; --bg-2:#e4e1fb; --glass:rgba(255,255,255,.72); --glass-2:rgba(255,255,255,.95); --line:rgba(24,28,70,.12);
+  --fg:#141a3c; --muted:#565d88; --accent:#5b48e6; --accent-2:#4a37d6; --on-accent:#ffffff;
+  --good:#0b927f; --bad:#d23f3f; --warn:#a86b0c; --new:#8a90b3; --mast:#7a5ce0;
+  --good-bg:rgba(11,146,127,.12); --bad-bg:rgba(210,63,63,.10); --warn-bg:rgba(168,107,12,.12);
+  --shadow:0 8px 24px rgba(30,30,90,.10); color-scheme:light;}}
+:root[data-theme="light"]{
+  --bg:#eef0fa; --bg-2:#e4e1fb; --glass:rgba(255,255,255,.72); --glass-2:rgba(255,255,255,.95); --line:rgba(24,28,70,.12);
+  --fg:#141a3c; --muted:#565d88; --accent:#5b48e6; --accent-2:#4a37d6; --on-accent:#ffffff;
+  --good:#0b927f; --bad:#d23f3f; --warn:#a86b0c; --new:#8a90b3; --mast:#7a5ce0;
+  --good-bg:rgba(11,146,127,.12); --bad-bg:rgba(210,63,63,.10); --warn-bg:rgba(168,107,12,.12);
+  --shadow:0 8px 24px rgba(30,30,90,.10); color-scheme:light;}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0;background:var(--bg);background-image:radial-gradient(120% 60% at 0% 0%,var(--bg-2),transparent 60%),radial-gradient(90% 50% at 100% 100%,var(--bg-2),transparent 60%);background-attachment:fixed;color:var(--fg);font:17px/1.45 var(--body);-webkit-font-smoothing:antialiased;overflow:hidden}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;-webkit-tap-highlight-color:transparent}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+h1,h2,h3{font-family:var(--display);margin:0;text-wrap:balance;letter-spacing:-.01em}
+.num{font-family:var(--display);font-variant-numeric:tabular-nums}
+.app{position:fixed;inset:0;display:flex;flex-direction:column;max-width:560px;margin:0 auto;padding-top:env(safe-area-inset-top,0px)}
+.top{flex:none;display:flex;align-items:center;gap:10px;padding:12px max(16px,env(safe-area-inset-right,0px)) 8px max(16px,env(safe-area-inset-left,0px));min-height:56px}
+.top h1{font-size:22px;flex:1;min-width:0}
+.top .title{flex:1;min-width:0;font-family:var(--display);font-weight:600;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.iconbtn{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;flex:none}
+.iconbtn:active{background:var(--glass)}
+.iconbtn svg{width:24px;height:24px}
+.main{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:4px max(16px,env(safe-area-inset-right,0px)) 16px max(16px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:14px}
+.main.session{overflow:hidden}
+.tabs{flex:none;display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid var(--line);background:var(--glass);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);padding:6px max(6px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(6px,env(safe-area-inset-left,0px))}
+.tabs button{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;font-size:13px;color:var(--muted);border-radius:12px;min-height:52px}
+.tabs button svg{width:24px;height:24px}
+.tabs button[aria-current="page"]{color:var(--accent)}
+.glass{background:var(--glass);border:1px solid var(--line);border-radius:var(--r);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+.pad{padding:16px}
+.label{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.muted{color:var(--muted)}
+.btn{min-height:52px;border-radius:14px;padding:0 18px;font-weight:700;font-size:17px;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.btn.primary{background:var(--accent);color:var(--on-accent)}
+.btn.primary:active{background:var(--accent-2)}
+.btn.ghost{background:var(--glass-2);border:1px solid var(--line)}
+.btn.full{width:100%}
+.btn.small{min-height:40px;font-size:15px;padding:0 14px;border-radius:12px}
+.btn svg{width:20px;height:20px}
+.row{display:flex;gap:10px;align-items:center}
+.row > *{min-width:0}
+.grow{flex:1}
+.chip{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:var(--glass);font-size:15px}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:700}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:14px;font-weight:700;padding:3px 10px;border-radius:999px;border:1px solid var(--line)}
+.ok{color:var(--good)} .no{color:var(--bad)}
+.bar{height:8px;border-radius:99px;background:var(--glass-2);overflow:hidden}
+.bar > i{display:block;height:100%;background:var(--accent);border-radius:99px}
+/* Home */
+.hero{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center}
+.ring{width:96px;height:96px}
+.kv{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.kv div{display:flex;flex-direction:column}
+.kv b{font-family:var(--display);font-size:22px;font-variant-numeric:tabular-nums}
+.kv span{font-size:14px;color:var(--muted)}
+.presets{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.preset{text-align:left;padding:14px;display:flex;flex-direction:column;gap:2px;min-height:84px}
+.preset b{font-family:var(--display);font-size:16px}
+.preset span{font-size:14px;color:var(--muted)}
+.preset svg{width:22px;height:22px;color:var(--accent);margin-bottom:4px}
+/* lists */
+.list{display:flex;flex-direction:column;gap:10px}
+.item{display:flex;align-items:center;gap:12px;padding:14px;text-align:left;width:100%}
+.item .t{font-weight:700}
+.item .s{font-size:14px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item .txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.mark{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;flex:none}
+.mark svg{width:18px;height:18px}
+.mark.ok{background:var(--good-bg)} .mark.no{background:var(--bad-bg)}
+.theme-head{display:flex;align-items:center;gap:12px;width:100%;padding:14px;text-align:left}
+.sets{display:flex;flex-direction:column;gap:8px;padding:0 10px 12px}
+.setrow{display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;background:var(--glass);border:1px solid var(--line);text-align:left;width:100%}
+/* Study card */
+.counter{font-size:15px;color:var(--muted);font-variant-numeric:tabular-nums}
+.sesh{display:flex;flex-direction:column;gap:14px;height:100%}
+.flash{flex:1;min-height:0;position:relative;padding:22px 20px;display:flex;flex-direction:column;gap:14px;overflow-y:auto;cursor:pointer;box-shadow:var(--shadow);transition:transform .25s ease}
+.flash.flip{animation:flip .28s ease}
+@keyframes flip{0%{transform:rotateY(0)}50%{transform:rotateY(90deg)}100%{transform:rotateY(0)}}
+.flash h2{font-size:clamp(26px,7.4vw,34px);line-height:1.15}
+.flash .def{font-size:20px;line-height:1.45}
+.flash .formula{font-family:var(--mono);font-size:24px;font-weight:700;padding:12px 14px;border-radius:12px;background:var(--glass-2);border:1px solid var(--line);overflow-x:auto}
+.tip{display:flex;gap:10px;padding:12px 14px;border-radius:12px;background:var(--warn-bg);border:1px solid color-mix(in srgb,var(--warn) 45%,transparent);font-size:16px}
+.tip svg{width:22px;height:22px;flex:none;color:var(--warn)}
+.star{position:absolute;top:10px;right:10px}
+.star[aria-pressed="true"] svg{fill:var(--warn);color:var(--warn)}
+.hint{text-align:center;font-size:15px;color:var(--muted)}
+.traps li{margin:2px 0}
+.sub{font-weight:700;font-size:15px;color:var(--muted);margin-top:2px}
+/* Quiz */
+.q{font-family:var(--display);font-weight:600;font-size:clamp(19px,5.2vw,23px);line-height:1.35}
+.q.long{font-family:var(--body);font-weight:400;font-size:18px;line-height:1.5}
+.opts{display:flex;flex-direction:column;gap:10px}
+.opt{display:flex;align-items:center;gap:12px;text-align:left;min-height:56px;padding:12px 14px;border-radius:14px;border:1.5px solid var(--line);background:var(--glass);font-size:17px;line-height:1.3;width:100%}
+.opt .dot{width:28px;height:28px;border-radius:50%;border:1.5px solid var(--line);flex:none;display:grid;place-items:center}
+.opt .dot svg{width:18px;height:18px}
+.opt .tag{margin-left:auto;font-size:13px;font-weight:700;flex:none;padding-left:8px}
+.opt.sel{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 16%,transparent)}
+.opt.sel .dot{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.opt.right{border-color:var(--good);background:var(--good-bg)}
+.opt.right .dot{background:var(--good);border-color:var(--good);color:#04241f}
+.opt.wrong{border-color:var(--bad);background:var(--bad-bg)}
+.opt.wrong .dot{background:var(--bad);border-color:var(--bad);color:#2a0606}
+.opt.dim{display:none}
+.opt:disabled{cursor:default}
+.fb{padding:14px 16px;display:flex;flex-direction:column;gap:6px;font-size:16px}
+.fb h3{font-size:18px;display:flex;align-items:center;gap:8px}
+.fb h3 svg{width:22px;height:22px}
+.fb .picked{color:var(--muted);font-size:15px}
+.qscroll{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:14px;padding-bottom:4px}
+/* Progress */
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tile{padding:14px;display:flex;flex-direction:column;gap:2px}
+.tile b{font-family:var(--display);font-size:26px;font-variant-numeric:tabular-nums;line-height:1.1}
+.tile b small{font-size:15px;color:var(--muted);font-weight:500}
+.tile span{font-size:14px;color:var(--muted)}
+.stack{display:flex;height:30px;border-radius:10px;overflow:hidden;gap:2px}
+.stack i{display:grid;place-items:center;font-style:normal;font-size:13px;font-weight:700;color:#0b0f26;min-width:0}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.dom{display:grid;grid-template-columns:minmax(0,9.5em) 1fr 3.4em;gap:10px;align-items:center;font-size:15px}
+.dom .pct{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
+.spark{width:100%;height:70px}
+/* Builder */
+.field{display:flex;flex-direction:column;gap:8px}
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:6px;background:var(--glass);border:1px solid var(--line);padding:4px;border-radius:14px}
+.seg button{min-height:42px;border-radius:10px;font-size:15px;font-weight:700;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
+input[type=text],textarea{width:100%;min-height:48px;padding:10px 14px;border-radius:12px;border:1px solid var(--line);background:var(--glass-2);color:var(--fg);font:16px var(--body)}
+textarea{min-height:120px;font-family:var(--mono);font-size:13px}
+.sticky-foot{position:sticky;bottom:-16px;margin:8px -16px -16px;padding:12px 16px 16px;background:var(--bg);border-top:1px solid var(--line);box-shadow:0 -10px 20px var(--bg);display:flex;flex-direction:column;gap:8px}
+.count{text-align:center;font-size:15px;color:var(--muted)}
+.empty{padding:24px 16px;text-align:center;color:var(--muted)}
+.sheet-back{position:fixed;inset:0;background:rgba(5,8,25,.55);display:flex;align-items:flex-end;justify-content:center;z-index:50}
+.sheet{width:100%;max-width:560px;background:var(--bg);border:1px solid var(--line);border-bottom:0;border-radius:20px 20px 0 0;padding:18px max(16px,env(safe-area-inset-right,0px)) calc(18px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:12px;max-height:85%;overflow-y:auto}
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:12px;font-weight:700;z-index:60;max-width:90%}
+.details{padding:0 14px 14px;display:flex;flex-direction:column;gap:6px;font-size:15px}
+@media (prefers-reduced-motion: reduce){.flash.flip{animation:none}*{scroll-behavior:auto}}
+@media (min-width:700px){.app{max-width:620px}}
+</style>
+
+<script src="cloud-config.js"></script>
+<div class="app" id="app">
+  <header class="top" id="top"></header>
+  <main class="main" id="main"><div class="empty">Loading cards…</div></main>
+  <nav class="tabs" id="tabs" aria-label="Main"></nav>
+</div>
+
+<script>
+(() => {
+'use strict';
+// ---------- icons ----------
+const I = {
+  home:'<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>',
+  sets:'<path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/><path d="M3 17.5l9 5 9-5"/>',
+  build:'<path d="M4 6h10M4 12h6M4 18h10"/><circle cx="17" cy="6" r="2.5"/><circle cx="13" cy="12" r="2.5"/><circle cx="17" cy="18" r="2.5"/>',
+  hist:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  prog:'<path d="M5 20V12M10 20V6M15 20v-9M20 20V4"/>',
+  x:'<path d="M6 6l12 12M18 6L6 18"/>',
+  back:'<path d="M15 5l-7 7 7 7"/>',
+  next:'<path d="M5 12h14M13 6l6 6-6 6"/>',
+  prev:'<path d="M19 12H5M11 6l-6 6 6 6"/>',
+  check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+  star:'<path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.8z"/>',
+  bulb:'<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2V17h5v-1.1c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/>',
+  shuffle:'<path d="M3 7h3c4 0 6 10 10 10h5M3 17h3c1.6 0 2.8-1.5 3.9-3.4M14.1 9.4C15.2 7.5 16.4 7 18 7h3M18 4l3 3-3 3M18 14l3 3-3 3"/>',
+  missed:'<circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/>',
+  weak:'<path d="M4 20h16M7 16V9M12 16V5M17 16v-3"/>',
+  due:'<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/>',
+  flame:'<path d="M12 3c1 4 5 5.5 5 10a5 5 0 0 1-10 0c0-2 1-3.5 2-4.5 0 2 1 3 2 3-1-3 0-6 1-8.5z"/>',
+  swap:'<path d="M7 7h11l-3-3M17 17H6l3 3"/>',
+  chev:'<path d="M9 6l6 6-6 6"/>',
+  down:'<path d="M6 9l6 6 6-6"/>',
+};
+const ic = (n, extra='') => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ${extra}>${I[n]}</svg>`;
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const $ = s => document.querySelector(s);
+const TYPE_LABEL = {term:'Term', principle:'Principle', formula:'Formula', compare:'Compare', rule:'Decision rule'};
+const DOMAINS = ['People','Process','Business Environment','Foundations'];
+const DAY = 864e5;
+const today = () => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime(); };
+const dayKey = t => { const d = new Date(t); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
+const fmtDate = t => new Date(t).toLocaleDateString(undefined, {month:'short', day:'numeric'});
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const pct = (a, b) => b ? Math.round(100 * a / b) : 0;
+
+// ---------- data ----------
+let DB = null, CARD = {}, SET = {}, THEME = {};
+// ---------- storage ----------
+const KEY = 'pmp-rapid-fire.v1';
+const blank = () => ({v:1, quizzes:[], answers:[], cards:{}, saved:[], session:null, prefs:{defFirst:false}, scen:{}, updated:0});
+let S = blank();
+function load(){ try { const raw = localStorage.getItem(KEY); if (raw) S = Object.assign(blank(), JSON.parse(raw)); } catch(e) { /* storage unavailable: run in memory */ } }
+function save(quizId){ S.updated = Date.now(); try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e) { /* in-memory only */ } cloudMark(quizId); }
+
+// ---------- account sync ----------
+// Two backends behind one adapter: Firebase (Google sign-in) when cloud-config.js provides a config (CodyBoillot.com),
+// or claude.ai's private per-user store when the page runs as a claude.ai artifact. Otherwise progress stays in this browser.
+// Each person's data: one state doc (card status, saved sets, session) + one doc per quiz with its answers.
+let CLOUD = null, CLOUD_MODE = null, ACCOUNT = null, syncState = 'local', dirtyState = false, flushT = null, flushing = Promise.resolve(), syncErrShown = false, visHooked = false, FB = null;
+const dirtyQuiz = new Set();
+const clean = o => JSON.parse(JSON.stringify(o)); // strips undefined (Firestore rejects it)
+function cloudMark(quizId){ if (!CLOUD) return; dirtyState = true; if (quizId) dirtyQuiz.add(quizId); clearTimeout(flushT); flushT = setTimeout(flush, 1200); }
+function stateDoc(){ return clean({kind:'state', updated:S.updated || Date.now(), cards:S.cards, saved:S.saved, prefs:S.prefs, session:S.session, scen:S.scen}); }
+function quizDoc(id){ return clean({kind:'quiz', id, meta:S.quizzes.find(q => q.id === id) || null, answers:S.answers.filter(a => a.qz === id)}); }
+function flush(){
+  if (!CLOUD) return flushing;
+  const doState = dirtyState, ids = [...dirtyQuiz]; dirtyState = false; dirtyQuiz.clear();
+  const store = CLOUD;
+  flushing = flushing.then(async () => {
+    try {
+      for (const id of ids) await store.putQuiz(id, quizDoc(id));
+      if (doState) await store.putState(stateDoc());
+      if (CLOUD === store && syncState !== 'synced') { syncState = 'synced'; paintSync(); }
+    } catch (e) {
+      if (CLOUD !== store) return;
+      ids.forEach(id => dirtyQuiz.add(id)); if (doState) dirtyState = true;
+      syncState = 'error'; paintSync();
+      if (!syncErrShown) { syncErrShown = true; toast(e && /quota|exhausted/.test(e.code || '') ? 'Cloud storage is busy or full; progress is still saved on this device' : 'Could not sync right now; progress is saved on this device and will sync later'); }
+      clearTimeout(flushT); flushT = setTimeout(flush, 8000 + Math.random() * 4000);
+    }
+  });
+  return flushing;
+}
+async function pull(){
+  const cloud = await CLOUD.getState();
+  const cq = await CLOUD.getQuizzes();
+  const qmap = new Map(S.quizzes.map(q => [q.id, q]));
+  const cloudQ = new Set();
+  for (const d of cq) { cloudQ.add(d.id); if (d.meta) qmap.set(d.id, d.meta); }
+  const akey = a => a.qz + '|' + a.t + '|' + a.c;
+  const amap = new Map(S.answers.map(a => [akey(a), a]));
+  for (const d of cq) for (const a of (d.answers || [])) amap.set(akey(a), a);
+  const localNewer = !cloud || (S.updated || 0) > (cloud.updated || 0);
+  S.quizzes = [...qmap.values()].sort((a, b) => a.end - b.end);
+  S.answers = [...amap.values()].sort((a, b) => a.t - b.t);
+  if (!localNewer) { S.cards = clean(cloud.cards || {}); S.saved = clean(cloud.saved || []); S.prefs = Object.assign({defFirst:false}, cloud.prefs || {}); S.session = cloud.session ? clean(cloud.session) : null; S.scen = clean(cloud.scen || {}); S.updated = cloud.updated; }
+  try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {}
+  for (const q of S.quizzes) if (!cloudQ.has(q.id)) dirtyQuiz.add(q.id);
+  if (localNewer && (S.quizzes.length || Object.keys(S.cards).length || S.saved.length)) dirtyState = true;
+  if (dirtyState || dirtyQuiz.size) await flush();
+}
+async function attach(store, account){
+  // progress on this device that belongs to a different signed-in person is cleared, never merged
+  if (S.owner && S.owner !== account.uid) { S = blank(); try { localStorage.removeItem(KEY); } catch (e) {} }
+  CLOUD = store; ACCOUNT = account; S.owner = account.uid;
+  syncState = 'connecting'; paintSync();
+  await pull(); syncState = 'synced';
+  if (S.session && view !== 'session') view = 'session';
+  render();
+  if (!visHooked) { visHooked = true; document.addEventListener('visibilitychange', async () => {
+    if (document.visibilityState !== 'visible' || !CLOUD) return;
+    if (view === 'session' && S.session) return; // never swap data under an active session
+    try { await flush(); await pull(); render(); } catch (e) { /* keep local */ }
+  }); }
+}
+function loadScript(src){ return new Promise((res, rej) => { const el = document.createElement('script'); el.src = src; el.onload = res; el.onerror = rej; document.head.appendChild(el); }); }
+async function connectCloud(){
+  const cfg = window.FIREBASE_CONFIG;
+  if (cfg && cfg.apiKey) {           // CodyBoillot.com: Google sign-in + Firestore
+    CLOUD_MODE = 'firebase'; syncState = 'signedout'; render();
+    try {
+      const SDK = 'https://www.gstatic.com/firebasejs/10.12.2/';
+      await loadScript(SDK + 'firebase-app-compat.js');
+      await Promise.all([loadScript(SDK + 'firebase-auth-compat.js'), loadScript(SDK + 'firebase-firestore-compat.js')]);
+      firebase.initializeApp(cfg);
+      const auth = firebase.auth(), db = firebase.firestore();
+      try { db.enablePersistence({synchronizeTabs:true}).catch(() => {}); } catch (e) {}
+      FB = {auth};
+      auth.onAuthStateChanged(async u => {
+        if (!u) { CLOUD = null; ACCOUNT = null; syncState = 'signedout'; render(); return; }
+        const base = db.collection('users').doc(u.uid);
+        const store = {
+          getState: async () => { const d = await base.collection('pmp').doc('state').get(); return d.exists ? d.data() : null; },
+          getQuizzes: async () => (await base.collection('quizzes').get()).docs.map(d => d.data()),
+          putState: d => base.collection('pmp').doc('state').set(d),
+          putQuiz: (id, d) => base.collection('quizzes').doc(id).set(d),
+          delQuiz: id => base.collection('quizzes').doc(id).delete(),
+        };
+        try { await attach(store, {uid:u.uid, name:u.displayName || u.email || 'your Google account'}); }
+        catch (e) { syncState = 'error'; paintSync(); toast('Signed in, but could not reach your saved progress. It is still saved on this device.'); }
+      });
+    } catch (e) { syncState = 'error'; paintSync(); }
+    return;
+  }
+  if (window.claude && typeof window.claude.use === 'function') {   // claude.ai artifact: private per-user store
+    CLOUD_MODE = 'claude'; syncState = 'connecting'; paintSync();
+    try {
+      const [db, user] = await Promise.all([window.claude.use('db'), window.claude.use('user')]);
+      const uid = user ? await user.id() : null;
+      if (!db || !uid) { CLOUD_MODE = null; syncState = 'local'; paintSync(); return; }
+      const col = db.collection('data/users/' + uid);
+      const store = {
+        getState: async () => { const d = await col.doc('state').get(); return d.exists ? d.data() : null; },
+        getQuizzes: async () => (await col.where('kind', '==', 'quiz').get()).docs.map(d => d.data()),
+        putState: d => col.doc('state').set(d),
+        putQuiz: (id, d) => col.doc('quiz-' + id).set(d),
+        delQuiz: id => col.doc('quiz-' + id).delete(),
+      };
+      await attach(store, {uid, name:'your claude.ai account'});
+    } catch (e) { syncState = CLOUD ? 'error' : 'local'; paintSync(); }
+  }
+}
+async function signIn(){
+  if (!FB) { toast('Sign-in is still loading. Try again in a moment.'); return; }
+  const p = new firebase.auth.GoogleAuthProvider(); p.setCustomParameters({prompt:'select_account'});
+  try { await FB.auth.signInWithPopup(p); }
+  catch (e) {
+    if (e && ['auth/popup-blocked','auth/operation-not-supported-in-this-environment','auth/cancelled-popup-request'].includes(e.code)) await FB.auth.signInWithRedirect(p);
+    else if (e && e.code !== 'auth/popup-closed-by-user') toast('Sign-in did not finish. Check your connection and try again.');
+  }
+}
+function signOutFlow(){
+  confirmSheet('Sign out?', 'Your progress stays in your Google account. This device is cleared, so the next person starts fresh.', 'Sign out', async () => {
+    try { await flush(); } catch (e) {}
+    await FB.auth.signOut();
+    S = blank(); try { localStorage.removeItem(KEY); } catch (e) {}
+    go('home'); toast('Signed out');
+  });
+}
+function syncChip(){
+  const m = {local:['Saved on this device','var(--muted)'], signedout:['Saved on this device','var(--muted)'], connecting:['Connecting…','var(--muted)'], synced:['Synced to your account','var(--good)'], error:['Sync paused · saved here','var(--warn)']}[syncState];
+  return `<span class="badge" id="syncchip" style="color:${m[1]};font-weight:600;font-size:13px">${syncState === 'synced' ? ic('check','style="width:14px;height:14px"') : ''} ${m[0]}</span>`;
+}
+function accountBox(){
+  if (CLOUD_MODE !== 'firebase') return '';
+  if (ACCOUNT) return `<div class="row" id="acct"><span class="grow muted" style="font-size:15px">Signed in as <b style="color:var(--fg)">${esc(ACCOUNT.name)}</b></span><button class="btn small ghost" data-act="signout">Sign out</button></div>`;
+  return `<button class="btn ghost full" id="acct" data-act="signin">${GOOGLE_G} Sign in with Google to sync</button>`;
+}
+const GOOGLE_G = '<svg viewBox="0 0 48 48" width="20" height="20" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>';
+function renderAccount(){ const el = document.getElementById('acct'); if (el) el.outerHTML = accountBox(); }
+function paintSync(){ const el = document.getElementById('syncchip'); if (el) el.outerHTML = syncChip(); }
+
+// ---------- card status ----------
+const cs = id => S.cards[id] || (S.cards[id] = {seen:0, right:0, wrong:0, streak:0, days:[], last:0, due:0, star:false});
+function status(id){
+  const c = S.cards[id];
+  if (!c || !c.seen) return 'new';
+  if (c.streak >= 1 && c.days.length >= 3) return 'mastered';
+  if (c.streak >= 2) return 'known';
+  return 'learning';
+}
+const STATUS_LABEL = {new:'New', learning:'Learning', known:'Known', mastered:'Mastered'};
+const STATUS_COLOR = {new:'var(--new)', learning:'var(--warn)', known:'var(--good)', mastered:'var(--mast)'};
+function recordFirst(id, ok){
+  const c = cs(id), now = Date.now();
+  c.seen++; c.last = now;
+  if (ok) { c.right++; c.streak++; const k = dayKey(now); if (!c.days.includes(k)) c.days.push(k);
+    c.due = today() + [1,3,7,14][Math.min(c.streak - 1, 3)] * DAY; }
+  else { c.wrong++; c.streak = 0; c.due = today(); }
+}
+
+// ---------- stats ----------
+function stats(){
+  const first = S.answers.filter(a => a.f && a.k !== 'sc');
+  const right = first.filter(a => a.ok).length;
+  const counts = {new:0, learning:0, known:0, mastered:0};
+  for (const c of DB.cards) counts[status(c.id)]++;
+  const covered = DB.cards.length - counts.new;
+  const setsDone = new Set(S.quizzes.filter(q => q.done && q.setId).map(q => q.setId)).size;
+  const days = [...new Set(S.quizzes.filter(q => q.done).map(q => dayKey(q.end)))].sort();
+  let streak = 0; let d = today();
+  if (!days.includes(dayKey(d))) d -= DAY;
+  while (days.includes(dayKey(d))) { streak++; d -= DAY; }
+  const secs = S.answers.reduce((s, a) => s + (a.s || 0), 0) + S.quizzes.reduce((s, q) => s + (q.studySecs || 0), 0);
+  return {answered:first.length, right, acc:pct(right, first.length), counts, covered, left:counts.new, setsDone, streak, secs, total:DB.cards.length};
+}
+function groupAcc(keyFn){
+  const m = {};
+  for (const a of S.answers) if (a.f && a.k !== 'sc') { const c = CARD[a.c]; if (!c) continue; const k = keyFn(c); (m[k] ||= {n:0, r:0}); m[k].n++; if (a.ok) m[k].r++; }
+  return m;
+}
+
+// ---------- question generation ----------
+function nearTerms(card, n){
+  const pool = DB.cards.filter(c => c.type === 'term' && c.id !== card.id && c.theme === card.theme);
+  const idx = c => parseInt(c.id.slice(1), 10), me = idx(card);
+  pool.sort((a, b) => Math.abs(idx(a) - me) - Math.abs(idx(b) - me));
+  const picks = [];
+  if (card.confused_with && CARD[card.confused_with] && CARD[card.confused_with].type === 'term') picks.push(card.confused_with);
+  for (const c of shuffle(pool.slice(0, 8))) if (picks.length < n && !picks.includes(c.id)) picks.push(c.id);
+  if (picks.length < n) for (const c of shuffle(DB.cards.filter(c => c.type === 'term' && c.id !== card.id))) if (picks.length < n && !picks.includes(c.id)) picks.push(c.id);
+  return picks.slice(0, n);
+}
+function sameType(card, n){
+  const pool = shuffle(DB.cards.filter(c => c.type === card.type && c.id !== card.id)).map(c => c.id);
+  const picks = [];
+  if (card.confused_with && CARD[card.confused_with]?.type === card.type) picks.push(card.confused_with);
+  for (const id of pool) if (picks.length < n && !picks.includes(id)) picks.push(id);
+  return picks;
+}
+function makeQ(id){
+  const c = CARD[id];
+  if (c.type === 'principle') {
+    const qs = c.quick_qs || []; const seen = (S.cards[id]?.seen) || 0;
+    const qi = qs.length ? seen % qs.length : 0;
+    return {c:id, k:'pq', qi, o:shuffle(['A','B','C','D']), a:qs[qi].answer};
+  }
+  if (c.type === 'term') {
+    const k = Math.random() < .5 ? 'd2t' : 't2d';
+    return {c:id, k, o:shuffle([id, ...nearTerms(c, 3)]), a:id};
+  }
+  if (c.type === 'formula') return {c:id, k:Math.random() < .5 ? 'n2f' : 'f2n', o:shuffle([id, ...sameType(c, 3)]), a:id};
+  if (c.type === 'compare') return {c:id, k:'cmp', o:shuffle([id, ...sameType(c, 3)]), a:id};
+  return {c:id, k:'rule', o:shuffle([id, ...sameType(c, 3)]), a:id};
+}
+function qPrompt(q){
+  const c = CARD[q.c];
+  switch (q.k) {
+    case 'sc': return SC(q.sid).q;
+    case 'pq': return c.quick_qs[q.qi].prompt;
+    case 'd2t': return `Which term matches: ${lower1(c.back)}`;
+    case 't2d': return `What does “${c.front}” mean?`;
+    case 'n2f': return `What is the formula for ${c.front}?`;
+    case 'f2n': return `${c.back} calculates which value?`;
+    case 'cmp': return `${c.front}: what is the key difference?`;
+    case 'rule': return `Which decision rule fits? ${c.situation || c.back}`;
+  }
+}
+const lower1 = s => s ? s.charAt(0).toLowerCase() + s.slice(1) : s;
+function qOption(q, key){
+  const c = CARD[q.c];
+  if (q.k === 'pq') return c.quick_qs[q.qi].options[key];
+  if (q.k === 'sc') return SC(q.sid).o[+key];
+  const o = CARD[key];
+  switch (q.k) {
+    case 'd2t': case 'f2n': case 'rule': return o.front;
+    case 't2d': case 'cmp': return o.back;
+    case 'n2f': return o.back;
+  }
+}
+function qExplain(q){ const c = CARD[q.c]; if (q.k === 'sc') return SC(q.sid).w[+q.a] || c.back; return q.k === 'pq' ? c.quick_qs[q.qi].why : c.explain; }
+function qAnswerLine(q){
+  const c = CARD[q.c];
+  if (q.k === 'sc') return SC(q.sid).o[+q.a];
+  if (q.k === 'pq') return c.quick_qs[q.qi].options[q.a];
+  if (c.type === 'term') return `${c.front}: ${c.back}`;
+  if (c.type === 'formula') return `${c.front} = ${c.back}`;
+  if (c.type === 'compare') return `${c.front}: ${c.back}`;
+  return c.front;
+}
+function qPicked(q, key){
+  if (q.k === 'sc') { const w = SC(q.sid).w[+key]; return key === q.a || !w ? '' : `Why not your pick: ${w}`; }
+  if (q.k === 'pq' || key === q.a) return '';
+  const o = CARD[key];
+  if (o.type === 'term') return q.k === 't2d' ? `The definition you picked belongs to ${o.front}.` : `You picked ${o.front}: ${lower1(o.back)}`;
+  if (o.type === 'formula') return q.k === 'n2f' ? `That is the formula for ${o.front}.` : `You picked ${o.front} = ${o.back}.`;
+  if (o.type === 'compare') return `That describes ${o.front}.`;
+  return `You picked “${o.front}”: ${lower1(o.back)}`;
+}
+
+// ---------- scenarios (loaded on first use) ----------
+let SCEN = null, scenLoading = null;
+const SC = id => SCEN.by[id];
+function loadScen(){
+  if (SCEN) return Promise.resolve(SCEN);
+  return scenLoading ||= fetch('scenarios.json', {cache:'no-cache'}).then(r => r.json()).then(j => {
+    SCEN = {list:j.scenarios, by:{}, byP:{}};
+    for (const s of j.scenarios) { SCEN.by[s.id] = s; (SCEN.byP[s.p] ||= []).push(s.id); }
+    return SCEN;
+  }).catch(e => { scenLoading = null; throw e; });
+}
+const REL = {}; // term id -> principle ids that use it
+function principlesFor(ids){
+  const out = new Set();
+  for (const id of ids) { const c = CARD[id]; if (!c) continue; if (c.type === 'principle') out.add(id); (REL[id] || []).forEach(p => out.add(p)); }
+  return [...out];
+}
+function pickScenarios(pids, n){
+  const st = S.scen || {};
+  const lists = shuffle(pids).map(p => shuffle(SCEN.byP[p] || []).sort((a, b) => ((st[a]?.[0] || 0) - (st[b]?.[0] || 0)) || ((st[a]?.[1] || 0) - (st[b]?.[1] || 0))));
+  const out = [];
+  for (let round = 0; out.length < n && lists.some(l => l.length > round); round++)
+    for (const l of lists) if (out.length < n && l[round]) out.push(l[round]);
+  return out;
+}
+async function startScenarios({name, pids, n = 10, cfg = null}){
+  if (!pids.length) { toast('No scenarios link to these cards. Scenarios cover the principle cards.'); return; }
+  try { await loadScen(); } catch (e) { toast('Could not load scenarios. Check your connection and try again.'); return; }
+  const ids = pickScenarios(pids, n);
+  if (!ids.length) { toast('No scenarios found for these cards'); return; }
+  S.session = {id:'q' + Date.now(), kind:'scen', name, setId:null, cfg, ids, phase:'quiz', i:0, back:false, t0:Date.now(), studySecs:0, quiz:null};
+  beginQuiz(); save(); go('session');
+}
+function scenStats(){
+  const a = S.answers.filter(x => x.f && x.k === 'sc'); const r = a.filter(x => x.ok).length;
+  return {answered:a.length, right:r, acc:pct(r, a.length), seen:Object.keys(S.scen || {}).length};
+}
+const needsScen = answers => answers.some(a => a.k === 'sc') && !SCEN;
+function loadingView(title){ loadScen().then(render, () => toast('Could not load scenarios')); return [`<h1>${esc(title)}</h1>`, '<div class="glass empty">Loading scenarios…</div>']; }
+
+// ---------- set building ----------
+const themeIdx = {};
+function orderByTheme(ids){ return ids.slice().sort((a, b) => (themeIdx[CARD[a].theme] - themeIdx[CARD[b].theme]) || (DB.order[a] - DB.order[b])); }
+const knowRank = id => ({new:0, learning:1, known:2, mastered:3})[status(id)];
+function pickLeastKnown(ids, n){
+  const sorted = ids.slice().sort((a, b) => (knowRank(a) - knowRank(b)) || (DB.order[a] - DB.order[b]));
+  return sorted.slice(0, n);
+}
+function poolFor(cfg){
+  let pool = DB.cards;
+  if (cfg.source === 'sections') pool = pool.filter(c => cfg.themes.includes(c.theme));
+  else if (cfg.source === 'domain') pool = pool.filter(c => c.domain === cfg.domain);
+  else if (cfg.source === 'search') {
+    const words = (cfg.query || '').toLowerCase().split(/\s+/).filter(w => w.length > 2);
+    if (!words.length) return [];
+    pool = pool.map(c => { const hay = [c.front, c.front, c.theme, c.topic, c.back, c.explain || ''].join(' ').toLowerCase();
+      return [c, words.reduce((s, w) => s + (hay.includes(w) ? 1 : 0), 0)]; }).filter(x => x[1] > 0)
+      .sort((a, b) => b[1] - a[1]).map(x => x[0]);
+  }
+  if (cfg.types?.length) pool = pool.filter(c => cfg.types.includes(c.type));
+  if (cfg.status?.length) pool = pool.filter(c => cfg.status.some(s => s === 'missed' ? (S.cards[c.id]?.wrong > 0) : status(c.id) === s));
+  return pool.map(c => c.id);
+}
+function buildFromCfg(cfg){
+  const pool = poolFor(cfg); const n = cfg.size;
+  let pick;
+  if (cfg.source === 'search') pick = pool.slice(0, n);
+  else if (cfg.source === 'random' || cfg.source === 'domain') {
+    const byTheme = {}; for (const id of shuffle(pool)) (byTheme[CARD[id].theme] ||= []).push(id);
+    const themes = Object.keys(byTheme); const total = pool.length; pick = [];
+    for (const t of themes) pick.push(...byTheme[t].slice(0, Math.max(1, Math.round(n * byTheme[t].length / total))));
+    pick = shuffle(pick).slice(0, n);
+    if (pick.length < n) for (const id of shuffle(pool)) if (pick.length < n && !pick.includes(id)) pick.push(id);
+  } else {
+    const byTheme = {}; for (const id of pool) (byTheme[CARD[id].theme] ||= []).push(id);
+    const themes = cfg.themes.filter(t => byTheme[t]); pick = [];
+    let quota = themes.map((t, i) => Math.floor(n / themes.length) + (i < n % themes.length ? 1 : 0));
+    themes.forEach((t, i) => pick.push(...pickLeastKnown(byTheme[t], quota[i])));
+    if (pick.length < n) for (const id of pickLeastKnown(pool, pool.length)) if (pick.length < n && !pick.includes(id)) pick.push(id);
+  }
+  return cfg.order === 'shuffle' ? shuffle(pick) : orderByTheme(pick);
+}
+function cfgName(cfg){
+  if (cfg.name) return cfg.name;
+  if (cfg.source === 'sections') return cfg.themes.length === 1 ? THEME[cfg.themes[0]].short : cfg.themes.map(t => THEME[t].short).slice(0, 2).join(' + ') + (cfg.themes.length > 2 ? ` +${cfg.themes.length - 2}` : '');
+  if (cfg.source === 'domain') return cfg.domain;
+  if (cfg.source === 'search') return `Focus: ${cfg.query}`;
+  return `Random ${cfg.size}`;
+}
+function presetCards(kind){
+  const seen = DB.cards.filter(c => S.cards[c.id]?.seen);
+  if (kind === 'random') return {name:'Random 20', ids:buildFromCfg({source:'random', size:20, order:'grouped'})};
+  if (kind === 'missed') {
+    const ids = seen.filter(c => S.cards[c.id].wrong > 0 && S.cards[c.id].streak === 0).sort((a, b) => S.cards[b.id].last - S.cards[a.id].last).map(c => c.id);
+    return {name:'Missed cards', ids:orderByTheme(ids), empty:'No missed cards yet. Take a quiz first.'};
+  }
+  if (kind === 'due') {
+    const t = today() + DAY - 1;
+    const ids = seen.filter(c => S.cards[c.id].due <= t && S.cards[c.id].streak > 0).sort((a, b) => S.cards[a.id].due - S.cards[b.id].due).slice(0, 20).map(c => c.id);
+    return {name:'Due for review', ids:orderByTheme(ids), empty:'Nothing is due yet. Cards you get right come back after 1, 3, 7 and 14 days.'};
+  }
+  if (kind === 'weak') {
+    const acc = groupAcc(c => c.theme);
+    const ranked = DB.themes.map(t => { const a = acc[t.name]; const cov = DB.cards.filter(c => c.theme === t.name && S.cards[c.id]?.seen).length;
+      return {t:t.name, score: a && a.n >= 5 ? a.r / a.n : 2 + cov / t.count}; }).sort((a, b) => a.score - b.score);
+    const t = ranked[0].t;
+    return {name:`Weakest: ${THEME[t].short}`, ids:buildFromCfg({source:'sections', themes:[t], size:20, order:'grouped'})};
+  }
+}
+
+// ---------- session ----------
+function startSession({name, ids, setId=null, mode='study', cfg=null}){
+  if (!ids || !ids.length) return;
+  S.session = {id:'q' + Date.now(), name, setId, cfg, ids, phase: mode === 'study' ? 'study' : 'quiz', i:0, back:false, t0:Date.now(), studySecs:0, quiz:null};
+  if (mode !== 'study') beginQuiz();
+  save(); go('session');
+}
+function beginQuiz(){
+  const s = S.session;
+  if (s.phase === 'study') s.studySecs = Math.round((Date.now() - s.t0) / 1000);
+  const starred = s.ids.filter(id => S.cards[id]?.star), rest = s.ids.filter(id => !S.cards[id]?.star);
+  const order = s.kind === 'scen' ? shuffle(s.ids) : [...shuffle(starred), ...shuffle(rest)];
+  s.phase = 'quiz';
+  s.quiz = {queue: order.map(s.kind === 'scen' ? makeScenQ : makeQ), i:0, picks:{}, secs:{}, shown:Date.now()};
+}
+function makeScenQ(sid){ const sc = SC(sid); return {c:sc.p, sid, k:'sc', o:shuffle(['0','1','2','3']), a:String(sc.a)}; }
+// Exam-style: pick an answer (changeable), no right/wrong shown until the whole quiz is submitted.
+function answer(key){
+  const z = S.session.quiz;
+  z.picks[z.i] = key;
+  z.secs[z.i] = (z.secs[z.i] || 0) + Math.min(180, Math.round((Date.now() - z.shown) / 1000)); z.shown = Date.now();
+  save(); render();
+}
+function nextQ(){
+  const z = S.session.quiz;
+  if (z.picks[z.i] === undefined) return;
+  if (z.i < z.queue.length - 1) { z.i++; z.shown = Date.now(); save(); render(); }
+  else finish();
+}
+function prevQ(){ const z = S.session.quiz; if (z.i > 0) { z.i--; z.shown = Date.now(); save(); render(); } }
+function finish(){
+  const s = S.session, z = s.quiz, now = Date.now();
+  let score = 0;
+  z.queue.forEach((q, i) => {
+    const key = z.picks[i]; if (key === undefined) return;
+    const ok = key === q.a; if (ok) score++;
+    const rec = {qz:s.id, c:q.c, k:q.k, qi:q.qi, o:q.o, a:q.a, p:key, ok, f:true, t:now + i, s:z.secs[i] || 0};
+    if (q.sid) rec.sid = q.sid;
+    S.answers.push(rec);
+    if (q.k === 'sc') { const v = (S.scen ||= {})[q.sid] || [0, 0, 0]; S.scen[q.sid] = [v[0] + 1, v[1] + (ok ? 1 : 0), ok ? 1 : 0]; }
+    else recordFirst(q.c, ok);
+  });
+  const answered = Object.keys(z.picks).length;
+  const rec = {id:s.id, kind:s.kind || 'cards', name:s.name, setId:answered === z.queue.length ? s.setId : null, cfg:s.cfg, ids:s.ids, start:s.t0, end:now, score, total:answered, done:true, partial:answered < z.queue.length, studySecs:s.studySecs};
+  S.quizzes.push(rec);
+  S.session = null; save(rec.id);
+  view = 'results'; resultId = rec.id; histFilter = 'wrong'; openRow = null; render(); $('#main').scrollTop = 0;
+}
+function endSession(){
+  const s = S.session, n = s?.quiz ? Object.keys(s.quiz.picks).length : 0;
+  confirmSheet('End this session?', n ? `You have answered ${n} of ${s.quiz.queue.length}. Grade those ${n} now, or discard them.` : 'Nothing has been graded yet, so nothing is lost except your place.', n ? 'Grade my answers so far' : 'End session', () => {
+    if (n) finish(); else { S.session = null; save(); go('home'); }
+  });
+  if (n) { const box = document.querySelector('#sheet .sheet'); const b = document.createElement('button'); b.className = 'btn full'; b.style.color = 'var(--bad)'; b.textContent = 'Discard answers'; b.dataset.act = 'discard'; box.insertBefore(b, box.lastElementChild); }
+}
+
+// ---------- UI shell ----------
+let view = 'home', resultId = null, histId = null, histFilter = 'all', openTheme = null, openRow = null;
+const TABS = [['home','Home','home'],['sets','Sets','sets'],['build','Build','build'],['history','History','hist'],['progress','Progress','prog']];
+function go(v){ view = v; if (v !== 'history') histId = null; render(); $('#main').scrollTop = 0; }
+function render(){
+  const top = $('#top'), main = $('#main'), tabs = $('#tabs');
+  const inSession = view === 'session' && S.session;
+  tabs.hidden = !!inSession;
+  if (!inSession) tabs.innerHTML = TABS.map(([k, l, i]) => `<button data-act="tab" data-v="${k}" ${view === k || (view === 'results' && k === 'history') ? 'aria-current="page"' : ''}>${ic(i)}<span>${l}</span></button>`).join('');
+  main.classList.toggle('session', !!inSession);
+  const r = ({home:vHome, sets:vSets, build:vBuild, history:vHistory, progress:vProgress, results:vResults, session:vSession})[inSession ? 'session' : (view === 'session' ? 'home' : view)]();
+  top.innerHTML = r[0]; main.innerHTML = r[1];
+  if (r[2]) r[2]();
+}
+
+// ---------- Home ----------
+function vHome(){
+  const st = stats();
+  const nextSet = DB.sets.find(s => !S.quizzes.some(q => q.setId === s.id && q.done)) || DB.sets[0];
+  const resume = S.session;
+  const ringPct = st.covered / st.total;
+  const R = 40, C = 2 * Math.PI * R;
+  const top = `<h1>PMP Rapid-Fire</h1>${st.streak ? `<span class="badge" style="color:var(--warn)">${ic('flame','style="width:16px;height:16px"')} ${st.streak} day${st.streak > 1 ? 's' : ''}</span>` : ''}`;
+  const main = `
+  <section class="glass pad hero" aria-label="Overall progress">
+    <svg class="ring" viewBox="0 0 100 100" role="img" aria-label="${st.covered} of ${st.total} cards covered">
+      <circle cx="50" cy="50" r="${R}" fill="none" stroke="var(--glass-2)" stroke-width="10"/>
+      <circle cx="50" cy="50" r="${R}" fill="none" stroke="var(--accent)" stroke-width="10" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - ringPct)}" transform="rotate(-90 50 50)"/>
+      <text x="50" y="49" text-anchor="middle" font-family="Sora,sans-serif" font-weight="700" font-size="20" fill="var(--fg)">${pct(st.covered, st.total)}%</text>
+      <text x="50" y="65" text-anchor="middle" font-size="11" fill="var(--muted)">covered</text>
+    </svg>
+    <div class="kv">
+      <div><b>${st.covered}</b><span>of ${st.total} cards</span></div>
+      <div><b>${st.answered ? st.acc + '%' : '–'}</b><span>right</span></div>
+      <div><b>${st.left}</b><span>to go</span></div>
+    </div>
+  </section>
+  <div class="row" style="justify-content:flex-end;margin-top:-6px">${syncChip()}</div>
+  ${CLOUD_MODE === 'firebase' && !ACCOUNT ? accountBox() : ''}
+  ${resume ? `<button class="btn primary full" data-act="resume">${ic('next')} Resume: ${esc(resume.name)} (${resume.phase === 'study' ? `study ${resume.i + 1}/${resume.ids.length}` : `quiz ${resume.quiz.i + 1}/${resume.quiz.queue.length}`})</button>`
+           : `<button class="btn primary full" data-act="openset" data-id="${nextSet.id}">${ic('next')} Next set: ${esc(nextSet.name)}</button>`}
+  <div class="label">Quick sets</div>
+  <div class="presets">
+    <button class="glass preset" data-act="preset" data-k="random">${ic('shuffle')}<b>Random 20</b><span>Mixed themes, grouped</span></button>
+    <button class="glass preset" data-act="preset" data-k="missed">${ic('missed')}<b>Missed questions</b><span>${missedCount() + missedScenIds().length} to retake</span></button>
+    <button class="glass preset" data-act="preset" data-k="weak">${ic('weak')}<b>Weakest theme</b><span>Lowest accuracy</span></button>
+    <button class="glass preset" data-act="preset" data-k="due">${ic('due')}<b>Due for review</b><span>${dueCount()} due today</span></button>
+  </div>
+  <button class="glass item" data-act="scenpreset">${ic('bulb','style="width:24px;height:24px;color:var(--accent);flex:none"')}<div class="txt"><span class="t">Scenario practice</span><span class="s" style="white-space:normal">10 exam-style scenarios on principles you have studied</span></div>${ic('chev','style="width:20px;height:20px;color:var(--muted);flex:none"')}</button>
+  <button class="btn ghost full" data-act="tab" data-v="build">${ic('build')} Build a custom quiz</button>
+  ${S.saved.length ? `<div class="label">My sets</div><div class="list">${S.saved.map((x, i) => `<button class="glass item" data-act="runsaved" data-i="${i}"><div class="txt"><span class="t">${esc(x.cfg.name)}</span><span class="s">${esc(describeCfg(x.cfg))}</span></div>${ic('chev','style="width:20px;height:20px;color:var(--muted)"')}</button>`).join('')}</div>` : ''}
+  ${S.quizzes.length ? `<div class="label">Last quiz</div>${quizRow(S.quizzes[S.quizzes.length - 1])}` : `<p class="muted" style="margin:0">Pick a set, flip through its 20 cards, then take the quiz on the same 20. Every answer is saved.</p>`}`;
+  return [top, main];
+}
+const missLine = a => { const c = CARD[a.c]; if (a.k === 'sc') return SC(a.sid).o[+a.a]; return a.k === 'pq' ? c.quick_qs[a.qi].options[a.a] : c.type === 'formula' ? c.back : c.type === 'rule' ? c.back : c.back; };
+const missedScenIds = () => Object.entries(S.scen || {}).filter(([, v]) => v[2] === 0).map(([k]) => k);
+const missedCount = () => DB.cards.filter(c => { const x = S.cards[c.id]; return x?.seen && x.wrong > 0 && x.streak === 0; }).length;
+const dueCount = () => DB.cards.filter(c => { const x = S.cards[c.id]; return x?.seen && x.streak > 0 && x.due <= today() + DAY - 1; }).length;
+function quizRow(q){
+  const p = pct(q.score, q.total);
+  return `<button class="glass item" data-act="openhist" data-id="${q.id}"><span class="mark ${p >= 70 ? 'ok' : 'no'}">${ic(p >= 70 ? 'check' : 'x')}</span><div class="txt"><span class="t">${esc(q.name)}${q.partial ? ' (ended early)' : ''}</span><span class="s">${fmtDate(q.end)} · ${q.score} / ${q.total} · ${p}%</span></div>${ic('chev','style="width:20px;height:20px;color:var(--muted)"')}</button>`;
+}
+
+// ---------- Sets ----------
+function vSets(){
+  const top = `<h1>Sets</h1>`;
+  const main = `<p class="muted" style="margin:0">42 sets of 20, each from one section. Tap a theme to see its sets.</p>
+  <div class="list">${DB.themes.map(t => {
+    const ids = DB.cards.filter(c => c.theme === t.name).map(c => c.id);
+    const cov = ids.filter(id => S.cards[id]?.seen).length; const open = openTheme === t.name;
+    return `<div class="glass"><button class="theme-head" data-act="theme" data-t="${esc(t.name)}" aria-expanded="${open}">
+      <div class="txt grow" style="display:flex;flex-direction:column;gap:6px;min-width:0"><span class="t" style="font-weight:700">${esc(t.name)}</span>
+      <div class="row"><div class="bar grow"><i style="width:${pct(cov, t.count)}%"></i></div><span class="counter">${cov}/${t.count}</span></div></div>
+      ${ic(open ? 'down' : 'chev','style="width:20px;height:20px;color:var(--muted);flex:none"')}</button>
+      ${open ? `<div class="sets">${t.sets.map(sid => { const s = SET[sid]; const qs = S.quizzes.filter(q => q.setId === sid && q.done); const best = qs.length ? Math.max(...qs.map(q => pct(q.score, q.total))) : null;
+        return `<button class="setrow" data-act="openset" data-id="${sid}"><div class="txt grow" style="display:flex;flex-direction:column;min-width:0"><span style="font-weight:700">${esc(s.name)}</span><span class="s muted" style="font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(s.preview)}</span></div>
+        ${best === null ? '<span class="badge muted">Not started</span>' : `<span class="badge ${best >= 80 ? 'ok' : ''}">${best >= 80 ? ic('check','style="width:14px;height:14px"') : ''} Best ${best}%</span>`}</button>`; }).join('')}</div>` : ''}</div>`;
+  }).join('')}</div>`;
+  return [top, main];
+}
+function setSheet(id){
+  const s = SET[id];
+  const counts = {new:0, learning:0, known:0, mastered:0}; for (const c of s.cards) counts[status(c)]++;
+  sheet(`<h2>${esc(s.name)}</h2><p class="muted" style="margin:0">${esc(s.theme)} · 20 cards · ${counts.new} new, ${counts.learning} learning, ${counts.known + counts.mastered} known</p>
+  <p style="margin:0">${esc(s.preview)}…</p>
+  <button class="btn primary full" data-act="startset" data-id="${id}" data-mode="study">${ic('next')} Study, then quiz</button>
+  <button class="btn ghost full" data-act="startset" data-id="${id}" data-mode="quiz">Quiz only</button>
+  <button class="btn full" data-act="closesheet">Cancel</button>`);
+}
+
+// ---------- Builder ----------
+let B = {source:'sections', themes:[], domain:'People', query:'', types:[], status:[], size:20, mode:'study', order:'grouped'};
+function describeCfg(c){ return `${c.size} ${c.mode === 'scen' ? 'scenarios' : 'cards'} · ${c.mode === 'study' ? 'study + quiz' : c.mode === 'scen' ? 'scenario practice' : 'quiz only'} · ${c.source === 'sections' ? c.themes.length + ' section' + (c.themes.length > 1 ? 's' : '') : c.source === 'domain' ? c.domain : c.source === 'search' ? '“' + c.query + '”' : 'random'}`; }
+function vBuild(){
+  const pool = poolFor(B); const n = Math.min(B.size, pool.length);
+  const scenMode = B.mode === 'scen', np = scenMode ? principlesFor(pool).length : 0;
+  const ready = (B.source !== 'sections' || B.themes.length) && (B.source !== 'search' || B.query.trim().length > 2) && pool.length > 0 && (!scenMode || np > 0);
+  const countText = !ready ? (B.source === 'sections' && !B.themes.length ? 'Pick at least one section' : B.source === 'search' && B.query.trim().length < 3 ? 'Type a topic of 3+ letters' : scenMode && pool.length ? 'No principles link to these cards, so there are no scenarios' : 'No cards match these filters')
+    : scenMode ? `${np} principle${np > 1 ? 's' : ''} match · up to ${B.size} scenarios` : `${pool.length} cards match · ${n} will be picked${pool.length < B.size ? ` (only ${pool.length} match)` : ''}`;
+  const seg = (field, opts) => `<div class="seg" role="group">${opts.map(([v, l]) => `<button data-act="bset" data-f="${field}" data-v="${v}" aria-pressed="${String(B[field]) === String(v)}">${l}</button>`).join('')}</div>`;
+  const multi = (field, opts) => `<div class="chips">${opts.map(([v, l]) => `<button class="chip" data-act="btog" data-f="${field}" data-v="${esc(v)}" aria-pressed="${B[field].includes(v)}">${esc(l)}</button>`).join('')}</div>`;
+  const top = `<h1>Build a quiz</h1>`;
+  const main = `
+  <div class="field"><span class="label">Source</span>${seg('source', [['sections','Sections'],['domain','Domain'],['random','Random'],['search','Focus']])}</div>
+  ${B.source === 'sections' ? `<div class="field"><span class="label">Sections · pick one or more</span>${multi('themes', DB.themes.map(t => [t.name, t.short]))}</div>` : ''}
+  ${B.source === 'domain' ? `<div class="field"><span class="label">Domain</span>${seg('domain', DOMAINS.map(d => [d, d === 'Business Environment' ? 'Business Env.' : d]))}</div>` : ''}
+  ${B.source === 'search' ? `<div class="field"><label class="label" for="bq">Focus · type a topic</label><input id="bq" type="text" placeholder="e.g. agile leadership" value="${esc(B.query)}" autocomplete="off"></div>` : ''}
+  <div class="field"><span class="label">Card types · optional</span>${multi('types', [['term','Terms'],['principle','Principles'],['formula','Formulas'],['compare','Comparisons'],['rule','Rules']])}</div>
+  <div class="field"><span class="label">Status · optional</span>${multi('status', [['new','New'],['learning','Learning'],['known','Known'],['mastered','Mastered'],['missed','Missed before']])}</div>
+  <div class="field"><span class="label">Size</span>${seg('size', [[10,'10'],[20,'20'],[30,'30'],[40,'40']])}</div>
+  <div class="field"><span class="label">Mode</span>${seg('mode', [['study','Study + quiz'],['quiz','Quiz only'],['scen','Scenarios']])}</div>
+  ${scenMode ? '<p class="muted" style="margin:0;font-size:15px">Exam-style scenario questions on the principles behind the cards you pick.</p>' : `<div class="field"><span class="label">Order</span>${seg('order', [['grouped','Related together'],['shuffle','Shuffle']])}</div>`}
+  <div class="sticky-foot">
+    <div class="count" id="bcount">${countText}</div>
+    <div class="row"><button class="btn ghost" data-act="bsave" ${ready ? '' : 'disabled style="opacity:.5"'}>Save as my set</button><button class="btn primary grow" data-act="bstart" ${ready ? '' : 'disabled style="opacity:.5"'}>${ic('next')} Start</button></div>
+  </div>`;
+  return [top, main, () => { const q = $('#bq'); if (q) q.addEventListener('input', e => { B.query = e.target.value; const pool = poolFor(B); const np = B.mode === 'scen' ? principlesFor(pool).length : pool.length;
+    $('#bcount').textContent = B.query.trim().length < 3 ? 'Type a topic of 3+ letters' : B.mode === 'scen' ? `${np} principles match · up to ${B.size} scenarios` : `${pool.length} cards match · ${Math.min(B.size, pool.length)} will be picked`;
+    document.querySelectorAll('[data-act="bstart"],[data-act="bsave"]').forEach(b => { const ok = B.query.trim().length > 2 && np > 0; b.disabled = !ok; b.style.opacity = ok ? '' : '.5'; }); }); }];
+}
+
+// ---------- Session views ----------
+function vSession(){
+  const s = S.session;
+  if (s.kind === 'scen' && !SCEN) return loadingView(s.name);
+  return s.phase === 'study' ? vStudy(s) : vQuiz(s);
+}
+function vStudy(s){
+  const id = s.ids[s.i], c = CARD[id], st = S.cards[id] || {};
+  const defFirst = S.prefs.defFirst && c.type === 'term';
+  const showBack = s.back;
+  const top = `<button class="iconbtn" data-act="end" aria-label="End session">${ic('x')}</button><span class="title">${esc(s.name)}</span><span class="counter">${s.i + 1} / ${s.ids.length}</span>`;
+  const face = (side) => {
+    if (side === 'q') return defFirst ? `<p class="def" style="margin:auto 0">${esc(c.back)}</p><p class="hint" style="margin:0">Name the term</p>` :
+      `<h2 style="margin:auto 0;font-size:clamp(28px,8.4vw,38px)">${esc(c.front)}</h2><p class="hint" style="margin:0">${c.type === 'principle' ? 'What does PMI expect you to do?' : c.type === 'formula' ? 'Recall the formula' : c.type === 'compare' ? 'What is the key difference?' : c.type === 'rule' ? 'When and why does it apply?' : 'Recall the definition'}</p>`;
+    let h = `<h2>${esc(c.front)}</h2>`;
+    if (c.type === 'formula') h += `<div class="formula">${esc(c.back)}</div><p style="margin:0">${esc(c.note || '')}</p>`;
+    else h += `<p class="def" style="margin:0">${esc(c.back)}</p>`;
+    if (c.type === 'principle') {
+      h += `<div><div class="sub">Right move</div><p style="margin:2px 0 0">${esc(c.note)}</p></div>`;
+      if (c.traps) h += `<div><div class="sub">Traps</div><ul class="traps" style="margin:2px 0 0;padding-left:20px">${c.traps.map(t => `<li>${esc(t)}</li>`).join('')}</ul></div>`;
+    } else if (c.explain) h += `<div class="tip">${ic('bulb')}<span>${esc(c.explain)}</span></div>`;
+    const rel = (c.related || []).map(r => CARD[r]).filter(Boolean).slice(0, 3);
+    if (rel.length) h += `<div class="chips" style="align-items:center"><span class="muted" style="font-size:14px">Related:</span>${rel.map(r => `<span class="chip" style="min-height:30px;font-size:14px">${esc(r.front)}</span>`).join('')}</div>`;
+    return h;
+  };
+  const main = `<div class="sesh">
+    <div class="bar"><i style="width:${pct(s.i + 1, s.ids.length)}%"></i></div>
+    <article class="glass flash" id="card" data-act="flip" tabindex="0" aria-live="polite" aria-label="Flashcard, tap to flip">
+      <div class="label" style="padding-right:48px">${TYPE_LABEL[c.type]} · ${esc(THEME[c.theme].short)} · ${showBack ? 'Answer' : 'Prompt'}</div>
+      ${face(showBack ? 'a' : 'q')}
+      <button class="iconbtn star" data-act="star" aria-pressed="${!!st.star}" aria-label="Star for quiz focus">${ic('star')}</button>
+    </article>
+    <div class="row" style="justify-content:space-between"><span class="hint">Tap to flip · swipe for next</span>${c.type === 'term' ? `<button class="chip" data-act="dir" aria-pressed="${!!S.prefs.defFirst}">${ic('swap','style="width:16px;height:16px"')} Definition first</button>` : ''}</div>
+    <div class="row"><button class="btn ghost" data-act="sprev" ${s.i ? '' : 'disabled style="opacity:.45"'}>${ic('prev')} Back</button>
+    <button class="btn primary grow" data-act="snext">${s.i === s.ids.length - 1 ? 'Quiz me now' : 'Next'} ${ic('next')}</button></div>
+  </div>`;
+  return [top, main, () => swipe($('#card'), () => act('snext'), () => act('sprev'))];
+}
+function vQuiz(s){
+  const z = s.quiz, q = z.queue[z.i], c = CARD[q.c];
+  const picked = z.picks[z.i], last = z.i === z.queue.length - 1, answered = Object.keys(z.picks).length;
+  const top = `<button class="iconbtn" data-act="end" aria-label="End session">${ic('x')}</button><span class="title">${s.kind === 'scen' ? '' : 'Quiz · '}${esc(s.name)}</span><span class="counter">${z.i + 1} / ${z.queue.length}</span>`;
+  const opts = q.o.map((key, i) => {
+    const sel = key === picked;
+    return `<button class="opt${sel ? ' sel' : ''}" data-act="ans" data-k="${esc(key)}" aria-pressed="${sel}"><span class="dot">${sel ? ic('check') : `<span style="font-size:14px;font-weight:700;color:var(--muted)">${'ABCD'[i]}</span>`}</span><span>${esc(qOption(q, key))}</span></button>`;
+  }).join('');
+  const main = `<div class="sesh">
+    <div class="bar"><i style="width:${pct(answered, z.queue.length)}%"></i></div>
+    <div class="qscroll" id="qs">
+      <div class="label">${q.k === 'sc' ? 'Scenario' : TYPE_LABEL[c.type]} · ${esc(THEME[c.theme].short)}</div>
+      <div class="q${q.k === 'sc' ? ' long' : ''}">${esc(qPrompt(q))}</div>
+      <div class="opts">${opts}</div>
+    </div>
+    <div class="row"><button class="btn ghost" data-act="qprev" ${z.i ? '' : 'disabled style="opacity:.45"'}>${ic('prev')} Back</button>
+    <button class="btn primary grow" data-act="qnext" id="qnext" ${picked === undefined ? 'disabled style="opacity:.45"' : ''}>${last ? `Submit quiz` : 'Next'} ${ic('next')}</button></div>
+  </div>`;
+  return [top, main, () => { $('#qs').scrollTop = 0; }];
+}
+
+// ---------- Results ----------
+function vResults(){
+  const q = S.quizzes.find(x => x.id === resultId); if (!q) { view = 'home'; return vHome(); }
+  const ans = S.answers.filter(a => a.qz === q.id && a.f); const wrong = ans.filter(a => !a.ok);
+  if (needsScen(ans) || (q.kind === 'scen' && !SCEN)) return loadingView('Results');
+  const p = pct(q.score, q.total);
+  const pids = q.kind === 'scen' ? [...new Set(q.ids.map(id => SC(id).p))] : principlesFor(q.ids);
+  if (!wrong.length && histFilter === 'wrong') histFilter = 'all';
+  const top = `<h1>Your grade</h1>`;
+  const main = `<section class="glass pad" style="display:flex;flex-direction:column;gap:6px;align-items:center;text-align:center">
+    <div class="label">${esc(q.name)}</div>
+    <div class="num" style="font-size:52px;font-weight:700;line-height:1">${q.score}<span class="muted" style="font-size:26px"> / ${q.total}</span></div>
+    <div class="badge ${p >= 80 ? 'ok' : p >= 60 ? '' : 'no'}">${p}%${p >= 80 ? ' · passing pace' : ''}</div>
+    ${wrong.length ? `<div class="muted" style="font-size:15px">${wrong.length} added to your missed list</div>` : `<div class="ok" style="font-weight:700">${ic('check','style="width:18px;height:18px;vertical-align:-3px"')} Perfect</div>`}
+  </section>
+  <div class="list">
+    ${wrong.length ? `<button class="btn primary full" data-act="retryq" data-id="${q.id}" data-w="1" data-mode="quiz">Quiz me on the ${wrong.length} I missed</button>` : ''}
+    ${q.setId ? (() => { const i = DB.sets.findIndex(s => s.id === q.setId); const nx = DB.sets[i + 1]; return nx ? `<button class="btn ${wrong.length ? 'ghost' : 'primary'} full" data-act="openset" data-id="${nx.id}">Next set: ${esc(nx.name)}</button>` : ''; })() : ''}
+    ${pids.length ? `<button class="btn ghost full" data-act="scenfor" data-id="${q.id}">${ic('bulb')} ${q.kind === 'scen' ? 'More scenarios' : 'Scenario practice on this set'}</button>` : ''}
+  </div>
+  <div class="label">Review answers</div>
+  ${reviewList(ans)}`;
+  return [top, main];
+}
+function reviewList(all){
+  const list = histFilter === 'wrong' ? all.filter(a => !a.ok) : all;
+  return `<div class="chips"><button class="chip" data-act="hf" data-v="wrong" aria-pressed="${histFilter === 'wrong'}">Wrong (${all.filter(a => !a.ok).length})</button><button class="chip" data-act="hf" data-v="all" aria-pressed="${histFilter === 'all'}">All (${all.length})</button></div>
+  <div class="list">${list.length ? list.map(a => { const open = openRow === a.t; const c = CARD[a.c];
+    return `<div class="glass"><button class="item" data-act="row" data-t="${a.t}" aria-expanded="${open}"><span class="mark ${a.ok ? 'ok' : 'no'}">${ic(a.ok ? 'check' : 'x')}</span><div class="txt"><span class="t">${esc(a.k === 'sc' ? 'Scenario: ' + c.front : c.front)}</span>${a.ok ? '' : `<span class="s">You: ${esc(short(qOption(a, a.p)))}</span>`}</div>${ic(open ? 'down' : 'chev','style="width:20px;height:20px;color:var(--muted);flex:none"')}</button>
+    ${open ? `<div class="details"><div><b>Question:</b> ${esc(qPrompt(a))}</div>${a.ok ? '' : `<div class="no"><b>${ic('x','style="width:14px;height:14px;vertical-align:-2px"')} Your answer:</b> ${esc(qOption(a, a.p))}</div>`}<div class="ok"><b>${ic('check','style="width:14px;height:14px;vertical-align:-2px"')} Correct:</b> ${esc(qOption(a, a.a))}</div><div>${esc(qExplain(a))}</div>${!a.ok && qPicked(a, a.p) ? `<div class="muted">${esc(qPicked(a, a.p))}</div>` : ''}${a.k === 'sc' ? `<div class="tip">${ic('bulb')}<span><b>Principle:</b> ${esc(c.note || c.front)}</span></div>` : ''}</div>` : ''}</div>`; }).join('') : '<div class="glass empty">No wrong answers in this quiz.</div>'}</div>`;
+}
+
+// ---------- History ----------
+function vHistory(){
+  if (histId) return vHistDetail();
+  const top = `<h1>History</h1>`;
+  const qs = S.quizzes.slice().reverse();
+  const main = qs.length ? `<div class="list">${qs.map(quizRow).join('')}</div>` : `<div class="glass empty">Your quizzes appear here, newest first. Tap one to see every question, your answer and the correct answer.</div>`;
+  return [top, main];
+}
+function vHistDetail(){
+  const q = S.quizzes.find(x => x.id === histId);
+  const all = S.answers.filter(a => a.qz === q.id && a.f);
+  if (needsScen(all)) return loadingView(q.name);
+  const p = pct(q.score, q.total), nw = all.filter(a => !a.ok).length;
+  const top = `<button class="iconbtn" data-act="histback" aria-label="Back to history">${ic('back')}</button><span class="title">${esc(q.name)}</span>`;
+  const main = `<section class="glass pad row"><div class="grow"><div class="num" style="font-size:28px;font-weight:700">${q.score} / ${q.total}</div><div class="muted">${fmtDate(q.end)} · ${p}%${q.partial ? ' · ended early' : ''}</div></div>
+    ${nw ? `<button class="btn small primary" data-act="retryq" data-id="${q.id}" data-w="1" data-mode="quiz">Quiz the ${nw} missed</button>` : ''}</section>
+  ${reviewList(all)}`;
+  return [top, main];
+}
+const short = s => s.length > 60 ? s.slice(0, 57) + '…' : s;
+
+// ---------- Progress ----------
+function vProgress(){
+  const st = stats();
+  const dom = groupAcc(c => c.domain), th = groupAcc(c => c.theme);
+  const recent = S.quizzes.filter(q => q.done && !q.partial).slice(-20);
+  const seg = ['new','learning','known','mastered'].map(k => st.counts[k] ? `<i style="flex:${st.counts[k]};background:${STATUS_COLOR[k]}" title="${STATUS_LABEL[k]}">${st.counts[k] / st.total > .07 ? st.counts[k] : ''}</i>` : '').join('');
+  const themes = DB.themes.map(t => { const a = th[t.name]; const cov = DB.cards.filter(c => c.theme === t.name && S.cards[c.id]?.seen).length; return {t, a, cov, acc: a ? pct(a.r, a.n) : null}; })
+    .sort((x, y) => (x.acc ?? 101) - (y.acc ?? 101) || x.cov - y.cov);
+  const ss = scenStats();
+  const top = `<h1>Your progress</h1>${st.streak ? `<span class="badge" style="color:var(--warn)">${ic('flame','style="width:16px;height:16px"')} ${st.streak} day${st.streak > 1 ? 's' : ''}</span>` : ''}`;
+  const spark = recent.length > 1 ? (() => { const W = 300, H = 70, xs = i => 6 + i * (W - 12) / (recent.length - 1), ys = v => H - 8 - v * (H - 16) / 100;
+    const pts = recent.map((q, i) => `${xs(i).toFixed(1)},${ys(pct(q.score, q.total)).toFixed(1)}`).join(' ');
+    const last = recent[recent.length - 1];
+    return `<svg class="spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Scores on the last ${recent.length} quizzes"><line x1="0" x2="${W}" y1="${ys(80)}" y2="${ys(80)}" stroke="var(--line)" stroke-dasharray="4 4"/><polyline points="${pts}" fill="none" stroke="var(--accent)" stroke-width="2.5" vector-effect="non-scaling-stroke"/><circle cx="${xs(recent.length - 1)}" cy="${ys(pct(last.score, last.total))}" r="4" fill="var(--accent)"/></svg>
+    <div class="row muted" style="font-size:14px;justify-content:space-between"><span>Last ${recent.length} quizzes · dashed line = 80%</span><span>Latest ${pct(last.score, last.total)}%</span></div>`; })() : `<p class="muted" style="margin:0">Take two quizzes to see your trend.</p>`;
+  const main = `
+  <div class="tiles">
+    <div class="glass tile"><b>${st.covered} <small>of ${st.total}</small></b><span>Cards covered</span></div>
+    <div class="glass tile"><b>${st.left}</b><span>Cards left</span></div>
+    <div class="glass tile"><b>${st.answered}</b><span>Answered</span></div>
+    <div class="glass tile"><b>${st.answered ? st.acc + '%' : '–'}</b><span>Right on first try${st.answered ? ` (${st.right})` : ''}</span></div>
+    <div class="glass tile"><b>${st.counts.mastered}</b><span>Mastered</span></div>
+    <div class="glass tile"><b>${st.setsDone} <small>of ${DB.sets.length}</small></b><span>Sets done</span></div>
+  </div>
+  <section class="glass pad" style="display:flex;flex-direction:column;gap:10px"><div class="label">All ${st.total} cards</div><div class="stack" role="img" aria-label="${['new','learning','known','mastered'].map(k => st.counts[k] + ' ' + STATUS_LABEL[k]).join(', ')}">${seg}</div>
+    <div class="legend">${['new','learning','known','mastered'].map(k => `<span><i style="background:${STATUS_COLOR[k]}"></i>${STATUS_LABEL[k]} ${st.counts[k]}</span>`).join('')}</div></section>
+  <section class="glass pad" style="display:flex;flex-direction:column;gap:10px"><div class="label">By domain · first-try accuracy</div>
+    ${DOMAINS.map(d => { const a = dom[d]; const p = a ? pct(a.r, a.n) : 0; return `<div class="dom"><span>${d === 'Business Environment' ? 'Business Env.' : d}</span><div class="bar"><i style="width:${p}%;background:${p >= 80 ? 'var(--good)' : p >= 65 ? 'var(--warn)' : 'var(--bad)'}"></i></div><span class="pct">${a ? p + '%' : '–'}</span></div>`; }).join('')}</section>
+  <section class="glass pad" style="display:flex;flex-direction:column;gap:10px"><div class="label">Scenario practice</div>
+    ${ss.answered ? `<div class="kv"><div><b>${ss.answered}</b><span>answered</span></div><div><b>${ss.acc}%</b><span>right first try</span></div><div><b>${ss.seen}</b><span>of 1,630 seen</span></div></div>` : '<p class="muted" style="margin:0">Exam-style questions on the principles. Start one from Home, a quiz result, or the builder.</p>'}
+    <button class="btn small ghost" data-act="scenpreset">${ic('bulb')} 10 scenarios now</button></section>
+  <section class="glass pad" style="display:flex;flex-direction:column;gap:8px"><div class="label">Trend</div>${spark}</section>
+  <section class="glass pad" style="display:flex;flex-direction:column;gap:8px"><div class="label">Themes · weakest first</div>
+    ${themes.map(x => `<div class="row" style="min-height:44px"><div class="txt grow" style="display:flex;flex-direction:column;min-width:0"><span style="font-weight:700">${esc(x.t.short)}</span><span class="muted" style="font-size:14px">${x.cov}/${x.t.count} covered${x.acc !== null ? ` · ${x.acc}% right` : ''}</span></div><button class="btn small ghost" data-act="studytheme" data-t="${esc(x.t.name)}">Study</button></div>`).join('')}</section>
+  <section class="glass pad" style="display:flex;flex-direction:column;gap:8px"><div class="label">Totals</div><div>${S.quizzes.length} quizzes · ${Math.round(st.secs / 60)} minutes studying</div></section>
+  <section class="glass pad" style="display:flex;flex-direction:column;gap:10px"><div class="label">Backup and reset</div>
+    <div class="row">${syncChip()}</div>
+    ${accountBox()}
+    <p class="muted" style="margin:0">${CLOUD ? 'Progress syncs to your account, so it follows you to every device where you sign in. A backup is an extra copy.' : CLOUD_MODE === 'firebase' ? 'Progress is saved in this browser. Sign in with Google to keep it in your account and see it on any device.' : 'Progress is saved in this browser. Copy a backup to move it to another device.'}</p>
+    <div class="row"><button class="btn ghost small grow" data-act="export">Export backup</button><button class="btn ghost small grow" data-act="import">Import backup</button></div>
+    <button class="btn small full" data-act="reset" style="color:var(--bad)">Reset all progress</button></section>`;
+  return [top, main];
+}
+
+// ---------- sheets & toasts ----------
+function sheet(html){ closeSheet(); const d = document.createElement('div'); d.className = 'sheet-back'; d.id = 'sheet'; d.innerHTML = `<div class="sheet" role="dialog" aria-modal="true">${html}</div>`; d.addEventListener('click', e => { if (e.target === d) closeSheet(); }); document.body.appendChild(d); d.querySelector('button')?.focus(); }
+function closeSheet(){ $('#sheet')?.remove(); }
+let confirmFn = null;
+function confirmSheet(title, body, okLabel, fn){ confirmFn = fn; sheet(`<h2>${esc(title)}</h2><p class="muted" style="margin:0">${esc(body)}</p><button class="btn primary full" data-act="confirm">${esc(okLabel)}</button><button class="btn full" data-act="closesheet">Cancel</button>`); }
+let toastT; function toast(msg){ $('#toast')?.remove(); const t = document.createElement('div'); t.className = 'toast'; t.id = 'toast'; t.textContent = msg; document.body.appendChild(t); clearTimeout(toastT); toastT = setTimeout(() => t.remove(), 2600); }
+function swipe(el, left, right){ if (!el) return; let x0 = null, y0 = null; el.addEventListener('touchstart', e => { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }, {passive:true});
+  el.addEventListener('touchend', e => { if (x0 === null) return; const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0; if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) { el.dataset.swiped = '1'; dx < 0 ? left() : right(); } x0 = null; }, {passive:true}); }
+
+// ---------- actions ----------
+function act(a, el){
+  const d = el?.dataset || {};
+  switch (a) {
+    case 'tab': go(d.v); break;
+    case 'resume': view = 'session'; render(); break;
+    case 'openset': setSheet(d.id); break;
+    case 'startset': closeSheet(); { const s = SET[d.id]; startSession({name:s.name, ids:s.cards, setId:s.id, mode:d.mode}); } break;
+    case 'preset': if (d.k === 'missed') { const pc = presetCards('missed'), ns = missedScenIds().length; pendingPreset = pc;
+      if (!pc.ids.length && !ns) { toast('Nothing missed yet. Wrong answers land here after each quiz.'); break; }
+      sheet(`<h2>Missed questions</h2><p class="muted" style="margin:0">Questions whose last answer was wrong. Get one right and it leaves this list.</p>${pc.ids.length ? `<button class="btn primary full" data-act="startpreset" data-mode="quiz">Quiz all ${pc.ids.length} missed cards</button><button class="btn ghost full" data-act="startpreset" data-mode="study">Study them first, then quiz</button>` : ''}${ns ? `<button class="btn ${pc.ids.length ? 'ghost' : 'primary'} full" data-act="missedscen">Quiz all ${ns} missed scenarios</button>` : ''}<button class="btn full" data-act="closesheet">Cancel</button>`); break; }
+    { const p = presetCards(d.k); if (!p.ids.length) { toast(p.empty || 'Nothing to study here yet'); break; }
+      sheet(`<h2>${esc(p.name)}</h2><p class="muted" style="margin:0">${p.ids.length} cards${p.ids.length < 20 ? ' (all that match)' : ''}</p><button class="btn primary full" data-act="startpreset" data-mode="study">${ic('next')} Study, then quiz</button><button class="btn ghost full" data-act="startpreset" data-mode="quiz">Quiz only</button><button class="btn full" data-act="closesheet">Cancel</button>`);
+      pendingPreset = p; } break;
+    case 'startpreset': closeSheet(); startSession({name:pendingPreset.name, ids:pendingPreset.ids, mode:d.mode}); break;
+    case 'runsaved': { const x = S.saved[+d.i];
+      if (x.cfg.mode === 'scen') startScenarios({name:x.cfg.name, pids:principlesFor(poolFor(x.cfg)), n:x.cfg.size, cfg:x.cfg});
+      else startSession({name:x.cfg.name, ids:buildFromCfg(x.cfg), mode:x.cfg.mode, cfg:x.cfg}); } break;
+    case 'scenpreset': { const seen = DB.cards.filter(c => S.cards[c.id]?.seen).map(c => c.id); let pids = principlesFor(seen);
+      if (!pids.length) pids = DB.cards.filter(c => c.type === 'principle').map(c => c.id);
+      startScenarios({name:'Scenario practice', pids, n:10}); } break;
+    case 'scenfor': { const q = S.quizzes.find(x => x.id === d.id); const pids = q.kind === 'scen' ? [...new Set(q.ids.map(id => SC(id).p))] : principlesFor(q.ids);
+      startScenarios({name:`Scenarios: ${q.name.replace(/^(Scenarios: |Retry: )/, '')}`, pids, n:10}); } break;
+    case 'theme': openTheme = openTheme === d.t ? null : d.t; render(); break;
+    case 'bset': B[d.f] = d.f === 'size' ? +d.v : d.v; render(); break;
+    case 'btog': { const arr = B[d.f]; const i = arr.indexOf(d.v); i < 0 ? arr.push(d.v) : arr.splice(i, 1); render(); } break;
+    case 'bstart': { const cfg = JSON.parse(JSON.stringify(B));
+      if (cfg.mode === 'scen') startScenarios({name:`Scenarios: ${cfgName(cfg)}`, pids:principlesFor(poolFor(cfg)), n:cfg.size, cfg});
+      else startSession({name:cfgName(cfg), ids:buildFromCfg(cfg), mode:cfg.mode, cfg}); } break;
+    case 'bsave': sheet(`<h2>Save as my set</h2><label class="label" for="sname">Name</label><input id="sname" type="text" value="${esc(cfgName(B))}" maxlength="40"><p class="muted" style="margin:0">${esc(describeCfg(B))}. Each run picks fresh cards with these settings.</p><button class="btn primary full" data-act="dosave">Save</button><button class="btn full" data-act="closesheet">Cancel</button>`); break;
+    case 'dosave': { const name = ($('#sname').value || cfgName(B)).trim(); const cfg = JSON.parse(JSON.stringify(B)); cfg.name = name; S.saved.push({cfg}); save(); closeSheet(); toast(`Saved “${name}” to My sets`); } break;
+    case 'studytheme': B = Object.assign(B, {source:'sections', themes:[d.t]}); { const cfg = {source:'sections', themes:[d.t], size:20, mode:'study', order:'grouped', types:[], status:[]}; startSession({name:THEME[d.t].short, ids:buildFromCfg(cfg), mode:'study', cfg}); } break;
+    case 'flip': { const card = $('#card'); if (card?.dataset.swiped) { delete card.dataset.swiped; break; } S.session.back = !S.session.back; save(); render(); $('#card')?.classList.add('flip'); } break;
+    case 'star': { const id = S.session.ids[S.session.i]; const c = cs(id); c.star = !c.star; save(); render(); } break;
+    case 'dir': S.prefs.defFirst = !S.prefs.defFirst; S.session.back = false; save(); render(); break;
+    case 'snext': { const s = S.session; if (s.i < s.ids.length - 1) { s.i++; s.back = false; save(); render(); } else { beginQuiz(); save(); render(); } } break;
+    case 'sprev': { const s = S.session; if (s.i > 0) { s.i--; s.back = false; save(); render(); } } break;
+    case 'ans': answer(d.k); break;
+    case 'qnext': nextQ(); break;
+    case 'qprev': prevQ(); break;
+    case 'signin': signIn(); break;
+    case 'signout': signOutFlow(); break;
+    case 'discard': closeSheet(); S.session = null; save(); go('home'); break;
+    case 'missedscen': { closeSheet(); const ids = missedScenIds(); loadScen().then(() => { S.session = {id:'q' + Date.now(), kind:'scen', name:'Missed scenarios', setId:null, cfg:null, ids, phase:'quiz', i:0, back:false, t0:Date.now(), studySecs:0, quiz:null}; beginQuiz(); save(); go('session'); }, () => toast('Could not load scenarios')); } break;
+    case 'end': endSession(); break;
+    case 'confirm': { const f = confirmFn; confirmFn = null; closeSheet(); f && f(); } break;
+    case 'closesheet': closeSheet(); break;
+    case 'openhist': view = 'history'; histId = d.id; histFilter = S.answers.some(a => a.qz === d.id && a.f && !a.ok) ? 'wrong' : 'all'; openRow = null; render(); $('#main').scrollTop = 0; break;
+    case 'histback': histId = null; render(); break;
+    case 'hf': histFilter = d.v; openRow = null; render(); break;
+    case 'row': openRow = openRow === +d.t ? null : +d.t; render(); break;
+    case 'retryq': { const q = S.quizzes.find(x => x.id === d.id);
+      if (q.kind === 'scen') { const ids = d.w === '1' ? [...new Set(S.answers.filter(a => a.qz === q.id && a.f && !a.ok).map(a => a.sid))] : q.ids;
+        if (!ids.length) { toast('No missed scenarios in this quiz'); break; }
+        loadScen().then(() => { S.session = {id:'q' + Date.now(), kind:'scen', name:`Retake: ${q.name.replace(/^(Retry|Retake): /, '')}`, setId:null, cfg:null, ids, phase:'quiz', i:0, back:false, t0:Date.now(), studySecs:0, quiz:null}; beginQuiz(); save(); go('session'); }, () => toast('Could not load scenarios'));
+        break; }
+      const ids = d.w === '1' ? [...new Set(S.answers.filter(a => a.qz === q.id && a.f && !a.ok).map(a => a.c))] : q.ids;
+      if (!ids.length) { toast('No missed cards in this quiz'); break; } startSession({name:`Retake: ${q.name.replace(/^(Retry|Retake): /, '')}`, ids:orderByTheme(ids), mode:d.mode || 'quiz'}); } break;
+    case 'export': { const data = JSON.stringify(Object.assign({}, S, {session:null, exported:new Date().toISOString()}));
+      const inFrame = window.self !== window.top;
+      sheet(`<h2>Export backup</h2><p class="muted" style="margin:0">Copy this text and paste it into Import backup on another device${inFrame ? '' : ', or download it as a file'}.</p><textarea id="bx" readonly>${esc(data)}</textarea><button class="btn primary full" data-act="copybx">Copy backup</button>${inFrame ? '' : '<button class="btn ghost full" data-act="dlbx">Download file</button>'}<button class="btn full" data-act="closesheet">Close</button>`); } break;
+    case 'copybx': { const t = $('#bx'); navigator.clipboard?.writeText(t.value).then(() => toast('Backup copied'), () => { t.select(); toast('Select all and copy'); }) ?? (t.select(), toast('Select all and copy')); } break;
+    case 'dlbx': { const blob = new Blob([$('#bx').value], {type:'application/json'}); const a2 = document.createElement('a'); a2.href = URL.createObjectURL(blob); a2.download = `pmp-rapid-fire-backup-${dayKey(Date.now())}.json`; document.body.appendChild(a2); a2.click(); a2.remove(); } break;
+    case 'import': sheet(`<h2>Import backup</h2><p class="muted" style="margin:0">Paste a backup, or choose a backup file. This replaces the progress on this device.</p><textarea id="bi" placeholder="Paste backup text here"></textarea><input id="bf" type="file" accept="application/json,.json"><button class="btn primary full" data-act="doimport">Import and replace</button><button class="btn full" data-act="closesheet">Cancel</button>`);
+      $('#bf').addEventListener('change', e => { const f = e.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = () => { $('#bi').value = r.result; }; r.readAsText(f); }); break;
+    case 'doimport': try { const data = JSON.parse($('#bi').value); if (!data || !Array.isArray(data.answers) || !Array.isArray(data.quizzes)) throw 0; S = Object.assign(blank(), data, {session:null}); S.quizzes.forEach(q => dirtyQuiz.add(q.id)); save(); closeSheet(); toast(`Imported ${S.quizzes.length} quizzes and ${S.answers.length} answers`); render(); } catch (e) { toast('That is not a valid backup. Paste the full exported text.'); } break;
+    case 'reset': confirmSheet('Reset all progress?', `This deletes every saved answer, quiz and saved set${CLOUD ? ' on every device' : ' in this browser'}. Export a backup first if you might want it back.`, 'Delete everything', async () => {
+      const old = S.quizzes.map(q => q.id), owner = S.owner; S = blank(); S.owner = owner; dirtyQuiz.clear(); save(); go('home');
+      if (CLOUD) { try { await flushing; for (const id of old) await CLOUD.delQuiz(id); } catch (e) { toast('Some synced quizzes could not be deleted; try again later'); return; } }
+      toast('Progress reset'); }); break;
+  }
+}
+let pendingPreset = null;
+document.addEventListener('click', e => { const el = e.target.closest('[data-act]'); if (!el || el.disabled) return; if (el.dataset.act === 'flip' && e.target.closest('[data-act="star"]')) return; act(el.dataset.act, el); });
+document.addEventListener('keydown', e => {
+  if (e.target.matches('input,textarea')) return;
+  if (e.key === 'Escape' && $('#sheet')) { closeSheet(); return; }
+  if (view !== 'session' || !S.session || $('#sheet')) return;
+  const s = S.session;
+  if (s.phase === 'study') {
+    if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); act('flip'); }
+    else if (e.key === 'ArrowRight') act('snext'); else if (e.key === 'ArrowLeft') act('sprev');
+  } else {
+    const z = s.quiz;
+    if (['1','2','3','4'].includes(e.key)) answer(z.queue[z.i].o[+e.key - 1]);
+    else if (e.key === 'Enter' || e.key === 'ArrowRight') { e.preventDefault(); nextQ(); }
+    else if (e.key === 'ArrowLeft') prevQ();
+  }
+});
+
+// ---------- boot ----------
+async function boot(){
+  load();
+  try { const r = await fetch('cards.json', {cache:'no-cache'}); DB = await r.json(); }
+  catch (e) { $('#main').innerHTML = '<div class="glass empty">Could not load the cards. Check your connection and reload.</div>'; return; }
+  DB.order = {};
+  DB.sets.forEach(s => s.cards.forEach((id, i) => { if (!(id in DB.order)) DB.order[id] = Object.keys(DB.order).length; }));
+  DB.cards.forEach(c => { CARD[c.id] = c; if (!(c.id in DB.order)) DB.order[c.id] = 1e6; });
+  DB.sets.forEach(s => SET[s.id] = s);
+  DB.themes.forEach((t, i) => { THEME[t.name] = t; themeIdx[t.name] = i; });
+  DB.cards.forEach(c => { if (c.type === 'principle') (c.related || []).forEach(r => (REL[r] ||= []).push(c.id)); });
+  if (S.session) view = 'session';
+  render();
+  connectCloud();
+  if ('serviceWorker' in navigator && location.protocol === 'https:' && window.self === window.top) navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+boot();
+})();
+</script>
