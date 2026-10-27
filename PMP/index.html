@@ -666,6 +666,43 @@ function endSession(){
 let view = 'home', resultId = null, histId = null, histFilter = 'all', openTheme = null, openRow = null;
 const TABS = [['home','Home','home'],['sets','Sets','sets'],['build','Build','build'],['history','History','hist'],['progress','Progress','prog']];
 function go(v){ view = v; if (v !== 'history') histId = null; render(); $('#main').scrollTop = 0; }
+// ---------- in-app back button: each screen is a #hash entry; popups add a "-x" entry on top ----------
+const VIEWS = ['home','sets','build','history','progress'];
+let ignoreHash = 0, backThen = null, backPending = false;
+const curHash = () => decodeURIComponent(location.hash.slice(1));
+function hashFor(){
+  if (view === 'session' && S.session) return 'session';
+  if (view === 'history' && histId) return 'history-' + histId;
+  if (view === 'results' && resultId) return 'results-' + resultId;
+  return VIEWS.includes(view) ? view : 'home';
+}
+function setHash(h, replace){
+  if (curHash() === h) return;
+  ignoreHash++;
+  if (replace) location.replace('#' + h); else location.hash = h;
+}
+function syncHash(){
+  if (backPending) return;
+  const cur = curHash(), want = hashFor();
+  if (cur.endsWith('-x') || cur === want) return;
+  // first load, or leaving a finished session: replace instead of stacking a new entry
+  setHash(want, !cur || (cur === 'session' && !S.session));
+}
+function applyHash(h){
+  if (h === 'session') { view = S.session ? 'session' : 'home'; return; }
+  if (h.startsWith('history-')) { view = 'history'; histId = h.slice(8); return; }
+  if (h.startsWith('results-')) { view = 'results'; resultId = h.slice(8); return; }
+  view = VIEWS.includes(h) ? h : 'home'; histId = null;
+}
+window.addEventListener('hashchange', () => {
+  if (ignoreHash > 0) { ignoreHash--; return; }
+  if (backPending) { backPending = false; const f = backThen; backThen = null; if (f) f(); return; }
+  const h = curHash() || 'home';
+  if ($('#sheet')) removeSheet();                       // back closes a popup first
+  if (h.endsWith('-x')) return;
+  if (S.session && view === 'session' && h !== 'session') { setHash('session'); endSession(); return; }  // back during a session asks first
+  applyHash(h); render(); $('#main').scrollTop = 0;
+});
 function render(){
   const top = $('#top'), main = $('#main'), tabs = $('#tabs');
   const inSession = view === 'session' && S.session;
@@ -675,6 +712,7 @@ function render(){
   const r = ({home:vHome, sets:vSets, build:vBuild, history:vHistory, progress:vProgress, results:vResults, session:vSession})[inSession ? 'session' : (view === 'session' ? 'home' : view)]();
   top.innerHTML = r[0]; main.innerHTML = r[1];
   if (r[2]) r[2]();
+  syncHash();
 }
 
 // ---------- Home ----------
@@ -1010,8 +1048,13 @@ function deckDrag(){
 }
 
 // ---------- sheets & toasts ----------
-function sheet(html){ closeSheet(); const d = document.createElement('div'); d.className = 'sheet-back'; d.id = 'sheet'; d.innerHTML = `<div class="sheet" role="dialog" aria-modal="true">${html}</div>`; d.addEventListener('click', e => { if (e.target === d) closeSheet(); }); document.body.appendChild(d); d.querySelector('button')?.focus(); }
-function closeSheet(){ $('#sheet')?.remove(); }
+function sheet(html){ const had = !!$('#sheet'); removeSheet(); if (!had && !curHash().endsWith('-x')) setHash(hashFor() + '-x'); const d = document.createElement('div'); d.className = 'sheet-back'; d.id = 'sheet'; d.innerHTML = `<div class="sheet" role="dialog" aria-modal="true">${html}</div>`; d.addEventListener('click', e => { if (e.target === d) closeSheet(); }); document.body.appendChild(d); d.querySelector('button')?.focus(); }
+function removeSheet(){ $('#sheet')?.remove(); }
+function closeSheet(next){
+  removeSheet();
+  if (curHash().endsWith('-x')) { backPending = true; backThen = next || null; history.back(); }
+  else if (next) next();
+}
 let confirmFn = null;
 function confirmSheet(title, body, okLabel, fn){ confirmFn = fn; sheet(`<h2>${esc(title)}</h2><p class="muted" style="margin:0">${esc(body)}</p><button class="btn primary full" data-act="confirm">${esc(okLabel)}</button><button class="btn full" data-act="closesheet">Cancel</button>`); }
 let toastT; function toast(msg){ $('#toast')?.remove(); const t = document.createElement('div'); t.className = 'toast'; t.id = 'toast'; t.textContent = msg; document.body.appendChild(t); clearTimeout(toastT); toastT = setTimeout(() => t.remove(), 2600); }
@@ -1023,14 +1066,14 @@ function act(a, el){
     case 'tab': go(d.v); break;
     case 'resume': view = 'session'; render(); break;
     case 'openset': setSheet(d.id); break;
-    case 'startset': closeSheet(); { const s = SET[d.id]; startSession({name:s.name, ids:s.cards, setId:s.id, mode:d.mode}); } break;
+    case 'startset': { const s = SET[d.id]; closeSheet(() => startSession({name:s.name, ids:s.cards, setId:s.id, mode:d.mode})); } break;
     case 'preset': if (d.k === 'missed') { const pc = presetCards('missed'), ns = missedScenIds().length; pendingPreset = pc;
       if (!pc.ids.length && !ns) { toast('Nothing missed yet. Wrong answers land here after each quiz.'); break; }
       sheet(`<h2>Missed questions</h2><p class="muted" style="margin:0">Questions whose last answer was wrong. Get one right and it leaves this list.</p>${pc.ids.length ? `<button class="btn primary full" data-act="startpreset" data-mode="quiz">Quiz all ${pc.ids.length} missed cards</button><button class="btn ghost full" data-act="startpreset" data-mode="study">Study them first, then quiz</button>` : ''}${ns ? `<button class="btn ${pc.ids.length ? 'ghost' : 'primary'} full" data-act="missedscen">Quiz all ${ns} missed scenarios</button>` : ''}<button class="btn full" data-act="closesheet">Cancel</button>`); break; }
     { const p = presetCards(d.k); if (!p.ids.length) { toast(p.empty || 'Nothing to study here yet'); break; }
       sheet(`<h2>${esc(p.name)}</h2><p class="muted" style="margin:0">${p.ids.length} cards${p.ids.length < 20 ? ' (all that match)' : ''}</p><button class="btn primary full" data-act="startpreset" data-mode="study">${ic('next')} Study, then quiz</button><button class="btn ghost full" data-act="startpreset" data-mode="quiz">Quiz only</button><button class="btn full" data-act="closesheet">Cancel</button>`);
       pendingPreset = p; } break;
-    case 'startpreset': closeSheet(); startSession({name:pendingPreset.name, ids:pendingPreset.ids, mode:d.mode}); break;
+    case 'startpreset': { const pp = pendingPreset; closeSheet(() => startSession({name:pp.name, ids:pp.ids, mode:d.mode})); } break;
     case 'runsaved': { const x = S.saved[+d.i];
       if (x.cfg.mode === 'scen') startScenarios({name:x.cfg.name, pids:principlesFor(poolFor(x.cfg)), n:x.cfg.size, cfg:x.cfg});
       else startSession({name:x.cfg.name, ids:buildFromCfg(x.cfg), mode:x.cfg.mode, cfg:x.cfg}); } break;
@@ -1058,10 +1101,10 @@ function act(a, el){
     case 'qprev': prevQ(); break;
     case 'signin': signIn(); break;
     case 'signout': signOutFlow(); break;
-    case 'discard': closeSheet(); S.session = null; save(); go('home'); break;
-    case 'missedscen': { closeSheet(); const ids = missedScenIds(); loadScen().then(() => { S.session = {id:'q' + Date.now(), kind:'scen', name:'Missed scenarios', setId:null, cfg:null, ids, phase:'quiz', i:0, back:false, t0:Date.now(), studySecs:0, quiz:null}; beginQuiz(); save(); go('session'); }, () => toast('Could not load scenarios')); } break;
+    case 'discard': closeSheet(() => { S.session = null; save(); go('home'); }); break;
+    case 'missedscen': { const ids = missedScenIds(); closeSheet(() => loadScen().then(() => { S.session = {id:'q' + Date.now(), kind:'scen', name:'Missed scenarios', setId:null, cfg:null, ids, phase:'quiz', i:0, back:false, t0:Date.now(), studySecs:0, quiz:null}; beginQuiz(); save(); go('session'); }, () => toast('Could not load scenarios'))); } break;
     case 'end': endSession(); break;
-    case 'confirm': { const f = confirmFn; confirmFn = null; closeSheet(); f && f(); } break;
+    case 'confirm': { const f = confirmFn; confirmFn = null; closeSheet(f); } break;
     case 'closesheet': closeSheet(); break;
     case 'openhist': view = 'history'; histId = d.id; histFilter = S.answers.some(a => a.qz === d.id && a.f && !a.ok) ? 'wrong' : 'all'; openRow = null; render(); $('#main').scrollTop = 0; break;
     case 'histback': histId = null; render(); break;
@@ -1117,7 +1160,8 @@ async function boot(){
   DB.sets.forEach(s => SET[s.id] = s);
   DB.themes.forEach((t, i) => { THEME[t.name] = t; themeIdx[t.name] = i; });
   DB.cards.forEach(c => { if (c.type === 'principle') (c.related || []).forEach(r => (REL[r] ||= []).push(c.id)); });
-  if (S.session) view = 'session';
+  { const h0 = curHash(), h1 = h0.replace(/-x$/, ''); if (h1 !== h0) { ignoreHash++; location.replace('#' + h1); }
+    if (S.session) view = 'session'; else if (h1) applyHash(h1); }
   render();
   connectCloud();
   if ('serviceWorker' in navigator && location.protocol === 'https:' && window.self === window.top) navigator.serviceWorker.register('sw.js').catch(() => {});
