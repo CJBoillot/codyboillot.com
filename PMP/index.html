@@ -106,9 +106,21 @@ h1,h2,h3{font-family:var(--display);margin:0;text-wrap:balance;letter-spacing:-.
 /* Study card */
 .counter{font-size:15px;color:var(--muted);font-variant-numeric:tabular-nums}
 .sesh{display:flex;flex-direction:column;gap:14px;height:100%}
-.flash{flex:1;min-height:0;position:relative;padding:22px 20px;display:flex;flex-direction:column;gap:14px;overflow-y:auto;cursor:pointer;box-shadow:var(--shadow);transition:transform .25s ease}
-.flash.flip{animation:flip .28s ease}
-@keyframes flip{0%{transform:rotateY(0)}50%{transform:rotateY(90deg)}100%{transform:rotateY(0)}}
+.deck{flex:1;min-height:0;position:relative;perspective:1400px}
+.flash{position:absolute;inset:0;padding:22px 20px;display:flex;flex-direction:column;gap:14px;overflow-y:auto;cursor:grab;box-shadow:var(--shadow);background:var(--bg);background-image:linear-gradient(var(--glass),var(--glass))}
+#card{touch-action:pan-y;-webkit-user-select:none;user-select:none;will-change:transform}
+#card.dragging{cursor:grabbing}
+.flash.under{transform:scale(.93) translateY(14px);opacity:.55;pointer-events:none}
+.flash.snap{transition:transform .32s cubic-bezier(.2,.9,.3,1.25)}
+.flash.fly{transition:transform .3s ease-in,opacity .3s ease-in}
+.flash.enter-prev{animation:enterPrev .34s cubic-bezier(.2,.8,.3,1)}
+@keyframes enterPrev{from{transform:translateX(-118%) rotate(-14deg);opacity:.3}to{transform:none;opacity:1}}
+.flash.flip-out{transition:transform .14s ease-in;transform:rotateY(90deg)}
+.flash.flip-in{animation:flipIn .18s ease-out}
+@keyframes flipIn{from{transform:rotateY(-90deg)}to{transform:rotateY(0)}}
+.stamp{position:absolute;top:56px;padding:4px 12px;border:2.5px solid;border-radius:10px;font-family:var(--display);font-weight:700;font-size:17px;letter-spacing:.08em;text-transform:uppercase;pointer-events:none;background:var(--bg)}
+.st-next{right:16px;color:var(--good);border-color:var(--good);transform:rotate(10deg);opacity:var(--pn,0)}
+.st-back{left:16px;color:var(--warn);border-color:var(--warn);transform:rotate(-10deg);opacity:var(--pb,0)}
 .flash h2{font-size:clamp(26px,7.4vw,34px);line-height:1.15}
 .flash .def{font-size:20px;line-height:1.45}
 .flash .formula{font-family:var(--mono);font-size:24px;font-weight:700;padding:12px 14px;border-radius:12px;background:var(--glass-2);border:1px solid var(--line);overflow-x:auto}
@@ -168,7 +180,7 @@ textarea{min-height:120px;font-family:var(--mono);font-size:13px}
 .sheet{width:100%;max-width:560px;background:var(--bg);border:1px solid var(--line);border-bottom:0;border-radius:20px 20px 0 0;padding:18px max(16px,env(safe-area-inset-right,0px)) calc(18px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:12px;max-height:85%;overflow-y:auto}
 .toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:12px;font-weight:700;z-index:60;max-width:90%}
 .details{padding:0 14px 14px;display:flex;flex-direction:column;gap:6px;font-size:15px}
-@media (prefers-reduced-motion: reduce){.flash.flip{animation:none}*{scroll-behavior:auto}}
+@media (prefers-reduced-motion: reduce){.flash.flip-in,.flash.enter-prev{animation:none}.flash.snap,.flash.fly,.flash.flip-out{transition:none}*{scroll-behavior:auto}}
 @media (min-width:700px){.app{max-width:620px}}
 </style>
 
@@ -794,18 +806,24 @@ function vStudy(s){
     if (rel.length) h += `<div class="chips" style="align-items:center"><span class="muted" style="font-size:14px">Related:</span>${rel.map(r => `<span class="chip" style="min-height:30px;font-size:14px">${esc(r.front)}</span>`).join('')}</div>`;
     return h;
   };
+  const nx = CARD[s.ids[s.i + 1]];
+  const last = s.i === s.ids.length - 1;
+  const under = nx ? `<article class="glass flash under" id="under" aria-hidden="true"><div class="label">${TYPE_LABEL[nx.type]} · ${esc(THEME[nx.theme].short)} · Prompt</div><h2 style="margin:auto 0;font-size:clamp(28px,8.4vw,38px)">${esc(S.prefs.defFirst && nx.type === 'term' ? '' : nx.front)}</h2></article>` : '';
   const main = `<div class="sesh">
     <div class="bar"><i style="width:${pct(s.i + 1, s.ids.length)}%"></i></div>
-    <article class="glass flash" id="card" data-act="flip" tabindex="0" aria-live="polite" aria-label="Flashcard, tap to flip">
+    <div class="deck">${under}
+    <article class="glass flash${enterAnim ? ' ' + enterAnim : ''}" id="card" tabindex="0" aria-live="polite" aria-label="Flashcard: tap to flip, swipe left for the next card, right to go back">
       <div class="label" style="padding-right:48px">${TYPE_LABEL[c.type]} · ${esc(THEME[c.theme].short)} · ${showBack ? 'Answer' : 'Prompt'}</div>
       ${face(showBack ? 'a' : 'q')}
+      <span class="stamp st-next" aria-hidden="true">${last ? 'Quiz' : 'Next'}</span>${s.i ? '<span class="stamp st-back" aria-hidden="true">Back</span>' : ''}
       <button class="iconbtn star" data-act="star" aria-pressed="${!!st.star}" aria-label="Star for quiz focus">${ic('star')}</button>
-    </article>
-    <div class="row" style="justify-content:space-between"><span class="hint">Tap to flip · swipe for next</span>${c.type === 'term' ? `<button class="chip" data-act="dir" aria-pressed="${!!S.prefs.defFirst}">${ic('swap','style="width:16px;height:16px"')} Definition first</button>` : ''}</div>
+    </article></div>
+    <div class="row" style="justify-content:space-between"><span class="hint">Tap to flip · swipe to change</span>${c.type === 'term' ? `<button class="chip" data-act="dir" aria-pressed="${!!S.prefs.defFirst}">${ic('swap','style="width:16px;height:16px"')} Definition first</button>` : ''}</div>
     <div class="row"><button class="btn ghost" data-act="sprev" ${s.i ? '' : 'disabled style="opacity:.45"'}>${ic('prev')} Back</button>
     <button class="btn primary grow" data-act="snext">${s.i === s.ids.length - 1 ? 'Quiz me now' : 'Next'} ${ic('next')}</button></div>
   </div>`;
-  return [top, main, () => swipe($('#card'), () => act('snext'), () => act('sprev'))];
+  enterAnim = '';
+  return [top, main, () => deckDrag()];
 }
 function vQuiz(s){
   const z = s.quiz, q = z.queue[z.i], c = CARD[q.c];
@@ -925,14 +943,76 @@ function vProgress(){
   return [top, main];
 }
 
+// ---------- card deck: drag to swipe, tap to flip ----------
+let enterAnim = '', busy = false;
+const calm = () => window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+function stepNext(){ const s = S.session; if (s.i < s.ids.length - 1) { s.i++; s.back = false; save(); render(); } else { beginQuiz(); save(); render(); } }
+function stepPrev(){ const s = S.session; if (s.i > 0) { s.i--; s.back = false; enterAnim = 'enter-prev'; save(); render(); } }
+function flyOut(dir){            // dir -1 = left (next), +1 = right (back)
+  const el = $('#card'), under = $('#under');
+  if (busy) return;
+  if (!el || calm()) { dir < 0 ? stepNext() : stepPrev(); return; }
+  busy = true;
+  const cur = new DOMMatrixReadOnly(getComputedStyle(el).transform);
+  el.classList.remove('snap', 'enter-prev', 'flip-in'); el.classList.add('fly');
+  el.style.setProperty(dir < 0 ? '--pn' : '--pb', 1);
+  el.style.transform = `translateX(${dir * 1.25 * window.innerWidth}px) translateY(${cur.m42 + 40}px) rotate(${dir * 24}deg)`;
+  el.style.opacity = '0';
+  if (under && dir < 0) { under.style.transition = 'transform .3s ease-out, opacity .3s ease-out'; under.style.transform = 'none'; under.style.opacity = '1'; }
+  setTimeout(() => { busy = false; dir < 0 ? stepNext() : stepPrev(); }, 280);
+}
+function flipCard(){
+  const el = $('#card');
+  if (!el || busy) return;
+  const swap = () => { S.session.back = !S.session.back; save(); enterAnim = calm() ? '' : 'flip-in'; render(); };
+  if (calm()) return swap();
+  busy = true; el.classList.add('flip-out');
+  setTimeout(() => { busy = false; swap(); }, 140);
+}
+function deckDrag(){
+  const el = $('#card'), under = $('#under'); if (!el) return;
+  let id = null, x0 = 0, y0 = 0, t0 = 0, dx = 0, dy = 0, drag = false;
+  const paint = () => {
+    const w = el.offsetWidth || 1, p = Math.max(-1, Math.min(1, dx / (w * 0.5)));
+    el.style.transform = `translateX(${dx}px) translateY(${dy * 0.12}px) rotate(${dx * 0.06}deg)`;
+    el.style.setProperty('--pn', Math.max(0, -p).toFixed(2)); el.style.setProperty('--pb', S.session.i ? Math.max(0, p).toFixed(2) : 0);
+    if (under) { const a = Math.max(0, -p); under.style.transform = `scale(${0.93 + 0.07 * a}) translateY(${14 - 14 * a}px)`; under.style.opacity = (0.55 + 0.45 * a).toFixed(2); }
+  };
+  el.addEventListener('pointerdown', e => {
+    if (busy || e.button > 0 || e.target.closest('[data-act]')) return;
+    id = e.pointerId; x0 = e.clientX; y0 = e.clientY; t0 = performance.now(); dx = dy = 0; drag = false;
+    el.classList.remove('snap', 'enter-prev', 'flip-in');
+  });
+  el.addEventListener('pointermove', e => {
+    if (e.pointerId !== id) return;
+    dx = e.clientX - x0; dy = e.clientY - y0;
+    if (!drag) {
+      if (Math.abs(dx) > 8 && Math.abs(dx) > Math.abs(dy) * 1.2) { drag = true; try { el.setPointerCapture(id); } catch (err) {} el.classList.add('dragging'); }
+      else if (Math.abs(dy) > 10) { id = null; return; }   // vertical: let the card scroll
+      else return;
+    }
+    e.preventDefault(); paint();
+  });
+  const end = e => {
+    if (e.pointerId !== id) return; id = null;
+    if (!drag) { if (e.type === 'pointerup') flipCard(); return; }   // a tap flips
+    el.classList.remove('dragging');
+    const w = el.offsetWidth, v = dx / Math.max(1, performance.now() - t0);
+    const far = Math.abs(dx) > w * 0.3 || Math.abs(v) > 0.55;
+    if (far && dx < 0) return flyOut(-1);
+    if (far && dx > 0 && S.session.i > 0) return flyOut(1);
+    el.classList.add('snap'); el.style.transform = ''; el.style.setProperty('--pn', 0); el.style.setProperty('--pb', 0);
+    if (under) { under.style.transition = 'transform .3s ease, opacity .3s ease'; under.style.transform = ''; under.style.opacity = ''; }
+  };
+  el.addEventListener('pointerup', end); el.addEventListener('pointercancel', end);
+}
+
 // ---------- sheets & toasts ----------
 function sheet(html){ closeSheet(); const d = document.createElement('div'); d.className = 'sheet-back'; d.id = 'sheet'; d.innerHTML = `<div class="sheet" role="dialog" aria-modal="true">${html}</div>`; d.addEventListener('click', e => { if (e.target === d) closeSheet(); }); document.body.appendChild(d); d.querySelector('button')?.focus(); }
 function closeSheet(){ $('#sheet')?.remove(); }
 let confirmFn = null;
 function confirmSheet(title, body, okLabel, fn){ confirmFn = fn; sheet(`<h2>${esc(title)}</h2><p class="muted" style="margin:0">${esc(body)}</p><button class="btn primary full" data-act="confirm">${esc(okLabel)}</button><button class="btn full" data-act="closesheet">Cancel</button>`); }
 let toastT; function toast(msg){ $('#toast')?.remove(); const t = document.createElement('div'); t.className = 'toast'; t.id = 'toast'; t.textContent = msg; document.body.appendChild(t); clearTimeout(toastT); toastT = setTimeout(() => t.remove(), 2600); }
-function swipe(el, left, right){ if (!el) return; let x0 = null, y0 = null; el.addEventListener('touchstart', e => { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }, {passive:true});
-  el.addEventListener('touchend', e => { if (x0 === null) return; const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0; if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) { el.dataset.swiped = '1'; dx < 0 ? left() : right(); } x0 = null; }, {passive:true}); }
 
 // ---------- actions ----------
 function act(a, el){
@@ -966,11 +1046,11 @@ function act(a, el){
     case 'bsave': sheet(`<h2>Save as my set</h2><label class="label" for="sname">Name</label><input id="sname" type="text" value="${esc(cfgName(B))}" maxlength="40"><p class="muted" style="margin:0">${esc(describeCfg(B))}. Each run picks fresh cards with these settings.</p><button class="btn primary full" data-act="dosave">Save</button><button class="btn full" data-act="closesheet">Cancel</button>`); break;
     case 'dosave': { const name = ($('#sname').value || cfgName(B)).trim(); const cfg = JSON.parse(JSON.stringify(B)); cfg.name = name; S.saved.push({cfg}); save(); closeSheet(); toast(`Saved “${name}” to My sets`); } break;
     case 'studytheme': B = Object.assign(B, {source:'sections', themes:[d.t]}); { const cfg = {source:'sections', themes:[d.t], size:20, mode:'study', order:'grouped', types:[], status:[]}; startSession({name:THEME[d.t].short, ids:buildFromCfg(cfg), mode:'study', cfg}); } break;
-    case 'flip': { const card = $('#card'); if (card?.dataset.swiped) { delete card.dataset.swiped; break; } S.session.back = !S.session.back; save(); render(); $('#card')?.classList.add('flip'); } break;
+    case 'flip': flipCard(); break;
     case 'star': { const id = S.session.ids[S.session.i]; const c = cs(id); c.star = !c.star; save(); render(); } break;
     case 'dir': S.prefs.defFirst = !S.prefs.defFirst; S.session.back = false; save(); render(); break;
-    case 'snext': { const s = S.session; if (s.i < s.ids.length - 1) { s.i++; s.back = false; save(); render(); } else { beginQuiz(); save(); render(); } } break;
-    case 'sprev': { const s = S.session; if (s.i > 0) { s.i--; s.back = false; save(); render(); } } break;
+    case 'snext': flyOut(-1); break;
+    case 'sprev': if (S.session.i > 0) flyOut(1); break;
     case 'ans': answer(d.k); break;
     case 'qnext': nextQ(); break;
     case 'qprev': prevQ(); break;
