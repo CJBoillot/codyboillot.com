@@ -10,12 +10,16 @@ See [SkillTrainer](#skilltrainer) below.
 
 | File | Purpose |
 |------|---------|
-| `index.html` | The home page, in full. |
+| `index.html` | The home page. Projects and Games are compact card grids; each card links to a detail page. Still uses its own embedded CSS, plus `assets/tiles.css` for the cards. |
+| `projects/` | `projects/index.html` lists the projects; `projects/<name>/` holds each full write-up (LoPro, PMP Rapid-Fire, SkillTrainer, CoEngine). |
+| `assets/site.css` | Shared styles for the detail and hub pages (a copy of the home page's CSS plus page extras). Update it when the home page's styles change. |
+| `assets/tiles.css` | The card-grid styles used by the home page and the `/games` and `/projects` hubs. |
+| `assets/projects/` | Covers and screenshots for the project pages. |
 | `404.html` | Site-wide not-found page. Also redirects wrong-case URLs to `/SkillTrainer/`, `/ClickToConquer/`, `/FactoryAFK/`, `/BattlePass/` and `/games/`. |
 | `assets/headshot.jpg` | The portrait on the hero. Falls back to a "CB" monogram if missing. |
 | `assets/favicon.svg` | Browser tab icon, used by both the home page and SkillTrainer. |
 | `resume.pdf` | Backs the résumé button. |
-| `games/` | A shareable page with just the games (codyboillot.com/games). Its styles and game cards are copied from `index.html`; update both when a card changes. |
+| `games/` | `games/index.html` lists the games (codyboillot.com/games); `games/<name>/` holds each full write-up with screenshots. Card text lives in both the home page and the hubs; update both when a card changes. |
 | `SkillTrainer/` | The training-engine demo. |
 | `PMP/` | PMP Rapid-Fire, a PMP 2026 study app: themed 20-card flashcard sets, exam-style quizzes, scenario practice and progress tracking. Plain HTML/JS; optional Google sign-in syncs progress to Firestore (Firebase project `pmp-rapid-fire`, data at `users/{uid}/pmp/state` and `users/{uid}/quizzes/{id}`). |
 | `ClickToConquer/` | Click to Conquer, an idle survival-crafting game (Firebase cloud saves). |

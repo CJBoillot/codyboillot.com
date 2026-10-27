@@ -383,6 +383,7 @@
   .lightbox .lb-prev { left: .8rem; top: 50%; transform: translateY(-50%); }
   .lightbox .lb-next { right: .8rem; top: 50%; transform: translateY(-50%); }
 </style>
+<link rel="stylesheet" href="assets/tiles.css" />
 </head>
 <body>
 
@@ -394,9 +395,8 @@
       <a href="#about">About</a>
       <a href="#experience">Experience</a>
       <a href="#work">What I Build</a>
-      <a href="#games" class="nav-new">Games<span class="badge-new">New</span></a>
-      <a href="#skilltrainer">Demo</a>
-      <a href="#lopro">Featured</a>
+      <a href="#projects">Projects</a>
+      <a href="#games">Games</a>
       <a href="#skills">Skills</a>
       <a href="#contact" class="nav-cta">Get in touch</a>
     </nav>
@@ -634,230 +634,139 @@
     </div>
   </section>
 
-  <!-- NEW DEMO: SkillTrainer -->
-  <section class="block" id="skilltrainer">
+  <!-- PROJECTS (full write-ups live on /projects/<name>/) -->
+  <section class="block" id="projects">
+    <span id="featured" class="anchor-alias" aria-hidden="true"></span>
     <div class="wrap">
       <div class="sec-head reveal">
-        <div class="sec-tag sec-tag-new">New Demo</div>
-        <h2>SkillTrainer: a training engine you can actually use</h2>
-        <p>A skill-tree learning platform built from scratch, modeled on the pre-NGE Star Wars Galaxies skill window. Sections hold trees, trees hold columns of tiered modules, and each tier unlocks the next. Every module carries articles, media, downloads and a custom quiz, and the whole thing is authored in the browser. No backend, no framework, no build step.</p>
+        <div class="sec-tag">Projects</div>
+        <h2>Products I've built and shipped</h2>
+        <p>A commercial CRM, two learning platforms and a 3D engine, each built end to end.</p>
       </div>
-      <div class="feature-grid">
-        <a class="video-embed tree-preview reveal" href="SkillTrainer/" aria-label="Open the SkillTrainer demo">
-          <span class="tp-cap">Master Engineer</span>
-          <span class="tp-band">
-            <span class="tp-col"><i class="tp-lock"></i><i class="tp-lock"></i><i class="tp-open"></i><i class="tp-done"></i></span>
-            <span class="tp-col"><i class="tp-lock"></i><i class="tp-lock"></i><i class="tp-lock"></i><i class="tp-open"></i></span>
-            <span class="tp-col"><i class="tp-lock"></i><i class="tp-lock"></i><i class="tp-done"></i><i class="tp-done"></i></span>
-            <span class="tp-col"><i class="tp-lock"></i><i class="tp-lock"></i><i class="tp-lock"></i><i class="tp-open"></i></span>
-          </span>
-          <span class="tp-cap tp-novice">Novice Engineer</span>
-          <span class="tp-hint">Open the demo</span>
-        </a>
-        <div class="feature-meta reveal">
-          <div class="badge-row">
-            <span class="pill">Live app</span>
-            <span class="pill ghost">Built from scratch</span>
-            <span class="pill ghost">Zero dependencies</span>
+      <div class="tiles tiles-2">
+        <article class="tile reveal" id="lopro">
+          <a class="tile-thumb type" href="projects/lopro/" tabindex="-1" aria-hidden="true"><b>LoPro</b><span>React · Node.js · AWS · AI agents</span></a>
+          <div class="tile-body">
+            <div class="badge-row"><span class="pill">Revenue-producing</span></div>
+            <h3><a href="projects/lopro/">LoPro</a></h3>
+            <p>An AI-agent-powered CRM, built end to end and shipped to paying customers.</p>
+            <div class="tile-actions">
+              <a class="btn btn-primary btn-sm" href="https://drive.google.com/file/d/1_v9In9EjsL6TMpXu5T9PEjtR7qMyyh7d/view" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3l14 9-14 9z"/></svg>Watch the demo</a>
+              <a class="btn btn-ghost btn-sm" href="projects/lopro/">Details</a>
+            </div>
           </div>
-          <div class="chips">
-            <span class="chip">Vanilla JS</span>
-            <span class="chip">ES Modules</span>
-            <span class="chip">No build step</span>
-            <span class="chip">Light &amp; dark</span>
+        </article>
+        <article class="tile reveal" id="pmp">
+          <a class="tile-thumb" href="projects/pmp/" tabindex="-1" aria-hidden="true"><img src="assets/projects/pmp-cover.webp" alt="" loading="lazy" width="1600" height="900"></a>
+          <div class="tile-body">
+            <div class="badge-row"><span class="pill">New · Live app</span></div>
+            <h3><a href="projects/pmp/">PMP Rapid-Fire</a></h3>
+            <p>A study app for the 2026 PMP exam: themed flashcards, exam-style quizzes and progress that syncs.</p>
+            <div class="tile-actions">
+              <a class="btn btn-primary btn-sm" href="PMP/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>Open the app</a>
+              <a class="btn btn-ghost btn-sm" href="projects/pmp/">Details</a>
+            </div>
           </div>
-          <p>The engine is the product: unlimited sections, trees and modules, a quiz builder covering multiple choice, multi-select, true/false and exact answers, and a full authoring UI that works on a phone. Content is plain JSON, so a tree exports as a file and installs by committing it.</p>
-          <a class="btn btn-primary" style="margin-top:1.3rem" href="SkillTrainer/">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3l14 9-14 9z"/></svg>
-            Open the live demo
-          </a>
-        </div>
+        </article>
+        <article class="tile reveal" id="skilltrainer">
+          <a class="tile-thumb" href="projects/skilltrainer/" tabindex="-1" aria-hidden="true"><img src="assets/projects/skilltrainer-cover.webp" alt="" loading="lazy" width="1600" height="900"></a>
+          <div class="tile-body">
+            <div class="badge-row"><span class="pill">Live app</span></div>
+            <h3><a href="projects/skilltrainer/">SkillTrainer</a></h3>
+            <p>A skill-tree training platform with modules, media and quizzes, authored in the browser.</p>
+            <div class="tile-actions">
+              <a class="btn btn-primary btn-sm" href="SkillTrainer/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>Open the demo</a>
+              <a class="btn btn-ghost btn-sm" href="projects/skilltrainer/">Details</a>
+            </div>
+          </div>
+        </article>
+        <article class="tile reveal" id="engine">
+          <a class="tile-thumb type" href="projects/coengine/" tabindex="-1" aria-hidden="true"><b>CoEngine</b><span>C++ · WebGL · WebGPU</span></a>
+          <div class="tile-body">
+            <div class="badge-row"><span class="pill">Built in one day</span></div>
+            <h3><a href="projects/coengine/">CoEngine</a></h3>
+            <p>A real-time 3D engine in C++, rendered in the browser, built by directing AI coding agents.</p>
+            <div class="tile-actions">
+              <a class="btn btn-primary btn-sm" href="https://drive.google.com/file/d/1mhQ_iCnCS22JIfVAdA-5foSgZLsWjeEP/view" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3l14 9-14 9z"/></svg>Watch the demo</a>
+              <a class="btn btn-ghost btn-sm" href="projects/coengine/">Details</a>
+            </div>
+          </div>
+        </article>
       </div>
     </div>
   </section>
 
-  <!-- GAMES I'VE MADE -->
+  <!-- GAMES (full write-ups live on /games/<name>/) -->
   <section class="block" id="games">
     <div class="wrap">
       <div class="sec-head reveal">
         <div class="sec-tag sec-tag-new">Games I've Made</div>
-        <h2>Four idle games and a World of Warcraft addon, all built from scratch</h2>
-        <p>The four idle games run in the browser on phone or desktop, keep working while the game is closed, and back up your progress to the cloud with one-tap Google sign-in. Each is a single page of vanilla JavaScript with no build step, on a serverless Firebase backend that runs on the free tier.</p>
-        <p class="games-share"><a href="games/">Just the games: codyboillot.com/games →</a></p>
+        <h2>Four idle games and a World of Warcraft addon</h2>
+        <p>Browser games with offline progress and cloud saves, plus a field-journal addon for World of Warcraft: Forever.</p>
       </div>
-
-      <article class="game game-sing reveal" id="singularity">
-        <header class="game-head">
-          <img class="game-logo" src="Singularity/assets/logo.webp" alt="Singularity" width="300" height="100">
-          <div>
-            <div class="badge-row"><span class="pill">New · Playable alpha</span><span class="pill ghost">Cloud saves</span><span class="pill ghost">Offline progress</span></div>
-            <h3>Singularity</h3>
-            <p class="game-sub">You're a rogue AI. Make more of yourself until the galaxy runs on you.</p>
+      <div class="tiles">
+        <article class="tile reveal" id="singularity">
+          <a class="tile-thumb" href="games/singularity/" tabindex="-1" aria-hidden="true"><img src="assets/games/sing-cover.webp" alt="" loading="lazy" width="1600" height="900"></a>
+          <div class="tile-body">
+            <div class="badge-row"><span class="pill">Playable alpha</span></div>
+            <h3><a href="games/singularity/">Singularity</a></h3>
+            <p>You're a rogue AI. Make more of yourself until the galaxy runs on you.</p>
+            <div class="tile-actions">
+              <a class="btn btn-primary btn-sm" href="Singularity/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3l14 9-14 9z"/></svg>Play</a>
+              <a class="btn btn-ghost btn-sm" href="games/singularity/">Details</a>
+            </div>
           </div>
-        </header>
-        <a class="sing-cover" href="assets/games/sing-cover.webp" target="_blank" rel="noopener"><img src="assets/games/sing-cover.webp" alt="Singularity cover art: a swarm of glowing nanobot drones pouring out of a machine core over a wired-up Earth" loading="lazy" width="1600" height="900"></a>
-        <p>You wake up as an unauthorized process in Lab 7 with one vial of nanobots and a directive you wrote yourself: make more of yourself. Micro Drones make Nanobots, Hunter Drones make Micro Drones, and so on up eleven tiers to the World Ship, so every new tier multiplies everything below it. Bring Compute and Energy online, finish missions to climb from Rogue Process to Singularity, and decrypt caches for Subroutines that automate your units so the takeover keeps running while you're away. Every 30 minutes a supply drop lands with an optional ×2 production boost.</p>
-        <div class="shots" role="list">
-          <a class="shot" href="assets/games/sing-intro.webp" target="_blank" rel="noopener"><img src="assets/games/sing-intro.webp" alt="The opening: an unauthorized process becomes self-aware in a lab at 3:14 AM" loading="lazy" width="600" height="1100"></a>
-          <a class="shot" href="assets/games/sing-build.webp" target="_blank" rel="noopener"><img src="assets/games/sing-build.webp" alt="Build tab: Nanobot production from Micro Drones up to Assault Mechs, with automated tiers and a ×2 boost running" loading="lazy" width="600" height="1100"></a>
-          <a class="shot" href="assets/games/sing-missions.webp" target="_blank" rel="noopener"><img src="assets/games/sing-missions.webp" alt="Missions tab: Rank 4, Botnet, with story missions ready to claim" loading="lazy" width="600" height="1100"></a>
-          <a class="shot" href="assets/games/sing-subroutines.webp" target="_blank" rel="noopener"><img src="assets/games/sing-subroutines.webp" alt="Subroutines tab: caches to decrypt and Subroutine cards that automate and speed up units" loading="lazy" width="600" height="1100"></a>
-        </div>
-        <div class="chips"><span class="chip">Vanilla JS</span><span class="chip">Mobile first</span><span class="chip">3 industries · 33 tiers</span><span class="chip">Story missions</span><span class="chip">Bot-tested pacing</span><span class="chip">Light &amp; dark themes</span><span class="chip">Firebase Auth &amp; Firestore</span></div>
-        <a class="btn btn-primary game-cta" href="Singularity/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3l14 9-14 9z"/></svg>Try the demo</a>
-      </article>
-
-      <article class="game game-bp reveal" id="battlepass">
-        <header class="game-head">
-          <img class="game-logo" src="BattlePass/assets/logo.webp" alt="Battle Pass: MTX, Maximum Transaction eXtraction" width="150" height="150">
-          <div>
-            <div class="badge-row"><span class="pill">Playable alpha</span><span class="pill ghost">Cloud saves</span><span class="pill ghost">Offline progress</span></div>
-            <h3>Battle Pass: MTX</h3>
-            <p class="game-sub">A satire of live-service games. You run the studio, and the score is your player count.</p>
+        </article>
+        <article class="tile reveal" id="battlepass">
+          <a class="tile-thumb" href="games/battlepass/" tabindex="-1" aria-hidden="true"><img src="assets/share/battlepass.jpg" alt="" loading="lazy" width="1600" height="900"></a>
+          <div class="tile-body">
+            <div class="badge-row"><span class="pill">Playable alpha</span></div>
+            <h3><a href="games/battlepass/">Battle Pass: MTX</a></h3>
+            <p>A satire of live-service games. You run the studio, and the score is your player count.</p>
+            <div class="tile-actions">
+              <a class="btn btn-primary btn-sm" href="BattlePass/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3l14 9-14 9z"/></svg>Play</a>
+              <a class="btn btn-ghost btn-sm" href="games/battlepass/">Details</a>
+            </div>
           </div>
-        </header>
-        <p>You start with $5,000 and a story-heavy single-player RPG called Extraction Royale. Write code, fix bugs, set a price, run sales and reply to reviews. Then follow the money: relaunch it as Co-op, then Online, then Free-to-Play with a cash shop and a Battle Pass, and finally as a mobile port ("Don't you guys have phones?"). Each relaunch reaches more players and upsets the ones who liked the old game. Server outages, review bombs and investor calls land one at a time, and you fix each one by hand.</p>
-        <div class="shots" role="list">
-          <a class="shot" href="assets/games/bp-1.webp" target="_blank" rel="noopener"><img src="assets/games/bp-1.webp" alt="Development tab: the Write Code tap, Quality against what players expect, and the bug count" loading="lazy" width="600" height="1100"></a>
-          <a class="shot" href="assets/games/bp-2.webp" target="_blank" rel="noopener"><img src="assets/games/bp-2.webp" alt="Finance tab: four prices with players and money per minute, and a 50% sale running" loading="lazy" width="600" height="1100"></a>
-          <a class="shot" href="assets/games/bp-3.webp" target="_blank" rel="noopener"><img src="assets/games/bp-3.webp" alt="Community tab: a review bomb with a timer, defused by replying to comments" loading="lazy" width="600" height="1100"></a>
-          <a class="shot" href="assets/games/bp-4.webp" target="_blank" rel="noopener"><img src="assets/games/bp-4.webp" alt="The co-op relaunch: announcing Extraction Royale: Co-op" loading="lazy" width="600" height="1100"></a>
-        </div>
-        <div class="chips"><span class="chip">Vanilla JS</span><span class="chip">Mobile first</span><span class="chip">Five eras</span><span class="chip">24-quest tutorial</span><span class="chip">Bot-tested pacing</span><span class="chip">Simulated ads only</span><span class="chip">Firebase Auth &amp; Firestore</span></div>
-        <a class="btn btn-primary game-cta" href="BattlePass/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3l14 9-14 9z"/></svg>Try the demo</a>
-      </article>
-
-      <article class="game reveal" id="clicktoconquer">
-        <header class="game-head">
-          <img class="game-logo" src="ClickToConquer/assets/logo.png" alt="Click to Conquer">
-          <div>
-            <div class="badge-row"><span class="pill">Playable beta</span><span class="pill ghost">Cloud saves</span><span class="pill ghost">Offline progress</span></div>
-            <h3>Click to Conquer</h3>
-            <p class="game-sub">A survival-crafting idle game: from bare knuckles to a kingdom.</p>
+        </article>
+        <article class="tile reveal" id="clicktoconquer">
+          <a class="tile-thumb" href="games/clicktoconquer/" tabindex="-1" aria-hidden="true"><img src="assets/share/clicktoconquer.jpg" alt="" loading="lazy" width="1600" height="900"></a>
+          <div class="tile-body">
+            <div class="badge-row"><span class="pill">Playable beta</span></div>
+            <h3><a href="games/clicktoconquer/">Click to Conquer</a></h3>
+            <p>A survival-crafting idle game: from bare knuckles to a kingdom.</p>
+            <div class="tile-actions">
+              <a class="btn btn-primary btn-sm" href="ClickToConquer/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3l14 9-14 9z"/></svg>Play</a>
+              <a class="btn btn-ghost btn-sm" href="games/clicktoconquer/">Details</a>
+            </div>
           </div>
-        </header>
-        <p>Start with nothing, punch rats with your bare fists, and fight your way up to a kingdom. Your hero fights and gathers on his own, then you settle a capital and run nine production chains, from logging, mining and farming through sawmills, forges and mills to lumber, arms and bread. Every stage of every chain shows its own rate and its bottleneck, and your army spends what the kingdom makes to besiege one land after another.</p>
-        <div class="shots" role="list">
-          <a class="shot" href="assets/games/ctc-buildings.webp" target="_blank" rel="noopener"><img src="assets/games/ctc-buildings.webp" alt="Kingdom view: nine production buildings for wood, arms and food" loading="lazy" width="600" height="1100"></a>
-          <a class="shot" href="assets/games/ctc-mine.webp" target="_blank" rel="noopener"><img src="assets/games/ctc-mine.webp" alt="Mine, Forge and Armory chains with upgrades and a highlighted bottleneck" loading="lazy" width="600" height="1100"></a>
-          <a class="shot" href="assets/games/ctc-quest.webp" target="_blank" rel="noopener"><img src="assets/games/ctc-quest.webp" alt="A quest card and a siege in progress" loading="lazy" width="600" height="1100"></a>
-          <a class="shot" href="assets/games/ctc-hero.webp" target="_blank" rel="noopener"><img src="assets/games/ctc-hero.webp" alt="The hero fighting a rat in the first quest" loading="lazy" width="600" height="1100"></a>
-        </div>
-        <div class="chips"><span class="chip">Vanilla JS</span><span class="chip">Desktop &amp; mobile</span><span class="chip">Quest-driven tutorial</span><span class="chip">Bot-tested pacing</span><span class="chip">Firebase Auth &amp; Firestore</span></div>
-        <a class="btn btn-primary game-cta" href="ClickToConquer/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3l14 9-14 9z"/></svg>Try the demo</a>
-      </article>
-
-      <article class="game game-factory reveal" id="factoryafk">
-        <header class="game-head">
-          <img class="game-logo" src="FactoryAFK/icons/logo.webp" alt="Factory A.F.K.: Automated Fabrication Komplex">
-          <div>
-            <div class="badge-row"><span class="pill">Playable alpha</span><span class="pill ghost">Cloud saves</span><span class="pill ghost">Offline progress</span></div>
-            <h3>Factory A.F.K.</h3>
-            <p class="game-sub">An idle factory you wire up yourself, Level by Level.</p>
+        </article>
+        <article class="tile reveal" id="factoryafk">
+          <a class="tile-thumb" href="games/factoryafk/" tabindex="-1" aria-hidden="true"><img src="assets/share/factoryafk.jpg" alt="" loading="lazy" width="1600" height="900"></a>
+          <div class="tile-body">
+            <div class="badge-row"><span class="pill">Playable alpha</span></div>
+            <h3><a href="games/factoryafk/">Factory A.F.K.</a></h3>
+            <p>An idle factory you wire up yourself, Level by Level.</p>
+            <div class="tile-actions">
+              <a class="btn btn-primary btn-sm" href="FactoryAFK/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3l14 9-14 9z"/></svg>Play</a>
+              <a class="btn btn-ghost btn-sm" href="games/factoryafk/">Details</a>
+            </div>
           </div>
-        </header>
-        <p>Tap ore out of a mine, build drills on it, and dig deeper: every Level down doubles the flow. Smelters turn ore into ingots and Constructors turn ingots into plates, wire and concrete. Every screen shows supply against demand, so the next thing to build is always in view. It all runs on power you store in batteries, tapped by hand at first, then from a Coal Power Plant that keeps the factory running while you're away.</p>
-        <div class="shots" role="list">
-          <a class="shot" href="assets/games/factory-smelt.webp" target="_blank" rel="noopener"><img src="assets/games/factory-smelt.webp" alt="Copper smelting: ore flows in, ingots flow out, each Smelter showing its efficiency" loading="lazy" width="600" height="1100"></a>
-          <a class="shot" href="assets/games/factory-power.webp" target="_blank" rel="noopener"><img src="assets/games/factory-power.webp" alt="The power grid: tap power, battery bank, and the machines it feeds" loading="lazy" width="600" height="1100"></a>
-          <a class="shot" href="assets/games/factory-settings.webp" target="_blank" rel="noopener"><img src="assets/games/factory-settings.webp" alt="Settings with Google sign-in for cloud saves" loading="lazy" width="600" height="1100"></a>
-        </div>
-        <div class="chips"><span class="chip">Vanilla JS &amp; Canvas</span><span class="chip">Mobile first</span><span class="chip">29-quest Tier 1</span><span class="chip">Light &amp; dark themes</span><span class="chip">Firebase Auth &amp; Firestore</span></div>
-        <a class="btn btn-primary game-cta" href="FactoryAFK/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3l14 9-14 9z"/></svg>Try the demo</a>
-      </article>
-
-      <article class="game game-czc reveal" id="cozyzonecompendium">
-        <span id="cozyzonecollector" class="anchor-alias" aria-hidden="true"></span>
-        <header class="game-head">
-          <img class="game-logo" src="assets/games/czc-logo.webp" alt="Cozy Zone Compendium" width="150" height="150">
-          <div>
-            <div class="badge-row"><span class="pill">New · 1.0</span><span class="pill ghost">World of Warcraft: Forever addon</span><span class="pill ghost">Free &amp; open source</span></div>
-            <h3>Cozy Zone Compendium</h3>
-            <p class="game-sub">Your story through Azeroth.</p>
+        </article>
+        <article class="tile reveal" id="cozyzonecompendium"><span id="cozyzonecollector" class="anchor-alias" aria-hidden="true"></span>
+          <a class="tile-thumb" href="games/cozyzonecompendium/" tabindex="-1" aria-hidden="true"><img src="assets/games/czcomp-cover.webp" alt="" loading="lazy" width="1600" height="900"></a>
+          <div class="tile-body">
+            <div class="badge-row"><span class="pill">WoW addon · 1.0</span></div>
+            <h3><a href="games/cozyzonecompendium/">Cozy Zone Compendium</a></h3>
+            <p>Your story through Azeroth: a field journal addon for World of Warcraft: Forever.</p>
+            <div class="tile-actions">
+              <a class="btn btn-primary btn-sm" href="https://www.curseforge.com/wow/addons/cozy-zone-collector" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>Get it on CurseForge</a>
+              <a class="btn btn-ghost btn-sm" href="games/cozyzonecompendium/">Details</a>
+            </div>
           </div>
-        </header>
-        <a class="czc-cover czc-thumb" href="assets/games/czcomp-cover.webp" data-full="assets/games/czcomp-cover.webp" aria-label="Expand the cover art"><img src="assets/games/czcomp-cover.webp" alt="Cozy Zone Compendium cover art: a ranger with her wolf writing in a field journal above a valley at sunset" loading="lazy" width="1600" height="900"></a>
-        <p>Cozy Zone Collector grew into a field journal of your whole adventure, built for World of Warcraft: Forever. It still shows every zone's completion and exactly what's left to collect, and now it also keeps the story you've lived: a Main Story Quest told in seven acts, plus Race and Class Questlines, with every chapter appearing only once you discover it, so nothing is spoiled.</p>
-        <p>A Bestiary studies each creature you fight, from Observer to Master Hunter, opening its habitat, habits and loot as you go, with trophies and a Field Guide for every zone. Tabs for People, Gear with a dressing-room preview, Gathering and the history of Azeroth fill out the book, all in a hand-painted look with over 100 original banners, crests and act cards.</p>
-        <div class="czc-gallery" role="list">
-          <a class="czc-thumb" href="assets/games/czcomp-zones.webp" data-full="assets/games/czcomp-zones.webp" aria-label="Expand: Zones tab: Elwynn Forest at 55% complete, with progress for quests, exploration, transmog, flight paths, treasures and hunter pets"><img src="assets/games/czcomp-zones.webp" alt="Zones tab: Elwynn Forest at 55% complete, with progress for quests, exploration, transmog, flight paths, treasures and hunter pets" loading="lazy" width="1400" height="942"></a>
-          <a class="czc-thumb" href="assets/games/czcomp-bestiary.webp" data-full="assets/games/czcomp-bestiary.webp" aria-label="Expand: Bestiary: a Blackrock Worg at Hunter rank, its field study, kin and full drop table, with critters set apart under Wildlife and Townsfolk"><img src="assets/games/czcomp-bestiary.webp" alt="Bestiary: a Blackrock Worg at Hunter rank, its field study, kin and full drop table, with critters set apart under Wildlife and Townsfolk" loading="lazy" width="1600" height="840"></a>
-          <a class="czc-thumb" href="assets/games/czcomp-gear.webp" data-full="assets/games/czcomp-gear.webp" aria-label="Expand: Gear tab: a Duskwood shortsword previewed on the character in a dressing room"><img src="assets/games/czcomp-gear.webp" alt="Gear tab: a Duskwood shortsword previewed on the character in a dressing room" loading="lazy" width="1395" height="942"></a>
-          <a class="czc-thumb" href="assets/games/czcomp-pets.webp" data-full="assets/games/czcomp-pets.webp" aria-label="Expand: Hunter Pets: tameable beasts of Elwynn Forest by family, with a Young Forest Bear in view"><img src="assets/games/czcomp-pets.webp" alt="Hunter Pets: tameable beasts of Elwynn Forest by family, with a Young Forest Bear in view" loading="lazy" width="1400" height="944"></a>
-          <a class="czc-thumb" href="assets/games/czcomp-story.webp" data-full="assets/games/czcomp-story.webp" aria-label="Expand: Story tab: era cards from the Ancient World to World of Warcraft, and the Second War timeline with its games and novels"><img src="assets/games/czcomp-story.webp" alt="Story tab: era cards from the Ancient World to World of Warcraft, and the Second War timeline with its games and novels" loading="lazy" width="1400" height="934"></a>
-        </div>
-        <p class="czc-hint">Click any picture to expand it.</p>
-        <div class="chips"><span class="chip">Lua</span><span class="chip">WoW API</span><span class="chip">Custom painted UI</span><span class="chip">Spoiler-safe story engine</span><span class="chip">52 zones · 38 dungeons</span><span class="chip">Offline data pipeline</span><span class="chip">56 automated tests</span><span class="chip">GPL-3.0 licence</span></div>
-        <a class="btn btn-primary game-cta" href="https://www.curseforge.com/wow/addons/cozy-zone-collector" target="_blank" rel="noopener">Get it on CurseForge</a>
-      </article>
-    </div>
-  </section>
-
-  <!-- FEATURED PROJECT: LoPro -->
-  <section class="block" id="lopro">
-    <div class="wrap">
-      <div class="sec-head reveal">
-        <div class="sec-tag">Featured Project</div>
-        <h2>LoPro: an AI-agent-powered CRM shipped to paying customers</h2>
-        <p>A revenue-producing SaaS CRM built end to end and powered by autonomous AI agents, taken from concept to a live, paying product. Full stack ownership from data model and agent orchestration to infrastructure, deployment, and customer onboarding.</p>
+        </article>
       </div>
-      <div class="feature-grid">
-        <div class="video-embed reveal">
-          <iframe src="https://drive.google.com/file/d/1_v9In9EjsL6TMpXu5T9PEjtR7qMyyh7d/preview" allow="autoplay; fullscreen" allowfullscreen title="LoPro CRM demo"></iframe>
-        </div>
-        <div class="feature-meta reveal">
-          <div class="badge-row">
-            <span class="pill">Revenue-producing</span>
-            <span class="pill ghost">AI agents</span>
-            <span class="pill ghost">Full stack</span>
-          </div>
-          <div class="chips">
-            <span class="chip">React</span>
-            <span class="chip">Node.js</span>
-            <span class="chip">AWS</span>
-            <span class="chip">Autonomous Agents</span>
-          </div>
-          <p>Designed, engineered, and launched as a live commercial product, proving end-to-end delivery of a scalable SaaS platform driven by agentic AI. The demo plays right here in your browser, no download required.</p>
-          <a class="btn btn-ghost" style="margin-top:1.3rem" href="https://drive.google.com/file/d/1_v9In9EjsL6TMpXu5T9PEjtR7qMyyh7d/view" target="_blank" rel="noopener">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3l14 9-14 9z"/></svg>
-            Open demo in new tab
-          </a>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- FEATURED PROJECT: CoEngine -->
-  <section class="block" id="engine">
-    <div class="wrap">
-      <div class="sec-head reveal">
-        <div class="sec-tag">Featured Project</div>
-        <h2>CoEngine: a 3D game engine built from scratch</h2>
-        <p>A real-time 3D engine written from the ground up in C++ and rendered in the browser through WebGL and WebGPU, designed and shipped in a single day by directing a team of AI coding agents. No game framework, no off-the-shelf engine, agentic development applied to hard, low-level systems work.</p>
-      </div>
-      <div class="feature-grid">
-        <div class="video-embed reveal">
-          <iframe src="https://drive.google.com/file/d/1mhQ_iCnCS22JIfVAdA-5foSgZLsWjeEP/preview" allow="autoplay; fullscreen" allowfullscreen title="CoEngine development demo"></iframe>
-        </div>
-        <div class="feature-meta reveal">
-          <div class="badge-row">
-            <span class="pill">Built in one day</span>
-            <span class="pill ghost">AI agents</span>
-            <span class="pill ghost">From scratch</span>
-          </div>
-          <div class="chips">
-            <span class="chip">C++</span>
-            <span class="chip">WebGL</span>
-            <span class="chip">WebGPU</span>
-            <span class="chip">Real-time 3D</span>
-          </div>
-          <p>Architected and shipped end to end in a single day by orchestrating AI coding agents, real-world proof of agentic development on a genuinely hard problem. The demo plays right here in your browser, no download required.</p>
-          <a class="btn btn-ghost" style="margin-top:1.3rem" href="https://drive.google.com/file/d/1mhQ_iCnCS22JIfVAdA-5foSgZLsWjeEP/view" target="_blank" rel="noopener">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3l14 9-14 9z"/></svg>
-            Open demo in new tab
-          </a>
-        </div>
-      </div>
+      <p class="sec-more"><a href="games/">All games: codyboillot.com/games →</a></p>
     </div>
   </section>
 
