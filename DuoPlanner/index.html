@@ -252,24 +252,28 @@ select,.bar select{background:linear-gradient(180deg,#1f1915,#14100d) url("data:
 .mbox{border:1px solid #6b5422;border-radius:10px;background:linear-gradient(180deg,#1b1612,#120e0b);padding:10px 0 8px;margin-bottom:12px}
 .mbox h3{text-align:center;font-size:14px;letter-spacing:.1em;text-transform:uppercase;color:var(--fg);margin:0 10px 2px}
 .mbox .msub{text-align:center;font-size:12px;color:var(--muted);margin:0 10px 8px}
-.mscroll{overflow-x:auto;-webkit-overflow-scrolling:touch;padding:0 10px}
-.mtx{border-collapse:separate;border-spacing:0;min-width:100%;font-size:12px}
-.mtx th,.mtx td{padding:4px 3px;text-align:center;border-bottom:1px solid #2a2117}
+.mscroll{padding:0 8px;overflow:hidden}
+.mtx{border-collapse:separate;border-spacing:0;width:100%;table-layout:fixed;font-size:12px}
+.mtx col.first{width:30%}
+.mtx th,.mtx td{padding:5px 1px;text-align:center;border-bottom:1px solid #2a2117;overflow:hidden}
 .mtx thead th{vertical-align:bottom;padding-bottom:6px}
-.mtx thead th img{width:28px;height:28px;border-radius:50%;display:block;margin:0 auto 2px}
+.mtx thead th img{width:24px;height:24px;border-radius:50%;display:block;margin:0 auto 2px;max-width:100%}
 .mtx thead th .lbl{font-size:9px;color:var(--muted);line-height:1.1;display:block;max-width:44px;margin:0 auto;white-space:normal}
-.mtx th.rh{text-align:left;position:sticky;left:0;background:#17120f;z-index:1;white-space:nowrap;padding-left:4px;padding-right:8px;font-weight:600;color:var(--fg)}
-.mtx th.rh img{width:24px;height:24px;border-radius:50%;vertical-align:middle;margin-right:6px}
-.mtx th.rh button,.mtx thead th button{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.mtx th.rh{text-align:left;white-space:nowrap;padding-left:2px;padding-right:4px;font-weight:600;color:var(--fg);font-size:11.5px;overflow:hidden;text-overflow:ellipsis}
+.mtx th.rh img{width:22px;height:22px;border-radius:50%;vertical-align:middle;margin-right:5px;flex-shrink:0}
+.mtx th.rh button,.mtx thead th button{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:4px;max-width:100%}
+.mtx th.rh button span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mtx thead th button{flex-direction:column;gap:2px}
 .mtx th.rh button:focus-visible,.mtx thead th button:focus-visible{outline:2px solid var(--gold);border-radius:4px}
-.dot{display:inline-block;width:11px;height:11px;border-radius:50%;background:#2c2a2a;border:1px solid #3a3836}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:#2c2a2a;border:1px solid #3a3836}
 .dot.on{background:#22c55e;border-color:#4ade80;box-shadow:0 0 5px #22c55e88}
 .mtx tr.hl th.rh,.mtx tr.hl td{background:#2a2217}
 .mtx td.hl{background:#2a2217}
 .mtx .fsep{border-top:2px solid #4a3a22}
 .mtx td.fsepc,.mtx th.fsepc{border-left:2px solid #4a3a22}
-.mleg{display:flex;justify-content:center;gap:16px;font-size:11px;color:var(--muted);margin-top:8px}
+.mleg{display:flex;justify-content:center;gap:16px;font-size:11px;color:var(--muted);margin-top:8px;flex-wrap:wrap}
+@media (max-width:640px){.mtx thead th .lbl{display:none} .mtx thead th img{width:22px;height:22px} .mtx thead th{padding-bottom:4px}}
+@media (min-width:641px){.mtx col.first{width:160px}}
 .mleg span{display:inline-flex;align-items:center;gap:5px}
 .rdot{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;flex-shrink:0;vertical-align:middle}
 .rdot svg{width:11px;height:11px}
@@ -582,17 +586,18 @@ const RDSVG={Tank:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l8
 function specRole(cls,spec,role){ if(role==="Healer"||role==="Tank")return [role]; if(role.includes("/"))return ["Tank","Melee"]; const n=`${spec} ${cls}`;return [SPECS[n]?SPECS[n].role:"Melee"]}
 function roleDots(cls,spec,role){return specRole(cls,spec,role).map(r=>`<span class="rdot ${r}" title="${r}">${RDSVG[r]}</span>`).join("")}
 function raceIcon(r,sz){const k=RIMG[r];return `<img src="${RACEIMG}${k}-m.webp" alt="" loading="lazy">`}
+function tinyRace(r){return r.replace("Skyborne (Windshaper)","H. Skyborne").replace("Skyborne (High Order)","A. Skyborne")}
 function shortRace(r){return r.replace("Skyborne (Windshaper)","Horde Skyborne").replace("Skyborne (High Order)","Alliance Skyborne")}
 function can(r,c){return r.classes.includes(c)}
 function matrix(mode){
   if(mode==="races"){
-    const head=XP.classOrder.map(c=>`<th><button type="button" data-mclass="${c}" aria-label="${c}"><img src="${ICON}${CICON[c]}.webp" alt=""><span class="lbl">${c}</span></button></th>`).join("");
-    const rows=ALLRACES.map((r,i)=>`<tr data-mrace="${esc(r.race)}" class="${i===RACES.Horde.length?"fsep":""}"><th class="rh"><button type="button" data-mrace="${esc(r.race)}">${raceIcon(r.race)}${shortRace(r.race)}</button></th>${XP.classOrder.map(c=>`<td data-mclass="${c}"><span class="dot ${can(r,c)?"on":""}" aria-label="${can(r,c)?"can":"cannot"} play ${c}"></span></td>`).join("")}</tr>`).join("");
-    return `<div class="mbox"><h3>Classes available by race</h3><p class="msub">See which classes each race can play.</p><div class="mscroll"><table class="mtx"><thead><tr><th class="rh" style="font-weight:400;color:var(--muted);font-size:10px;letter-spacing:.08em">RACE</th>${head}</tr></thead><tbody>${rows}</tbody></table></div><div class="mleg"><span><i class="dot on"></i>Can play class</span><span><i class="dot"></i>Cannot play class</span></div></div>`;
+    const head=XP.classOrder.map(c=>`<th><button type="button" data-mclass="${c}" aria-label="${c}" title="${c}"><img src="${ICON}${CICON[c]}.webp" alt=""><span class="lbl">${c}</span></button></th>`).join("");
+    const rows=ALLRACES.map((r,i)=>`<tr data-mrace="${esc(r.race)}" class="${i===RACES.Horde.length?"fsep":""}"><th class="rh"><button type="button" data-mrace="${esc(r.race)}" title="${esc(r.race)}">${raceIcon(r.race)}<span>${tinyRace(r.race)}</span></button></th>${XP.classOrder.map(c=>`<td data-mclass="${c}"><span class="dot ${can(r,c)?"on":""}" aria-label="${can(r,c)?"can":"cannot"} play ${c}"></span></td>`).join("")}</tr>`).join("");
+    return `<div class="mbox"><h3>Classes available by race</h3><p class="msub">See which classes each race can play.</p><div class="mscroll"><table class="mtx"><colgroup><col class="first"></colgroup><thead><tr><th class="rh" style="font-weight:400;color:var(--muted);font-size:10px;letter-spacing:.08em">RACE</th>${head}</tr></thead><tbody>${rows}</tbody></table></div><div class="mleg"><span><i class="dot on"></i>Can play class</span><span><i class="dot"></i>Cannot play class</span></div></div>`;
   }
-  const head=ALLRACES.map((r,i)=>`<th class="${i===RACES.Horde.length?"fsepc":""}"><button type="button" data-mrace="${esc(r.race)}" aria-label="${esc(r.race)}">${raceIcon(r.race)}<span class="lbl">${shortRace(r.race)}</span></button></th>`).join("");
-  const rows=XP.classOrder.map(c=>`<tr data-mclass="${c}"><th class="rh"><button type="button" data-mclass="${c}"><img src="${ICON}${CICON[c]}.webp" alt="">${c}</button></th>${ALLRACES.map((r,i)=>`<td class="${i===RACES.Horde.length?"fsepc":""}">${can(r,c)?`<button type="button" data-goto="${esc(r.race)}" aria-label="${esc(r.race)} can play ${c}" style="all:unset;cursor:pointer;display:inline-flex"><span class="dot on"></span></button>`:`<span class="dot" aria-label="${esc(r.race)} cannot play ${c}"></span>`}</td>`).join("")}</tr>`).join("");
-  return `<div class="mbox"><h3>Races that can play each class</h3><p class="msub">See which races can choose each class.</p><div class="mscroll"><table class="mtx"><thead><tr><th class="rh" style="font-weight:400;color:var(--muted);font-size:10px;letter-spacing:.08em">CLASS</th>${head}</tr></thead><tbody>${rows}</tbody></table></div><div class="mleg"><span><i class="dot on"></i>Race can play this class</span><span><i class="dot"></i>Cannot play this class</span></div></div>`;
+  const head=ALLRACES.map((r,i)=>`<th class="${i===RACES.Horde.length?"fsepc":""}"><button type="button" data-mrace="${esc(r.race)}" aria-label="${esc(r.race)}" title="${esc(r.race)}">${raceIcon(r.race)}<span class="lbl">${shortRace(r.race)}</span></button></th>`).join("");
+  const rows=XP.classOrder.map(c=>`<tr data-mclass="${c}"><th class="rh"><button type="button" data-mclass="${c}"><img src="${ICON}${CICON[c]}.webp" alt=""><span>${c}</span></button></th>${ALLRACES.map((r,i)=>`<td class="${i===RACES.Horde.length?"fsepc":""}">${can(r,c)?`<button type="button" data-goto="${esc(r.race)}" aria-label="${esc(r.race)} can play ${c}" style="all:unset;cursor:pointer;display:inline-flex"><span class="dot on"></span></button>`:`<span class="dot" aria-label="${esc(r.race)} cannot play ${c}"></span>`}</td>`).join("")}</tr>`).join("");
+  return `<div class="mbox"><h3>Races that can play each class</h3><p class="msub">See which races can choose each class.</p><div class="mscroll"><table class="mtx"><colgroup><col class="first"></colgroup><thead><tr><th class="rh" style="font-weight:400;color:var(--muted);font-size:10px;letter-spacing:.08em">CLASS</th>${head}</tr></thead><tbody>${rows}</tbody></table></div><div class="mleg"><span><i class="dot on"></i>Race can play this class</span><span><i class="dot"></i>Cannot play this class</span></div></div>`;
 }
 state.xview="races";
 function renderExplorer(openRace,openClass){
@@ -615,17 +620,18 @@ document.getElementById("raceList").addEventListener("click",e=>{
 function specRole(cls,spec,role){ if(role==="Healer"||role==="Tank")return [role]; if(role.includes("/"))return ["Tank","Melee"]; const n=`${spec} ${cls}`;return [SPECS[n]?SPECS[n].role:"Melee"]}
 function roleDots(cls,spec,role){return specRole(cls,spec,role).map(r=>`<span class="rdot ${r}" title="${r}">${RDSVG[r]}</span>`).join("")}
 function raceIcon(r,sz){const k=RIMG[r];return `<img src="${RACEIMG}${k}-m.webp" alt="" loading="lazy">`}
+function tinyRace(r){return r.replace("Skyborne (Windshaper)","H. Skyborne").replace("Skyborne (High Order)","A. Skyborne")}
 function shortRace(r){return r.replace("Skyborne (Windshaper)","Horde Skyborne").replace("Skyborne (High Order)","Alliance Skyborne")}
 function can(r,c){return r.classes.includes(c)}
 function matrix(mode){
   if(mode==="races"){
-    const head=XP.classOrder.map(c=>`<th><button type="button" data-mclass="${c}" aria-label="${c}"><img src="${ICON}${CICON[c]}.webp" alt=""><span class="lbl">${c}</span></button></th>`).join("");
-    const rows=ALLRACES.map((r,i)=>`<tr data-mrace="${esc(r.race)}" class="${i===RACES.Horde.length?"fsep":""}"><th class="rh"><button type="button" data-mrace="${esc(r.race)}">${raceIcon(r.race)}${shortRace(r.race)}</button></th>${XP.classOrder.map(c=>`<td data-mclass="${c}"><span class="dot ${can(r,c)?"on":""}" aria-label="${can(r,c)?"can":"cannot"} play ${c}"></span></td>`).join("")}</tr>`).join("");
-    return `<div class="mbox"><h3>Classes available by race</h3><p class="msub">See which classes each race can play.</p><div class="mscroll"><table class="mtx"><thead><tr><th class="rh" style="font-weight:400;color:var(--muted);font-size:10px;letter-spacing:.08em">RACE</th>${head}</tr></thead><tbody>${rows}</tbody></table></div><div class="mleg"><span><i class="dot on"></i>Can play class</span><span><i class="dot"></i>Cannot play class</span></div></div>`;
+    const head=XP.classOrder.map(c=>`<th><button type="button" data-mclass="${c}" aria-label="${c}" title="${c}"><img src="${ICON}${CICON[c]}.webp" alt=""><span class="lbl">${c}</span></button></th>`).join("");
+    const rows=ALLRACES.map((r,i)=>`<tr data-mrace="${esc(r.race)}" class="${i===RACES.Horde.length?"fsep":""}"><th class="rh"><button type="button" data-mrace="${esc(r.race)}" title="${esc(r.race)}">${raceIcon(r.race)}<span>${tinyRace(r.race)}</span></button></th>${XP.classOrder.map(c=>`<td data-mclass="${c}"><span class="dot ${can(r,c)?"on":""}" aria-label="${can(r,c)?"can":"cannot"} play ${c}"></span></td>`).join("")}</tr>`).join("");
+    return `<div class="mbox"><h3>Classes available by race</h3><p class="msub">See which classes each race can play.</p><div class="mscroll"><table class="mtx"><colgroup><col class="first"></colgroup><thead><tr><th class="rh" style="font-weight:400;color:var(--muted);font-size:10px;letter-spacing:.08em">RACE</th>${head}</tr></thead><tbody>${rows}</tbody></table></div><div class="mleg"><span><i class="dot on"></i>Can play class</span><span><i class="dot"></i>Cannot play class</span></div></div>`;
   }
-  const head=ALLRACES.map((r,i)=>`<th class="${i===RACES.Horde.length?"fsepc":""}"><button type="button" data-mrace="${esc(r.race)}" aria-label="${esc(r.race)}">${raceIcon(r.race)}<span class="lbl">${shortRace(r.race)}</span></button></th>`).join("");
-  const rows=XP.classOrder.map(c=>`<tr data-mclass="${c}"><th class="rh"><button type="button" data-mclass="${c}"><img src="${ICON}${CICON[c]}.webp" alt="">${c}</button></th>${ALLRACES.map((r,i)=>`<td class="${i===RACES.Horde.length?"fsepc":""}">${can(r,c)?`<button type="button" data-goto="${esc(r.race)}" aria-label="${esc(r.race)} can play ${c}" style="all:unset;cursor:pointer;display:inline-flex"><span class="dot on"></span></button>`:`<span class="dot" aria-label="${esc(r.race)} cannot play ${c}"></span>`}</td>`).join("")}</tr>`).join("");
-  return `<div class="mbox"><h3>Races that can play each class</h3><p class="msub">See which races can choose each class.</p><div class="mscroll"><table class="mtx"><thead><tr><th class="rh" style="font-weight:400;color:var(--muted);font-size:10px;letter-spacing:.08em">CLASS</th>${head}</tr></thead><tbody>${rows}</tbody></table></div><div class="mleg"><span><i class="dot on"></i>Race can play this class</span><span><i class="dot"></i>Cannot play this class</span></div></div>`;
+  const head=ALLRACES.map((r,i)=>`<th class="${i===RACES.Horde.length?"fsepc":""}"><button type="button" data-mrace="${esc(r.race)}" aria-label="${esc(r.race)}" title="${esc(r.race)}">${raceIcon(r.race)}<span class="lbl">${shortRace(r.race)}</span></button></th>`).join("");
+  const rows=XP.classOrder.map(c=>`<tr data-mclass="${c}"><th class="rh"><button type="button" data-mclass="${c}"><img src="${ICON}${CICON[c]}.webp" alt=""><span>${c}</span></button></th>${ALLRACES.map((r,i)=>`<td class="${i===RACES.Horde.length?"fsepc":""}">${can(r,c)?`<button type="button" data-goto="${esc(r.race)}" aria-label="${esc(r.race)} can play ${c}" style="all:unset;cursor:pointer;display:inline-flex"><span class="dot on"></span></button>`:`<span class="dot" aria-label="${esc(r.race)} cannot play ${c}"></span>`}</td>`).join("")}</tr>`).join("");
+  return `<div class="mbox"><h3>Races that can play each class</h3><p class="msub">See which races can choose each class.</p><div class="mscroll"><table class="mtx"><colgroup><col class="first"></colgroup><thead><tr><th class="rh" style="font-weight:400;color:var(--muted);font-size:10px;letter-spacing:.08em">CLASS</th>${head}</tr></thead><tbody>${rows}</tbody></table></div><div class="mleg"><span><i class="dot on"></i>Race can play this class</span><span><i class="dot"></i>Cannot play this class</span></div></div>`;
 }
 state.xview="races";renderExplorer(go.dataset.goto);return}
   const h=e.target.closest("[data-acc]");if(!h)return;h.parentElement.classList.toggle("open");
@@ -634,17 +640,18 @@ document.getElementById("xRaces").onclick=()=>{const RDSVG={Tank:'<svg viewBox="
 function specRole(cls,spec,role){ if(role==="Healer"||role==="Tank")return [role]; if(role.includes("/"))return ["Tank","Melee"]; const n=`${spec} ${cls}`;return [SPECS[n]?SPECS[n].role:"Melee"]}
 function roleDots(cls,spec,role){return specRole(cls,spec,role).map(r=>`<span class="rdot ${r}" title="${r}">${RDSVG[r]}</span>`).join("")}
 function raceIcon(r,sz){const k=RIMG[r];return `<img src="${RACEIMG}${k}-m.webp" alt="" loading="lazy">`}
+function tinyRace(r){return r.replace("Skyborne (Windshaper)","H. Skyborne").replace("Skyborne (High Order)","A. Skyborne")}
 function shortRace(r){return r.replace("Skyborne (Windshaper)","Horde Skyborne").replace("Skyborne (High Order)","Alliance Skyborne")}
 function can(r,c){return r.classes.includes(c)}
 function matrix(mode){
   if(mode==="races"){
-    const head=XP.classOrder.map(c=>`<th><button type="button" data-mclass="${c}" aria-label="${c}"><img src="${ICON}${CICON[c]}.webp" alt=""><span class="lbl">${c}</span></button></th>`).join("");
-    const rows=ALLRACES.map((r,i)=>`<tr data-mrace="${esc(r.race)}" class="${i===RACES.Horde.length?"fsep":""}"><th class="rh"><button type="button" data-mrace="${esc(r.race)}">${raceIcon(r.race)}${shortRace(r.race)}</button></th>${XP.classOrder.map(c=>`<td data-mclass="${c}"><span class="dot ${can(r,c)?"on":""}" aria-label="${can(r,c)?"can":"cannot"} play ${c}"></span></td>`).join("")}</tr>`).join("");
-    return `<div class="mbox"><h3>Classes available by race</h3><p class="msub">See which classes each race can play.</p><div class="mscroll"><table class="mtx"><thead><tr><th class="rh" style="font-weight:400;color:var(--muted);font-size:10px;letter-spacing:.08em">RACE</th>${head}</tr></thead><tbody>${rows}</tbody></table></div><div class="mleg"><span><i class="dot on"></i>Can play class</span><span><i class="dot"></i>Cannot play class</span></div></div>`;
+    const head=XP.classOrder.map(c=>`<th><button type="button" data-mclass="${c}" aria-label="${c}" title="${c}"><img src="${ICON}${CICON[c]}.webp" alt=""><span class="lbl">${c}</span></button></th>`).join("");
+    const rows=ALLRACES.map((r,i)=>`<tr data-mrace="${esc(r.race)}" class="${i===RACES.Horde.length?"fsep":""}"><th class="rh"><button type="button" data-mrace="${esc(r.race)}" title="${esc(r.race)}">${raceIcon(r.race)}<span>${tinyRace(r.race)}</span></button></th>${XP.classOrder.map(c=>`<td data-mclass="${c}"><span class="dot ${can(r,c)?"on":""}" aria-label="${can(r,c)?"can":"cannot"} play ${c}"></span></td>`).join("")}</tr>`).join("");
+    return `<div class="mbox"><h3>Classes available by race</h3><p class="msub">See which classes each race can play.</p><div class="mscroll"><table class="mtx"><colgroup><col class="first"></colgroup><thead><tr><th class="rh" style="font-weight:400;color:var(--muted);font-size:10px;letter-spacing:.08em">RACE</th>${head}</tr></thead><tbody>${rows}</tbody></table></div><div class="mleg"><span><i class="dot on"></i>Can play class</span><span><i class="dot"></i>Cannot play class</span></div></div>`;
   }
-  const head=ALLRACES.map((r,i)=>`<th class="${i===RACES.Horde.length?"fsepc":""}"><button type="button" data-mrace="${esc(r.race)}" aria-label="${esc(r.race)}">${raceIcon(r.race)}<span class="lbl">${shortRace(r.race)}</span></button></th>`).join("");
-  const rows=XP.classOrder.map(c=>`<tr data-mclass="${c}"><th class="rh"><button type="button" data-mclass="${c}"><img src="${ICON}${CICON[c]}.webp" alt="">${c}</button></th>${ALLRACES.map((r,i)=>`<td class="${i===RACES.Horde.length?"fsepc":""}">${can(r,c)?`<button type="button" data-goto="${esc(r.race)}" aria-label="${esc(r.race)} can play ${c}" style="all:unset;cursor:pointer;display:inline-flex"><span class="dot on"></span></button>`:`<span class="dot" aria-label="${esc(r.race)} cannot play ${c}"></span>`}</td>`).join("")}</tr>`).join("");
-  return `<div class="mbox"><h3>Races that can play each class</h3><p class="msub">See which races can choose each class.</p><div class="mscroll"><table class="mtx"><thead><tr><th class="rh" style="font-weight:400;color:var(--muted);font-size:10px;letter-spacing:.08em">CLASS</th>${head}</tr></thead><tbody>${rows}</tbody></table></div><div class="mleg"><span><i class="dot on"></i>Race can play this class</span><span><i class="dot"></i>Cannot play this class</span></div></div>`;
+  const head=ALLRACES.map((r,i)=>`<th class="${i===RACES.Horde.length?"fsepc":""}"><button type="button" data-mrace="${esc(r.race)}" aria-label="${esc(r.race)}" title="${esc(r.race)}">${raceIcon(r.race)}<span class="lbl">${shortRace(r.race)}</span></button></th>`).join("");
+  const rows=XP.classOrder.map(c=>`<tr data-mclass="${c}"><th class="rh"><button type="button" data-mclass="${c}"><img src="${ICON}${CICON[c]}.webp" alt=""><span>${c}</span></button></th>${ALLRACES.map((r,i)=>`<td class="${i===RACES.Horde.length?"fsepc":""}">${can(r,c)?`<button type="button" data-goto="${esc(r.race)}" aria-label="${esc(r.race)} can play ${c}" style="all:unset;cursor:pointer;display:inline-flex"><span class="dot on"></span></button>`:`<span class="dot" aria-label="${esc(r.race)} cannot play ${c}"></span>`}</td>`).join("")}</tr>`).join("");
+  return `<div class="mbox"><h3>Races that can play each class</h3><p class="msub">See which races can choose each class.</p><div class="mscroll"><table class="mtx"><colgroup><col class="first"></colgroup><thead><tr><th class="rh" style="font-weight:400;color:var(--muted);font-size:10px;letter-spacing:.08em">CLASS</th>${head}</tr></thead><tbody>${rows}</tbody></table></div><div class="mleg"><span><i class="dot on"></i>Race can play this class</span><span><i class="dot"></i>Cannot play this class</span></div></div>`;
 }
 state.xview="races";renderExplorer()};
 document.getElementById("xClasses").onclick=()=>{state.xview="classes";renderExplorer()};
