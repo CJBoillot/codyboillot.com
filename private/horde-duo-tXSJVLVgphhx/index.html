@@ -11,6 +11,7 @@
 :root{--bg:#0f0d0b;--panel:#1a1613;--panel2:#241e19;--line:#4a3a22;--gold:#d9b15a;--gold2:#8a6a2b;--fg:#ece4d2;--muted:#a69a82;
 --display:"Cinzel",Georgia,serif;--body:"Source Sans 3","Segoe UI",system-ui,sans-serif;color-scheme:dark}
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 html,body{margin:0}
 body{background:var(--bg) radial-gradient(ellipse at top,#1d2a36 0,transparent 55%);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.45;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px 48px}
 .wrap{max-width:980px;margin:0 auto}
@@ -69,8 +70,8 @@ select{width:100%;font:600 14px var(--body);padding:7px 8px;border-radius:6px;bo
 .tray textarea{width:100%;min-height:140px;font:13px ui-monospace,Menlo,Consolas,monospace;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:8px;resize:vertical}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--gold);color:#1a1400;font-weight:700;padding:8px 14px;border-radius:8px;z-index:20}
 .topbar{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:10px}
-.fac{display:flex;border:1px solid var(--gold2);border-radius:8px;overflow:hidden}
-.fac button{font:700 13px var(--display);padding:7px 12px;border:0;background:var(--panel);color:var(--muted);cursor:pointer;letter-spacing:.05em}
+.fac{display:flex;width:100%;border:1px solid var(--gold2);border-radius:8px;overflow:hidden}
+.fac button{flex:1;font:700 13px var(--display);padding:7px 12px;border:0;background:var(--panel);color:var(--muted);cursor:pointer;letter-spacing:.05em}
 .fac button.on.h{background:#8b1a1a;color:#fff} .fac button.on.a{background:#1f4e9c;color:#fff}
 .racebtn{font:700 13px var(--display);padding:7px 12px;border-radius:8px;border:1px solid var(--gold2);background:var(--panel);color:var(--gold);cursor:pointer;letter-spacing:.05em}
 .modal{position:fixed;inset:0;background:#000b;z-index:30;display:flex;align-items:flex-end;justify-content:center;padding:0}
@@ -96,17 +97,14 @@ footer{margin-top:24px;color:var(--muted);font-size:12px;text-align:center}
 <p class="sub" id="subline">All 406 spec pairings · Fun + Effectiveness + Ease = Total /15 · Launch Nov 4, 2026</p>
 </header>
 
-<div class="topbar">
-<div class="fac"><button type="button" id="fH" class="h on">HORDE</button><button type="button" id="fA" class="a">ALLIANCE</button></div>
-<button type="button" class="racebtn" id="openRaces">Races &amp; Racials</button>
-</div>
+<div class="topbar"><button type="button" class="racebtn" id="openRaces">Races &amp; Racials</button></div>
 <div class="mode"><button type="button" id="mDuo" class="on">DUO</button><button type="button" id="mSolo">SOLO</button></div>
-<div class="modal" id="raceModal" hidden><div class="sheet" role="dialog" aria-label="Races and racials"><div class="head"><h2 id="raceTitle">Horde Races</h2><button type="button" class="x" id="closeRaces" aria-label="Close">×</button></div><p class="note" id="raceNote"></p><div id="raceList"></div></div></div>
+<div class="modal" id="raceModal" hidden><div class="sheet" role="dialog" aria-label="Races and racials"><div class="head"><h2 id="raceTitle">Horde Races</h2><button type="button" class="x" id="closeRaces" aria-label="Close">×</button></div><div class="fac" style="margin-bottom:10px"><button type="button" id="fH" class="h on">HORDE</button><button type="button" id="fA" class="a">ALLIANCE</button></div><p class="note" id="raceNote"></p><div id="raceList"></div></div></div>
 
 <div class="filters" id="duoFilters">
 <div class="who">
-<div class="person"><label>CODY</label><div class="roles" id="rolesA"></div><select id="specA"></select></div>
-<div class="person"><label>TOM</label><div class="roles" id="rolesB"></div><select id="specB"></select></div>
+<div class="person"><label>PLAYER 1</label><div class="roles" id="rolesA"></div><select id="specA"></select></div>
+<div class="person"><label>PLAYER 2</label><div class="roles" id="rolesB"></div><select id="specB"></select></div>
 </div>
 <div class="bar"><span>Sort</span><select id="sort"><option value="t">Total</option><option value="f">Fun</option><option value="e">Effectiveness</option><option value="z">Ease (easiest first)</option><option value="h">Ease (hardest first)</option></select><span class="count" id="count"></span></div>
 </div>
@@ -143,7 +141,7 @@ footer{margin-top:24px;color:var(--muted);font-size:12px;text-align:center}
 <div id="savedList" class="list"></div>
 </div>
 
-<footer>Duo: Fun + Effectiveness + Ease, max 15. Solo: Fun + Ease + Leveling + Solo PvP, max 20. Ease: 5 = very easy, 1 = very hard. Duo grades are Cody and Tom's own; solo grades and all one-line rationales are Claude's starting estimates, not win rates.</footer>
+<footer>Duo: Fun + Effectiveness + Ease, max 15. Solo: Fun + Ease + Leveling + Solo PvP, max 20. Ease: 5 = very easy, 1 = very hard. Duo grades are the players' own; solo grades and all one-line rationales are Claude's starting estimates, not win rates.</footer>
 </div>
 <script>
 const SPECS={"Affliction Warlock": {"role": "Ranged", "color": "#8788EE"}, "Arcane Mage": {"role": "Ranged", "color": "#3FC7EB"}, "Arms Warrior": {"role": "Melee", "color": "#C69B6D"}, "Assassination Rogue": {"role": "Melee", "color": "#FFF468"}, "Balance Druid": {"role": "Ranged", "color": "#FF7C0A"}, "Beast Mastery Hunter": {"role": "Ranged", "color": "#AAD372"}, "Combat Rogue": {"role": "Melee", "color": "#FFF468"}, "Demonology Warlock": {"role": "Ranged", "color": "#8788EE"}, "Destruction Warlock": {"role": "Ranged", "color": "#8788EE"}, "Discipline Priest": {"role": "Healer", "color": "#FFFFFF"}, "Elemental Shaman": {"role": "Ranged", "color": "#0070DD"}, "Enhancement Shaman": {"role": "Melee", "color": "#0070DD"}, "Feral Bear Druid": {"role": "Tank", "color": "#FF7C0A"}, "Feral Cat Druid": {"role": "Melee", "color": "#FF7C0A"}, "Fire Mage": {"role": "Ranged", "color": "#3FC7EB"}, "Frost Mage": {"role": "Ranged", "color": "#3FC7EB"}, "Fury Warrior": {"role": "Melee", "color": "#C69B6D"}, "Holy Paladin": {"role": "Healer", "color": "#F48CBA"}, "Holy Priest": {"role": "Healer", "color": "#FFFFFF"}, "Marksmanship Hunter": {"role": "Ranged", "color": "#AAD372"}, "Protection Paladin": {"role": "Tank", "color": "#F48CBA"}, "Protection Warrior": {"role": "Tank", "color": "#C69B6D"}, "Restoration Druid": {"role": "Healer", "color": "#FF7C0A"}, "Restoration Shaman": {"role": "Healer", "color": "#0070DD"}, "Retribution Paladin": {"role": "Melee", "color": "#F48CBA"}, "Shadow Priest": {"role": "Ranged", "color": "#FFFFFF"}, "Subtlety Rogue": {"role": "Melee", "color": "#FFF468"}, "Survival Hunter": {"role": "Melee", "color": "#AAD372"}};
@@ -165,9 +163,9 @@ function duoKey(a,b){return [a,b].sort().join(" + ")}
 function toast(msg){const t=document.createElement("div");t.className="toast";t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),1400)}
 function copyText(txt){const done=()=>toast("Copied");navigator.clipboard&&navigator.clipboard.writeText(txt).then(done).catch(()=>{showExport(txt);toast("Select and copy the text below")})||(showExport(txt),toast("Select and copy the text below"))}
 function showExport(txt){const b=document.getElementById("exportBox");b.hidden=false;b.value=txt;b.scrollIntoView({block:"nearest"})}
-function duoText(p){return `DUO: ${p.A} (Cody, ${SPECS[p.A].role}) + ${p.B} (Tom, ${SPECS[p.B].role})\n  Fun ${p.f}/5 · Effectiveness ${p.e}/5 · Ease ${p.z}/5 · Total ${p.t}/15 (${tcD(p.t)[1]})\n  Why: ${p.w}`}
+function duoText(p){return `DUO: ${p.A} (Player 1, ${SPECS[p.A].role}) + ${p.B} (Player 2, ${SPECS[p.B].role})\n  Fun ${p.f}/5 · Effectiveness ${p.e}/5 · Ease ${p.z}/5 · Total ${p.t}/15 (${tcD(p.t)[1]})\n  Why: ${p.w}`}
 function soloText(s){return `SOLO: ${s.s} (${SPECS[s.s].role})\n  Fun ${s.f}/5 · Ease ${s.z}/5 · Leveling ${s.l}/5 · Solo PvP ${s.p}/5 · Total ${s.t}/20 (${tcS(s.t)[1]})\n  Why: ${s.why}`}
-const HEADER=`You are helping two friends (Cody and Tom) plan characters for World of Warcraft: Forever (classic-era rules, launching Nov 4, 2026). Their focus is two-player PvP in battlegrounds, world PvP and small skirmishes, plus solo leveling. Scores below are 1-5 (Ease: 5 = very easy). For each entry give a detailed report: strengths, weaknesses, how the pair works together, a typical fight, offensive and defensive cooldown coordination, crowd control, survivability, learning curve, larger-battleground value, and recommended Horde races. Finish with a ranked recommendation. Faction: `+state.faction+`.\n\n`;
+const HEADER=`You are helping two friends (Player 1 and Player 2) plan characters for World of Warcraft: Forever (classic-era rules, launching Nov 4, 2026). Their focus is two-player PvP in battlegrounds, world PvP and small skirmishes, plus solo leveling. Scores below are 1-5 (Ease: 5 = very easy). For each entry give a detailed report: strengths, weaknesses, how the pair works together, a typical fight, offensive and defensive cooldown coordination, crowd control, survivability, learning curve, larger-battleground value, and recommended Horde races. Finish with a ranked recommendation. Faction: `+state.faction+`.\n\n`;
 function allDuos(){return DATA.map(([a,b,f,e,z,w])=>({A:a,B:b,f,e,z,w,t:f+e+z,key:duoKey(a,b)}))}
 function allSolo(){return SOLO.map(o=>({...o,t:o.f+o.z+o.l+o.p,key:"solo:"+o.s}))}
 function currentDuo(){
@@ -195,7 +193,7 @@ function rec(title,note,items,tc,label){
 function best(list,key,cap=5){if(!list.length)return[];const top=key(list.reduce((m,p)=>key(p)>key(m)?p:m));return list.filter(p=>key(p)===top).slice(0,cap)}
 function duoCard(p){
   const on=!!saved[p.key];
-  return `<div class="card ${on?"saved":""}" data-key="${esc(p.key)}"><div class="names"><b>${nameSpan(p.A)}</b><small>Cody · ${SPECS[p.A].role}</small></div><div class="total ${tcD(p.t)[0]}">${p.t}<small>/15</small></div><div class="names"><b>${nameSpan(p.B)}</b><small>Tom · ${SPECS[p.B].role}</small></div><div class="pills"><span class="pill ${rc(p.f)}"><small>Fun</small>${p.f}</span><span class="pill ${rc(p.e)}"><small>Eff</small>${p.e}</span><span class="pill ${rc(p.z)}"><small>Ease</small>${p.z}</span></div><div class="why">${esc(p.w)}</div><div class="acts"><button type="button" data-act="copy">Copy</button><button type="button" data-act="save" class="${on?"on":""}">${on?"Saved ✓":"Save"}</button></div></div>`;
+  return `<div class="card ${on?"saved":""}" data-key="${esc(p.key)}"><div class="names"><b>${nameSpan(p.A)}</b><small>Player 1 · ${SPECS[p.A].role}</small></div><div class="total ${tcD(p.t)[0]}">${p.t}<small>/15</small></div><div class="names"><b>${nameSpan(p.B)}</b><small>Player 2 · ${SPECS[p.B].role}</small></div><div class="pills"><span class="pill ${rc(p.f)}"><small>Fun</small>${p.f}</span><span class="pill ${rc(p.e)}"><small>Eff</small>${p.e}</span><span class="pill ${rc(p.z)}"><small>Ease</small>${p.z}</span></div><div class="why">${esc(p.w)}</div><div class="acts"><button type="button" data-act="copy">Copy</button><button type="button" data-act="save" class="${on?"on":""}">${on?"Saved ✓":"Save"}</button></div></div>`;
 }
 function soloCard(s){
   const on=!!saved[s.key];
