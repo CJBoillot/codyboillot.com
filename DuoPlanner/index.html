@@ -394,7 +394,8 @@ const RICO={Healer:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 3h6
 function specIcon(spec){return `<span class="ico role-${SPECS[spec].role}" style="--pc:${SPECS[spec].color}">${RICO[SPECS[spec].role]}</span>`}
 function fits(spec,role,pick){if(pick)return spec===pick;return role==="Any"||SPECS[spec].role===role}
 function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;")}
-function nameSpan(s){return `<span style="color:${SPECS[s].color}">${esc(s)}</span>`}
+function short(s){return s.replace("Beast Mastery","BM").replace("Restoration","Resto")}
+function nameSpan(s){return `<span style="color:${SPECS[s].color}">${esc(short(s))}</span>`}
 function duoKey(a,b){return [a,b].sort().join(" + ")}
 function toast(msg){const t=document.createElement("div");t.className="toast";t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),1400)}
 function copyText(txt){const done=()=>toast("Copied");navigator.clipboard&&navigator.clipboard.writeText(txt).then(done).catch(()=>{showExport(txt);toast("Select and copy the text below")})||(showExport(txt),toast("Select and copy the text below"))}
@@ -494,7 +495,7 @@ function buildPerson(side){
   const roles=document.getElementById("roles"+side),sel=document.getElementById("spec"+side);
   roles.innerHTML=ROLES.map(r=>`<button type="button" data-r="${r}" class="role-${r} ${state["role"+side]===r?"on":""}">${roleIcon(r)}${r}</button>`).join("");
   const opts=Object.keys(SPECS).filter(s=>state["role"+side]==="Any"||SPECS[s].role===state["role"+side]);
-  sel.innerHTML=`<option value="">Any ${state["role"+side]==="Any"?"spec":state["role"+side].toLowerCase()+" spec"}</option>`+opts.map(s=>`<option value="${s}">${s}</option>`).join("");
+  sel.innerHTML=`<option value="">Any ${state["role"+side]==="Any"?"spec":state["role"+side].toLowerCase()+" spec"}</option>`+opts.map(s=>`<option value="${s}">${short(s)}</option>`).join("");
   sel.value=opts.includes(state["spec"+side])?state["spec"+side]:"";state["spec"+side]=sel.value;
   roles.onclick=e=>{const b=e.target.closest("button");if(!b)return;state["role"+side]=b.dataset.r;state["spec"+side]="";state.limit=40;buildPerson(side);render()};
   sel.onchange=()=>{state["spec"+side]=sel.value;state.limit=40;render()};
@@ -526,14 +527,14 @@ const SPECIMG={};Object.keys(SPECS).forEach(s=>{SPECIMG[s]=SPECS[s].img});
 function specPortrait(cls,spec){const n=spec==="Feral Combat"?"Feral Cat Druid":`${spec} ${cls}`;const u=SPECS[n]&&SPECS[n].icon;return u?`<img src="${u}" alt="" loading="lazy" style="--pc:${CLASSCOL[cls]}">`:`<span></span>`}
 function roleBadge(r){const k=r.includes("/")?"Mixed":r;return `<span class="rb ${k}">${r}</span>`}
 function classAccordion(cls,opts){const c=XP.classes[cls];
-  return `<div class="cls"><button type="button" class="xhead" data-acc>${`<img class="ci big" src="${ICON}${CICON[cls]}.webp" alt="" style="--pc:${CLASSCOL[cls]};width:36px;height:36px">`}<h3 style="color:${CLASSCOL[cls]}">${cls}</h3>${c.roles.map(roleBadge).join(" ")}${CHEV}</button><div class="xbody">${opts&&opts.desc?`<p class="cdesc">${c.desc}</p>`:""}${c.specs.map(([n,r,d])=>`<div class="spec">${specPortrait(cls,n)}<div><div class="sn">${n} ${roleBadge(r)}</div><div class="sd">${d}</div></div></div>`).join("")}</div></div>`}
+  return `<div class="cls"><button type="button" class="xhead" data-acc>${`<img class="ci big" src="${ICON}${CICON[cls]}.webp" alt="" style="--pc:${CLASSCOL[cls]};width:36px;height:36px">`}<h3 style="color:${CLASSCOL[cls]}">${cls}</h3>${c.roles.map(roleBadge).join(" ")}${CHEV}</button><div class="xbody">${opts&&opts.desc?`<p class="cdesc">${c.desc}</p>`:""}${c.specs.map(([n,r,d])=>`<div class="spec">${specPortrait(cls,n)}<div><div class="sn">${short(n)} ${roleBadge(r)}</div><div class="sd">${d}</div></div></div>`).join("")}</div></div>`}
 function raceCard(r,open){
   return `<div class="xcard ${open?"open":""}" data-race="${esc(r.race)}"><button type="button" class="xhead" data-acc><div style="flex:1;min-width:0"><h3 style="font-family:var(--display)">${esc(r.race)}</h3><div style="margin:3px 0 4px"><span class="fb ${r.faction}">${r.faction}</span></div><div class="sub">${XP.raceDesc[r.race]||""}</div></div>${CHEV}</button>
   <div class="xbody"><div class="xsec">Racial traits</div><ul class="traits">${r.racials.map(([n,d])=>`<li><b>${esc(n)}</b>${esc(d)}</li>`).join("")}</ul>
   <div class="xsec">Available classes (${r.classes.length})</div>${XP.classOrder.filter(c=>r.classes.includes(c)).map(c=>classAccordion(c)).join("")}</div></div>`}
 function classCard(cls){const c=XP.classes[cls];const races=ALLRACES.filter(r=>r.classes.includes(cls));
   return `<div class="xcard" data-class="${cls}"><button type="button" class="xhead" data-acc><img class="ci big" src="${ICON}${CICON[cls]}.webp" alt="" style="--pc:${CLASSCOL[cls]}"><div style="flex:1;min-width:0"><h3 style="color:${CLASSCOL[cls]}">${cls}</h3><div style="margin-top:3px">${c.roles.map(roleBadge).join(" ")}</div></div>${CHEV}</button>
-  <div class="xbody"><p class="cdesc">${c.desc}</p><div class="xsec">Specializations</div>${c.specs.map(([n,r,d])=>`<div class="spec">${specPortrait(cls,n)}<div><div class="sn">${n} ${roleBadge(r)}</div><div class="sd">${d}</div></div></div>`).join("")}
+  <div class="xbody"><p class="cdesc">${c.desc}</p><div class="xsec">Specializations</div>${c.specs.map(([n,r,d])=>`<div class="spec">${specPortrait(cls,n)}<div><div class="sn">${short(n)} ${roleBadge(r)}</div><div class="sd">${d}</div></div></div>`).join("")}
   <div class="xsec">Playable races (${races.length})</div>${races.map(r=>`<button type="button" class="racerow" data-goto="${esc(r.race)}">${esc(r.race)}<span class="fb ${r.faction}">${r.faction}</span></button>`).join("")}</div></div>`}
 state.xview="races";
 function renderExplorer(openRace){
