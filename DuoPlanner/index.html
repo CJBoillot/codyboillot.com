@@ -128,7 +128,7 @@ select{width:100%;font:600 14px var(--body);padding:7px 8px;border-radius:6px;bo
 .racebtn{font:700 13px var(--display);padding:7px 12px;border-radius:8px;border:1px solid var(--gold2);background:var(--panel);color:var(--gold);cursor:pointer;letter-spacing:.05em}
 .modal{position:fixed;inset:0;background:#000b;z-index:30;display:flex;align-items:flex-end;justify-content:center;padding:0}
 .sheet{background:var(--panel);border:1px solid var(--gold2);border-radius:14px 14px 0 0;width:100%;max-width:720px;max-height:92%;overflow:auto;padding:12px max(16px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
-.sheet .head{display:flex;align-items:center;gap:10px;position:sticky;top:0;background:var(--panel);padding-bottom:8px;border-bottom:1px solid var(--line);margin-bottom:10px}
+.sheet .head{display:flex;align-items:center;gap:10px;position:sticky;top:-12px;margin-top:-12px;padding-top:12px;background:#1b1612;padding-bottom:8px;border-bottom:1px solid var(--line);margin-bottom:10px;z-index:3}
 .sheet .head h2{margin:0;border:0;padding:0;flex:1}
 .sheet .head button.x{font:700 18px var(--body);border:1px solid var(--line);background:var(--panel2);color:var(--fg);border-radius:8px;width:36px;height:36px;cursor:pointer}
 .race{border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-bottom:8px;background:var(--panel2)}
@@ -201,6 +201,40 @@ select,.bar select{background:linear-gradient(180deg,#1f1915,#14100d) url("data:
 .solo .top{align-items:flex-start}
 .solo .top .names{padding-top:4px}
 
+/* ===== Explorer ===== */
+.xtog{max-width:none;margin-bottom:10px}
+.xcard{border:1px solid #6b5422;border-radius:10px;background:linear-gradient(180deg,#1b1612,#120e0b);margin-bottom:10px;overflow:hidden}
+.xhead{display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer;width:100%;background:none;border:0;color:var(--fg);text-align:left;font:inherit}
+.xhead:focus-visible{outline:2px solid var(--gold);outline-offset:-2px}
+.xhead h3{font-size:18px;margin:0;color:var(--fg);letter-spacing:.04em;text-transform:uppercase}
+.xhead .sub{font-size:13px;color:var(--muted);font-style:italic}
+.xhead .ci.big{width:44px;height:44px}
+.chev{margin-left:auto;color:var(--gold);transition:transform .15s;flex-shrink:0}
+.open>.xhead .chev{transform:rotate(180deg)}
+.xbody{padding:0 12px 12px;display:none}
+.open>.xbody{display:block}
+.fb{font:700 10px var(--body);letter-spacing:.08em;padding:2px 8px;border-radius:5px;border:1px solid;text-transform:uppercase}
+.fb.Horde{color:#f87171;border-color:#8b1a1a;background:#8b1a1a33} .fb.Alliance{color:#60a5fa;border-color:#1f4e9c;background:#1f4e9c33}
+.rb{font:700 10px var(--body);letter-spacing:.06em;padding:2px 7px;border-radius:5px;border:1px solid;text-transform:uppercase;white-space:nowrap}
+.rb.Tank{color:#60a5fa;border-color:#1e4f8f;background:#1e4f8f33} .rb.Healer{color:#34d399;border-color:#0f6b4b;background:#0f6b4b33} .rb.DPS{color:#f87171;border-color:#8b1f1f;background:#8b1f1f33} .rb.Mixed{color:#d8b4fe;border-color:#5b2a9c;background:#5b2a9c33}
+.xsec{font-family:var(--display);font-size:12px;color:var(--gold);letter-spacing:.1em;text-transform:uppercase;display:flex;align-items:center;gap:8px;margin:10px 0 6px}
+.xsec::after{content:"";flex:1;height:1px;background:#4a3a22}
+.traits{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.traits li{background:#0f0c0a;border:1px solid #2d251c;border-radius:6px;padding:7px 9px;font-size:13px;line-height:1.4}
+.traits li b{color:var(--gold);display:block;font-size:13.5px}
+.cls{border:1px solid #4a3a22;border-radius:8px;background:#0f0c0a;margin-bottom:6px;overflow:hidden}
+.cls>.xhead{padding:8px 10px}
+.cls>.xhead h3{font-size:15px}
+.cls .xbody{padding:0 8px 8px}
+.spec{display:grid;grid-template-columns:36px 1fr;gap:8px;align-items:center;padding:6px 6px;border-top:1px solid #2d251c;font-size:13px}
+.spec img{width:36px;height:36px;border-radius:6px;object-fit:cover;object-position:50% 20%;border:1px solid var(--pc,#4a3a22)}
+.spec .sn{font-weight:700;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.spec .sd{color:var(--muted);font-size:12.5px}
+.racerow{display:flex;align-items:center;gap:8px;padding:6px 8px;border-top:1px solid #2d251c;font-size:13px;background:none;border-left:0;border-right:0;border-bottom:0;width:100%;color:var(--fg);text-align:left;font-family:inherit;cursor:pointer}
+.racerow .fb{margin-left:auto}
+.cdesc{font-size:13px;color:var(--muted);margin:0 0 6px;line-height:1.45}
+@media (min-width:700px){#raceList.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start} #raceList.grid .xcard{margin:0}}
+
 footer{margin-top:24px;color:var(--muted);font-size:12px;text-align:center}
 </style>
 </head>
@@ -213,7 +247,7 @@ footer{margin-top:24px;color:var(--muted);font-size:12px;text-align:center}
 <p class="sub" id="subline">All 406 spec pairings · graded A–F on Fun, Effectiveness and Ease · Launch Nov 4, 2026</p>
 </header>
 
-<div class="topbar"><button type="button" class="racebtn" id="openRaces">Races &amp; Racials</button><button type="button" class="racebtn" id="openHow">How Ratings Work</button></div>
+<div class="topbar"><button type="button" class="racebtn" id="openRaces">Race &amp; Class Explorer</button><button type="button" class="racebtn" id="openHow">How Ratings Work</button></div>
 <div class="modal" id="howModal" hidden><div class="sheet" role="dialog" aria-label="How ratings work"><div class="head"><h2>How Ratings Work</h2><button type="button" class="x" id="closeHow" aria-label="Close">×</button></div>
 <p class="note"><b>Grades:</b> A = 5, B = 4, C = 3, D = 2, F = 1. The overall grade is the average of the category scores: 4.5+ A, 3.5–4.49 B, 2.5–3.49 C, 1.5–2.49 D, below 1.5 F. Sorting still uses the underlying numbers.</p>
 <p class="note">Every score is a 1–5 rating built from weighted factors: rate each factor 1–5, multiply by its weight, add them up, round to the nearest whole number. The same rubric is applied to every spec and pairing. Scores are judgments about level-60 play with comparable gear, not measured win rates.</p>
@@ -265,7 +299,10 @@ footer{margin-top:24px;color:var(--muted);font-size:12px;text-align:center}
 <p class="note">Duo grades come from the players' own assessments. Solo grades and the one-line rationales are Claude's starting estimates from classic-era mechanics plus the latest credible Forever reporting, with estimates kept distinct from verified mechanics. Revise them freely once you have played.</p>
 </div></div>
 <div class="mode"><button type="button" id="mDuo" class="on">DUO</button><button type="button" id="mSolo">SOLO</button></div>
-<div class="modal" id="raceModal" hidden><div class="sheet" role="dialog" aria-label="Races and racials"><div class="head"><h2 id="raceTitle">Horde Races</h2><button type="button" class="x" id="closeRaces" aria-label="Close">×</button></div><div class="fac" style="margin-bottom:10px"><button type="button" id="fH" class="h on">HORDE</button><button type="button" id="fA" class="a">ALLIANCE</button></div><p class="note" id="raceNote"></p><div id="raceList"></div></div></div>
+<div class="modal" id="raceModal" hidden><div class="sheet" role="dialog" aria-label="Race and Class Explorer"><div class="head"><div style="flex:1"><h2 style="margin:0">Race &amp; Class Explorer</h2><div class="sub" style="font-size:12px">Discover your path in Azeroth</div></div><button type="button" class="x" id="closeRaces" aria-label="Close">×</button></div>
+<div class="mode xtog"><button type="button" id="xRaces" class="on">RACES</button><button type="button" id="xClasses">CLASSES</button></div>
+<p class="note" id="raceNote"></p>
+<div id="raceList"></div></div></div></div>
 
 <div class="filters" id="duoFilters">
 <div class="who">
@@ -472,16 +509,38 @@ document.getElementById("copyAll").onclick=()=>{if(!Object.keys(saved).length)re
 document.getElementById("showAll").onclick=()=>{if(!Object.keys(saved).length)return toast("Nothing saved yet");showExport(exportText())};
 document.getElementById("clearAll").onclick=()=>{saved={};persist();document.getElementById("exportBox").hidden=true;render();toast("Cleared")};
 const CLASSCOL={"Warrior":"#C69B6D","Mage":"#3FC7EB","Warlock":"#8788EE","Rogue":"#FFF468","Hunter":"#AAD372","Druid":"#FF7C0A","Shaman":"#0070DD","Paladin":"#F48CBA","Priest":"#FFFFFF"};
-function renderFaction(){
-  const h=state.faction==="Horde";
-  document.getElementById("fH").classList.toggle("on",h);document.getElementById("fA").classList.toggle("on",!h);
-  document.getElementById("raceTitle").textContent=state.faction+" Races";
-  document.getElementById("raceNote").textContent=RACES.asof;
-  document.getElementById("raceList").innerHTML=RACES[state.faction].map(r=>`<div class="race"><h3>${esc(r.race)}</h3><div class="chips">${r.classes.map(c=>`<span class="chip" style="color:${CLASSCOL[c]}"><img class="ci" src="${ICON}${CICON[c]}.webp" alt="">${c}</span>`).join("")}</div><ul>${r.racials.map(([n,d])=>`<li><b>${esc(n)}</b> — ${esc(d)}</li>`).join("")}</ul></div>`).join("");
-  try{localStorage.setItem("hordeFaction",state.faction)}catch(e){}
+const XP={"raceDesc": {"Orc": "Once-peaceful shamanic people from Draenor who freed themselves from demonic corruption and now fight for honor.", "Undead": "Forsaken freed from the Lich King, seeking vengeance against the Scourge on their own terms.", "Tauren": "Guardians of natural balance who joined the Horde to repay a debt to the orcs.", "Troll": "The Darkspear tribe, driven from its jungle home and now holding a respected place in the Horde.", "Skyborne (Windshaper)": "Shen'dorei descendants who gained elemental skysight and seek their missing wind-spirit mentors.", "Human": "A young, versatile race of strong kingdoms seeking to restore its former glory.", "Dwarf": "Scholarly, artifact-hunting people who turned from earthly riches to ancient knowledge.", "Night Elf": "Survivors of an ancient forest empire, emerged from isolation to face the Burning Legion again.", "Gnome": "Small but brilliant inventors whose lost city of Gnomeregan was a steam-technology marvel.", "Skyborne (High Order)": "Descendants of Highborne scholars who aim to regain lost arcane knowledge."}, "classOrder": ["Warrior", "Paladin", "Hunter", "Rogue", "Priest", "Shaman", "Mage", "Warlock", "Druid"], "classes": {"Warrior": {"roles": ["Tank", "DPS"], "desc": "Plate-armored fighters who build rage in combat and turn it into crushing weapon attacks or an unbreakable defense.", "specs": [["Arms", "DPS", "Powerful, deliberate weapon attacks."], ["Fury", "DPS", "Fast, relentless melee combat."], ["Protection", "Tank", "Shields, defense, and enemy control."]]}, "Paladin": {"roles": ["Tank", "Healer", "DPS"], "desc": "Holy knights who wield the Light to heal, protect, or smite, with blessings and auras that strengthen the whole group.", "specs": [["Holy", "Healer", "Restores allies with the power of the Light."], ["Protection", "Tank", "Defends allies with holy magic and armor."], ["Retribution", "DPS", "Combines melee weapons with holy damage."]]}, "Hunter": {"roles": ["DPS"], "desc": "Ranged marksmen who fight beside a tamed beast, laying traps and controlling distance.", "specs": [["Beast Mastery", "DPS", "Fights alongside a powerful animal companion."], ["Marksmanship", "DPS", "Focuses on precise ranged weapon damage."], ["Survival", "DPS", "Uses traps and close-range survival tactics."]]}, "Rogue": {"roles": ["DPS"], "desc": "Stealthy melee assassins who pick their fights, open from the shadows, and finish with combo points.", "specs": [["Assassination", "DPS", "Uses poisons and sustained lethal attacks."], ["Combat", "DPS", "Specializes in direct and sustained melee combat."], ["Subtlety", "DPS", "Uses stealth, positioning, and surprise attacks."]]}, "Priest": {"roles": ["Healer", "DPS"], "desc": "Masters of the Light and the Shadow, healing and shielding allies or draining enemies with dark magic.", "specs": [["Discipline", "Healer", "Protects and heals allies with divine magic."], ["Holy", "Healer", "Specializes in powerful restorative spells."], ["Shadow", "DPS", "Uses dark magic and sustained magical damage."]]}, "Shaman": {"roles": ["Healer", "DPS"], "desc": "Spiritual leaders who call on the elements through totems, lightning, and empowered weapons.", "specs": [["Elemental", "DPS", "Strikes enemies with lightning and elemental spells."], ["Enhancement", "DPS", "Empowers melee attacks with elemental energy."], ["Restoration", "Healer", "Heals allies using water magic and totems."]]}, "Mage": {"roles": ["DPS"], "desc": "Cloth-wearing spellcasters who control the battlefield with arcane, fire, and frost magic.", "specs": [["Arcane", "DPS", "Channels powerful arcane magic."], ["Fire", "DPS", "Burns enemies with explosive fire spells."], ["Frost", "DPS", "Controls and damages enemies with freezing magic."]]}, "Warlock": {"roles": ["DPS"], "desc": "Wielders of fel and shadow who command demons and wear enemies down with curses and fear.", "specs": [["Affliction", "DPS", "Weakens enemies with curses and damage over time."], ["Demonology", "DPS", "Uses summoned demons and demonic powers."], ["Destruction", "DPS", "Unleashes powerful destructive spells."]]}, "Druid": {"roles": ["Tank", "Healer", "DPS"], "desc": "Shapeshifting keepers of nature who can fill any role by changing form.", "specs": [["Balance", "DPS", "Uses nature and celestial magic at range."], ["Feral Combat", "Tank / DPS", "Shapeshifts into bears for tanking or cats for melee damage."], ["Restoration", "Healer", "Uses nature magic and healing-over-time spells."]]}}};
+const CHEV='<svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
+const ALLRACES=[...RACES.Horde.map(r=>({...r,faction:"Horde"})),...RACES.Alliance.map(r=>({...r,faction:"Alliance"}))];
+const SPECIMG={};Object.keys(SPECS).forEach(s=>{SPECIMG[s]=SPECS[s].img});
+function specPortrait(cls,spec){const n=spec==="Feral Combat"?"Feral Cat Druid":`${spec} ${cls}`;const u=SPECIMG[n];return u?`<img src="${u}" alt="" loading="lazy" style="--pc:${CLASSCOL[cls]}">`:`<span></span>`}
+function roleBadge(r){const k=r.includes("/")?"Mixed":r;return `<span class="rb ${k}">${r}</span>`}
+function classAccordion(cls,opts){const c=XP.classes[cls];
+  return `<div class="cls"><button type="button" class="xhead" data-acc>${`<img class="ci big" src="${ICON}${CICON[cls]}.webp" alt="" style="--pc:${CLASSCOL[cls]};width:36px;height:36px">`}<h3 style="color:${CLASSCOL[cls]}">${cls}</h3>${c.roles.map(roleBadge).join(" ")}${CHEV}</button><div class="xbody">${opts&&opts.desc?`<p class="cdesc">${c.desc}</p>`:""}${c.specs.map(([n,r,d])=>`<div class="spec">${specPortrait(cls,n)}<div><div class="sn">${n} ${roleBadge(r)}</div><div class="sd">${d}</div></div></div>`).join("")}</div></div>`}
+function raceCard(r,open){
+  return `<div class="xcard ${open?"open":""}" data-race="${esc(r.race)}"><button type="button" class="xhead" data-acc><div style="flex:1;min-width:0"><h3 style="font-family:var(--display)">${esc(r.race)}</h3><div style="margin:3px 0 4px"><span class="fb ${r.faction}">${r.faction}</span></div><div class="sub">${XP.raceDesc[r.race]||""}</div></div>${CHEV}</button>
+  <div class="xbody"><div class="xsec">Racial traits</div><ul class="traits">${r.racials.map(([n,d])=>`<li><b>${esc(n)}</b>${esc(d)}</li>`).join("")}</ul>
+  <div class="xsec">Available classes (${r.classes.length})</div>${XP.classOrder.filter(c=>r.classes.includes(c)).map(c=>classAccordion(c)).join("")}</div></div>`}
+function classCard(cls){const c=XP.classes[cls];const races=ALLRACES.filter(r=>r.classes.includes(cls));
+  return `<div class="xcard" data-class="${cls}"><button type="button" class="xhead" data-acc><img class="ci big" src="${ICON}${CICON[cls]}.webp" alt="" style="--pc:${CLASSCOL[cls]}"><div style="flex:1;min-width:0"><h3 style="color:${CLASSCOL[cls]}">${cls}</h3><div style="margin-top:3px">${c.roles.map(roleBadge).join(" ")}</div></div>${CHEV}</button>
+  <div class="xbody"><p class="cdesc">${c.desc}</p><div class="xsec">Specializations</div>${c.specs.map(([n,r,d])=>`<div class="spec">${specPortrait(cls,n)}<div><div class="sn">${n} ${roleBadge(r)}</div><div class="sd">${d}</div></div></div>`).join("")}
+  <div class="xsec">Playable races (${races.length})</div>${races.map(r=>`<button type="button" class="racerow" data-goto="${esc(r.race)}">${esc(r.race)}<span class="fb ${r.faction}">${r.faction}</span></button>`).join("")}</div></div>`}
+state.xview="races";
+function renderExplorer(openRace){
+  const list=document.getElementById("raceList");
+  document.getElementById("xRaces").classList.toggle("on",state.xview==="races");document.getElementById("xClasses").classList.toggle("on",state.xview!=="races");
+  document.getElementById("raceNote").textContent=state.xview==="races"?RACES.asof:"Nine classes, 27 specializations. Tap a class for its specs and every race that can play it; tap a race to jump to its racial traits.";
+  list.className="grid";
+  list.innerHTML=state.xview==="races"?ALLRACES.map(r=>raceCard(r,r.race===openRace)).join(""):XP.classOrder.map(classCard).join("");
+  if(openRace){const el=list.querySelector(`[data-race="${CSS.escape(openRace)}"]`);if(el)el.scrollIntoView({block:"start"})}
 }
-document.getElementById("fH").onclick=()=>{state.faction="Horde";renderFaction()};
-document.getElementById("fA").onclick=()=>{state.faction="Alliance";renderFaction()};
+document.getElementById("raceList").addEventListener("click",e=>{
+  const go=e.target.closest("[data-goto]");if(go){state.xview="races";renderExplorer(go.dataset.goto);return}
+  const h=e.target.closest("[data-acc]");if(!h)return;h.parentElement.classList.toggle("open");
+});
+document.getElementById("xRaces").onclick=()=>{state.xview="races";renderExplorer()};
+document.getElementById("xClasses").onclick=()=>{state.xview="classes";renderExplorer()};
+function renderFaction(){renderExplorer()}
 const modal=document.getElementById("raceModal");
 document.getElementById("openRaces").onclick=()=>{modal.hidden=false};
 document.getElementById("closeRaces").onclick=()=>{modal.hidden=true};
