@@ -4,11 +4,11 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>WoW Forever PvP Planner · Games by Cody J. Boillot</title>
-<meta name="description" content="Grade every two-spec duo and every solo spec for World of Warcraft: Forever PvP, with race and racial notes." />
+<meta name="description" content="Grade every two-spec duo and every solo spec for World of Warcraft: Forever PvP with letter grades, spec portraits and race notes." />
 <meta name="author" content="Cody J. Boillot" />
 <meta property="og:type" content="website" />
 <meta property="og:title" content="WoW Forever PvP Planner · Games by Cody J. Boillot" />
-<meta property="og:description" content="Grade every two-spec duo and every solo spec for World of Warcraft: Forever PvP, with race and racial notes." />
+<meta property="og:description" content="Grade every two-spec duo and every solo spec for World of Warcraft: Forever PvP with letter grades, spec portraits and race notes." />
 <meta property="og:url" content="https://codyboillot.com/games/duoplanner/" />
 <meta property="og:image" content="https://codyboillot.com/assets/games/duoplanner-cover.webp" />
 <meta property="og:image:width" content="1600" />
@@ -48,9 +48,16 @@
             <p class="game-sub">Pick your duo before the queue pops.</p>
           </div>
         </header>
-        <a class="czc-cover" href="../../DuoPlanner/" aria-label="Open the PvP Planner"><img src="../../assets/games/duoplanner-cover.webp" alt="PvP Planner cover: five color-coded score tiles on dark stone" loading="lazy" width="1600" height="900"></a>
+        <a class="czc-cover" href="../../DuoPlanner/" aria-label="Open the PvP Planner"><img src="../../assets/games/duoplanner-cover.webp" alt="PvP Planner: a duo card and two solo cards with portraits and letter-grade shields" loading="lazy" width="1600" height="900"></a>
         <p>Built for the launch of World of Warcraft: Forever, the PvP Planner grades every one of the 406 possible two-spec pairings across all 28 specializations on Fun, Effectiveness and Ease, each 1 to 5, for a color-coded total out of 15. Every pairing carries a one-sentence read on why it scores the way it does, grounded in the actual kit: Shatter combos, Pain Suppression, Windfury, Viper Sting, Fear.</p>
-        <p>Filter each player by role (Healer, Tank, Melee, Ranged) or exact spec, sort by any axis, and the Top Picks section recalculates for whatever you have selected. A Solo mode grades each spec alone on Fun, Ease, Leveling and solo PvP out of 20. Save the combos you are weighing, then copy them as a ready-made prompt to paste into an AI for a deeper write-up. A Races &amp; Racials sheet covers both factions with the latest pre-launch racial tuning.</p>
+        <p>Every spec has its own portrait, and every grade is a shield badge with a five-segment bar, colored by the grade alone: A blue, B green, C yellow, D red, F gray. Filter each player by role (Healer, Tank, Melee, Ranged) or exact spec, sort by any axis, and the Top Picks section recalculates for whatever you have selected. A Solo mode grades each spec alone on Fun, Ease, Leveling and solo PvP out of 20. Save the combos you are weighing, then copy them as a ready-made prompt to paste into an AI for a deeper write-up. A Races &amp; Racials sheet covers both factions with the latest pre-launch racial tuning.</p>
+                <div class="czc-gallery" role="list">
+          <a class="czc-thumb" href="../../assets/games/duoplanner-duo.webp" data-full="../../assets/games/duoplanner-duo.webp" aria-label="Expand: Duo cards with Player 1 and Player 2 portraits, overall grade shield and Fun, Effective and Ease badges"><img src="../../assets/games/duoplanner-duo.webp" alt="Duo cards: Player 1 and Player 2 portraits side by side, an overall grade shield between them and three graded badges below" loading="lazy" width="780" height="1688"></a>
+          <a class="czc-thumb" href="../../assets/games/duoplanner-solo.webp" data-full="../../assets/games/duoplanner-solo.webp" aria-label="Expand: Solo cards with a full-height portrait, overall grade and four graded badges"><img src="../../assets/games/duoplanner-solo.webp" alt="Solo cards: a full-height spec portrait on the left, overall grade shield and Fun, Ease, Level and PvP badges" loading="lazy" width="780" height="1688"></a>
+          <a class="czc-thumb" href="../../assets/games/duoplanner-home.webp" data-full="../../assets/games/duoplanner-home.webp" aria-label="Expand: Home view with role filters for both players and the Top Picks section"><img src="../../assets/games/duoplanner-home.webp" alt="Home view: role filter buttons for Player 1 and Player 2, spec dropdowns and sort control" loading="lazy" width="780" height="1688"></a>
+          <a class="czc-thumb" href="../../assets/games/duoplanner-races.webp" data-full="../../assets/games/duoplanner-races.webp" aria-label="Expand: Races and Racials sheet with the Horde and Alliance switch"><img src="../../assets/games/duoplanner-races.webp" alt="Races and Racials sheet listing each race, its classes and current racial abilities" loading="lazy" width="780" height="1688"></a>
+        </div>
+        <p class="czc-hint">Click any picture to expand it.</p>
         <div class="chips"><span class="chip">Vanilla JS</span><span class="chip">Single file, no build</span><span class="chip">406 duos · 28 solo specs</span><span class="chip">Role &amp; spec filters</span><span class="chip">Save &amp; export to AI</span><span class="chip">Phone first</span></div>
         <a class="btn btn-primary game-cta" href="../../DuoPlanner/">Open the Planner</a>
       </article>
@@ -70,6 +77,14 @@
 
 </main>
 
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Expanded image">
+  <button class="lb-close" type="button" aria-label="Close">✕</button>
+  <button class="lb-prev" type="button" aria-label="Previous image">‹</button>
+  <img alt="">
+  <button class="lb-next" type="button" aria-label="Next image">›</button>
+  <figcaption></figcaption>
+</div>
+
 <script>
   (function () {
     var els = document.querySelectorAll(".reveal");
@@ -78,6 +93,33 @@
     els.forEach(function (e) { io.observe(e); });
   })();
   document.getElementById("yr").textContent = new Date().getFullYear();
+  // Lightbox for the addon's pictures: click to expand, arrows to browse, Esc to close
+  (function () {
+    var box = document.getElementById("lightbox");
+    if (!box) return;
+    var img = box.querySelector("img"), cap = box.querySelector("figcaption");
+    var items = Array.prototype.slice.call(document.querySelectorAll(".czc-thumb"));
+    var i = 0, last = null;
+    function show(n) {
+      i = (n + items.length) % items.length;
+      var a = items[i], t = a.querySelector("img");
+      img.src = a.getAttribute("data-full") || a.href; img.alt = t ? t.alt : "";
+      cap.textContent = t ? t.alt : "";
+    }
+    function open(n) { last = document.activeElement; show(n); box.classList.add("open"); document.body.style.overflow = "hidden"; box.querySelector(".lb-close").focus(); }
+    function close() { box.classList.remove("open"); document.body.style.overflow = ""; if (last) last.focus(); }
+    items.forEach(function (a, n) { a.addEventListener("click", function (e) { e.preventDefault(); open(n); }); });
+    box.querySelector(".lb-close").addEventListener("click", close);
+    box.querySelector(".lb-prev").addEventListener("click", function () { show(i - 1); });
+    box.querySelector(".lb-next").addEventListener("click", function () { show(i + 1); });
+    box.addEventListener("click", function (e) { if (e.target === box) close(); });
+    document.addEventListener("keydown", function (e) {
+      if (!box.classList.contains("open")) return;
+      if (e.key === "Escape") close();
+      else if (e.key === "ArrowLeft") show(i - 1);
+      else if (e.key === "ArrowRight") show(i + 1);
+    });
+  })();
 </script>
 </body>
 </html>
