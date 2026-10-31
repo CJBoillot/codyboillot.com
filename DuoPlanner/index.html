@@ -87,6 +87,11 @@ select{width:100%;font:600 14px var(--body);padding:7px 8px;border-radius:6px;bo
 .race ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:5px;font-size:13px}
 .race li b{color:var(--gold)}
 .note{font-size:12px;color:var(--muted);margin:0 0 10px}
+.rub{width:100%;border-collapse:collapse;font-size:13px;margin:4px 0 8px}
+.rub td{padding:4px 6px;border-top:1px solid var(--line);vertical-align:top}
+.rub td:nth-child(2){color:var(--gold);font-weight:700;white-space:nowrap;text-align:right}
+.rub td:first-child{font-weight:600;white-space:nowrap}
+.race h3 small{display:block;font:400 12px var(--body);margin-top:2px}
 footer{margin-top:24px;color:var(--muted);font-size:12px;text-align:center}
 </style>
 </head>
@@ -98,7 +103,56 @@ footer{margin-top:24px;color:var(--muted);font-size:12px;text-align:center}
 <p class="sub" id="subline">All 406 spec pairings · Fun + Effectiveness + Ease = Total /15 · Launch Nov 4, 2026</p>
 </header>
 
-<div class="topbar"><button type="button" class="racebtn" id="openRaces">Races &amp; Racials</button></div>
+<div class="topbar"><button type="button" class="racebtn" id="openRaces">Races &amp; Racials</button><button type="button" class="racebtn" id="openHow">How Ratings Work</button></div>
+<div class="modal" id="howModal" hidden><div class="sheet" role="dialog" aria-label="How ratings work"><div class="head"><h2>How Ratings Work</h2><button type="button" class="x" id="closeHow" aria-label="Close">×</button></div>
+<p class="note">Every score is a 1–5 rating built from weighted factors: rate each factor 1–5, multiply by its weight, add them up, round to the nearest whole number. The same rubric is applied to every spec and pairing. Scores are judgments about level-60 play with comparable gear, not measured win rates.</p>
+
+<div class="race"><h3>Duo Total = Fun + Effectiveness + Ease <span class="chip" style="color:var(--gold)">max 15</span></h3>
+<ul>
+<li><b>13–15</b> Excellent · <b>11–12</b> Strong · <b>9–10</b> Average · <b>6–8</b> Weak · <b>3–5</b> Poor</li>
+<li>A 15 has to be extremely fun, extremely effective, and very easy for two people to run together. Hard pairings can still be fun and effective; Ease is never flipped into a bonus for difficulty.</li>
+</ul></div>
+
+<div class="race"><h3>Fun <small style="color:var(--muted)">How enjoyable is this for two people playing together?</small></h3>
+<table class="rub"><tr><td>Combat excitement</td><td>30%</td><td>Exciting abilities, satisfying hits, engaging fights</td></tr>
+<tr><td>Duo interaction</td><td>30%</td><td>How often both players actively support and complement each other</td></tr>
+<tr><td>Gameplay variety</td><td>20%</td><td>Different strategies, encounters and tactical options</td></tr>
+<tr><td>Role satisfaction</td><td>20%</td><td>Both players feel valuable, active and important</td></tr></table>
+<ul><li><b>5</b> Both roles engaging with exciting synergy · <b>4</b> Excellent cooperation, occasionally repetitive · <b>3</b> Enjoyable but limited variety or interaction · <b>2</b> Repetitive, or one player often feels sidelined · <b>1</b> Little cooperation or engagement</li></ul></div>
+
+<div class="race"><h3>Effectiveness <small style="color:var(--muted)">How successful is the pair in coordinated PvP?</small></h3>
+<table class="rub"><tr><td>Kill pressure</td><td>30%</td><td>Damage output and the ability to secure kills</td></tr>
+<tr><td>Survivability</td><td>25%</td><td>Healing, mitigation, defensive cooldowns, escapes</td></tr>
+<tr><td>Crowd control</td><td>20%</td><td>Stuns, fears, roots, silences, interrupts, dispels</td></tr>
+<tr><td>Mobility &amp; objectives</td><td>15%</td><td>Chasing, escaping, repositioning, contesting flags and bases</td></tr>
+<tr><td>Matchup versatility</td><td>10%</td><td>Performance against different enemy classes and comps</td></tr></table>
+<ul><li>Judged for world PvP, battlegrounds and small skirmishes. No rated 2v2 arena is assumed in Forever.</li>
+<li><b>5</b> Excellent offensive and defensive synergy · <b>4</b> Strong with manageable weaknesses · <b>3</b> Competitive with noticeable limits · <b>2</b> Significant weaknesses vs. common opponents · <b>1</b> Poor synergy, major disadvantages</li></ul></div>
+
+<div class="race"><h3>Ease <small style="color:var(--muted)">How easy is this duo to learn and play well? 5 = easiest.</small></h3>
+<table class="rub"><tr><td>Class simplicity</td><td>30%</td><td>Ability complexity, rotations, resource management, keybinds</td></tr>
+<tr><td>Coordination needed</td><td>30%</td><td>How much timing and communication the pairing demands</td></tr>
+<tr><td>Forgiveness</td><td>25%</td><td>Recovering from mistakes or badly timed cooldowns</td></tr>
+<tr><td>Learning curve</td><td>15%</td><td>How fast two average players become competent together</td></tr></table>
+<ul><li><b>5</b> Simple coordination, forgiving · <b>4</b> Some coordination, straightforward mechanics · <b>3</b> Needs practice and awareness · <b>2</b> Precise timing and complex mechanics · <b>1</b> Extremely demanding and unforgiving</li></ul></div>
+
+<div class="race"><h3>Solo mode = Fun + Ease + Leveling + Solo PvP <span class="chip" style="color:var(--gold)">max 20</span></h3>
+<ul>
+<li><b>17–20</b> Excellent · <b>14–16</b> Strong · <b>11–13</b> Average · <b>8–10</b> Weak · <b>4–7</b> Poor</li>
+<li>Solo scores are kept completely separate from duo scores and never feed into a pairing's 15-point total.</li>
+<li><b>Fun</b> and <b>Ease</b> use the rubrics above, applied to one player with no partner.</li>
+<li><b>Solo PvP</b> uses the Effectiveness rubric for a player fighting alone: can you both survive and finish a kill without help?</li>
+</ul>
+<h3 style="margin-top:10px">Leveling <small style="color:var(--muted)">How efficiently and comfortably does this spec level 1–60 alone?</small></h3>
+<table class="rub"><tr><td>Kill speed</td><td>30%</td><td>How quickly normal enemies die</td></tr>
+<tr><td>Solo survivability</td><td>25%</td><td>Surviving tough enemies without help</td></tr>
+<tr><td>Downtime</td><td>20%</td><td>Time spent eating, drinking, healing or regenerating</td></tr>
+<tr><td>Quest capability</td><td>15%</td><td>Handling multiple enemies and quest objectives alone</td></tr>
+<tr><td>Leveling toolkit</td><td>10%</td><td>Mobility, early ability access, utility, power progression</td></tr></table>
+<ul><li>Judged across the whole 1–60 journey, not just the level-60 kit. A great PvP spec can still level poorly, and a tank or healer can score low here while scoring high on duo Effectiveness.</li></ul></div>
+
+<p class="note">Duo grades come from the players' own assessments. Solo grades and the one-line rationales are Claude's starting estimates from classic-era mechanics plus the latest credible Forever reporting, with estimates kept distinct from verified mechanics. Revise them freely once you have played.</p>
+</div></div>
 <div class="mode"><button type="button" id="mDuo" class="on">DUO</button><button type="button" id="mSolo">SOLO</button></div>
 <div class="modal" id="raceModal" hidden><div class="sheet" role="dialog" aria-label="Races and racials"><div class="head"><h2 id="raceTitle">Horde Races</h2><button type="button" class="x" id="closeRaces" aria-label="Close">×</button></div><div class="fac" style="margin-bottom:10px"><button type="button" id="fH" class="h on">HORDE</button><button type="button" id="fA" class="a">ALLIANCE</button></div><p class="note" id="raceNote"></p><div id="raceList"></div></div></div>
 
@@ -288,7 +342,11 @@ const modal=document.getElementById("raceModal");
 document.getElementById("openRaces").onclick=()=>{modal.hidden=false};
 document.getElementById("closeRaces").onclick=()=>{modal.hidden=true};
 modal.onclick=e=>{if(e.target===modal)modal.hidden=true};
-document.addEventListener("keydown",e=>{if(e.key==="Escape")modal.hidden=true});
+const howM=document.getElementById("howModal");
+document.getElementById("openHow").onclick=()=>{howM.hidden=false};
+document.getElementById("closeHow").onclick=()=>{howM.hidden=true};
+howM.onclick=e=>{if(e.target===howM)howM.hidden=true};
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){modal.hidden=true;howM.hidden=true}});
 buildPerson("A");buildPerson("B");buildSoloRoles();renderFaction();render();
 </script>
 </body>
