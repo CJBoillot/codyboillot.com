@@ -204,12 +204,12 @@ select,.bar select{background:linear-gradient(180deg,#1f1915,#14100d) url("data:
 /* ===== Explorer ===== */
 .xtog{max-width:none;margin-bottom:10px}
 .xcard{border:1px solid #6b5422;border-radius:10px;background:linear-gradient(180deg,#1b1612,#120e0b);margin-bottom:10px;overflow:hidden}
-.xhead{display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer;width:100%;background:none;border:0;color:var(--fg);text-align:left;font:inherit}
+.xhead{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;cursor:pointer;width:100%;background:none;border:0;color:var(--fg);text-align:left;font:inherit}
 .xhead:focus-visible{outline:2px solid var(--gold);outline-offset:-2px}
 .xhead h3{font-size:18px;margin:0;color:var(--fg);letter-spacing:.04em;text-transform:uppercase}
 .xhead .sub{font-size:13px;color:var(--muted);font-style:italic}
 .xhead .ci.big{width:44px;height:44px}
-.chev{margin-left:auto;color:var(--gold);transition:transform .15s;flex-shrink:0}
+.chev{margin-left:auto;color:var(--gold);transition:transform .15s;flex-shrink:0;align-self:center}
 .open>.xhead .chev{transform:rotate(180deg)}
 .xbody{padding:0 12px 12px;display:none}
 .open>.xbody{display:block}
@@ -223,7 +223,7 @@ select,.bar select{background:linear-gradient(180deg,#1f1915,#14100d) url("data:
 .traits li{background:#0f0c0a;border:1px solid #2d251c;border-radius:6px;padding:7px 9px;font-size:13px;line-height:1.4}
 .traits li b{color:var(--gold);display:block;font-size:13.5px}
 .cls{border:1px solid #4a3a22;border-radius:8px;background:#0f0c0a;margin-bottom:6px;overflow:hidden}
-.cls>.xhead{padding:8px 10px}
+.cls>.xhead{padding:8px 10px;align-items:center}
 .cls>.xhead h3{font-size:15px}
 .cls .xbody{padding:0 8px 8px}
 .spec{display:grid;grid-template-columns:36px 1fr;gap:8px;align-items:center;padding:6px 6px;border-top:1px solid #2d251c;font-size:13px}
@@ -242,6 +242,11 @@ select,.bar select{background:linear-gradient(180deg,#1f1915,#14100d) url("data:
 .panel .names .sic{width:26px;height:26px} .panel .names .si{width:26px;height:26px} .panel .names .ci.mini{width:14px;height:14px}
 .names b{grid-template-columns:auto 1fr;gap:12px}
 .rec li span.n{display:flex;align-items:center;flex-wrap:wrap;gap:2px}
+
+.rp{display:inline-flex;flex-shrink:0;align-self:flex-start;border-radius:8px;overflow:hidden;border:1px solid #6b5422;box-shadow:0 2px 6px #000a;background:#0b0908}
+.rp img{width:48px;height:48px;object-fit:cover;display:block}
+.rp img+img{border-left:1px solid #3d2f16}
+.rp.sm img{width:26px;height:26px} .rp.sm{border-radius:5px}
 
 footer{margin-top:24px;color:var(--muted);font-size:12px;text-align:center}
 </style>
@@ -521,6 +526,9 @@ document.getElementById("showAll").onclick=()=>{if(!Object.keys(saved).length)re
 document.getElementById("clearAll").onclick=()=>{saved={};persist();document.getElementById("exportBox").hidden=true;render();toast("Cleared")};
 const CLASSCOL={"Warrior":"#C69B6D","Mage":"#3FC7EB","Warlock":"#8788EE","Rogue":"#FFF468","Hunter":"#AAD372","Druid":"#FF7C0A","Shaman":"#0070DD","Paladin":"#F48CBA","Priest":"#FFFFFF"};
 const XP={"raceDesc": {"Orc": "Once-peaceful shamanic people from Draenor who freed themselves from demonic corruption and now fight for honor.", "Undead": "Forsaken freed from the Lich King, seeking vengeance against the Scourge on their own terms.", "Tauren": "Guardians of natural balance who joined the Horde to repay a debt to the orcs.", "Troll": "The Darkspear tribe, driven from its jungle home and now holding a respected place in the Horde.", "Skyborne (Windshaper)": "Shen'dorei descendants who gained elemental skysight and seek their missing wind-spirit mentors.", "Human": "A young, versatile race of strong kingdoms seeking to restore its former glory.", "Dwarf": "Scholarly, artifact-hunting people who turned from earthly riches to ancient knowledge.", "Night Elf": "Survivors of an ancient forest empire, emerged from isolation to face the Burning Legion again.", "Gnome": "Small but brilliant inventors whose lost city of Gnomeregan was a steam-technology marvel.", "Skyborne (High Order)": "Descendants of Highborne scholars who aim to regain lost arcane knowledge."}, "classOrder": ["Warrior", "Paladin", "Hunter", "Rogue", "Priest", "Shaman", "Mage", "Warlock", "Druid"], "classes": {"Warrior": {"roles": ["Tank", "DPS"], "desc": "Plate-armored fighters who build rage in combat and turn it into crushing weapon attacks or an unbreakable defense.", "specs": [["Arms", "DPS", "Powerful, deliberate weapon attacks."], ["Fury", "DPS", "Fast, relentless melee combat."], ["Protection", "Tank", "Shields, defense, and enemy control."]]}, "Paladin": {"roles": ["Tank", "Healer", "DPS"], "desc": "Holy knights who wield the Light to heal, protect, or smite, with blessings and auras that strengthen the whole group.", "specs": [["Holy", "Healer", "Restores allies with the power of the Light."], ["Protection", "Tank", "Defends allies with holy magic and armor."], ["Retribution", "DPS", "Combines melee weapons with holy damage."]]}, "Hunter": {"roles": ["DPS"], "desc": "Ranged marksmen who fight beside a tamed beast, laying traps and controlling distance.", "specs": [["Beast Mastery", "DPS", "Fights alongside a powerful animal companion."], ["Marksmanship", "DPS", "Focuses on precise ranged weapon damage."], ["Survival", "DPS", "Uses traps and close-range survival tactics."]]}, "Rogue": {"roles": ["DPS"], "desc": "Stealthy melee assassins who pick their fights, open from the shadows, and finish with combo points.", "specs": [["Assassination", "DPS", "Uses poisons and sustained lethal attacks."], ["Combat", "DPS", "Specializes in direct and sustained melee combat."], ["Subtlety", "DPS", "Uses stealth, positioning, and surprise attacks."]]}, "Priest": {"roles": ["Healer", "DPS"], "desc": "Masters of the Light and the Shadow, healing and shielding allies or draining enemies with dark magic.", "specs": [["Discipline", "Healer", "Protects and heals allies with divine magic."], ["Holy", "Healer", "Specializes in powerful restorative spells."], ["Shadow", "DPS", "Uses dark magic and sustained magical damage."]]}, "Shaman": {"roles": ["Healer", "DPS"], "desc": "Spiritual leaders who call on the elements through totems, lightning, and empowered weapons.", "specs": [["Elemental", "DPS", "Strikes enemies with lightning and elemental spells."], ["Enhancement", "DPS", "Empowers melee attacks with elemental energy."], ["Restoration", "Healer", "Heals allies using water magic and totems."]]}, "Mage": {"roles": ["DPS"], "desc": "Cloth-wearing spellcasters who control the battlefield with arcane, fire, and frost magic.", "specs": [["Arcane", "DPS", "Channels powerful arcane magic."], ["Fire", "DPS", "Burns enemies with explosive fire spells."], ["Frost", "DPS", "Controls and damages enemies with freezing magic."]]}, "Warlock": {"roles": ["DPS"], "desc": "Wielders of fel and shadow who command demons and wear enemies down with curses and fear.", "specs": [["Affliction", "DPS", "Weakens enemies with curses and damage over time."], ["Demonology", "DPS", "Uses summoned demons and demonic powers."], ["Destruction", "DPS", "Unleashes powerful destructive spells."]]}, "Druid": {"roles": ["Tank", "Healer", "DPS"], "desc": "Shapeshifting keepers of nature who can fill any role by changing form.", "specs": [["Balance", "DPS", "Uses nature and celestial magic at range."], ["Feral Combat", "Tank / DPS", "Shapeshifts into bears for tanking or cats for melee damage."], ["Restoration", "Healer", "Uses nature magic and healing-over-time spells."]]}}};
+const RIMG={"Orc":"orc","Undead":"undead","Tauren":"tauren","Troll":"troll","Skyborne (Windshaper)":"skyborne","Human":"human","Dwarf":"dwarf","Night Elf":"nightelf","Gnome":"gnome","Skyborne (High Order)":"skyborne"};
+const RACEIMG="../assets/duoplanner/races/";
+function racePair(r,cls){const k=RIMG[r];return k?`<span class="rp ${cls||""}"><img src="${RACEIMG}${k}-m.webp" alt="" loading="lazy"><img src="${RACEIMG}${k}-f.webp" alt="" loading="lazy"></span>`:""}
 const CHEV='<svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
 const ALLRACES=[...RACES.Horde.map(r=>({...r,faction:"Horde"})),...RACES.Alliance.map(r=>({...r,faction:"Alliance"}))];
 const SPECIMG={};Object.keys(SPECS).forEach(s=>{SPECIMG[s]=SPECS[s].img});
@@ -529,13 +537,13 @@ function roleBadge(r){const k=r.includes("/")?"Mixed":r;return `<span class="rb 
 function classAccordion(cls,opts){const c=XP.classes[cls];
   return `<div class="cls"><button type="button" class="xhead" data-acc>${`<img class="ci big" src="${ICON}${CICON[cls]}.webp" alt="" style="--pc:${CLASSCOL[cls]};width:36px;height:36px">`}<h3 style="color:${CLASSCOL[cls]}">${cls}</h3>${c.roles.map(roleBadge).join(" ")}${CHEV}</button><div class="xbody">${opts&&opts.desc?`<p class="cdesc">${c.desc}</p>`:""}${c.specs.map(([n,r,d])=>`<div class="spec">${specPortrait(cls,n)}<div><div class="sn">${short(n)} ${roleBadge(r)}</div><div class="sd">${d}</div></div></div>`).join("")}</div></div>`}
 function raceCard(r,open){
-  return `<div class="xcard ${open?"open":""}" data-race="${esc(r.race)}"><button type="button" class="xhead" data-acc><div style="flex:1;min-width:0"><h3 style="font-family:var(--display)">${esc(r.race)}</h3><div style="margin:3px 0 4px"><span class="fb ${r.faction}">${r.faction}</span></div><div class="sub">${XP.raceDesc[r.race]||""}</div></div>${CHEV}</button>
+  return `<div class="xcard ${open?"open":""}" data-race="${esc(r.race)}"><button type="button" class="xhead" data-acc>${racePair(r.race)}<div style="flex:1;min-width:0"><h3 style="font-family:var(--display)">${esc(r.race)}</h3><div style="margin:3px 0 4px"><span class="fb ${r.faction}">${r.faction}</span></div><div class="sub">${XP.raceDesc[r.race]||""}</div></div>${CHEV}</button>
   <div class="xbody"><div class="xsec">Racial traits</div><ul class="traits">${r.racials.map(([n,d])=>`<li><b>${esc(n)}</b>${esc(d)}</li>`).join("")}</ul>
   <div class="xsec">Available classes (${r.classes.length})</div>${XP.classOrder.filter(c=>r.classes.includes(c)).map(c=>classAccordion(c)).join("")}</div></div>`}
 function classCard(cls){const c=XP.classes[cls];const races=ALLRACES.filter(r=>r.classes.includes(cls));
   return `<div class="xcard" data-class="${cls}"><button type="button" class="xhead" data-acc><img class="ci big" src="${ICON}${CICON[cls]}.webp" alt="" style="--pc:${CLASSCOL[cls]}"><div style="flex:1;min-width:0"><h3 style="color:${CLASSCOL[cls]}">${cls}</h3><div style="margin-top:3px">${c.roles.map(roleBadge).join(" ")}</div></div>${CHEV}</button>
   <div class="xbody"><p class="cdesc">${c.desc}</p><div class="xsec">Specializations</div>${c.specs.map(([n,r,d])=>`<div class="spec">${specPortrait(cls,n)}<div><div class="sn">${short(n)} ${roleBadge(r)}</div><div class="sd">${d}</div></div></div>`).join("")}
-  <div class="xsec">Playable races (${races.length})</div>${races.map(r=>`<button type="button" class="racerow" data-goto="${esc(r.race)}">${esc(r.race)}<span class="fb ${r.faction}">${r.faction}</span></button>`).join("")}</div></div>`}
+  <div class="xsec">Playable races (${races.length})</div>${races.map(r=>`<button type="button" class="racerow" data-goto="${esc(r.race)}">${racePair(r.race,"sm")}${esc(r.race)}<span class="fb ${r.faction}">${r.faction}</span></button>`).join("")}</div></div>`}
 state.xview="races";
 function renderExplorer(openRace){
   const list=document.getElementById("raceList");
