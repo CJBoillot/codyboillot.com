@@ -104,6 +104,8 @@ select{width:100%;font:600 14px var(--body);padding:7px 8px;border-radius:6px;bo
 .panel .ov{position:absolute;left:0;right:0;top:0;min-height:58px;padding:7px 8px 10px;background:linear-gradient(180deg,#0b0908f5 0,#0b0908d8 70%,transparent 100%);z-index:2}
 .panel .names b{font-size:13px;line-height:1.15;grid-template-columns:26px 1fr;gap:6px}
 .panel .names .ci{width:26px;height:26px}
+.chip .ci{width:16px;height:16px;box-shadow:none;vertical-align:-3px;margin-right:4px}
+.hdr-ico img{border-radius:50%}
 .panel .names small{font-size:10.5px;margin-top:3px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
 .trio .mid{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;margin:0}
 .trio .mid svg{width:22px;height:22px;color:var(--gold);filter:drop-shadow(0 1px 2px #000)}
@@ -143,7 +145,7 @@ select{width:100%;font:600 14px var(--body);padding:7px 8px;border-radius:6px;bo
 .race h3 small{display:block;font:400 12px var(--body);margin-top:2px}
 
 /* ===== Design-reference components ===== */
-.ci{width:30px;height:30px;border-radius:7px;flex-shrink:0;box-shadow:0 1px 4px #000a;border:1px solid var(--pc,var(--gold2));object-fit:cover}
+.ci{width:30px;height:30px;border-radius:50%;flex-shrink:0;box-shadow:0 0 0 1.5px var(--pc,var(--gold2)),0 2px 5px #000a;object-fit:cover;background:#0b0908}
 .ri{width:26px;height:24px;object-fit:contain;flex-shrink:0;display:block}
 .mi{display:inline-flex;width:13px;height:13px;filter:drop-shadow(0 1px 1px #0009)} .mi svg{width:13px;height:13px}
 .roles button{display:inline-flex;align-items:center;gap:7px;overflow:visible;line-height:1;background:linear-gradient(180deg,#1f1915,#14100d);border:1px solid #4a3a22;color:var(--fg);font-weight:600;font-size:12px;padding:4px 9px 4px 5px;border-radius:8px;min-height:36px}
@@ -475,7 +477,7 @@ function renderFaction(){
   document.getElementById("fH").classList.toggle("on",h);document.getElementById("fA").classList.toggle("on",!h);
   document.getElementById("raceTitle").textContent=state.faction+" Races";
   document.getElementById("raceNote").textContent=RACES.asof;
-  document.getElementById("raceList").innerHTML=RACES[state.faction].map(r=>`<div class="race"><h3>${esc(r.race)}</h3><div class="chips">${r.classes.map(c=>`<span class="chip" style="color:${CLASSCOL[c]}">${c}</span>`).join("")}</div><ul>${r.racials.map(([n,d])=>`<li><b>${esc(n)}</b> — ${esc(d)}</li>`).join("")}</ul></div>`).join("");
+  document.getElementById("raceList").innerHTML=RACES[state.faction].map(r=>`<div class="race"><h3>${esc(r.race)}</h3><div class="chips">${r.classes.map(c=>`<span class="chip" style="color:${CLASSCOL[c]}"><img class="ci" src="${ICON}${CICON[c]}.webp" alt="">${c}</span>`).join("")}</div><ul>${r.racials.map(([n,d])=>`<li><b>${esc(n)}</b> — ${esc(d)}</li>`).join("")}</ul></div>`).join("");
   try{localStorage.setItem("hordeFaction",state.faction)}catch(e){}
 }
 document.getElementById("fH").onclick=()=>{state.faction="Horde";renderFaction()};
