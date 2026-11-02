@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#070d19">
+<title>Cody's SC2 Field Manual</title>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@0,500;0,700;0,800;1,700&family=Barlow:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: one column, phone-first. Dark holo-console look taken from the source art; semantic color is the information. */
+:root{
+  --bg:#070d19; --bg2:#0d172a; --panel:#111e36; --panel2:#162846; --line:#2a4a78;
+  --fg:#e9f1ff; --muted:#a9bddb; --dim:#7f94b8;
+  --good:#1f9d3f; --good-bg:#0f3d1f; --good-line:#3ddc68; --good-fg:#c6ffd6;
+  --bad:#c42b2b; --bad-bg:#4a1212; --bad-line:#ff5a5a; --bad-fg:#ffd6d6;
+  --info:#1f7fd6; --info-bg:#0e2f55; --info-line:#4fb3ff; --info-fg:#d2ecff;
+  --gold:#ffd34d; --gold-bg:#3d2e0a; --violet:#a855f7; --violet-bg:#2a1046; --violet-line:#c58bff;
+  --terran:#ff6b4a; --zerg:#c05cff; --protoss:#38a8ff;
+  --display:"Exo 2",system-ui,sans-serif; --body:"Barlow",system-ui,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:17px;line-height:1.4;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+img{max-width:100%}
+.wrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px;max-width:760px;margin:0 auto}
+h1,h2,h3,h4{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.15}
+h2{font-size:1.45rem;font-weight:800;text-transform:uppercase;letter-spacing:.02em;color:#fff;margin-top:8px}
+h3{font-size:1.15rem;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.03em}
+p{margin:0}
+.hero{position:relative;background:#030711}
+.hero img{display:block;width:100%;height:auto;object-fit:cover}
+.hero .t{padding:10px max(16px,env(safe-area-inset-right,0px)) 12px max(16px,env(safe-area-inset-left,0px));background:linear-gradient(#030711,var(--bg2))}
+.hero h1{font-size:1.55rem;font-weight:800;text-transform:uppercase;color:#fff;text-shadow:0 2px 8px #000}
+.hero h1 span{color:var(--gold)}
+.hero .sub{color:var(--muted);font-size:.95rem;font-style:italic}
+nav.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;background:var(--bg2);border-bottom:2px solid var(--line);padding:8px max(12px,env(safe-area-inset-left,0px)) 8px max(12px,env(safe-area-inset-right,0px))}
+nav.tabs .g{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;max-width:760px;margin:0 auto}
+nav.tabs a{display:flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:6px 4px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--fg);text-decoration:none;font-family:var(--display);font-weight:700;font-size:.92rem;text-align:center;line-height:1.1}
+nav.tabs a img{width:20px;height:20px;object-fit:contain}
+nav.tabs a[aria-current]{background:var(--gold);color:#1b1400;border-color:var(--gold)}
+nav.tabs a:focus-visible{outline:2px solid #fff}
+section.view{display:none}section.view.on{display:block}
+.stack{display:flex;flex-direction:column;gap:12px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px}
+.panel.p{border-color:#2f6fb3}.panel.t{border-color:#8a3a2a}.panel.z{border-color:#6b3aa3}
+.hdr{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.hdr img{width:34px;height:34px;object-fit:contain}
+.lead{color:var(--muted);font-size:1rem}
+/* semantic chips & rows */
+.row{display:flex;gap:8px;align-items:flex-start;padding:8px 10px;border-radius:8px;border:1px solid;font-size:.98rem;line-height:1.3}
+.row b{font-weight:700}
+.row .ic{flex:none;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:.8rem;color:#fff}
+.good{background:var(--good-bg);border-color:var(--good-line);color:var(--good-fg)}.good .ic{background:var(--good)}
+.bad{background:var(--bad-bg);border-color:var(--bad-line);color:var(--bad-fg)}.bad .ic{background:var(--bad)}
+.info{background:var(--info-bg);border-color:var(--info-line);color:var(--info-fg)}.info .ic{background:var(--info)}
+.gold{background:var(--gold-bg);border-color:var(--gold);color:#ffeaa8}.gold .ic{background:#b58a00}
+.rows{display:flex;flex-direction:column;gap:6px}
+/* cost */
+.cost{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;font-family:var(--display);font-weight:700;font-variant-numeric:tabular-nums;font-size:1.02rem}
+.cost span{display:inline-flex;align-items:center;gap:4px}
+.cost img{width:20px;height:20px;object-fit:contain}
+.cost .m{color:#7cc8ff}.cost .g{color:#6ff28a}.cost .s{color:var(--muted);font-weight:600;font-size:.9rem}
+/* unit card */
+.card{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:10px;display:grid;grid-template-columns:72px 1fr;gap:10px;align-items:start}
+.card .pic{width:72px;height:72px;border-radius:10px;overflow:hidden;background:#000;border:1px solid var(--line);display:grid;place-items:center}
+.card .pic img{width:100%;height:100%;object-fit:cover}
+.card .pic.none{font-family:var(--display);font-weight:800;color:var(--dim);font-size:1.4rem}
+.card .nm{font-family:var(--display);font-weight:800;font-size:1.15rem;color:#fff;text-transform:uppercase}
+.card .role{color:var(--muted);font-size:.92rem;font-style:italic;margin-bottom:4px}
+.card .meta{min-width:0}
+.card .abil{display:inline-block;margin-top:6px;font-size:.88rem;color:#fff;background:#223a63;border:1px solid var(--line);border-radius:999px;padding:2px 9px}
+.card .rows{grid-column:1/-1}
+.card.t .pic{border-color:#8a3a2a}.card.z .pic{border-color:#6b3aa3}.card.p .pic{border-color:#2f6fb3}
+.grid2{display:grid;grid-template-columns:1fr;gap:10px}
+@media(min-width:620px){.grid2{grid-template-columns:1fr 1fr}}
+/* tech tree */
+.tree{display:flex;flex-direction:column;gap:6px}
+.tn{display:flex;align-items:center;gap:10px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:6px 8px;min-width:0}
+.tn img{width:44px;height:44px;border-radius:8px;object-fit:cover;background:#000;flex:none}
+.tn .n{font-family:var(--display);font-weight:800;font-size:1rem;color:#fff}
+.tn .u{font-size:.86rem;color:var(--muted);line-height:1.25}
+.tn .u em{color:var(--gold);font-style:normal}
+.tn.root{border-color:var(--gold);background:#1b2340}
+.kids{margin-left:14px;padding-left:12px;border-left:3px solid var(--line);display:flex;flex-direction:column;gap:6px;position:relative}
+.kids>.tn::before,.kids>.branch>.tn::before{content:"";position:absolute;left:-15px;width:12px;height:3px;background:var(--line)}
+.tn{position:relative}
+.branch{display:flex;flex-direction:column;gap:6px;position:relative}
+.p .kids{border-color:#2f6fb3}.p .kids>.tn::before,.p .kids>.branch>.tn::before{background:#2f6fb3}
+.t .kids{border-color:#a8452f}.t .kids>.tn::before,.t .kids>.branch>.tn::before{background:#a8452f}
+.z .kids{border-color:#8a4ccf}.z .kids>.tn::before,.z .kids>.branch>.tn::before{background:#8a4ccf}
+.chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:3px}
+.chips span{font-size:.8rem;background:#0b1326;border:1px solid var(--line);border-radius:6px;padding:1px 6px;color:#cfe0ff}
+/* tactic card */
+.tac{background:var(--panel2);border:1px solid #8a3a2a;border-radius:12px;overflow:hidden}
+.tac .top{display:grid;grid-template-columns:96px 1fr;gap:10px;padding:10px;align-items:center}
+.tac .top img{width:96px;height:96px;object-fit:cover;border-radius:10px;border:1px solid #8a3a2a}
+.tac h3{color:#fff;font-size:1.1rem}
+.tac .rows{padding:0 10px 10px}
+/* build order */
+.bo{display:flex;flex-direction:column;gap:5px}
+.bo .s{display:grid;grid-template-columns:52px 1fr;gap:8px;align-items:center;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:7px 8px}
+.bo .s .k{font-family:var(--display);font-weight:800;color:var(--gold);font-size:1.05rem;font-variant-numeric:tabular-nums}
+.bo .s .k small{display:block;font-size:.72rem;color:var(--dim);font-weight:600}
+.bo .s .v{min-width:0}
+.bo .s .v b{color:#fff}
+/* checklist */
+.chk{display:flex;flex-direction:column;gap:6px}
+.chk div{display:flex;gap:8px;align-items:flex-start}
+.chk .bx{flex:none;width:24px;height:24px;border-radius:6px;background:var(--good);color:#fff;display:grid;place-items:center;font-weight:900}
+.chk b{color:var(--gold)}
+/* phases */
+.phase{border-left:4px solid var(--info-line);padding:6px 10px;background:var(--panel2);border-radius:0 10px 10px 0}
+.phase .tm{font-family:var(--display);font-weight:800;color:var(--info-line);font-size:1.05rem}
+.flow3{display:grid;grid-template-columns:1fr;gap:8px}
+@media(min-width:520px){.flow3{grid-template-columns:1fr 1fr 1fr}}
+.flow3 div{border-radius:10px;padding:10px;border:2px solid;text-align:center}
+.flow3 .n{font-family:var(--display);font-weight:800;font-size:1.1rem;text-transform:uppercase}
+.flow3 .a{border-color:var(--info-line);background:var(--info-bg)}.flow3 .b{border-color:var(--gold);background:var(--gold-bg)}.flow3 .c{border-color:var(--good-line);background:var(--good-bg)}
+.flow3 img{width:64px;height:64px;object-fit:cover;border-radius:10px;margin:6px auto;display:block}
+/* if/then */
+.ifthen{display:grid;grid-template-columns:1fr;gap:6px}
+.ifthen .if{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.ifthen .if>div{padding:8px;border-radius:8px;border:1px solid;font-size:.95rem;min-width:0}
+.ifthen .if .q{background:var(--bad-bg);border-color:var(--bad-line);color:var(--bad-fg)}
+.ifthen .if .r{background:var(--good-bg);border-color:var(--good-line);color:var(--good-fg)}
+.ifthen b{display:block;font-family:var(--display);font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;opacity:.8}
+/* hotkeys */
+.hk{display:grid;grid-template-columns:48px 1fr;gap:8px;align-items:center}
+.hk .key{font-family:var(--display);font-weight:800;font-size:1.2rem;background:#fff;color:#0b1326;border-radius:8px;text-align:center;padding:4px 0;border-bottom:3px solid #9fb3d6}
+.hk b{color:var(--gold)}
+.legend{display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:.92rem}
+.legend .row{align-items:center}
+.src{color:var(--dim);font-size:.82rem}
+.note{font-size:.9rem;color:var(--muted)}
+.ok{color:var(--good-line);font-weight:700}
+.toc{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.toc a{color:var(--info-line);font-weight:600;text-decoration:none;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px;font-size:.92rem}
+footer{color:var(--dim);font-size:.82rem;padding:20px 0 30px;text-align:center}
+@media(prefers-reduced-motion:no-preference){nav.tabs a{transition:background .15s}}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <img src="icons/hero.jpg" alt="StarCraft II: Cody's Mobile Field Manual">
+  <div class="t">
+    <h1>Cody's StarCraft II <span>Field Manual</span></h1>
+    <p class="sub">Protoss vs Tom's Terran · Hit fast. Starve the economy. Disappear.</p>
+  </div>
+</div>
+
+<nav class="tabs" id="tabs"><div class="g">
+  <a href="#plan">⚡ Plan</a>
+  <a href="#protoss"><img src="icons/emblem_protoss.png" alt="">Protoss</a>
+  <a href="#terran"><img src="icons/emblem_terran.png" alt="">Terran</a>
+  <a href="#counter">🎯 Counter</a>
+  <a href="#zerg"><img src="icons/emblem_zerg.png" alt="">Zerg</a>
+  <a href="#match">⌨️ Match</a>
+</div></nav>
+
+<main class="wrap">
+
+<!-- ================= PLAN ================= -->
+<section class="view" id="plan">
+<div class="stack">
+  <div class="panel">
+    <div class="hdr"><h2>60-Second Game Plan</h2></div>
+    <div class="chk">
+      <div><span class="bx">✓</span><span>Open safe, scout early, and get <b>Blink</b> on time.</span></div>
+      <div><span class="bx">✓</span><span>Harass with <b>Blink Stalkers</b> and a <b>Warp Prism</b> instead of headbutting bio.</span></div>
+      <div><span class="bx">✓</span><span>Force Tom to <b>split his army</b> between the front, main, and third.</span></div>
+      <div><span class="bx">✓</span><span>Take a <b>third base</b> behind pressure.</span></div>
+      <div><span class="bx">✓</span><span>Transition into <b>Colossus</b> or <b>Storm</b> for the decisive fight.</span></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>Default matchup plan vs bio</h3>
+    <div class="flow3" style="margin-top:8px">
+      <div class="a"><div class="n">1 · Divert</div><img src="icons/p_stalker.png" alt=""><p>Blink Stalkers pressure natural / third</p></div>
+      <div class="b"><div class="n">2 · Infiltrate</div><img src="icons/p_warp_prism.png" alt=""><p>Warp Prism or Zealot warp-in hits workers</p></div>
+      <div class="c"><div class="n">3 · Punish</div><img src="icons/p_zealot.png" alt=""><p>Attack whichever base he leaves exposed</p></div>
+    </div>
+    <div class="row gold" style="margin-top:8px"><span class="ic">!</span><span>When Tom defends one base, hit a <b>different</b> base.</span></div>
+  </div>
+
+  <div class="panel">
+    <h3>Color + icon legend</h3>
+    <div class="legend" style="margin-top:8px">
+      <div class="row good"><span class="ic">✓</span><span><b>Green</b> = good / power spike / answer</span></div>
+      <div class="row bad"><span class="ic">!</span><span><b>Red</b> = danger / threat / bad trade</span></div>
+      <div class="row info"><span class="ic">i</span><span><b>Blue</b> = more info / eco / macro</span></div>
+      <div class="row gold"><span class="ic">★</span><span><b>Gold</b> = timing / key rule</span></div>
+    </div>
+    <div class="cost" style="margin-top:10px;gap:18px"><span class="m"><img src="icons/minerals.png" alt="">Minerals</span><span class="g"><img src="icons/vespene.png" alt="">Vespene gas</span><span class="s">👤 Supply</span></div>
+  </div>
+
+  <div class="panel">
+    <h3>How to beat Tom, phase by phase</h3>
+    <div class="stack" style="margin-top:8px;gap:8px">
+      <div class="phase"><div class="tm">0:00 – 3:00 · Establish</div><p>Produce Probes uninterrupted. Scout his Command Center and first production. Set a ramp wall; avoid greed if he has no natural CC.</p></div>
+      <div class="phase"><div class="tm">3:00 – 5:00 · Own the map</div><p>Finish Warp Gate and Blink; defend a Reaper with your first fighting unit. Get map vision with a forward Pylon, Observer, or spotter.</p></div>
+      <div class="phase"><div class="tm">5:00 – 7:00 · First deception</div><p>Stalkers pressure a flank but never trade into Stimmed bio. Prism circles into the main; warp in 2–4 Zealots or drop 2 Adepts on SCVs.</p></div>
+      <div class="phase"><div class="tm">7:00 – 10:00 · Multiply threats</div><p>Take and saturate the third. Research Charge; warp Chargelots at undefended bases. Add Colossus splash; keep an Observer for Widow Mines.</p></div>
+      <div class="phase"><div class="tm">10:00+ · Secure the win</div><p>65–80 Probes on 3–4 bases. Attack with a protected splash core only when his bio is out of position; keep Prisms going behind.</p></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>The 3-part win condition</h3>
+    <div class="rows" style="margin-top:8px">
+      <div class="row info"><span class="ic">1</span><span>Keep building Probes and Nexus expansions.</span></div>
+      <div class="row info"><span class="ic">2</span><span>Make Tom split his bio army by threatening two bases.</span></div>
+      <div class="row info"><span class="ic">3</span><span>Win the main fight with Colossi and/or Psionic Storm after his mining has been interrupted.</span></div>
+    </div>
+    <div class="row bad" style="margin-top:8px"><span class="ic">!</span><span><b>Operating rule:</b> a raid that kills 5 SCVs but loses an entire Blink army is not good harassment. Preserve the expensive units so you can attack again.</span></div>
+  </div>
+
+  <div class="panel">
+    <h3>What's inside</h3>
+    <div class="toc" style="margin-top:8px">
+      <a href="#protoss">Protoss units, buildings, tech tree, builds</a>
+      <a href="#terran">Terran units, buildings, tech tree</a>
+      <a href="#counter">How to counter Terran tactics</a>
+      <a href="#zerg">Zerg guide + how to counter</a>
+      <a href="#match">Quick match card + hotkeys</a>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ================= PROTOSS ================= -->
+<section class="view" id="protoss">
+<div class="stack">
+  <div class="panel p">
+    <div class="hdr"><img src="icons/emblem_protoss.png" alt=""><h2>Protoss Units</h2></div>
+    <p class="lead">Your tools for pressure, mobility, and control. Costs are minerals / gas / supply.</p>
+  </div>
+  <div class="grid2" id="p-units"></div>
+
+  <div class="panel p"><div class="hdr"><img src="icons/emblem_protoss.png" alt=""><h2>Protoss Buildings</h2></div><p class="lead">Cost, purpose, and what each one unlocks.</p></div>
+  <div class="grid2" id="p-bld"></div>
+
+  <div class="panel p">
+    <div class="hdr"><img src="icons/emblem_protoss.png" alt=""><h2>Protoss Tech Tree</h2></div>
+    <p class="lead" style="margin-bottom:10px">Read top to bottom. Each building branches into what it unlocks; gold text = units it produces.</p>
+    <div class="tree" id="p-tree"></div>
+  </div>
+
+  <div class="panel p">
+    <h3>Core upgrades: what they do & when</h3>
+    <div class="rows" style="margin-top:8px">
+      <div class="row info"><span class="ic">i</span><span><b>Warp Gate</b> (Cyber Core) — gateways warp in units at any Pylon. <b>When:</b> ASAP, core for pressure and reinforcements.</span></div>
+      <div class="row info"><span class="ic">i</span><span><b>Blink</b> (Twilight, 150/150) — Stalkers teleport a short distance. <b>When:</b> mid game: pressure, pickoffs, vs bio.</span></div>
+      <div class="row info"><span class="ic">i</span><span><b>Charge</b> (Twilight) — Zealots sprint into melee. <b>When:</b> mid game engagements, vs bio, vs ranged.</span></div>
+      <div class="row info"><span class="ic">i</span><span><b>Extended Thermal Lance</b> (Robo Bay) — Colossus range. <b>When:</b> going Colossus vs bio, Tanks, clumps.</span></div>
+      <div class="row info"><span class="ic">i</span><span><b>Psionic Storm</b> (Templar Archives) — big AoE spell. <b>When:</b> vs clumped ground (bio, Roaches, Hydras).</span></div>
+      <div class="row info"><span class="ic">i</span><span><b>Air Weapons</b> (Cyber Core) — damage for all Protoss air. <b>When:</b> committing to an air army mid–late game.</span></div>
+      <div class="row gold"><span class="ic">★</span><span><b>Research priority vs Tom:</b> Warp Gate → Blink → Charge → +1 Ground Weapons → Thermal Lance or Storm → Shadow Stride only if you use DTs.</span></div>
+    </div>
+  </div>
+
+  <div class="panel p">
+    <h3>Default build vs Tom's bio: 3-Gate Blink → Warp Prism</h3>
+    <p class="note" style="margin:6px 0 8px">Supply values assume 12 workers, Faster speed. Keep making Probes, Chrono Boost, add Pylons before supply blocks. This is not a one-base all-in.</p>
+    <div class="bo">
+      <div class="s"><div class="k">14</div><div class="v"><b>Pylon</b> — place it to help wall the natural approach.</div></div>
+      <div class="s"><div class="k">15</div><div class="v"><b>Gateway</b> — scout with the Probe. Check Tom's natural and wall-off.</div></div>
+      <div class="s"><div class="k">16</div><div class="v"><b>Assimilator</b> — saturate with 3 Probes.</div></div>
+      <div class="s"><div class="k">20</div><div class="v"><b>Cybernetics Core + 2nd Nexus</b> (around 1:30).</div></div>
+      <div class="s"><div class="k">21–22</div><div class="v"><b>2nd Pylon, 2nd Assimilator</b>; early Adept or Stalker for scouting.</div></div>
+      <div class="s"><div class="k">~25</div><div class="v"><b>Warp Gate</b> research; chrono as needed.</div></div>
+      <div class="s"><div class="k">29</div><div class="v"><b>Twilight Council</b>; start preparing Gateway #2.</div></div>
+      <div class="s"><div class="k">33</div><div class="v"><b>Blink</b> (150/150); chrono it.</div></div>
+      <div class="s"><div class="k">35</div><div class="v"><b>Robotics Facility + Gateway #3.</b> Verify no early all-in.</div></div>
+      <div class="s"><div class="k">38–48</div><div class="v">Pylons; <b>Stalkers from 3 Gateways</b>; start <b>Warp Prism</b> (250).</div></div>
+      <div class="s"><div class="k">~60</div><div class="v"><b>Third Nexus</b> if safe (≈4:45–5:30); keep probing.</div></div>
+      <div class="s"><div class="k">After</div><div class="v">Forge + Robo Bay; <b>Charge</b>, Colossus range / Storm, extra Gateways.</div></div>
+    </div>
+    <div class="row gold" style="margin-top:8px"><span class="ic">★</span><span><b>First pressure window:</b> as Blink completes, poke exposed Marines, Medivacs, add-ons or SCVs. Keep 8–12 Stalkers alive. Never Blink into Tanks or a full Stimmed bio army.</span></div>
+  </div>
+
+  <div class="panel p">
+    <h3>Two more builds to learn</h3>
+    <div class="stack" style="margin-top:8px;gap:8px">
+      <div class="phase"><div class="tm">A · Defensive Robo / Colossus (PvT)</div><p>Use if Tom keeps hitting with a fast 2-base Stim army. Same 14/15/16/20 opening, Robo at ~30 (Observer if mines/cloak likely), Robo Bay + Colossus at ~35–45, then Thermal Lance. Grow to 3–5 Gateways, Charge, +1, 2 Colossi, safe third. If he masses Vikings, pivot part of splash into Storm.</p></div>
+      <div class="phase"><div class="tm">B · Stargate Oracle → macro (PvZ)</div><p>14–22 Pylon → Gateway → Gas → Core/Nexus. Stargate + Oracle after Core: scout Zerg tech, hit undefended Drones, leave before Queen/Spore crossfire. Third Nexus when safe; Twilight/Robo based on scouting. Roach → Immortal; Hydra → Colossus/Storm; Muta → Phoenix/Stalker.</p></div>
+    </div>
+  </div>
+
+  <div class="panel p">
+    <h3>Rock-paper-scissors quick read</h3>
+    <div class="rows" style="margin-top:8px">
+      <div class="row good"><span class="ic">✓</span><span><b>Chargelots</b> overwhelm bio when they connect.</span></div>
+      <div class="row good"><span class="ic">✓</span><span><b>Stalkers</b> punish exposed air and Medivacs.</span></div>
+      <div class="row good"><span class="ic">✓</span><span><b>Immortals</b> crush armored ground.</span></div>
+      <div class="row good"><span class="ic">✓</span><span><b>Colossi and Storm</b> punish clumped Marines.</span></div>
+      <div class="row good"><span class="ic">✓</span><span><b>Tempests</b> punish BCs and turtling.</span></div>
+    </div>
+    <h3 style="margin-top:12px">Protoss golden rules</h3>
+    <div class="rows" style="margin-top:8px">
+      <div class="row gold"><span class="ic">★</span><span>Keep Probe production going.</span></div>
+      <div class="row gold"><span class="ic">★</span><span>Harass before big fights.</span></div>
+      <div class="row gold"><span class="ic">★</span><span>Preserve Stalkers with Blink.</span></div>
+      <div class="row gold"><span class="ic">★</span><span>Tech switch based on what you scout.</span></div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ================= TERRAN ================= -->
+<section class="view" id="terran">
+<div class="stack">
+  <div class="panel t">
+    <div class="hdr"><img src="icons/emblem_terran.png" alt=""><h2>Terran Guide</h2></div>
+    <p class="lead">What Tom can build, what is dangerous, and how Protoss should answer it.</p>
+    <div class="rows" style="margin-top:10px">
+      <div class="row info"><span class="ic">i</span><span>Flexible, efficient, and mobile.</span></div>
+      <div class="row info"><span class="ic">i</span><span>Strong mid-game with <b>Bio (MMM)</b>.</span></div>
+      <div class="row info"><span class="ic">i</span><span>Powerful tech: <b>Tanks, Ghosts, BCs</b>.</span></div>
+      <div class="row info"><span class="ic">i</span><span>Wins with pressure, <b>multitask</b>, and scaling into late game.</span></div>
+    </div>
+  </div>
+
+  <div class="panel t"><div class="hdr"><img src="icons/emblem_terran.png" alt=""><h2>Terran Units</h2></div><p class="lead">Role · cost · danger · Protoss answer.</p></div>
+  <div class="grid2" id="t-units"></div>
+
+  <div class="panel t"><div class="hdr"><img src="icons/emblem_terran.png" alt=""><h2>Terran Buildings</h2></div></div>
+  <div class="grid2" id="t-bld"></div>
+
+  <div class="panel t">
+    <div class="hdr"><img src="icons/emblem_terran.png" alt=""><h2>Terran Tech Tree</h2></div>
+    <div class="tree" id="t-tree"></div>
+  </div>
+
+  <div class="panel t">
+    <h3>What bio is trying to do (MMM)</h3>
+    <p style="margin:6px 0 8px"><b>MMM = Marine + Marauder + Medivac:</b> a mobile, efficient army that presses, trades, and keeps you reacting.</p>
+    <div class="rows">
+      <div class="row bad"><span class="ic">!</span><span><b>Stim timing:</b> ~5:00–7:00 (varies). Expect a strong moveout.</span></div>
+      <div class="row bad"><span class="ic">!</span><span><b>Medivac mobility:</b> heals bio and enables drops and multitask.</span></div>
+      <div class="row bad"><span class="ic">!</span><span><b>Focus fire:</b> quickly deletes key units (Stalkers, Immortals).</span></div>
+      <div class="row bad"><span class="ic">!</span><span><b>Multitask drops:</b> hit your main, natural or third to split you.</span></div>
+    </div>
+  </div>
+
+  <div class="panel t">
+    <h3>Terran build order decoded</h3>
+    <p class="note" style="margin:6px 0 8px">A common bio 1-1-1 macro pattern. Scout to confirm Tom actually follows it.</p>
+    <div class="bo">
+      <div class="s"><div class="k">14</div><div class="v">Supply Depot wall and constant SCVs.</div></div>
+      <div class="s"><div class="k">16</div><div class="v">Barracks + Refinery, Reaper scout or Marine, then natural CC.</div></div>
+      <div class="s"><div class="k">1-1-1</div><div class="v">Factory → Starport + Orbital; early mine drop or Medivac becomes possible.</div></div>
+      <div class="s"><div class="k">Bio</div><div class="v">More Barracks + Tech Labs/Reactors. Stim, Combat Shield, Marauders.</div></div>
+      <div class="s"><div class="k">Push</div><div class="v">2–3 Medivacs with Stim bio, sometimes Tank / mine support.</div></div>
+      <div class="s"><div class="k">3rd</div><div class="v">Third CC, Engineering Bay upgrades, extra Barracks.</div></div>
+      <div class="s"><div class="k">Late</div><div class="v">Ghosts for EMP, Vikings for Colossi, Liberators for zone control.</div></div>
+    </div>
+    <h3 style="margin-top:12px">Terran upgrades → your response</h3>
+    <div class="rows" style="margin-top:8px">
+      <div class="row good"><span class="ic">✓</span><span><b>Stimpack:</b> retreat with Blink; fight only once your splash is ready.</span></div>
+      <div class="row good"><span class="ic">✓</span><span><b>Combat Shield:</b> Colossi and Storm stay high value.</span></div>
+      <div class="row good"><span class="ic">✓</span><span><b>Infantry weapons/armor:</b> don't let him reach 3/3 while you sit on 0/0.</span></div>
+      <div class="row good"><span class="ic">✓</span><span><b>Concussive Shells:</b> Blink damaged Stalkers out early.</span></div>
+      <div class="row good"><span class="ic">✓</span><span><b>Ghost EMP:</b> separate Templar, attack from multiple angles.</span></div>
+    </div>
+  </div>
+
+  <div class="panel t">
+    <h3>What gives Tom away</h3>
+    <div class="rows" style="margin-top:8px">
+      <div class="row bad"><span class="ic">!</span><span><b>Stim bio:</b> early Barracks Tech Labs + fast Medivacs. Add splash, keep Chargelots ready.</span></div>
+      <div class="row bad"><span class="ic">!</span><span><b>Fast Battlecruisers:</b> Fusion Core + quick Starport. Hold Stalkers at mineral lines; mass BC needs Tempests.</span></div>
+      <div class="row bad"><span class="ic">!</span><span><b>Mech pivot:</b> several Factories / Armories. Add Immortals, harassment, outer-base denial.</span></div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ================= COUNTER TERRAN ================= -->
+<section class="view" id="counter">
+<div class="stack">
+  <div class="panel t">
+    <div class="hdr"><img src="icons/emblem_terran.png" alt=""><h2>How to Counter Terran Tactics</h2></div>
+    <p class="lead">Recognize it fast. Answer it cleanly. Punish the weakness.</p>
+  </div>
+  <div class="grid2" id="tactics"></div>
+
+  <div class="panel t">
+    <h3>Tom-specific win plan</h3>
+    <div class="chk" style="margin-top:8px">
+      <div><span class="bx">✓</span><span><b>Harass workers constantly</b> — keep Tom's economy shaky and rebuilding.</span></div>
+      <div><span class="bx">✓</span><span><b>Pull bio out of position</b> — force him to split, then punish the piece that's alone.</span></div>
+      <div><span class="bx">✓</span><span><b>Deny the fourth</b> — keep him on 3 bases or fewer as long as possible.</span></div>
+      <div><span class="bx">✓</span><span><b>Never take bad fights into Tanks</b> — flank, Prism, or trade elsewhere.</span></div>
+      <div><span class="bx">✓</span><span><b>Finish with Colossus or Storm</b> after eco damage; once he's behind, close it cleanly.</span></div>
+    </div>
+  </div>
+
+  <div class="panel t">
+    <h3>Matchup flowchart: if Tom does X, you do Y</h3>
+    <div class="row gold" style="margin:8px 0"><span class="ic">★</span><span><b>Open:</b> 1-Gate expand into Twilight.</span></div>
+    <div class="ifthen">
+      <div class="if"><div class="q"><b>Tom is…</b>Expanding (standard bio)</div><div class="r"><b>You…</b>Continue 3-Gate Blink + Robo + Prism + third Nexus</div></div>
+      <div class="if"><div class="q"><b>Tom shows…</b>Fast Factory (mine play)</div><div class="r"><b>You…</b>Keep Stalkers home, get Observer sooner</div></div>
+      <div class="if"><div class="q"><b>Tom goes…</b>Heavy Tanks</div><div class="r"><b>You…</b>Immortal + Prism and flanks</div></div>
+      <div class="if"><div class="q"><b>Tom goes…</b>Fast Starport / BC signs</div><div class="r"><b>You…</b>Blink defense, then Tempests</div></div>
+      <div class="if"><div class="q"><b>Tom…</b>Turtles (heavy defense, few attacks)</div><div class="r"><b>You…</b>Expand faster, deny fourth, Tempests</div></div>
+      <div class="if"><div class="q"><b>Tom is…</b>Dropping constantly</div><div class="r"><b>You…</b>Batteries at mineral lines, keep map vision</div></div>
+    </div>
+  </div>
+
+  <div class="panel t">
+    <h3>Scouting cheat sheet</h3>
+    <div class="ifthen" style="margin-top:8px">
+      <div class="if"><div class="q"><b>You see…</b>Missing Barracks</div><div class="r"><b>= Proxy.</b> Be ready for an early attack (proxy Rax/Factory).</div></div>
+      <div class="if"><div class="q"><b>You see…</b>Many Barracks + Stim</div><div class="r"><b>= Bio timing.</b> Expect a mid-game Stim + Medivac push.</div></div>
+      <div class="if"><div class="q"><b>You see…</b>Armory + Factory count</div><div class="r"><b>= Mech.</b> Longer-term Tanks and Thors.</div></div>
+      <div class="if"><div class="q"><b>You see…</b>Fusion Core</div><div class="r"><b>= BC or air tech.</b> Battlecruisers, Vikings, Liberators.</div></div>
+      <div class="if"><div class="q"><b>You see…</b>Lots of Turrets + Planetaries</div><div class="r"><b>= Turtle.</b> Expect a long, static game.</div></div>
+      <div class="if"><div class="q"><b>You see…</b>No natural CC</div><div class="r"><b>= 1-base / all-in.</b> Delay third, Stalker + Battery, scout harder.</div></div>
+      <div class="if"><div class="q"><b>You see…</b>Ghost Academy</div><div class="r"><b>= EMP/Snipe.</b> Split Templar, avoid stacked Archon fights.</div></div>
+      <div class="if"><div class="q"><b>You see…</b>3+ Command Centers</div><div class="r"><b>= Macro / MULEs.</b> Take fast third/fourth, pressure third SCVs, keep upgrades moving.</div></div>
+    </div>
+  </div>
+
+  <div class="panel t">
+    <h3>Expansions + timing goals</h3>
+    <div class="rows" style="margin-top:8px">
+      <div class="row good"><span class="ic">✓</span><span><b>Natural ≈ 1:30–3:00</b> (1-Gate expand).</span></div>
+      <div class="row good"><span class="ic">✓</span><span><b>Third ≈ 4:45–7:00</b> behind Blink pressure / map control.</span></div>
+      <div class="row good"><span class="ic">✓</span><span><b>Fourth ≈ 8:30+</b> when map control is secure.</span></div>
+      <div class="row info"><span class="ic">i</span><span><b>Workers:</b> aim for 65–80 on 3–4 bases; 16 minerals / 6 gas per base is full saturation.</span></div>
+    </div>
+  </div>
+
+  <div class="panel t">
+    <h3>Rock-paper-scissors: key matchups</h3>
+    <div class="rows" style="margin-top:8px">
+      <div class="row good"><span class="ic">✓</span><span><b>Bio</b> loses value against <b>splash</b>.</span></div>
+      <div class="row good"><span class="ic">✓</span><span><b>Tanks</b> hate <b>flanks</b> and <b>Warp Prism</b>.</span></div>
+      <div class="row good"><span class="ic">✓</span><span><b>BCs</b> hate <b>Tempests</b> and <b>Stalkers</b>.</span></div>
+      <div class="row good"><span class="ic">✓</span><span><b>Static defense</b> hates <b>map control</b> and <b>long-range siege</b>.</span></div>
+    </div>
+    <div class="row gold" style="margin-top:8px"><span class="ic">★</span><span><b>Default answer:</b> Blink Stalkers harass, Warp Prism kills workers, then Colossus or Storm wins the main fight.</span></div>
+  </div>
+</div>
+</section>
+
+<!-- ================= ZERG ================= -->
+<section class="view" id="zerg">
+<div class="stack">
+  <div class="panel z">
+    <div class="hdr"><img src="icons/emblem_zerg.png" alt=""><h2>Zerg Guide</h2></div>
+    <p class="lead">Swarm units, tech paths, dangers, and how Protoss should counter them.</p>
+  </div>
+  <div class="panel z"><div class="hdr"><img src="icons/emblem_zerg.png" alt=""><h2>Zerg Units</h2></div><p class="lead">* = morph: the listed cost is the extra price on top of the precursor unit.</p></div>
+  <div class="grid2" id="z-units"></div>
+
+  <div class="panel z"><div class="hdr"><img src="icons/emblem_zerg.png" alt=""><h2>Zerg Buildings</h2></div></div>
+  <div class="grid2" id="z-bld"></div>
+
+  <div class="panel z">
+    <div class="hdr"><img src="icons/emblem_zerg.png" alt=""><h2>Zerg Tech Tree</h2></div>
+    <div class="tree" id="z-tree"></div>
+  </div>
+
+  <div class="panel z">
+    <h3>Zerg build order decoded</h3>
+    <p class="note" style="margin:6px 0 8px">Common Hatch-first pattern on the 12-worker start: 16 Hatch / 18 Extractor / 17 Pool. Specifics vary.</p>
+    <div class="bo">
+      <div class="s"><div class="k">16</div><div class="v"><b>Hatchery</b> (275 minerals in 5.0.17).</div></div>
+      <div class="s"><div class="k">18/17</div><div class="v"><b>Extractor / Spawning Pool.</b> Zergling speed when gas permits.</div></div>
+      <div class="s"><div class="k">Queens</div><div class="v">Inject larva and spread creep; just enough early lings to survive.</div></div>
+      <div class="s"><div class="k">Third</div><div class="v">Fast third Hatchery if unthreatened; Drones saturate quickly.</div></div>
+      <div class="s"><div class="k">Tech</div><div class="v">Roach Warren, Baneling Nest, Spire, Hydra Den, Nydus or Lurker Den reveals the direction.</div></div>
+      <div class="s"><div class="k">Hive</div><div class="v">Vipers, Ultras, Brood Lords arrive late and need tailored anti-air / caster answers.</div></div>
+    </div>
+  </div>
+
+  <div class="panel z">
+    <h3>Protoss versus Zerg: what beats what</h3>
+    <div class="stack" style="margin-top:8px;gap:8px" id="z-comp"></div>
+  </div>
+
+  <div class="panel z">
+    <h3>How Protoss beats Zerg</h3>
+    <div class="chk" style="margin-top:8px">
+      <div><span class="bx">✓</span><span>Wall and <b>scout</b> early.</span></div>
+      <div><span class="bx">✓</span><span><b>Adept</b> or <b>Oracle</b> pressure.</span></div>
+      <div><span class="bx">✓</span><span><b>Splash</b> versus Ling/Bane/Hydra.</span></div>
+      <div><span class="bx">✓</span><span><b>Immortal-Disruptor</b> versus Roach/Ravager.</span></div>
+      <div><span class="bx">✓</span><span><b>Tempests</b> or <b>Skytoss</b> versus Brood Lords when safe.</span></div>
+    </div>
+    <h3 style="margin-top:12px">Watch for</h3>
+    <div class="rows" style="margin-top:8px">
+      <div class="row bad"><span class="ic">!</span><span><b>Ling floods</b> — early, fast swarms.</span></div>
+      <div class="row bad"><span class="ic">!</span><span><b>Baneling busts</b> — all-in with Banelings.</span></div>
+      <div class="row bad"><span class="ic">!</span><span><b>Muta swings</b> — midgame air harass.</span></div>
+      <div class="row bad"><span class="ic">!</span><span><b>Lurker contain</b> — area denial and base lock.</span></div>
+      <div class="row bad"><span class="ic">!</span><span><b>Hive tech</b> — Brood Lords or Ultralisks (late-game threat).</span></div>
+    </div>
+    <div class="rows" style="margin-top:10px">
+      <div class="row info"><span class="ic">i</span><span><b>Creep is vision:</b> kill Creep Tumors to make flanks and Prism flights safer.</span></div>
+      <div class="row info"><span class="ic">i</span><span><b>Larva is production:</b> harassing Queens and Hatcheries slows how fast Zerg rebuilds.</span></div>
+      <div class="row info"><span class="ic">i</span><span><b>Identify the Spire:</b> if Mutas appear, build Phoenix/Stalkers and protect outer mineral lines.</span></div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ================= MATCH ================= -->
+<section class="view" id="match">
+<div class="stack">
+  <div class="panel"><div class="hdr"><h2>Quick Match Card + Hotkeys</h2></div><p class="lead">What to remember while the game is live.</p></div>
+
+  <div class="panel">
+    <h3>60-second pregame checklist</h3>
+    <div class="chk" style="margin-top:8px">
+      <div><span class="bx">✓</span><span><b>Pick a plan:</b> Blink, Prism, Colossus, Storm, or Tempest.</span></div>
+      <div><span class="bx">✓</span><span><b>Set hotkeys</b> & control groups (below).</span></div>
+      <div><span class="bx">✓</span><span><b>Check the map:</b> ramps, drop paths, third base, watchtowers.</span></div>
+      <div><span class="bx">✓</span><span><b>Queue workers</b> to 14–16 supply and start your opening.</span></div>
+      <div><span class="bx">✓</span><span><b>Know the matchup:</b> expect early pressure, drops, or tech.</span></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>Build order ladder (≈ first 4:30)</h3>
+    <div class="bo" style="margin-top:8px" id="ladder"></div>
+  </div>
+
+  <div class="panel">
+    <h3>Control groups (multitask harassment setup)</h3>
+    <div class="stack" style="margin-top:8px;gap:6px">
+      <div class="hk"><div class="key">1</div><div><b>Main army</b> — Zealots + Colossi / Archons + support</div></div>
+      <div class="hk"><div class="key">2</div><div><b>Harassment</b> — Warp Prism / drop or Zealot harass. Never in F2.</div></div>
+      <div class="hk"><div class="key">3</div><div><b>Blink Stalkers</b> — separate skirmish and focus fire</div></div>
+      <div class="hk"><div class="key">4</div><div><b>Nexuses</b> — Probes, Chrono Boost, recalls</div></div>
+      <div class="hk"><div class="key">5</div><div><b>Warp Gates</b> — warp-ins without hunting buildings</div></div>
+      <div class="hk"><div class="key">6</div><div><b>Robotics / Stargates</b> — backup splash and air</div></div>
+      <div class="hk"><div class="key">F1–4</div><div><b>Cameras</b> — F1 main · F2 natural · F3 third · F4 harassment path</div></div>
+    </div>
+    <div class="rows" style="margin-top:10px">
+      <div class="row info"><span class="ic">i</span><span><b>Ctrl + #</b> creates a group; <b>Shift + #</b> adds to it. <b>A + click</b> attack-move. <b>Shift</b> queues Prism routes.</span></div>
+      <div class="row info"><span class="ic">i</span><span>Put <b>Blink</b> and <b>Storm</b> on two easy MMO mouse thumb buttons.</span></div>
+      <div class="row bad"><span class="ic">!</span><span>Do <b>NOT</b> rely on Select All Army (F2) while running two-pronged raids.</span></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>Warp Gate cycle: always on</h3>
+    <div class="chk" style="margin-top:8px">
+      <div><span class="bx">✓</span><span>Use Gateways (5) to warp in constantly.</span></div>
+      <div><span class="bx">✓</span><span>Keep production and worker queues rolling.</span></div>
+      <div><span class="bx">✓</span><span>Before fights, pre-warp units at a forward Pylon. In 5.0.17 slow-field warp-ins take ~11 s vs ~3.6 s in fast zones, so never warp under Marine fire.</span></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>Your micro loop (ten seconds)</h3>
+    <div class="rows" style="margin-top:8px">
+      <div class="row info"><span class="ic">1</span><span>Select <b>3</b> → volley at exposed Medivac or Marine → Blink two damaged Stalkers back.</span></div>
+      <div class="row info"><span class="ic">2</span><span>Select <b>2</b> → drop/warp Zealots at a different base.</span></div>
+      <div class="row info"><span class="ic">3</span><span>Select <b>4/5</b> → produce Probes and units → repeat.</span></div>
+    </div>
+    <div class="rows" style="margin-top:8px">
+      <div class="row gold"><span class="ic">★</span><span><b>FIRST:</b> threaten the natural with the Blink army → Prism warps Chargelots in the main.</span></div>
+      <div class="row gold"><span class="ic">★</span><span><b>NEXT:</b> Tom rotates home → pressure the third while producing Probes.</span></div>
+      <div class="row gold"><span class="ic">★</span><span><b>THEN:</b> retreat damaged units → take a Nexus / upgrades while he defends.</span></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>Quick responses</h3>
+    <div class="ifthen" style="margin-top:8px">
+      <div class="if"><div class="q"><b>Spot</b>BC?</div><div class="r"><b>Do</b>Blink Stalkers now, Tempests later.</div></div>
+      <div class="if"><div class="q"><b>Spot</b>Mines?</div><div class="r"><b>Do</b>Observer, split, don't clump.</div></div>
+      <div class="if"><div class="q"><b>Spot</b>Tanks?</div><div class="r"><b>Do</b>Flank, Prism, don't a-move uphill.</div></div>
+      <div class="if"><div class="q"><b>Spot</b>Bio drop?</div><div class="r"><b>Do</b>Battery and map vision.</div></div>
+      <div class="if"><div class="q"><b>Spot</b>Turtle?</div><div class="r"><b>Do</b>Expand and Tempest.</div></div>
+      <div class="if"><div class="q"><b>Spot</b>Ghost EMP?</div><div class="r"><b>Do</b>Split Templar, Feedback, re-engage after EMP.</div></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>Top strategies</h3>
+    <div class="rows" style="margin-top:8px">
+      <div class="row info"><span class="ic">1</span><span><b>3-Gate Blink pressure</b> — early map control, force a response, keep the pressure.</span></div>
+      <div class="row gold"><span class="ic">2</span><span><b>Warp Prism Zealot harass</b> — multitask, kill workers, disrupt economy.</span></div>
+      <div class="row good"><span class="ic">3</span><span><b>Colossus timing</b> — powerful push vs bio/small units, take a fast third.</span></div>
+      <div class="row info"><span class="ic">4</span><span><b>Storm control</b> — zone, punish clumps, win key fights.</span></div>
+      <div class="row bad"><span class="ic">5</span><span><b>Tempest anti-BC / anti-turtle</b> — outrange, dismantle air, break static defenses.</span></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>Live-match checklist</h3>
+    <div class="rows" style="margin-top:8px">
+      <div class="row info"><span class="ic">i</span><span><b>Every 20 s:</b> Probes / spend money / check supply / scan minimap.</span></div>
+      <div class="row info"><span class="ic">i</span><span><b>Before a raid:</b> is his army elsewhere? Turret, scan or mine at the landing?</span></div>
+      <div class="row info"><span class="ic">i</span><span><b>Before a fight:</b> splash? detection? enough Zealots? fighting into Tank range?</span></div>
+      <div class="row info"><span class="ic">i</span><span><b>After a raid:</b> don't watch the SCVs die; warp in, expand, upgrade, reposition.</span></div>
+      <div class="row info"><span class="ic">i</span><span><b>After a loss:</b> macro gap, wrong counter, attacked into defenders, or missing vision? Fix one thing.</span></div>
+    </div>
+    <h3 style="margin-top:12px">Next three games vs Tom</h3>
+    <div class="bo" style="margin-top:8px">
+      <div class="s"><div class="k">Game 1</div><div class="v"><b>Build only:</b> 3 Gateways + Blink, take third. No long Probe gaps or supply blocks.</div></div>
+      <div class="s"><div class="k">Game 2</div><div class="v"><b>Macro + micro:</b> Stalkers threaten while the Prism raids a second base at least twice; lose no Prism.</div></div>
+      <div class="s"><div class="k">Game 3</div><div class="v"><b>Read the comp:</b> Bio → Colossus/Storm; BC → Stalker/Tempest; Tank turtle → run-bys and expansions.</div></div>
+    </div>
+  </div>
+</div>
+</section>
+
+<footer>Personal fan guide for 1v1 Legacy of the Void, patch 5.0.17. Not affiliated with Blizzard Entertainment. Art supplied by Cody; StarCraft and race insignia are property of their owners.</footer>
+</main>
+
+<script>
+const I=n=>`icons/${n}.png`;
+const M='<img src="icons/minerals.png" alt="minerals">',G='<img src="icons/vespene.png" alt="gas">';
+function cost(m,g,s,star){let h=`<div class="cost"><span class="m">${M}${m}</span><span class="g">${G}${g}</span>`;if(s!=null)h+=`<span class="s">👤 ${s}${star?'*':''}</span>`;return h+'</div>'}
+function card(race,u){const pic=u.icon?`<div class="pic"><img src="${I(u.icon)}" alt="${u.name}"></div>`:`<div class="pic none">${u.name[0]}</div>`;
+ let rows='';if(u.info)rows+=`<div class="row info"><span class="ic">i</span><span>${u.info}</span></div>`;if(u.bad)rows+=`<div class="row bad"><span class="ic">!</span><span>${u.bad}</span></div>`;if(u.good)rows+=`<div class="row good"><span class="ic">✓</span><span>${u.good}</span></div>`;
+ return `<div class="card ${race}">${pic}<div class="meta"><div class="nm">${u.name}</div><div class="role">${u.role}</div>${cost(u.m,u.g,u.s,u.star)}${u.ab?`<span class="abil">⚙ ${u.ab}</span>`:''}</div><div class="rows">${rows}</div></div>`}
+function fill(id,race,list){document.getElementById(id).innerHTML=list.map(u=>card(race,u)).join('')}
+
+/* ---------- PROTOSS ---------- */
+fill('p-units','p',[
+{name:'Probe',icon:'p_probe',m:50,g:0,s:1,role:'Worker / economy',ab:'Nexus (production)',good:'Builds, gathers, techs. Constantly make Probes; transfer between Nexuses.',bad:'Fragile; easy to harass. Pull to safety rather than fight.'},
+{name:'Zealot',icon:'p_zealot',m:100,g:0,s:2,role:'Frontline / Charge',ab:'Charge (upgrade)',good:'Fast, high DPS. Beats Marauders, dropped-on Tanks, exposed SCVs. Warp into mineral lines, attack from two angles.',bad:'Can be kited and AoE\'d. Fears Hellbats, mines, dense Marine fire. No anti-air.'},
+{name:'Stalker',icon:'p_stalker',m:125,g:50,s:2,role:'Core ranged / versatile',ab:'Blink (upgrade)',good:'Mobile, flexible, great value. Beats Medivacs, Liberators, Vikings, exposed air. Blink weak units back; threaten expansions.',bad:'Falls off vs heavy armor. Fears Stim Marauders and Tank shots. Poor as the lone damage dealer into mass bio.'},
+{name:'Sentry',icon:'p_sentry',m:50,g:100,s:2,role:'Support / utility',ab:'Force Field · Guardian Shield',good:'Controls space, buys time. Force Field splits Terran bio; Guardian Shield saves the army.',bad:'Low damage; fragile, gas-heavy. Fears EMP, Corrosive Bile, focus fire.'},
+{name:'Adept',icon:'p_adept',m:100,g:25,s:2,role:'Harass / skirmish',ab:'Psionic Transfer (shade)',good:'Harass, scout, pressure. Shades into workers; beats SCVs and light units.',bad:'Falls off in straight-up fights. Fears Marauders and static defense. Shade telegraphs intent; no anti-air.'},
+{name:'High Templar',icon:'p_high_templar',m:50,g:150,s:2,role:'Spellcaster / utility',ab:'Psionic Storm · Feedback',good:'Massive AoE vs clumped Marine/Marauder/Medivac. Keep behind the line; morph Archons when empty.',bad:'Expensive, fragile, slow, energy-dependent. Fears Ghost EMP/Snipe and mine splash.'},
+{name:'Dark Templar',icon:'p_dark_templar',m:125,g:125,s:2,role:'Stealth / high DPS',ab:'Permanent cloak · Shadow Stride',good:'Devastating vs unscouted SCV lines and undefended production. Forces expensive detection.',bad:'Detected by Observers, Raven, scans, turrets, Planetaries. One scan can erase a committed raid.'},
+{name:'Archon',icon:'p_archon',m:0,g:0,s:4,star:1,role:'Power unit / spell proxy',ab:'Merge (2 Templar)',good:'Huge AoE damage, high HP. Beats biological and clumped light armies.',bad:'Short range; costs two Templar. Fears EMP, heavy focus fire, splash.'},
+{name:'Observer',icon:'p_observer',m:25,g:75,s:1,role:'Detection / vision',ab:'Cloak · Surveillance Mode',good:'Reveals cloaked Banshees, burrowed mines, hidden tech. Park near vulnerable bases; scout army movement.',bad:'No attack; gets sniped by Marines, turrets, scans, Ravens.'},
+{name:'Warp Prism',icon:'p_warp_prism',m:250,g:0,s:2,role:'Transport / warp-in',ab:'Phasing Mode · Gravitic Drive',good:'Reinforce, drop, proxy. Hits SCV lines, unguarded walls, rear flanks. Drop 2 units or warp 4 Zealots, then evacuate.',bad:'Fragile; big target if caught. Slow-field warp-ins are vulnerable; never fly over anti-air.'},
+{name:'Immortal',icon:'p_immortal',m:250,g:100,s:4,role:'Anti-armor / siege',ab:'Barrier (passive)',good:'Shreds armored ground: Marauders, Tanks, Thors, Roaches, Ultralisks. High-value core behind Zealots.',bad:'Poor vs mass light units. Cannot shoot air; slow to replace. Fears Marines, Ling surrounds.'},
+{name:'Disruptor',icon:'p_disruptor',m:150,g:150,s:4,role:'AoE burst / zoning',ab:'Purification Nova',good:'Massive AoE and zone control vs clumped bio and slow ground. Threaten Nova, reposition, force Tom to split.',bad:'Skill-based; Novas can miss or be cleared. Fears fast splits, focus fire, flanking, air.'},
+{name:'Colossus',icon:'p_colossus',m:300,g:200,s:6,role:'AoE vs ground / siege',ab:'Extended Thermal Lance',good:'Melts clumped light units: Marines, Zerglings, Hydralisks. Keep a Zealot/Stalker screen; laser from max range.',bad:'Vulnerable to air (Vikings, Corruptors) and EMP. Can be shot by air weapons while on the ground.'},
+{name:'Phoenix',icon:'p_phoenix',m:150,g:100,s:2,role:'Anti-air / utility',ab:'Graviton Beam',good:'Controls air; lifts key units. Beats Medivacs, Banshees, Mutalisks, lifted ground. Intercepts drop routes.',bad:'Low HP; poor vs ground. Needs energy and micro. Fears Marines, Thors, mass Vikings.'},
+{name:'Oracle',icon:'p_oracle',m:150,g:150,s:3,role:'Harass / scouting / utility',ab:'Pulsar Beam · Revelation · Stasis Ward',good:'Harass, scout, disable worker lines. Kills early SCVs and unprotected Drones.',bad:'Fragile; very gas-heavy; beam energy runs out. Fears Marine clusters, turrets, Vikings, Spores.'},
+{name:'Void Ray',icon:'p_void_ray',m:250,g:150,s:4,role:'Anti-armor air / DPS',ab:'Prismatic Alignment',good:'High sustained damage; great vs armor, isolated BCs and buildings.',bad:'Less efficient vs mass light units. Easy to counter with cheap anti-air (Marines, Vikings, Hydras).'},
+{name:'Tempest',icon:'p_tempest',m:250,g:175,s:5,role:'Long-range air / siege',ab:'Tectonic Destabilizers',good:'Outranges most units; beats Battlecruisers and massive air. Kite BC fleets; siege fortified positions with vision.',bad:'Expensive, slow to ramp up, low rate of fire, poor close-range defense. Fears Vikings, Marines, Corruptors when caught.'},
+{name:'Carrier',icon:'p_carrier',m:350,g:250,s:6,role:'Air production / scaling',ab:'Interceptor production',good:'Sustained damage and map control vs unprepared ground-heavy armies. Late-game option at critical mass.',bad:'Very expensive; slow to build; interceptors can be killed. Fears Vikings, Corruptors, Thors, anti-air mass.'},
+{name:'Mothership',icon:'p_mothership',m:400,g:400,s:8,role:'Ultimate support / army control',ab:'Mass Recall · Time Warp · Cloaking Field',good:'Game-changing utility: recall, time stop, cloak. Protect the high-value army; rescue with Recall.',bad:'Very expensive, one at a time, high opportunity cost. Fears focused Vikings, Corruptors, EMP-supported pushes.'}
+]);
+fill('p-bld','p',[
+{name:'Nexus',icon:'p_nexus',m:400,g:0,role:'Main base',info:'Makes Probes, Chrono Boosts, Energy Recharge. Unlocks expansions; powers economy and production.'},
+{name:'Pylon',icon:'p_pylon',m:100,g:0,role:'Supply + power',info:'Provides supply and powers nearby buildings. Mandatory for production, expansion, and tech; forward Pylons enable warp-ins.'},
+{name:'Assimilator',icon:'p_assimilator',m:75,g:0,role:'Gas',info:'Harvests Vespene from a geyser. Gas is required for key tech, advanced units, and upgrades.'},
+{name:'Gateway',icon:'p_gateway',m:150,g:0,role:'Ground production',info:'Produces Zealot; with Cyber Core: Stalker, Adept, Sentry. Becomes Warp Gate after research.'},
+{name:'Cybernetics Core',icon:'p_cybernetics_core',m:150,g:0,role:'Tier-1 tech hub',info:'Unlocks Stalker, Sentry, Adept, Warp Gate, Air upgrades. Unlocks Twilight Council, Robotics Facility, Stargate, Shield Battery.'},
+{name:'Forge',icon:'p_forge',m:150,g:0,role:'Ground upgrades',info:'Ground Weapons, Ground Armor, and Shields upgrades. Unlocks Photon Cannon.'},
+{name:'Shield Battery',icon:'p_shield_battery',m:100,g:0,role:'Static defense (support)',info:'Rapidly restores shields to nearby units and structures. Defends pushes and buys time at natural, third, proxies.'},
+{name:'Photon Cannon',icon:'p_photon_cannon',m:150,g:0,role:'Static defense',info:'Attacks ground and air; detects. Base and expansion defense, especially vs early pressure and drops.'},
+{name:'Twilight Council',icon:'p_twilight_council',m:150,g:100,role:'Key ground upgrades',info:'Charge (Zealot), Blink (Stalker), Resonating Glaives (Adept). Leads to Templar Archives and Dark Shrine.'},
+{name:'Robotics Facility',icon:'p_robotics_facility',m:150,g:100,role:'Robotics production',info:'Observer, Warp Prism, Immortal; with Robo Bay: Colossus, Disruptor. Leads to Robotics Bay.'},
+{name:'Robotics Bay',icon:'p_robotics_bay',m:150,g:150,role:'Advanced robotics',info:'Unlocks Colossus and Disruptor; Extended Thermal Lance, Gravitic Drive, Gravitic Boosters.'},
+{name:'Stargate',icon:'p_stargate',m:150,g:150,role:'Air production',info:'Oracle, Phoenix, Void Ray; with Fleet Beacon: Tempest, Carrier, Mothership. Leads to Fleet Beacon.'},
+{name:'Fleet Beacon',icon:'p_fleet_beacon',m:300,g:200,role:'Advanced air (tier 3)',info:'Unlocks Tempest, Carrier, Mothership; Anion Pulse-Crystals, Tectonic Destabilizers.'},
+{name:'Templar Archives',icon:'p_templar_archives',m:150,g:200,role:'Advanced psionic tech',info:'Unlocks High Templar (Psionic Storm) and Archon via merge.'},
+{name:'Dark Shrine',icon:'p_dark_shrine',m:150,g:150,role:'Stealth tech',info:'Unlocks Dark Templar (Shadow Stride) and Archon via merge.'}
+]);
+
+/* ---------- TERRAN ---------- */
+fill('t-units','t',[
+{name:'SCV',icon:'t_scv',m:50,g:0,s:1,role:'Worker / build / repair',bad:'Economy and fast expands; repairs Tanks, Thors, BCs, Planetaries fast if untouched.',good:'Early pressure (Zealot/Adept). Prioritize killing SCVs or forcing mining stops.'},
+{name:'Marine',icon:'t_marine',m:50,g:0,s:1,role:'Core bio / high DPS',ab:'Stimpack · Combat Shield',bad:'Massed DPS, especially with Stim. Beats Void Rays, unsupported Zealots, many flyers.',good:'Stalker early; Zealot + AoE: Colossus, Storm, Disruptor. Never let mass Stim connect.'},
+{name:'Marauder',icon:'t_marauder',m:100,g:25,s:2,role:'Anti-armor / vs Zealots',ab:'Stimpack · Concussive Shells',bad:'Beats armored Stalkers and Immortals in attrition; slows retreating Stalkers.',good:'Chargelots to soak fire, Storm/Disruptor, Colossi with Zealot screen. No pure Stalker face-offs.'},
+{name:'Reaper',icon:'t_reaper',m:50,g:50,s:1,role:'Harass / scout / kite',ab:'KD8 Charge',bad:'Early worker harass and scouting via cliffs.',good:'Adept, Stalker, wall + Shield Battery. Low value in big battles.'},
+{name:'Ghost',icon:'t_ghost',m:150,g:125,s:2,role:'Spellcaster (EMP, Snipe)',ab:'EMP · Steady Targeting · Cloak',bad:'EMP removes shields and Templar energy before the fight starts; Snipe kills psionic units.',good:'High Templar Feedback, spread out, Chargelots, split engagements. Critical mid/late warning.'},
+{name:'Hellion',icon:'t_hellion',m:100,g:0,s:2,role:'Fast harass / vs Probes',ab:'Infernal Pre-Igniter',bad:'Line splash can wipe a worker line quickly; run-bys through side entrances.',good:'Adept, Stalker, wall-offs, Immortals.'},
+{name:'Hellbat',icon:'t_hellion',m:100,g:0,s:2,role:'Transformed Hellion / anti-light',ab:'Transform · Infernal Pre-Igniter',bad:'Beats Zealots, Zerglings, small melee swarms.',good:'Immortals, air, ranged focus fire. Don\'t blindly warp Zealots into a Hellbat defense.'},
+{name:'Widow Mine',icon:'t_widow_mine',m:75,g:25,s:2,role:'Burrowed burst vs units',ab:'Drilling Claws',bad:'Instant, high splash (especially on Zealots, Probe clumps, Stalker clumps, air).',good:'Observer + ranged Stalkers, detection, Disruptor. Spread out; read his mine-drop routes.'},
+{name:'Cyclone',icon:'t_cyclone',m:150,g:100,s:3,role:'Single-target / Lock-On',ab:'Lock On',bad:'Kites and picks off isolated armored units.',good:'Disruptor, Stalker (Blink), Chargelot surrounds, mass focus fire. Don\'t feed single Stalkers.'},
+{name:'Siege Tank',icon:'t_siege_tank',m:150,g:125,s:3,role:'Long-range siege DPS',ab:'Siege Mode',bad:'Denies ground, zone control; punishes concentrated Stalkers at chokes.',good:'Disruptor, Warp Prism angles, Zealot drops, flanks, air. Never walk across a siege line head-on.'},
+{name:'Thor',icon:'t_thor',m:300,g:200,s:6,role:'Heavy anti-air / anti-ground',ab:'High Impact Payload',bad:'Strong vs Colossus and massed air; large ground units.',good:'Carriers out of range, Immortals, Disruptor, sustained Chargelot surrounds. Keep Tempests out of Thor range.'},
+{name:'Viking',icon:'t_viking',m:150,g:75,s:2,role:'Anti-air (lands to ground)',ab:'Assault Mode',bad:'Strong vs Colossus, Tempests, Carriers, armored air from long range.',good:'Phoenix, Stalker, Carrier screen. Force Vikings, then switch some splash to Storm.'},
+{name:'Medivac',icon:'t_medivac',m:100,g:100,s:2,role:'Heal & transport / enables MMM',ab:'Ignite Afterburners',bad:'Keeps bio alive, enables drops and multitask.',good:'Focus-fire Medivacs after Marines split; Stalker, Phoenix (pick off). Deny drops with vision.'},
+{name:'Liberator',icon:'t_liberator',m:150,g:150,s:3,role:'Anti-ground zone control',ab:'Defender Mode · Advanced Ballistics',bad:'Denies areas, zones mineral lines, forces movement.',good:'Blink Stalkers, Phoenix, Tempest. Attack from outside the circle; move workers.'},
+{name:'Raven',icon:'t_raven',m:100,g:200,s:2,role:'Utility (disable, AAM, detection)',ab:'Interference Matrix · Anti-Armor Missile · Auto-Turret',bad:'Disables key units (Colossus, Immortal), detects DTs, adds utility.',good:'Focus-fire with Stalkers, Phoenix intercepts. Don\'t rely on DT invisibility vs Raven.'},
+{name:'Banshee',icon:'t_banshee',m:150,g:100,s:3,role:'Cloaked harass / single-target',ab:'Cloaking Field · Hyperflight Rotors',bad:'Harass and base damage; kills unprotected workers and Immortals.',good:'Observer + Stalkers, Phoenix, Shield Battery. Build a detector before committing against cloak.'},
+{name:'Battlecruiser',icon:'t_battlecruiser',m:400,g:300,s:6,role:'Late-game capital / high DPS',ab:'Tactical Jump · Yamato Cannon',bad:'Massive, durable, can snowball; an early single BC kills a mineral line and jumps out.',good:'1–2 BCs: Blink Stalkers + Batteries. Committed fleet: Tempests + screen, Void Rays on isolated BCs.'}
+]);
+fill('t-bld','t',[
+{name:'Command Center',icon:'t_command_center',m:400,g:0,role:'Main base / builds SCVs',bad:'Fast expand and macro lead.',good:'Early pressure.'},
+{name:'Orbital Command',icon:'t_orbital_command',m:150,g:0,role:'CC upgrade / MULE, Scan',bad:'Extra economy (MULE) and scouting; a scan erases a DT raid.',good:'Deny expansions; play around Scan.'},
+{name:'Planetary Fortress',icon:'t_planetary_fortress',m:150,g:150,role:'Defensive CC (turret + armor)',bad:'Very hard to break with SCV repair.',good:'Don\'t donate Chargelots into it; late-game army (Colossus / Disruptor / Carrier) or Tempest from range.'},
+{name:'Supply Depot',icon:'t_supply_depot',m:100,g:0,role:'Supply / wall / sim city',bad:'Walling slows your pressure.',good:'Adept (shade), Warp Prism.'},
+{name:'Refinery',icon:'t_refinery',m:75,g:0,role:'Gas',info:'Early Refinery count hints at tech speed (1 gas = bio, 2 = Factory/Starport tech).'},
+{name:'Barracks',icon:'t_barracks',m:150,g:0,role:'Marine, Marauder, Reaper, Ghost',bad:'Starts bio (MMM). Tech Labs = Stim/Marauders coming.',good:'Watch timing, prepare defense.'},
+{name:'Factory',icon:'t_factory',m:150,g:100,role:'Hellion, Mine, Cyclone, Tank, Thor',bad:'Tanks, Mines, Thor tech.',good:'Disruptor, Observer (mines).'},
+{name:'Starport',icon:'t_starport',m:150,g:100,role:'Viking, Medivac, Liberator, Raven, Banshee, BC',bad:'Mobility, air control, BC tech.',good:'Phoenix, Stalker, Tempest.'},
+{name:'Bunker',icon:'t_bunker',m:100,g:0,role:'Defensive garrison (4 units)',bad:'Holds pushes and delays.',good:'Out-position it, Disruptor, Warp Prism.'},
+{name:'Engineering Bay',icon:'t_engineering_bay',m:125,g:0,role:'Infantry upgrades, turret',bad:'Makes bio/mech much stronger.',good:'Scout and respect upgrade timings; keep your own Forge going.'},
+{name:'Armory',icon:'t_armory',m:150,g:100,role:'Vehicle / ship upgrades',bad:'Extends Tank range, BC power; mech signal.',good:'Disruptor, Tempest, deny late game.'},
+{name:'Fusion Core',icon:'t_fusion_core',m:150,g:150,role:'Unlocks Battlecruiser',bad:'BC rush / fast BC tech.',good:'Scout, Blink Stalkers + Batteries, Phoenix, then Tempest.'},
+{name:'Ghost Academy',icon:'t_ghost_academy',m:150,g:50,role:'Builds Ghosts, researches EMP',bad:'EMP removes shields and spells.',good:'High Templar (Feedback), spread out.'},
+{name:'Missile Turret',icon:'t_missile_turret',m:100,g:0,role:'Anti-air defense + detection',bad:'Limits Oracle / Phoenix harass; reveals DTs.',good:'Stalker focus-fire; harass elsewhere.'},
+{name:'Sensor Tower',icon:'t_sensor_tower',m:125,g:100,role:'Long-range vision (reveals cloaked)',bad:'Early warning and map control.',good:'Avoid seen angles, multi-prong, hidden Pylon spots.'}
+]);
+
+/* ---------- ZERG ---------- */
+fill('z-units','z',[
+{name:'Drone',icon:'z_drone',m:50,g:0,s:1,role:'Worker (gather, build)',bad:'Economy boom; Zerg can replace many Drones in one larva burst.',good:'Early pressure (Adept/Oracle), DT and Chargelot raids. Deny an unprotected Hatchery.'},
+{name:'Overlord',icon:'z_overlord',m:100,g:0,s:0,role:'Supply (+8) / scout',bad:'Supply for big attacks; drops when upgraded.',good:'Snipe with Stalkers, Phoenix, or Oracle for supply blocks.'},
+{name:'Overseer',icon:'z_overseer',m:50,g:50,s:0,star:1,role:'Detection, vision, spells',bad:'Detects your DTs, cloaked units, and flanks.',good:'Blink Stalkers or Phoenix; kill before a DT commit.'},
+{name:'Queen',icon:'z_queen',m:150,g:0,s:2,role:'Inject, creep, defense',ab:'Inject Larva · Transfuse · Creep Tumor',bad:'Healing, creep map control, early anti-air; defends Oracles.',good:'Focus fire (Stalkers/Immortals) during timings after removing lings. Slow off creep.'},
+{name:'Zergling',icon:'z_zergling',m:25,g:0,s:0.5,role:'Fast, cheap melee swarm',ab:'Metabolic Boost · Adrenal Glands',bad:'Early floods and run-bys; fast surround makes bad positioning lethal.',good:'Adepts, Sentries (walls), Zealots at chokes; Colossus, Archon, Storm.'},
+{name:'Baneling',icon:'z_baneling',m:25,g:25,s:0.5,star:1,role:'Suicide splash vs ground',ab:'Centrifugal Hooks',bad:'Huge splash vs light units: Zealots, Adepts, Probes; breaks defenses.',good:'Force Fields, Stalker spacing, ranged pickoffs, splash (Archon). Don\'t clump Probes.'},
+{name:'Roach',icon:'z_roach',m:75,g:25,s:2,role:'Durable ranged unit',ab:'Glial Reconstitution · Tunneling Claws',bad:'Strong, cost-efficient front line; beats basic Stalkers and Zealots in early mass.',good:'Immortals (+ Zealot/Archon), Disruptor, air. Scout the Roach Warren and build Immortals.'},
+{name:'Ravager',icon:'z_ravager',m:25,g:75,s:1,star:1,role:'Roach tech; Corrosive Bile',ab:'Corrosive Bile',bad:'Zone control; Bile breaks Force Fields and shreds static defense.',good:'Immortals, keep the army moving, Blink micro. Respect Bile on Observer/Prism.'},
+{name:'Hydralisk',icon:'z_hydralisk',m:100,g:50,s:2,role:'Ranged anti-air / anti-ground',ab:'Muscular Augments · Grooved Spines',bad:'Melts light units and anti-air (kills Warp Prisms).',good:'Colossi, Storm, Disruptors, Chargelot flanks. Fragile vs splash.'},
+{name:'Lurker',icon:'z_lurker',m:50,g:100,s:1,star:1,role:'Burrowed siege (line splash)',ab:'Seismic Spines · Adaptive Talons',bad:'Area denial, kites your army, locks bases.',good:'Observers + Immortals / Disruptors, air (Tempests). Go around Lurker lines; never frontal.'},
+{name:'Mutalisk',icon:'z_mutalisk',m:100,g:100,s:2,role:'Fast air harass (hit and run)',bad:'Harass, economy damage, map control.',good:'Phoenix, Blink Stalkers near bases, Archons. Don\'t chase with the main ground army.'},
+{name:'Corruptor',icon:'z_corruptor',m:150,g:100,s:2,role:'Anti-air (vs Colossus, Phoenix, Tempest)',ab:'Caustic Spray',bad:'Shuts down your air tech and Colossi.',good:'Stalkers, Archons, well-positioned Void Rays. Don\'t mass Carriers blindly if Spire is confirmed.'},
+{name:'Brood Lord',icon:'z_brood_lord',m:150,g:150,s:2,star:1,role:'Siege air; spawns Broodlings',bad:'Long-range siege that overruns ground-only armies and static defense.',good:'Tempests, Void Rays, Stalkers if reachable; Skytoss from range. Harass the slow Brood Lords.'},
+{name:'Infestor',icon:'z_infestor',m:100,g:150,s:2,role:'Support caster',ab:'Fungal Growth · Neural Parasite · Microbial Shroud',bad:'Fungal locks your army; Neural can steal units.',good:'Feedback (High Templar), focused Stalkers, Phoenix picks. Keep units spread; prioritize the caster.'},
+{name:'Swarm Host',icon:'z_swarm_host',m:100,g:75,s:3,role:'Spawns waves of Locusts',bad:'Constant free waves that wear you down and break static defenses.',good:'Disruptors, Colossi, Blink flanks. Hit the Hosts while Locusts are away; don\'t chase expiring Locusts.'},
+{name:'Ultralisk',icon:'z_ultralisk',m:275,g:200,s:6,role:'Massive melee bruiser',ab:'Chitinous Plating · Anabolic Synthesis',bad:'Wrecks ground armies and buildings; beats Zealots and small armies.',good:'Kiting, Immortals + Storm, Disruptors, air-ground units. Retreat from melee; block at chokes.'},
+{name:'Viper',icon:'z_viper',m:100,g:200,s:3,role:'Caster (Abduct, Blinding Cloud, Parasitic Bomb)',bad:'Pulls Colossi/Carriers; neutralizes strong armies and air.',good:'Feedback Vipers before they Abduct; Stalker/Phoenix/Tempest pickoffs.'}
+]);
+fill('z-bld','z',[
+{name:'Hatchery',icon:'z_hatchery',m:275,g:0,role:'Main base (produces larva, Drones)',info:'Also expansions. Larva makes burst production possible; creep grants speed and vision.'},
+{name:'Extractor',icon:null,m:25,g:0,role:'Gas',info:'Early gas = Zergling speed or fast tech; no gas = ling/drone greed.'},
+{name:'Spawning Pool',icon:'z_spawning_pool',m:200,g:0,role:'Zergling (early pressure)',info:'Also Queens and Metabolic Boost. Pool timing tells you how aggressive the opener is.'},
+{name:'Evolution Chamber',icon:'z_evolution_chamber',m:75,g:0,role:'Upgrades (attack, armor, speed)',info:'Melee / missile attacks and Carapace; also Spore Crawler.'},
+{name:'Lair',icon:'z_lair',m:150,g:100,role:'Mid tech (unlocks advanced units)',info:'Morphed from Hatchery. Unlocks Hydra Den, Spire, Infestation Pit, Nydus, Overseer, Overlord speed.'},
+{name:'Hive',icon:'z_hive',m:200,g:150,role:'Late tech',info:'Morphed from Lair. Unlocks Ultralisk Cavern, Greater Spire, Viper, Adrenal Glands.'},
+{name:'Roach Warren',icon:'z_roach_warren',m:150,g:0,role:'Roach / Ravager tech',info:'Scout it and build Immortals.'},
+{name:'Baneling Nest',icon:'z_baneling_nest',m:100,g:50,role:'Baneling tech (explosive threat)',info:'Expect a bust: wall the natural, Zealots, Archons, Force Fields.'},
+{name:'Hydralisk Den',icon:'z_hydralisk_den',m:100,g:100,role:'Hydralisk tech (anti-air)',info:'Leads to Lurker Den. Answer with Colossus/Storm.'},
+{name:'Lurker Den',icon:'z_lurker_den',m:100,g:150,role:'Lurker tech (area denial)',info:'Observers with the main army at all times.'},
+{name:'Spire',icon:'z_spire',m:200,g:200,role:'Mutalisk / Corruptor tech',info:'Phoenix/Stalkers; protect outer mineral lines; don\'t mass Carriers blindly.'},
+{name:'Greater Spire',icon:'z_greater_spire',m:100,g:150,role:'Brood Lord tech (late air)',info:'Tempests or Skytoss before they mass.'},
+{name:'Infestation Pit',icon:'z_infestation_pit',m:100,g:100,role:'Infestor tech (utility caster)',info:'Required for Hive. Keep Feedback ready.'},
+{name:'Nydus Network',icon:'z_nydus_network',m:150,g:150,role:'Builds Nydus Worms (map control)',info:'Scout likely Nydus spots; kill the Worm instantly.'},
+{name:'Ultralisk Cavern',icon:'z_ultralisk_cavern',m:150,g:200,role:'Ultralisk tech (ground behemoth)',info:'Immortals + Storm; kite.'},
+{name:'Spine Crawler',icon:'z_spine_crawler',m:100,g:0,role:'Ground defense (anti-ground)',info:'Can uproot and move on creep. Tempests or Immortals break lines.'},
+{name:'Spore Crawler',icon:'z_spore_crawler',m:75,g:0,role:'Air defense (anti-air) + detection',info:'Leave before Queen/Spore crossfire when harassing with Oracles.'}
+]);
+
+/* ---------- TECH TREES ---------- */
+function node(n){const chips=n.units?`<div class="chips">${n.units.map(u=>`<span>${u}</span>`).join('')}</div>`:'';
+ const inner=`<div class="tn${n.root?' root':''}">${n.icon?`<img src="${I(n.icon)}" alt="">`:''}<div style="min-width:0"><div class="n">${n.name}</div>${n.u?`<div class="u">${n.u}</div>`:''}${chips}</div></div>`;
+ if(!n.kids)return inner;return `<div class="branch">${inner}<div class="kids">${n.kids.map(node).join('')}</div></div>`}
+function tree(id,root){document.getElementById(id).innerHTML=node(root)}
+tree('p-tree',{name:'Nexus',icon:'p_nexus',root:1,u:'Probes · Chrono Boost',kids:[
+ {name:'Pylon',icon:'p_pylon',u:'Supply + power'},
+ {name:'Assimilator',icon:'p_assimilator',u:'Gas'},
+ {name:'Gateway',icon:'p_gateway',u:'<em>Zealot</em>',kids:[
+   {name:'Cybernetics Core',icon:'p_cybernetics_core',u:'<em>Stalker · Adept · Sentry</em> · Warp Gate · Air upgrades',kids:[
+     {name:'Shield Battery',icon:'p_shield_battery',u:'Shield regen defense'},
+     {name:'Twilight Council',icon:'p_twilight_council',u:'Blink · Charge · Glaives',kids:[
+       {name:'Templar Archives',icon:'p_templar_archives',u:'<em>High Templar</em> (Storm) · <em>Archon</em>'},
+       {name:'Dark Shrine',icon:'p_dark_shrine',u:'<em>Dark Templar</em> · <em>Archon</em>'}]},
+     {name:'Robotics Facility',icon:'p_robotics_facility',u:'<em>Observer · Warp Prism · Immortal</em>',kids:[
+       {name:'Robotics Bay',icon:'p_robotics_bay',u:'<em>Colossus · Disruptor</em> · Thermal Lance'}]},
+     {name:'Stargate',icon:'p_stargate',u:'<em>Oracle · Phoenix · Void Ray</em>',kids:[
+       {name:'Fleet Beacon',icon:'p_fleet_beacon',u:'<em>Tempest · Carrier · Mothership</em>'}]}]}]},
+ {name:'Forge',icon:'p_forge',u:'Ground weapons / armor / shields',kids:[{name:'Photon Cannon',icon:'p_photon_cannon',u:'Static defense + detection'}]}
+]});
+tree('t-tree',{name:'Command Center',icon:'t_command_center',root:1,u:'<em>SCV</em> · morphs to Orbital or Planetary',kids:[
+ {name:'Orbital Command',icon:'t_orbital_command',u:'MULE · Scan · Supply Drop'},
+ {name:'Planetary Fortress',icon:'t_planetary_fortress',u:'Needs Engineering Bay'},
+ {name:'Supply Depot',icon:'t_supply_depot',u:'Supply / wall'},
+ {name:'Refinery',icon:'t_refinery',u:'Gas'},
+ {name:'Barracks',icon:'t_barracks',u:'<em>Marine · Reaper</em> · + Tech Lab: <em>Marauder · Ghost</em>',kids:[
+   {name:'Bunker',icon:'t_bunker',u:'Garrison 4 units'},
+   {name:'Ghost Academy',icon:'t_ghost_academy',u:'<em>Ghost</em> · EMP · Nuke'},
+   {name:'Factory',icon:'t_factory',u:'<em>Hellion · Widow Mine · Cyclone</em> · + Tech Lab: <em>Siege Tank · Thor</em>',kids:[
+     {name:'Armory',icon:'t_armory',u:'Vehicle/ship upgrades · Hellbat · Thor'},
+     {name:'Starport',icon:'t_starport',u:'<em>Viking · Medivac · Liberator</em> · + Tech Lab: <em>Raven · Banshee · Battlecruiser</em>',kids:[
+       {name:'Fusion Core',icon:'t_fusion_core',u:'<em>Battlecruiser</em> · Yamato · Liberator range'}]}]}]},
+ {name:'Engineering Bay',icon:'t_engineering_bay',u:'Infantry upgrades · building armor',kids:[
+   {name:'Missile Turret',icon:'t_missile_turret',u:'Anti-air + detection'},
+   {name:'Sensor Tower',icon:'t_sensor_tower',u:'Long-range radar'}]}
+]});
+tree('z-tree',{name:'Hatchery',icon:'z_hatchery',root:1,u:'<em>Drone · Overlord</em> · larva · creep',kids:[
+ {name:'Extractor',u:'Gas'},
+ {name:'Spawning Pool',icon:'z_spawning_pool',u:'<em>Zergling · Queen</em> · Metabolic Boost',kids:[
+   {name:'Spine Crawler',icon:'z_spine_crawler',u:'Ground defense'},
+   {name:'Roach Warren',icon:'z_roach_warren',u:'<em>Roach</em> → <em>Ravager</em>'},
+   {name:'Baneling Nest',icon:'z_baneling_nest',u:'<em>Baneling</em> (morph from Zergling)'},
+   {name:'Evolution Chamber',icon:'z_evolution_chamber',u:'Attack / Carapace upgrades',kids:[{name:'Spore Crawler',icon:'z_spore_crawler',u:'Air defense + detection'}]},
+   {name:'Lair',icon:'z_lair',u:'<em>Overseer</em> · Overlord speed · Burrow',kids:[
+     {name:'Hydralisk Den',icon:'z_hydralisk_den',u:'<em>Hydralisk</em>',kids:[{name:'Lurker Den',icon:'z_lurker_den',u:'<em>Lurker</em> (morph from Hydra)'}]},
+     {name:'Spire',icon:'z_spire',u:'<em>Mutalisk · Corruptor</em>'},
+     {name:'Nydus Network',icon:'z_nydus_network',u:'Nydus Worms anywhere'},
+     {name:'Infestation Pit',icon:'z_infestation_pit',u:'<em>Infestor · Swarm Host</em>',kids:[
+       {name:'Hive',icon:'z_hive',u:'<em>Viper</em> · Adrenal Glands',kids:[
+         {name:'Ultralisk Cavern',icon:'z_ultralisk_cavern',u:'<em>Ultralisk</em>'},
+         {name:'Greater Spire',icon:'z_greater_spire',u:'<em>Brood Lord</em> (morph from Corruptor)'}]}]}]}]}
+]});
+
+/* ---------- COUNTER TACTICS ---------- */
+const TAC=[
+{t:'Proxy Reaper / early Reaper',i:'ct_proxy_reaper',tell:'Early missing Barracks or a Reaper at your base.',danger:'Worker kills, delayed tech, forces overreaction.',ans:'Fast Probe wall/hold, add an Adept or Stalker, keep a Battery.'},
+{t:'2-base Stim bio push',i:'ct_stim_bio',tell:'2 bases, 2+ Barracks, early Stim (Tech Lab).',danger:'Hits with a strong Marine army early (≈5:00–7:00).',ans:'Hold with Batteries + Stalkers/Adepts, then Colossus or Storm. A 3-Stalker defense won\'t stop it.'},
+{t:'Widow Mine drop',i:'ct_mine_drop',tell:'Medivac(s) moving out, add-on on Barracks (Tech Lab), Factory + Starport early.',danger:'Mine hits on workers = big economic damage.',ans:'Observer or detection, split workers, Batteries + Stalkers at each mineral line, spread units after seeing burrow.'},
+{t:'Marine-Marauder-Medivac spread bio',i:'ct_mmm',tell:'Multiple Barracks, Marauders (Tech Lab), Medivacs in production.',danger:'Mobile multi-angle pressure, hard to hold in one place.',ans:'Keep vision, force good engagements with Stalkers/Colossus, Storm punishes clumps, Chargelots flank.'},
+{t:'Siege Tank push',i:'ct_tank_push',tell:'Factory → Siege Tank (Tech Lab), large army moving out.',danger:'High ground / area denial; can break a base in one push.',ans:'Flank from multiple angles; Warp Prism or Chargelots on top of the Tanks; never charge through a sieged choke.'},
+{t:'Fast Battlecruiser rush',i:'ct_bc_rush',tell:'Fusion Core early (≈3:30–5:00), Starport tech.',danger:'BCs snowball and win if unanswered; first BC jumps in, kills a mineral line, jumps out.',ans:'Scout the Fusion Core, add Batteries, Blink Stalkers focus-fire at home, then Tempests if it continues. A Fleet Beacon alone is too slow for the first BC.'},
+{t:'Cloak Banshee',i:'ct_banshee',tell:'Starport + Tech Lab, no Vikings, Banshee timing (≈5:00–7:00).',danger:'Cloaked worker and Probe kills; tech and eco damage.',ans:'Get an Observer (or Revelation), add a Battery, use Stalkers to chase it off.'},
+{t:'Liberator harass',i:'ct_liberator',tell:'Starport → Liberator (Tech Lab), Liberator(s) moving out.',danger:'Zones your mineral line, stops mining, buys him time.',ans:'Blink Stalkers or a Prism to snipe it from outside the circle; keep an Observer for vision and map control.'},
+{t:'Turtle Terran (Planetaries + Turrets)',i:'ct_turtle',tell:'Extra Planetary Fortresses and many Turrets, low aggression.',danger:'Hard to break head-on; you bleed resources if you force it.',ans:'Don\'t ram it. Starve the outer bases, take the map, deny the fourth, use Tempests to break key defenses and add-ons.'},
+{t:'Mech transition',i:'ct_mech',tell:'Multiple Factories, Tech Labs, Tanks/Thors/Hellbats, fewer Marines.',danger:'Durable, cost-efficient army that scales well into late game.',ans:'Tech to Colossus + Disruptor (or Storm), Immortals vs armor, Chargelot run-bys, strong economy, fight with vision and good angles.'},
+{t:'Ghost EMP / Nuke',i:'ct_ghost',tell:'Ghost Academy, sudden Ghosts on the map, or a Nuke alert.',danger:'EMP drains shields and Templar energy (breaks Colossus/HT fights); a nuke can wipe a base.',ans:'Spread key units, keep an Observer, Feedback Ghosts, dodge the nuke, re-engage after EMP with Storm/Colossus.'}
+];
+document.getElementById('tactics').innerHTML=TAC.map(x=>`<div class="tac"><div class="top"><img src="${I(x.i)}" alt=""><h3>${x.t}</h3></div><div class="rows">
+<div class="row info"><span class="ic">👁</span><span><b>Scouting tell:</b> ${x.tell}</span></div>
+<div class="row bad"><span class="ic">!</span><span><b>Danger:</b> ${x.danger}</span></div>
+<div class="row good"><span class="ic">✓</span><span><b>Protoss answer:</b> ${x.ans}</span></div></div></div>`).join('');
+
+/* ---------- ZERG COMPS ---------- */
+const ZC=[
+{t:'Fast Zerglings + Banelings',r:'Small, fast swarms, surround attempts and Baneling busts.',a:'Wall the natural, Zealot hold; Archon/Colossus splash; keep Stalkers behind.',v:'Narrow open-ground fights without wall or splash.'},
+{t:'Roach + Ravager',r:'Armored pressure with Bile that breaks Force Fields.',a:'Immortals, safe Observer scouting, map-wide Prism harassment.',v:'Standing in Bile circles; bunching Immortals.'},
+{t:'Hydralisk + Lurker',r:'Hydra anti-air plus buried Lurker lines.',a:'Colossus/Storm, Observer detection, Immortals; go around Lurkers.',v:'Prism raids without a clear anti-air path.'},
+{t:'Mutalisk swarm',r:'Mobile, multi-base mineral harassment.',a:'Phoenix with upgrades; ground Stalkers + Cannons to buy time.',v:'Chasing all over the map with the main ground army.'},
+{t:'Corruptor + Brood Lord',r:'Late-game sky army; Brood Lords crush ground.',a:'Tempests, Void Rays with a protected Stalker/Archon screen.',v:'Unsupported air into Spore + Corruptor mass.'},
+{t:'Nydus + Swarm Host',r:'Locust wave on one base while a new tunnel opens elsewhere.',a:'Scout Nydus spots; kill the Worm quickly; counterattack the Hosts.',v:'Chasing expiring Locusts indefinitely.'}
+];
+document.getElementById('z-comp').innerHTML=ZC.map(x=>`<div class="phase" style="border-color:var(--violet-line)"><div class="tm" style="color:var(--violet-line)">${x.t}</div><div class="rows" style="margin-top:6px">
+<div class="row info"><span class="ic">i</span><span><b>Read:</b> ${x.r}</span></div><div class="row good"><span class="ic">✓</span><span><b>Answer:</b> ${x.a}</span></div><div class="row bad"><span class="ic">!</span><span><b>Avoid:</b> ${x.v}</span></div></div></div>`).join('');
+
+/* ---------- LADDER ---------- */
+const LAD=[['0:00','Pylon','p_pylon',100,0],['~0:18','Gateway','p_gateway',150,0],['~0:40','Assimilator','p_assimilator',75,0],['~1:20','Cybernetics Core','p_cybernetics_core',150,0],['~1:30','Nexus (expand)','p_nexus',400,0],['~2:00','2 more Gateways (3 total)','p_gateway',300,0],['~3:00','Warp Gate research','p_cybernetics_core',50,50],['~3:30','Twilight → Blink / Robotics','p_twilight_council',150,150]];
+document.getElementById('ladder').innerHTML=LAD.map((x,i)=>`<div class="s"><div class="k">${i+1}<small>${x[0]}</small></div><div class="v" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><img src="${I(x[2])}" alt="" style="width:36px;height:36px;border-radius:6px;object-fit:cover"><b>${x[1]}</b>${cost(x[3],x[4])}</div></div>`).join('');
+
+/* ---------- ROUTER ---------- */
+const views=['plan','protoss','terran','counter','zerg','match'];
+function show(){let h=(location.hash||'#plan').slice(1);if(!views.includes(h))h='plan';
+ document.querySelectorAll('section.view').forEach(s=>s.classList.toggle('on',s.id===h));
+ document.querySelectorAll('nav.tabs a').forEach(a=>{if(a.getAttribute('href')==='#'+h)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current')});
+ try{localStorage.setItem('sc2tab',h)}catch(e){}}
+if(!location.hash){try{const s=localStorage.getItem('sc2tab');if(s&&views.includes(s))history.replaceState(null,'','#'+s)}catch(e){}}
+addEventListener('hashchange',()=>{show();window.scrollTo({top:document.getElementById('tabs').offsetTop,behavior:'instant'})});
+show();
+document.querySelectorAll('.toc a').forEach(a=>a.addEventListener('click',()=>setTimeout(()=>window.scrollTo(0,document.getElementById('tabs').offsetTop),0)));
+</script>
+</body>
+</html>
