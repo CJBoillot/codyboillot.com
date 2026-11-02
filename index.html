@@ -126,7 +126,31 @@
     padding: 0.5rem 1rem; border-radius: 999px; font-weight: 600; font-size: 0.88rem;
     background: var(--grad); color: #1a1206 !important;
   }
-  @media (max-width: 720px) { .nav-links a:not(.nav-cta) { display: none; } }
+  .nav-toggle { display: none; }
+  @media (max-width: 720px) {
+    .nav-toggle {
+      display: inline-flex; align-items: center; gap: .45rem;
+      background: transparent; border: 1px solid var(--line-2); color: var(--text);
+      font: inherit; font-size: .9rem; font-weight: 600; padding: .5rem .85rem; border-radius: 999px; cursor: pointer;
+    }
+    .nav-toggle .bars { display: inline-block; width: 16px; height: 2px; background: currentColor; position: relative; }
+    .nav-toggle .bars::before, .nav-toggle .bars::after { content: ""; position: absolute; left: 0; width: 16px; height: 2px; background: currentColor; }
+    .nav-toggle .bars::before { top: -5px; } .nav-toggle .bars::after { top: 5px; }
+    .nav-links {
+      display: none; position: absolute; left: 0; right: 0; top: 64px;
+      flex-direction: column; align-items: stretch; gap: 0;
+      background: rgba(11,15,23,0.97); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--line); padding: .5rem 0 .9rem;
+    }
+    header.nav.open .nav-links { display: flex; }
+    .nav-links a { display: block; padding: .85rem 1.25rem; font-size: 1.05rem; border-top: 1px solid var(--line); }
+    .nav-links a.nav-cta { margin: .6rem 1.25rem 0; text-align: center; border-top: 0; }
+  }
+  footer.foot .other-links { margin-bottom: 1.2rem; }
+  footer.foot .other-links h4 { margin: 0 0 .5rem; font-size: .8rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted-2); font-weight: 600; }
+  footer.foot .other-links ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: .5rem 1.4rem; }
+  footer.foot .other-links a { color: var(--muted); }
+  footer.foot .other-links a:hover { color: var(--text); }
 
   /* ---------- Buttons ---------- */
   .btn {
@@ -391,7 +415,8 @@
 <header class="nav">
   <div class="wrap nav-inner">
     <a href="#top" class="brand">Cody&nbsp;Boillot<span class="dot">.</span></a>
-    <nav class="nav-links" aria-label="Primary">
+    <button class="nav-toggle" id="navToggle" type="button" aria-expanded="false" aria-controls="navLinks"><span class="bars" aria-hidden="true"></span>Menu</button>
+    <nav class="nav-links" id="navLinks" aria-label="Primary">
       <a href="#about">About</a>
       <a href="#experience">Experience</a>
       <a href="#work">What I Build</a>
@@ -874,7 +899,18 @@
   </section>
 
   <footer class="foot">
-    <div class="wrap">© <span id="yr">2026</span> Cody J. Boillot · Built simple, built to ship.</div>
+    <div class="wrap">
+      <nav class="other-links" aria-label="Other links">
+        <h4>Other links</h4>
+        <ul>
+          <li><a href="/private/sc2-field-manual-NZTfkHUN3mvX/">SC2 Field Manual</a></li>
+          <li><a href="/DuoPlanner/">WoW Duo Planner</a></li>
+          <li><a href="/PMP/">PMP Rapid-Fire</a></li>
+          <li><a href="/resume.pdf">Resume (PDF)</a></li>
+        </ul>
+      </nav>
+      © <span id="yr">2026</span> Cody J. Boillot · Built simple, built to ship.
+    </div>
   </footer>
 
 </main>
@@ -930,5 +966,14 @@
   })();
 </script>
 
+<script>
+(function(){
+  var nav=document.querySelector('header.nav'),btn=document.getElementById('navToggle');
+  if(!btn) return;
+  btn.addEventListener('click',function(){var o=nav.classList.toggle('open');btn.setAttribute('aria-expanded',o?'true':'false');});
+  document.querySelectorAll('#navLinks a').forEach(function(a){a.addEventListener('click',function(){nav.classList.remove('open');btn.setAttribute('aria-expanded','false');});});
+  document.addEventListener('click',function(e){if(nav.classList.contains('open')&&!nav.contains(e.target)){nav.classList.remove('open');btn.setAttribute('aria-expanded','false');}});
+})();
+</script>
 </body>
 </html>
