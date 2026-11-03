@@ -677,7 +677,7 @@ fill('t-units','t',[
 {name:'Reaper',icon:'t_reaper',m:50,g:50,s:1,role:'Harass / scout / kite',ab:'KD8 Charge',bad:'Early worker harass and scouting via cliffs.',good:'Adept, Stalker, wall + Shield Battery. Low value in big battles.'},
 {name:'Ghost',icon:'t_ghost',m:150,g:125,s:2,role:'Spellcaster (EMP, Snipe)',ab:'EMP · Steady Targeting · Cloak',bad:'EMP removes shields and Templar energy before the fight starts; Snipe kills psionic units.',good:'High Templar Feedback, spread out, Chargelots, split engagements. Critical mid/late warning.'},
 {name:'Hellion',icon:'t_hellion',m:100,g:0,s:2,role:'Fast harass / vs Probes',ab:'Infernal Pre-Igniter',bad:'Line splash can wipe a worker line quickly; run-bys through side entrances.',good:'Adept, Stalker, wall-offs, Immortals.'},
-{name:'Hellbat',icon:'t_hellion',m:100,g:0,s:2,role:'Transformed Hellion / anti-light',ab:'Transform · Infernal Pre-Igniter',bad:'Beats Zealots, Zerglings, small melee swarms.',good:'Immortals, air, ranged focus fire. Don\'t blindly warp Zealots into a Hellbat defense.'},
+{name:'Hellbat',icon:'t_hellbat',m:100,g:0,s:2,role:'Transformed Hellion / anti-light',ab:'Transform · Infernal Pre-Igniter',bad:'Beats Zealots, Zerglings, small melee swarms.',good:'Immortals, air, ranged focus fire. Don\'t blindly warp Zealots into a Hellbat defense.'},
 {name:'Widow Mine',icon:'t_widow_mine',m:75,g:25,s:2,role:'Burrowed burst vs units',ab:'Drilling Claws',bad:'Instant, high splash (especially on Zealots, Probe clumps, Stalker clumps, air).',good:'Observer + ranged Stalkers, detection, Disruptor. Spread out; read his mine-drop routes.'},
 {name:'Cyclone',icon:'t_cyclone',m:150,g:100,s:3,role:'Single-target / Lock-On',ab:'Lock On',bad:'Kites and picks off isolated armored units.',good:'Disruptor, Stalker (Blink), Chargelot surrounds, mass focus fire. Don\'t feed single Stalkers.'},
 {name:'Siege Tank',icon:'t_siege_tank',m:150,g:125,s:3,role:'Long-range siege DPS',ab:'Siege Mode',bad:'Denies ground, zone control; punishes concentrated Stalkers at chokes.',good:'Disruptor, Warp Prism angles, Zealot drops, flanks, air. Never walk across a siege line head-on.'},
@@ -729,7 +729,7 @@ fill('z-units','z',[
 ]);
 fill('z-bld','z',[
 {name:'Hatchery',icon:'z_hatchery',m:275,g:0,role:'Main base (produces larva, Drones)',info:'Also expansions. Larva makes burst production possible; creep grants speed and vision.'},
-{name:'Extractor',icon:null,m:25,g:0,role:'Gas',info:'Early gas = Zergling speed or fast tech; no gas = ling/drone greed.'},
+{name:'Extractor',icon:'z_extractor',m:25,g:0,role:'Gas',info:'Early gas = Zergling speed or fast tech; no gas = ling/drone greed.'},
 {name:'Spawning Pool',icon:'z_spawning_pool',m:200,g:0,role:'Zergling (early pressure)',info:'Also Queens and Metabolic Boost. Pool timing tells you how aggressive the opener is.'},
 {name:'Evolution Chamber',icon:'z_evolution_chamber',m:75,g:0,role:'Upgrades (attack, armor, speed)',info:'Melee / missile attacks and Carapace; also Spore Crawler.'},
 {name:'Lair',icon:'z_lair',m:150,g:100,role:'Mid tech (unlocks advanced units)',info:'Morphed from Hatchery. Unlocks Hydra Den, Spire, Infestation Pit, Nydus, Overseer, Overlord speed.'},
@@ -784,7 +784,7 @@ tree('t-tree',{name:'Command Center',icon:'t_command_center',root:1,u:'<em>SCV</
    {name:'Sensor Tower',icon:'t_sensor_tower',u:'Long-range radar'}]}
 ]});
 tree('z-tree',{name:'Hatchery',icon:'z_hatchery',root:1,u:'<em>Drone · Overlord</em> · larva · creep',kids:[
- {name:'Extractor',u:'Gas'},
+ {name:'Extractor',icon:'z_extractor',u:'Gas'},
  {name:'Spawning Pool',icon:'z_spawning_pool',u:'<em>Zergling · Queen</em> · Metabolic Boost',kids:[
    {name:'Spine Crawler',icon:'z_spine_crawler',u:'Ground defense'},
    {name:'Roach Warren',icon:'z_roach_warren',u:'<em>Roach</em> → <em>Ravager</em>'},
