@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Coaching the AI-First Sprint: Agile Leadership When AI Writes the Code</title>
+<meta property="og:title" content="Coaching the AI-First Sprint" />
+<meta property="og:description" content="An interactive demo course by Cody J. Boillot on Agile leadership when AI writes the code." />
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml" />
+<meta name="description" content="An interactive demo course by Cody J. Boillot: coaching and Agile leadership for teams where AI writes the code." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet" />
+<style>
+:root{--bg:#0b0f17;--bg-soft:#111725;--card:#141b2b;--card-2:#1a2336;--line:rgba(255,255,255,.08);--line-2:rgba(255,255,255,.16);--text:#eef2f9;--muted:#9aa6bd;--muted-2:#6b768e;--accent:#ff8a3d;--grad:linear-gradient(100deg,#ffc24b 0%,#ff8a3d 45%,#ff5e62 100%);--good:#4ade80;--bad:#f87171}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font-family:"Inter",system-ui,sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased;min-height:100vh;display:flex;flex-direction:column}
+h1,h2,h3{font-family:"Sora","Inter",sans-serif;line-height:1.2;margin:0}
+p{margin:0}
+button{font:inherit;color:inherit;cursor:pointer}
+a{color:var(--accent)}
+.wrap{width:100%;max-width:1160px;margin:0 auto;padding:0 20px}
+.grad{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.muted{color:var(--muted)}
+/* header */
+.top{border-bottom:1px solid var(--line);flex:none}
+.top .wrap{display:flex;align-items:center;gap:16px;min-height:54px;flex-wrap:wrap;padding-top:8px;padding-bottom:8px}
+.brand{font-family:"Sora","Inter",sans-serif;font-weight:700;font-size:15.5px;background:none;border:0;padding:0;white-space:nowrap}
+.prog{display:flex;align-items:center;gap:12px;margin-left:auto;font-size:12.5px;color:var(--muted)}
+.dots{display:flex;gap:5px}
+.dots i{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:11px;font-weight:700;color:var(--muted-2);border:1.5px solid rgba(255,255,255,.14)}
+.dots i.live{border-color:var(--accent);color:var(--text);box-shadow:0 0 0 3px rgba(255,138,61,.2)}
+.dots i.done{background:var(--grad);border-color:transparent;color:#0b0f17}
+.rank{font-size:12.5px;color:var(--muted);padding-left:14px;border-left:1px solid var(--line-2);white-space:nowrap}
+.rank b{color:var(--text)}
+/* main */
+main{flex:1;display:flex;flex-direction:column;justify-content:center;padding:18px 0}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;min-width:0}
+.ph{display:flex;align-items:center;gap:10px;font-size:12px;letter-spacing:.09em;text-transform:uppercase;font-weight:700;color:var(--muted);margin-bottom:14px}
+.ph .num{width:22px;height:22px;border-radius:50%;background:var(--grad);color:#0b0f17;display:grid;place-items:center;font-size:12px;letter-spacing:0}
+.ph .r{margin-left:auto;font-weight:600;letter-spacing:.04em;color:var(--muted-2)}
+.tag{font-size:10.5px;letter-spacing:.06em;color:#ffc24b;border:1px dashed rgba(255,194,75,.5);border-radius:6px;padding:1px 6px}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:11px 20px;border-radius:999px;border:1px solid var(--line-2);background:transparent;font-weight:600;font-size:14.5px}
+.btn.primary{background:var(--grad);color:#0b0f17;border-color:transparent}
+.btn:hover{filter:brightness(1.1)}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:stretch}
+.lead{display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin-bottom:12px;flex-wrap:wrap}
+.lead h2{font-size:21px}
+.lead span{font-size:13.5px;color:var(--muted)}
+/* situation */
+.setup{font-size:15px;color:var(--muted);margin-bottom:14px}
+.team{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;background:var(--bg-soft);border:1px solid var(--line);border-radius:14px;padding:12px 8px;margin-bottom:12px}
+.seat{text-align:center;min-width:0}
+.av{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;margin:0 auto 4px;font-weight:700;font-size:12.5px;background:var(--card-2);border:1.5px solid var(--line-2)}
+.seat.talk .av{border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,138,61,.18)}
+.seat b{font-size:12.5px;display:block}
+.seat small{display:block;font-size:11px;color:var(--muted-2)}
+.pk{display:inline-grid;place-items:center;width:26px;height:34px;border-radius:5px;margin-top:6px;font-weight:800;font-size:13px;background:#0f1522;border:1px solid var(--line-2);color:var(--muted-2)}
+.pk.up{background:var(--grad);color:#0b0f17;border-color:transparent}
+.say{background:var(--card-2);border-radius:12px;padding:9px 13px;margin-top:8px;font-size:14.5px}
+.say b{color:var(--accent);font-size:12px;display:block}
+/* move */
+.q{font-family:"Sora","Inter",sans-serif;font-size:19px;font-weight:700;margin-bottom:12px}
+.choice{display:block;width:100%;text-align:left;padding:14px 16px;margin-bottom:10px;border-radius:12px;background:var(--bg-soft);border:1px solid var(--line-2);font-size:15px;transition:all .15s}
+.choice:hover{border-color:var(--accent);background:var(--card-2);transform:translateX(3px)}
+.hint{margin-top:auto;font-size:12.5px;color:var(--muted-2)}
+.chose{font-size:13px;color:var(--muted);margin-bottom:10px}
+.chose b{color:var(--text);font-weight:600}
+.note{font-size:15.5px;border-left:3px solid var(--accent);padding-left:14px;margin-bottom:14px}
+.deltas{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.dl{font-size:12.5px;font-weight:700;padding:3px 10px;border-radius:999px;background:rgba(255,255,255,.06)}
+.dl.up{color:var(--good)}.dl.dn{color:var(--bad)}
+.move .row{margin-top:auto}
+/* home */
+.hero h1{font-size:clamp(28px,3.6vw,40px);margin-bottom:12px}
+.hero .p{color:var(--muted);font-size:16px;margin-bottom:18px;max-width:460px}
+.how{list-style:none;padding:0;margin:22px 0 0;display:grid;gap:8px;font-size:14px;color:var(--muted)}
+.how li{display:flex;gap:10px;align-items:center}
+.how .num{width:22px;height:22px;border-radius:50%;background:var(--card-2);border:1px solid var(--line-2);display:grid;place-items:center;font-size:11.5px;font-weight:700;color:var(--text);flex:none}
+.hero{display:flex;flex-direction:column;justify-content:center;padding:6px 10px 6px 0}
+.part{font-size:11px;letter-spacing:.09em;text-transform:uppercase;font-weight:700;color:var(--muted-2);margin:10px 0 4px}
+.part:first-of-type{margin-top:0}
+.mrow{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:0;border-radius:9px;padding:6px 8px;font-size:14px;color:var(--muted-2);cursor:default}
+.mrow .n{width:22px;height:22px;border-radius:50%;border:1.5px solid rgba(255,255,255,.14);display:grid;place-items:center;font-size:11px;font-weight:700;flex:none}
+.mrow .st{margin-left:auto;font-size:11.5px;white-space:nowrap}
+.mrow.play{color:var(--text);cursor:pointer;background:var(--card-2);border:1px solid var(--accent);font-weight:600}
+.mrow.play .n{border-color:var(--accent)}
+.mrow.play .st{color:var(--accent)}
+.mrow.done .n{background:var(--grad);border-color:transparent;color:#0b0f17}
+/* finish */
+.check{list-style:none;padding:0;margin:0 0 14px}
+.check li{padding:5px 0 5px 24px;position:relative;font-size:14.5px}
+.check li::before{content:"";position:absolute;left:0;top:10px;width:13px;height:13px;border-radius:4px;border:1.5px solid var(--accent)}
+/* hud */
+.hud{border-top:1px solid var(--line);background:var(--bg-soft);flex:none}
+.hud .wrap{display:flex;align-items:center;gap:22px;padding-top:12px;padding-bottom:12px;flex-wrap:wrap}
+.hud h4{margin:0;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted-2)}
+.meters{display:flex;gap:18px;flex:1;min-width:260px}
+.meter{flex:1;min-width:0}
+.meter .t{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:4px}
+.meter .t b{color:var(--text)}
+.meter .t em{font-style:normal;font-weight:700;margin-left:6px}
+.bar{height:7px;border-radius:7px;background:rgba(255,255,255,.08);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:7px;background:var(--grad);transition:width .7s cubic-bezier(.2,.8,.2,1)}
+.bar.low i{background:var(--bad)}
+.bds{display:flex;gap:6px;align-items:center}
+.bds span{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:14px;border:1px dashed var(--line-2);filter:grayscale(1);opacity:.4;cursor:help}
+.bds span.got{border:0;background:var(--grad);filter:none;opacity:1}
+.toast{position:fixed;left:50%;bottom:84px;background:var(--card-2);border:1px solid var(--accent);border-radius:999px;padding:9px 18px;font-size:13.5px;box-shadow:0 18px 50px -20px #000;transform:translate(-50%,30px);opacity:0;transition:all .35s;z-index:9;pointer-events:none;white-space:nowrap}
+.toast.show{transform:translate(-50%,0);opacity:1}
+.credit{font-size:11.5px;color:var(--muted-2);text-align:center;padding:8px 20px 12px;background:var(--bg-soft)}
+@media(max-width:860px){
+ main{justify-content:flex-start}
+ .two{grid-template-columns:1fr}
+ .prog{margin-left:0;width:100%;order:3;justify-content:space-between}
+ .rank{margin-left:auto;border:0;padding:0}
+ .dots i{width:20px;height:20px}
+ .lead span{display:none}
+ .meters{gap:10px;min-width:100%;order:2}
+ .hud .wrap{gap:10px 14px}
+ .hud h4{white-space:nowrap}
+ .hud h4:first-child{flex:1}
+ .toast{bottom:150px}
+ .hero{padding:0 0 4px}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <button class="brand" id="brand" title="Course home">Coaching the <span class="grad">AI-First Sprint</span> <span class="tag" style="margin-left:6px;vertical-align:middle">DEMO</span></button>
+  <div class="prog"><span id="t-label"></span><div class="dots" id="dots" aria-hidden="true"></div></div>
+  <div class="rank">Rank: <b id="rank">Observer</b></div>
+</div></header>
+<main><div class="wrap" id="app"></div></main>
+<footer>
+  <div class="hud"><div class="wrap">
+    <h4>Team health</h4><div class="meters" id="meters"></div>
+    <h4 id="bcount">Badges</h4><div class="bds" id="bds"></div>
+  </div></div>
+  <div class="credit">A course by Cody J. Boillot, MBA, CSM, CAF · <a href="https://codyboillot.com/">CodyBoillot.com</a> · Progress saves in this browser only</div>
+</footer>
+<div class="toast" id="toast" role="status"></div>
+<script>
+const MODULES=[
+ {id:1,s:"Foundations",part:"Part 1: Foundations",t:"What Changes for the Facilitator",d:"The bottleneck moves from building to reviewing, verifying, and testing."},
+ {id:2,s:"Refinement",part:"Part 2: The Ceremonies",t:"Backlog Refinement",d:"Stories clear enough to hand to an AI, with acceptance criteria that double as tests."},
+ {id:3,s:"Story Pointing",t:"Story Pointing",d:"What points measure when coding is fast, and how to run the room when estimates split.",play:true},
+ {id:4,s:"Planning",t:"Sprint Planning",d:"Capacity when review is the constraint, not coding."},
+ {id:5,s:"Standup",t:"Daily Standup",d:"The new impediments, and the questions that surface them."},
+ {id:6,s:"Review",t:"Sprint Review",d:"Demoing AI-built work honestly and holding the Definition of Done."},
+ {id:7,s:"Retro",t:"Retrospective",d:"Prompts that get at AI-specific problems."},
+ {id:8,s:"Product Owner",part:"Part 3: The People",t:"Working with the Product Owner",d:"Resetting expectations on deliverables."},
+ {id:9,s:"Coaching",t:"Coaching the Team",d:"Resistance, fear of being replaced, and bringing juniors along."}
+];
+const TEAM=[{i:"PR",n:"Priya",r:"Engineer"},{i:"MA",n:"Marcus",r:"Senior engineer"},{i:"LE",n:"Lena",r:"QA"},{i:"SA",n:"Sam",r:"Associate dev"}];
+const BADGES=[
+ {id:"open",e:"💬",n:"Opened the conversation"},{id:"size",e:"📐",n:"Sized the real work"},{id:"base",e:"📉",n:"Reset the baseline"},
+ {id:"done",e:"🛡️",n:"Held the line on Done"},{id:"health",e:"💚",n:"Healthy sprint"},{id:"explore",e:"🧭",n:"Explored another path"}
+];
+/* DRAFT scenario content: placeholder coaching notes until Cody supplies his own practices. */
+const BEATS=[
+ {cards:["1","8","?","?"],talk:[0,1],
+  says:[["Priya","AI writes it. It's a 1."],["Marcus","It's an 8. Review alone is days."]],
+  setup:"The story: add a CSV export to the reports page. The team shows cards and the estimates split wide.",
+  q:"What do you do?",
+  opts:[
+   {t:"Take the 1. AI is fast.",d:{Trust:-10,Delivery:10,Quality:-15},note:"You got a number quickly, and Marcus stopped talking. A wide split is information: two people see different work. Closing it early throws that away."},
+   {t:"Ask Priya and Marcus what's inside their number.",d:{Trust:10,Delivery:0,Quality:5},badge:"open",note:"A 1 and an 8 on the same story means two different mental models. Your job is to get both on the table, not to pick a winner. Priya is sizing the typing. Marcus is sizing everything after it."},
+   {t:"Average it to a 5 and move on.",d:{Trust:-5,Delivery:0,Quality:-5},note:"Averaging feels fair and teaches nothing. Neither of them believes the 5, and the disagreement returns mid-sprint as a surprise."}
+  ]},
+ {cards:["1","8","5","?"],talk:[2,3],
+  says:[["Lena","Generating it takes an hour. Proving it handles 50,000 rows and respects permissions is the job."],["Sam","So what do points even measure now?"]],
+  setup:"The conversation opens up. Sam asks the question everyone has been avoiding.",
+  q:"How do you answer Sam?",
+  opts:[
+   {t:"Points measure the effort to reach a verified Done: understand, prompt, review, test.",d:{Trust:5,Delivery:0,Quality:10},badge:"size",note:"When AI writes the code, typing stops being the cost. Understanding the problem, verifying the output, and testing it are the cost. Size those and the estimates converge."},
+   {t:"Points still measure coding. We'll track review time somewhere else.",d:{Trust:0,Delivery:5,Quality:-10},note:"This keeps the old numbers tidy and hides the real work. Review and testing become invisible, then get squeezed when the sprint runs short."},
+   {t:"Let's drop points and count stories.",d:{Trust:-5,Delivery:-5,Quality:0},note:"Some mature teams do this well. For a team mid-transition, it removes the one conversation that surfaces how differently people see the work."}
+  ]},
+ {cards:["5","5","5","5"],talk:[],po:true,
+  says:[["Dana, Product Owner","Velocity was 40 last quarter. With AI, I've told leadership to expect 80."]],
+  setup:"The team lands on a 5. Then the Product Owner joins the call.",
+  q:"How do you respond to Dana?",
+  opts:[
+   {t:"We can try for 80.",d:{Trust:-15,Delivery:5,Quality:-15},note:"You've agreed to a number nobody on the team produced. The team hears that their estimates don't matter, and the fastest way to hit 80 is to skip verification."},
+   {t:"Show where the time goes now, and propose re-baselining over the next three sprints.",d:{Trust:10,Delivery:5,Quality:5},badge:"base",note:"Dana isn't wrong that AI changes throughput. She's wrong about where. Show the data: coding shrank, review and testing grew. Offer a new baseline and a date, so she has something true to take to leadership."},
+   {t:"Velocity is the team's number, not a target.",d:{Trust:-10,Delivery:-5,Quality:5},note:"Technically right, and it leaves Dana alone with a promise she already made. Protect the team and give the PO a way forward in the same breath."}
+  ]},
+ {cards:["✓","","",""],talk:[0],
+  says:[["Priya","Export's done. AI generated it, it works on my machine, it's merged."],["Lena","There are no tests."]],
+  setup:"Last day of the sprint. The CSV export shows up in the Done column.",
+  q:"Is it Done?",
+  opts:[
+   {t:"It works in the demo. Count it.",d:{Trust:0,Delivery:10,Quality:-20},note:"The sprint looks better today. Nobody on the team wrote this code, so nobody knows how it fails. Without tests, Done means 'generated'."},
+   {t:"Not Done until tests pass and a person has reviewed it. Move it back.",d:{Trust:5,Delivery:-5,Quality:15},badge:"done",note:"This costs you a story this sprint and is the most important call in the scenario. When the team didn't write the code, tests and review are how the team comes to own it."},
+   {t:"Count it, and add a ticket for tests next sprint.",d:{Trust:0,Delivery:5,Quality:-10},note:"The follow-up ticket rarely wins against new features. You've also told the team that Done is negotiable when the sprint is tight."}
+  ]}
+];
+const CHECK=["Treat a wide estimate split as information; ask what is inside each number.","Size the path to verified Done: understand, prompt, review, test.","Re-baseline velocity after the move to AI; don't inherit old targets.","Give the Product Owner data and a date, not just a no.","Generated is not Done. Tests and human review are the gate."];
+const KEY="aisprint.v1",M0={Trust:60,Delivery:60,Quality:60};
+let S={done:[],badges:[],plays:0,best:null};
+try{S=Object.assign(S,JSON.parse(localStorage.getItem(KEY)||"{}"))}catch(e){}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+let run=null;
+const $=id=>document.getElementById(id), esc=s=>s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function toast(msg){const t=$("toast");t.textContent=msg;t.classList.add("show");clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove("show"),2800)}
+function award(id){if(S.badges.includes(id))return;S.badges.push(id);save();toast("Badge earned: "+BADGES.find(b=>b.id===id).n)}
+function chrome(delta){
+  const n=MODULES.length,live=run?3:null;
+  $("dots").innerHTML=MODULES.map(m=>`<i class="${S.done.includes(m.id)?"done":m.id===live?"live":""}" title="${m.id}. ${m.t}">${S.done.includes(m.id)?"✓":m.id}</i>`).join("");
+  $("t-label").textContent=live?"Module 3 of 9":S.done.length+" of "+n+" modules done";
+  $("rank").textContent=["Observer","Facilitator","Coach","Agile Leader"][S.done.length>=9?3:S.done.length>=5?2:S.done.length>=1?1:0];
+  const M=run?run.m:(S.best||M0),box=$("meters");
+  if(!box.children.length)box.innerHTML=Object.keys(M0).map(k=>`<div class="meter" data-k="${k}"><div class="t"><span>${k}<em></em></span><b></b></div><div class="bar"><i style="width:0"></i></div></div>`).join("");
+  [...box.children].forEach(el=>{const k=el.dataset.k,v=M[k],d=delta&&delta[k];
+    el.querySelector("b").textContent=v;el.querySelector(".bar").className="bar"+(v<40?" low":"");
+    const em=el.querySelector("em");em.textContent=d?(d>0?"+":"")+d:"";em.style.color=d>0?"var(--good)":"var(--bad)";
+    requestAnimationFrame(()=>el.querySelector("i").style.width=v+"%")});
+  $("bcount").textContent="Badges "+S.badges.length+"/"+BADGES.length;
+  $("bds").innerHTML=BADGES.map(b=>`<span class="${S.badges.includes(b.id)?"got":""}" title="${b.n}${S.badges.includes(b.id)?"":" (locked)"}">${b.e}</span>`).join("");
+}
+function home(){
+  run=null;const done=S.done.includes(3);
+  let list="";MODULES.forEach(m=>{if(m.part)list+=`<div class="part">${m.part}</div>`;
+    list+=m.play?`<button class="mrow play ${done?"done":""}" data-go="story-pointing"><span class="n">${done?"✓":m.id}</span>${m.t}<span class="st">${done?"Replay →":"Play now →"}</span></button>`
+                :`<div class="mrow"><span class="n">${m.id}</span>${m.t}<span class="st">Coming soon</span></div>`});
+  $("app").innerHTML=`<div class="two">
+   <section class="hero"><p style="font-size:12px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--accent);margin-bottom:10px">Agile leadership when AI writes the code</p><h1>Run a great sprint when <span class="grad">AI writes the code</span>.</h1>
+    <p class="p">An interactive course for Scrum Masters, Agile coaches and the leaders they work with. You take the facilitator's seat in real sprint situations.</p>
+    <div class="row"><button class="btn primary" data-go="story-pointing">${done?"Replay the scenario →":"Try a 2-minute scenario →"}</button></div>
+    <ol class="how"><li><span class="num">1</span>Read the situation your team is in</li><li><span class="num">2</span>Choose what you'd do as facilitator</li><li><span class="num">3</span>See how I'd coach it, and what it does to the team</li></ol></section>
+   <section class="panel"><div class="ph">The course · 9 modules <span class="r tag">Demo: 1 of 9 playable</span></div>${list}</section></div>`;
+  chrome();
+}
+function scene(delta){
+  const b=BEATS[run.i],o=run.pick!=null?b.opts[run.pick]:null;
+  const right=o?`<section class="panel move"><div class="ph"><span class="num">3</span>How I'd coach this</div>
+     <p class="chose">You chose: <b>${esc(o.t)}</b></p><p class="note">${esc(o.note)}</p>
+     <div class="deltas">${Object.entries(o.d).filter(e=>e[1]).map(([k,v])=>`<span class="dl ${v>0?"up":"dn"}">${k} ${v>0?"+":""}${v}</span>`).join("")}</div>
+     <div class="row"><button class="btn primary" data-next>${run.i<BEATS.length-1?"Next situation →":"See how the sprint ended →"}</button></div></section>`
+   :`<section class="panel move"><div class="ph"><span class="num">2</span>Your move</div><div class="q">${b.q}</div>
+     ${b.opts.map((x,i)=>`<button class="choice" data-pick="${i}">${esc(x.t)}</button>`).join("")}
+     <p class="hint">There's no single right answer. Each choice moves Trust, Delivery and Quality below.</p></section>`;
+  $("app").innerHTML=`<div class="lead"><h2>Story Pointing: the estimate that split the room</h2><span>You're the Scrum Master for this team.</span></div>
+  <div class="two"><section class="panel"><div class="ph"><span class="num">1</span>The situation <span class="r">${run.i+1} of ${BEATS.length}</span></div>
+   <p class="setup">${b.setup}</p>
+   <div class="team">${TEAM.map((p,i)=>`<div class="seat ${b.talk.includes(i)?"talk":""}"><div class="av">${p.i}</div><b>${p.n}</b><small>${p.r}</small><span class="pk ${b.cards[i]&&b.cards[i]!=="?"?"up":""}">${b.cards[i]||"·"}</span></div>`).join("")}</div>
+   ${b.says.map(x=>`<div class="say"><b>${esc(x[0])}</b>“${esc(x[1])}”</div>`).join("")}</section>${right}</div>`;
+  chrome(delta);
+}
+function finish(){
+  const M=run.m,healthy=Object.values(M).every(v=>v>=60),low=Object.keys(M).sort((a,b)=>M[a]-M[b])[0],got=run.earned.length;
+  if(!S.done.includes(3))S.done.push(3);S.plays++;S.best=M;save();
+  if(healthy)award("health");if(S.plays>1)award("explore");
+  run=null;
+  $("app").innerHTML=`<div class="two"><section class="panel"><div class="ph">Module 3 complete</div>
+   <h2 style="font-size:24px;margin-bottom:10px">${healthy?"A healthy sprint.":"Sprint closed. "+low+" took the hit."}</h2>
+   <p class="muted" style="margin-bottom:10px">${healthy?"You kept Trust, Delivery and Quality in balance, which is the whole job.":"Every choice traded something. Replay it and make a different call to see how the outcome changes."}</p>
+   <p class="muted" style="font-size:13.5px;margin-bottom:18px">Badges earned this run: ${got}. Final team health is shown below.</p>
+   <div class="row" style="margin-top:auto"><button class="btn primary" data-go="story-pointing">Replay another path</button><button class="btn" data-go="home">Back to the course</button></div></section>
+  <section class="panel"><div class="ph">Your takeaway</div><h3 style="font-size:16px;margin-bottom:8px">Facilitator's checklist: Story Pointing</h3>
+   <ul class="check">${CHECK.map(c=>`<li>${c}</li>`).join("")}</ul><div class="row" style="margin-top:auto"><button class="btn" id="copy">Copy checklist</button></div></section></div>`;
+  chrome();
+}
+function start(){run={i:0,pick:null,m:{...M0},earned:[]};scene();window.scrollTo(0,0)}
+document.addEventListener("click",e=>{
+  const t=e.target.closest("button");if(!t)return;
+  if(t.id==="brand"){if(location.hash==="#home"||!location.hash)home();else location.hash="home";return}
+  if(t.id==="copy"){const txt="Story Pointing in an AI-first team\n"+CHECK.map(c=>"- "+c).join("\n");
+    (navigator.clipboard?navigator.clipboard.writeText(txt):Promise.reject()).then(()=>toast("Checklist copied"),()=>toast("Copy isn't available here"));return}
+  if(t.dataset.go){if(location.hash==="#"+t.dataset.go)route();else location.hash=t.dataset.go;return}
+  if(t.dataset.pick!=null&&run&&run.pick==null){const o=BEATS[run.i].opts[+t.dataset.pick];run.pick=+t.dataset.pick;
+    for(const k in o.d)run.m[k]=Math.max(0,Math.min(100,run.m[k]+o.d[k]));
+    if(o.badge){run.earned.push(o.badge);award(o.badge)}scene(o.d);return}
+  if("next" in t.dataset&&run){if(run.i<BEATS.length-1){run.i++;run.pick=null;scene()}else finish();window.scrollTo(0,0)}
+});
+function route(){location.hash==="#story-pointing"?start():home()}
+window.addEventListener("hashchange",route);route();
+</script>
+</body>
+</html>
