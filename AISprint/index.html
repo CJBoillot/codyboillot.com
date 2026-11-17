@@ -3,8 +3,11 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Facilitating the AI-First Sprint</title>
-<meta name="description" content="A short interactive course by Cody J. Boillot on Agile facilitation when AI writes much of the code." />
+<title>Coaching the AI-First Sprint: Agile Leadership When AI Writes the Code</title>
+<meta property="og:title" content="Coaching the AI-First Sprint" />
+<meta property="og:description" content="An interactive demo course by Cody J. Boillot on Agile leadership when AI writes the code." />
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml" />
+<meta name="description" content="An interactive demo course by Cody J. Boillot: coaching and Agile leadership for teams where AI writes the code." />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet" />
@@ -127,7 +130,7 @@ main{flex:1;display:flex;flex-direction:column;justify-content:center;padding:18
 </head>
 <body>
 <header class="top"><div class="wrap">
-  <button class="brand" id="brand" title="Course home">Facilitating the <span class="grad">AI-First Sprint</span></button>
+  <button class="brand" id="brand" title="Course home">Coaching the <span class="grad">AI-First Sprint</span> <span class="tag" style="margin-left:6px;vertical-align:middle">DEMO</span></button>
   <div class="prog"><span id="t-label"></span><div class="dots" id="dots" aria-hidden="true"></div></div>
   <div class="rank">Rank: <b id="rank">Observer</b></div>
 </div></header>
@@ -225,16 +228,16 @@ function home(){
     list+=m.play?`<button class="mrow play ${done?"done":""}" data-go="story-pointing"><span class="n">${done?"✓":m.id}</span>${m.t}<span class="st">${done?"Replay →":"Play now →"}</span></button>`
                 :`<div class="mrow"><span class="n">${m.id}</span>${m.t}<span class="st">Coming soon</span></div>`});
   $("app").innerHTML=`<div class="two">
-   <section class="hero"><h1>Run a great sprint when <span class="grad">AI writes the code</span>.</h1>
-    <p class="p">A short interactive course for Scrum Masters and Agile coaches. You take the facilitator's seat in real sprint situations.</p>
+   <section class="hero"><p style="font-size:12px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--accent);margin-bottom:10px">Agile leadership when AI writes the code</p><h1>Run a great sprint when <span class="grad">AI writes the code</span>.</h1>
+    <p class="p">An interactive course for Scrum Masters, Agile coaches and the leaders they work with. You take the facilitator's seat in real sprint situations.</p>
     <div class="row"><button class="btn primary" data-go="story-pointing">${done?"Replay the scenario →":"Try a 2-minute scenario →"}</button></div>
     <ol class="how"><li><span class="num">1</span>Read the situation your team is in</li><li><span class="num">2</span>Choose what you'd do as facilitator</li><li><span class="num">3</span>See how I'd coach it, and what it does to the team</li></ol></section>
-   <section class="panel"><div class="ph">The course · 9 modules <span class="r tag">Preview: 1 playable</span></div>${list}</section></div>`;
+   <section class="panel"><div class="ph">The course · 9 modules <span class="r tag">Demo: 1 of 9 playable</span></div>${list}</section></div>`;
   chrome();
 }
 function scene(delta){
   const b=BEATS[run.i],o=run.pick!=null?b.opts[run.pick]:null;
-  const right=o?`<section class="panel move"><div class="ph"><span class="num">3</span>How I'd coach this <span class="r tag">Draft wording</span></div>
+  const right=o?`<section class="panel move"><div class="ph"><span class="num">3</span>How I'd coach this</div>
      <p class="chose">You chose: <b>${esc(o.t)}</b></p><p class="note">${esc(o.note)}</p>
      <div class="deltas">${Object.entries(o.d).filter(e=>e[1]).map(([k,v])=>`<span class="dl ${v>0?"up":"dn"}">${k} ${v>0?"+":""}${v}</span>`).join("")}</div>
      <div class="row"><button class="btn primary" data-next>${run.i<BEATS.length-1?"Next situation →":"See how the sprint ended →"}</button></div></section>`
@@ -258,7 +261,7 @@ function finish(){
    <p class="muted" style="margin-bottom:10px">${healthy?"You kept Trust, Delivery and Quality in balance, which is the whole job.":"Every choice traded something. Replay it and make a different call to see how the outcome changes."}</p>
    <p class="muted" style="font-size:13.5px;margin-bottom:18px">Badges earned this run: ${got}. Final team health is shown below.</p>
    <div class="row" style="margin-top:auto"><button class="btn primary" data-go="story-pointing">Replay another path</button><button class="btn" data-go="home">Back to the course</button></div></section>
-  <section class="panel"><div class="ph">Your takeaway <span class="r tag">Draft wording</span></div><h3 style="font-size:16px;margin-bottom:8px">Facilitator's checklist: Story Pointing</h3>
+  <section class="panel"><div class="ph">Your takeaway</div><h3 style="font-size:16px;margin-bottom:8px">Facilitator's checklist: Story Pointing</h3>
    <ul class="check">${CHECK.map(c=>`<li>${c}</li>`).join("")}</ul><div class="row" style="margin-top:auto"><button class="btn" id="copy">Copy checklist</button></div></section></div>`;
   chrome();
 }
