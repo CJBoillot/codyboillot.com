@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>How I Lead: Cody J. Boillot</title>
+<meta name="description" content="An interactive model of how Cody J. Boillot leads: people and relationships first, then process, then product." />
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700&display=swap" rel="stylesheet" />
+<style>
+:root{--bg:#0b0f17;--card:#141b2b;--card-2:#1a2336;--line:rgba(255,255,255,.09);--line-2:rgba(255,255,255,.2);--text:#eef2f9;--muted:#9aa6bd;--muted-2:#6b768e;--accent:#ff8a3d;--grad:linear-gradient(100deg,#ffc24b 0%,#ff8a3d 45%,#ff5e62 100%)}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font-family:"Inter",system-ui,sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased;min-height:100vh;display:flex;flex-direction:column;justify-content:center}
+h1,h2{font-family:"Sora","Inter",sans-serif;margin:0;line-height:1.2}
+button{font:inherit;color:inherit;cursor:pointer}
+a{color:var(--accent)}
+.wrap{width:100%;max-width:1240px;margin:0 auto;padding:14px 20px}
+.head{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:2px;border-left:3px solid var(--accent);padding-left:12px}
+.head h1{font-size:24px}
+.head p{margin:0;color:var(--muted);font-size:14.5px}
+.tag{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:#ffc24b;border:1px dashed rgba(255,194,75,.5);border-radius:6px;padding:1px 7px;margin-left:auto}
+.grid{display:grid;grid-template-columns:minmax(0,1.75fr) minmax(310px,1fr);gap:16px;align-items:center}
+svg{width:100%;height:auto;display:block;max-height:calc(100vh - 150px)}
+svg text{font-family:"Inter",sans-serif;pointer-events:none}
+.seg{cursor:pointer;transform-origin:450px 262px;transition:transform .2s,filter .2s,opacity .2s}
+.seg path{stroke:rgba(255,255,255,.08);stroke-width:1;transition:fill .2s}
+.seg text{font-weight:600;fill:#fff}
+.r0 path{fill:#ee7f52}.seg.r0 text{fill:#0b0f17;font-weight:700}.r1 path{fill:#12897b}.r2 path{fill:#1e4a94}
+.r0 text{font-size:11.5px}.r1 text{font-size:13px}.r2 text{font-size:14px}
+.seg:hover{filter:brightness(1.2)}
+.seg.dim{opacity:.4}
+.seg.rel path{stroke:#ffc24b;stroke-width:1.5}
+.seg.on{transform:scale(1.035)}
+.seg.on path{fill:url(#g);stroke:#fff;stroke-width:2}
+.seg.on text{fill:#0b0f17}
+#core{cursor:pointer;transition:filter .2s}
+#core:hover{filter:brightness(1.1)}
+#core.on{stroke:#fff;stroke-width:2.5}
+.core-t{font-family:"Sora","Inter",sans-serif;font-weight:700;font-size:13.5px;fill:#0b0f17}
+.wire{fill:none;stroke:rgba(255,255,255,.4);stroke-width:1.25;transition:stroke .2s;pointer-events:none}
+.dot{fill:#cfd6e4;transition:fill .2s;pointer-events:none}
+.wire.on{stroke:#ffc24b;stroke-width:2.25}.dot.on{fill:#ffc24b}
+.pill{cursor:pointer}
+.pill rect{fill:var(--card);stroke:var(--line-2);stroke-width:1.25;transition:all .2s}
+.pill text{font-size:14px;font-weight:600;fill:var(--text)}
+.pill:hover rect,.pill.rel rect{stroke:#ffc24b}
+.pill.on rect{fill:#ff8a3d;stroke:#ff8a3d}.pill.on text{fill:#0b0f17}
+.seg:focus,.pill:focus,#core:focus{outline:none}
+.pill:focus-visible rect,.seg:focus-visible path,#core:focus-visible{stroke:#fff;stroke-width:2.5;outline:none}
+.halo-t{font-family:"Sora","Inter",sans-serif;font-size:17px;font-weight:700;fill:#eef2f9}
+@keyframes pop{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:scale(1)}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@media(prefers-reduced-motion:no-preference){
+ #core{animation:pop .45s both;transform-origin:450px 262px}
+ .seg.r0{animation:pop .45s .3s both}.seg.r1{animation:pop .45s .55s both}.seg.r2{animation:pop .45s .8s both}
+ #halo,.halo-t,#wires,#pills{animation:fade .5s 1.2s both}
+}
+.legend{display:flex;justify-content:center;gap:22px;font-size:13px;color:var(--muted);margin-top:2px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:7px}
+.panel{background:var(--card);border:1px solid var(--line-2);border-radius:18px;padding:20px 22px;min-height:470px;display:flex;flex-direction:column}
+.kind{font-size:13px;font-weight:600;color:var(--accent);margin-bottom:4px}
+.panel h2{font-size:23px;margin-bottom:8px}
+.belief{font-size:15.5px;color:var(--muted);margin:0 0 6px}
+.sec{font-size:13px;font-weight:700;color:var(--muted);margin:12px 0 6px}
+.stat{display:flex;align-items:center;gap:14px;padding:5px 0;border-bottom:1px solid var(--line);font-size:14px}
+.stat b{font-family:"Sora","Inter",sans-serif;font-size:27px;line-height:1.1;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;min-width:84px}
+.panel ul{list-style:none;margin:0;padding:0}
+.panel li{position:relative;padding:3px 0 3px 18px;font-size:14.5px}
+.panel li::before{content:"";position:absolute;left:0;top:11px;width:7px;height:7px;border-radius:50%;background:var(--grad)}
+.chiprow{display:flex;gap:8px;flex-wrap:wrap}
+.chip{font-size:12.5px;font-weight:600;padding:5px 12px;border-radius:999px;background:transparent;border:1px solid var(--line-2);color:var(--text)}
+.chip:hover{border-color:var(--accent)}
+.chip.on{background:var(--accent);border-color:var(--accent);color:#0b0f17}
+.nav{margin-top:auto;padding-top:14px;display:flex;align-items:center;justify-content:space-between;font-size:13.5px;color:var(--muted)}
+.nav button{width:42px;height:34px;border-radius:9px;background:var(--card-2);border:1px solid var(--line-2);font-size:16px}
+.nav button:hover{border-color:var(--accent)}
+.chips{display:none;margin:10px 0 12px}
+.chips .grp{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px}
+.chips .grp b{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted-2);width:100%}
+.chips .chip{font-size:13.5px;padding:8px 13px}
+.chips i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px}
+@media(max-width:900px){
+ body{justify-content:flex-start}
+ .grid{grid-template-columns:minmax(0,1fr);gap:4px}
+ .grid>*,.chips,.panel{min-width:0}
+ #pills,#wires{display:none}
+ .grid>div:first-child{display:contents}
+ #svg{order:1}.legend{order:2;margin:0 0 6px;font-size:12.5px}.panel{order:3}.chips{order:4;display:block;margin:12px 0 0}
+ .chips .grp{flex-wrap:nowrap;overflow-x:auto;margin:0;padding-bottom:6px;scrollbar-width:none}
+ .chips .grp::-webkit-scrollbar{display:none}
+ .chips .grp b{width:auto;flex:none;margin-right:2px}
+ .chips .chip{flex:none;padding:7px 12px}
+ .panel .nav{order:-1;margin:0 0 12px;padding:0 0 12px;border-bottom:1px solid var(--line)}
+ .panel{padding:14px 18px 18px}
+ svg{max-height:none}
+ .panel{min-height:0}
+ .tag{margin-left:0}
+ .r0 text{font-size:12.5px}.r1 text{font-size:14.5px}.r2 text{font-size:15.5px}
+}
+body.embed{min-height:0;background:transparent;display:block}
+body.embed .head{display:none}
+body.embed .wrap{padding:0;max-width:none}
+body.embed svg{max-height:560px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head"><h1>How I lead</h1><p>People and relationships first. Everything else grows from that.</p></div>
+  <div class="grid">
+    <div>
+      <svg id="svg" viewBox="0 0 900 545" role="group" aria-label="Leadership model: a core of people and relationships, surrounded by rings of people, process and product practices">
+        <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffc24b"/><stop offset=".5" stop-color="#ff8a3d"/><stop offset="1" stop-color="#ff5e62"/></linearGradient></defs>
+        <circle id="halo" cx="450" cy="262" r="246" fill="none" stroke="url(#g)" stroke-width="2"/>
+        <g id="tps"></g><g id="segs"></g>
+        <circle id="core" data-id="core" cx="450" cy="262" r="62" fill="url(#g)" tabindex="0" role="button" aria-label="People and relationships"/>
+        <text class="core-t" x="450" y="258" text-anchor="middle">People &amp;</text>
+        <text class="core-t" x="450" y="275" text-anchor="middle">Relationships</text>
+        <g id="wires"></g>
+        <g id="pills"></g>
+        <text class="halo-t" x="450" y="537" text-anchor="middle">Excellence delivered</text>
+      </svg>
+      <div class="legend"><span><i style="background:#ee7f52"></i>People</span><span><i style="background:#12897b"></i>Process</span><span><i style="background:#1e4a94"></i>Product</span></div>
+      <div class="chips" id="chips"></div>
+    </div>
+    <aside class="panel" id="panel" aria-live="polite"></aside>
+  </div>
+</div>
+<script>
+/* Evidence lines come from Cody's resume. Titles and "how" lines are DRAFT wording for him to replace. */
+const RINGS=["People","Process","Product"];
+const SEGS=[
+ {r:0,l:"Coaching",t:"Coach people into leaders",ev:[["70+","engineers hired and trained"],["90%+","retention over two years"]],how:["Six-month, competency-based curriculum","Reviews and retros become lessons","Coach until the team runs without me"],d:["psych","coach"]},
+ {r:0,l:"Fair hiring",t:"Hire on evidence, not instinct",ev:[["16","direct reports across five teams"],[null,"Own technical hiring end to end"]],how:["Structured interviews with defined criteria","Every interviewer scores against the same standard","Decisions that are consistent and defensible"],d:["psych","mil"]},
+ {r:0,l:"Shared knowledge",t:"Make learning a team habit",ev:[["100+","staff trained on AI tools"],[null,"Founded a weekly Tech Talks series"]],how:["Short weekly talks that anyone can give","Explain what something is before how to do it","Welcome every level of experience"],d:["coach","agile"]},
+ {r:0,l:"Psychological safety",t:"Make it safe to speak up",ev:[[null,"Doctoral candidate, Industrial & Organizational Psychology"],[null,"Dissertation research on time off and fear of retaliation"]],how:["Ask before telling","Treat mistakes as information, not failure","Protect time off and work-life balance"],d:["psych","coach"]},
+ {r:1,l:"AI-first lifecycle",t:"Move a whole organization to AI-first delivery",ev:[["70+","engineers moved to an AI-first lifecycle"],[null,"Wrote the AI best-practice and security guidance"]],how:["Change how work is estimated, built, verified and tested","Train through hands-on sessions, not memos","Adjust the rollout from team feedback"],d:["ai","agile"]},
+ {r:1,l:"Story pointing",t:"Estimate the real work",ev:[[null,"Redefined story-point estimation and capacity planning for AI-assisted delivery"]],how:["Size review, verification and testing, not typing","Treat a wide estimate split as information","Re-baseline velocity instead of inheriting old targets"],d:["agile","ai"],link:["https://codyboillot.com/AISprint/","Play the Story Pointing scenario"]},
+ {r:1,l:"Testing as the gate",t:"Generated is not done",ev:[["35%","gain in reliability and release predictability on government platforms"],[null,"Made testing the quality gate for AI-written code"]],how:["Tests and human review before anything is Done","Teach engineers to debug code they did not write","Hold the Definition of Done under deadline pressure"],d:["mil","agile"]},
+ {r:1,l:"Light ceremonies",t:"Meetings that earn their time",ev:[[null,"Certified ScrumMaster since 2020, Certified Agile Facilitator since 2023"],[null,"Scrum Master at Sallie Mae; Product Owner for three teams"]],how:["Facilitate the room without dominating it","Remove impediments before they cost a sprint","Every retrospective ends with one change to try"],d:["agile","coach"]},
+ {r:2,l:"Vision & roadmap",t:"Own it from idea to adoption",ev:[["100+","daily users on one internal platform"],[null,"Direct a portfolio of platforms for a 70+ person organization"]],how:["Own vision, roadmap and backlog","Run discovery with the people who will use it","Plan releases around adoption, not launch day"],d:["mba","agile"]},
+ {r:2,l:"KPIs & value",t:"Measure what the work is worth",ev:[["$5M+","annual savings from vendor consolidation"]],how:["Define success measures before building","Weigh cost, risk and value before committing a team","Let user feedback set the next priority"],d:["mba"]},
+ {r:2,l:"Executive reporting",t:"Tell leaders the truth, briefly",ev:[["0","disruption to operations during a $5M+ vendor transition"],[null,"Concise executive reporting on milestones, risks and tradeoffs"]],how:["Lead with the decision that is needed","Offer options with their tradeoffs","No surprises: raise risk early"],d:["mba","mil"]},
+ {r:2,l:"AI-built products",t:"Ship by directing AI agents",ev:[["2026","founded and launched LoPro, a CRM run by AI agents"],[null,"Live apps and demos at CodyBoillot.com"]],how:["Direct AI agents, then verify and test the output","Prototype in days to learn what users need","Teach others to build the same way"],d:["ai","mba"]}
+];
+const SKILLS=[
+ {id:"psych",t:"Org Psychology",layer:"people",x:10,y:60,full:"Organizational Psychology",kind:"Background",
+  ev:["Doctoral candidate, Industrial & Organizational Psychology, Touro University","Dissertation research on paid time off and fear of retaliation at work"],
+  how:["Design training around how adults learn and stay motivated","Build teams where it is safe to ask, disagree and take time off","Use consistent, evidence-based criteria to evaluate people"]},
+ {id:"coach",t:"Coaching",layer:"people",x:610,y:60,full:"Coaching",kind:"Background",
+  ev:["Built the Associate Developer Program from zero to <b>70+</b> engineers","Trained <b>100+</b> staff on AI tools","U.S. Air Force flight instructor and evaluator"],
+  how:["Six-month, competency-based curriculum with clear milestones","Teach in the flow of work: reviews and retros become lessons","Coach until the team no longer needs me in the room"]},
+ {id:"agile",t:"Agile: CSM, CAF",layer:"process",x:10,y:232,full:"Agile: CSM and CAF",kind:"Background",
+  ev:["Certified ScrumMaster since 2020; Certified Agile Facilitator since 2023","Both active through 2028","Scrum Master at Sallie Mae; Product Owner for three teams at Indiana DWD"],
+  how:["Facilitate planning, standups, reviews and retrospectives","Remove impediments before they become missed sprints","Adapt Scrum for teams where AI writes much of the code"]},
+ {id:"mil",t:"Military",layer:"process",x:610,y:232,full:"Military Service",kind:"Background",
+  ev:["U.S. Air Force, 2001 to 2010, Staff Sergeant, inflight refueling","Combat missions over Iraq and Afghanistan","Multiple Air Medals and Aerial Achievement Medals"],
+  how:["Set clear standards, then trust people to meet them","Assess risk before acting, and stay calm when plans change","Look after morale as seriously as the mission"]},
+ {id:"mba",t:"MBA",layer:"product",x:10,y:404,full:"MBA",kind:"Background",
+  ev:["Master of Business Administration, University of Phoenix","Led vendor consolidation and contract negotiation that saved <b>$5M+</b> a year","Managed scope, schedule and budget across concurrent programs"],
+  how:["Tie every roadmap item to a business outcome","Weigh cost, risk and value before committing a team","Speak to executives in their terms, not engineering's"]},
+ {id:"ai",t:"AI Leverage",layer:"product",x:610,y:404,full:"AI Leverage",kind:"Background",
+  ev:["Wrote the organization's AI best-practice and security guidance","Ship working products by directing AI coding agents","Conceived an internal studio that turns prompts into working apps"],
+  how:["Use AI for speed, then verify and test everything it produces","Teach prompting, verification and debugging as core skills","Adopt tools only after a security and value review"]}
+];
+const CX=450,CY=262,RAD=[[70,118],[126,176],[184,236]],NS="http://www.w3.org/2000/svg",rad=d=>d*Math.PI/180;
+const P=(r,a)=>[(CX+r*Math.cos(a)).toFixed(2),(CY+r*Math.sin(a)).toFixed(2)];
+const el=(n,a,p)=>{const e=document.createElementNS(NS,n);for(const k in a)e.setAttribute(k,a[k]);p.appendChild(e);return e};
+const segG=document.getElementById("segs"),GAP=7;
+SEGS.forEach((s,i)=>{
+  const k=i%4,c=-90+k*90,[r0,r1]=RAD[s.r],a0=rad(c-45),a1=rad(c+45),po=GAP/(2*r1),pi=GAP/(2*r0),rm=(r0+r1)/2;
+  const g=el("g",{class:"seg r"+s.r,"data-id":"s"+i,id:"s"+i,tabindex:0,role:"button","aria-label":RINGS[s.r]+": "+s.l},segG);
+  el("path",{d:`M${P(r1,a0+po)}A${r1},${r1} 0 0 1 ${P(r1,a1-po)}L${P(r0,a1-pi)}A${r0},${r0} 0 0 0 ${P(r0,a0+pi)}Z`},g);
+  const flip=k===2,pad=rad(4);
+  el("path",{id:"tp"+i,fill:"none",d:flip?`M${P(rm,a1-pad)}A${rm},${rm} 0 0 0 ${P(rm,a0+pad)}`:`M${P(rm,a0+pad)}A${rm},${rm} 0 0 1 ${P(rm,a1-pad)}`},document.getElementById("tps"));
+  const t=el("text",{dy:".35em"},g),tp=el("textPath",{href:"#tp"+i,startOffset:"50%","text-anchor":"middle"},t);tp.textContent=s.l;
+});
+/* pill slots: [x, y, approach angle, target radius] */
+const SLOT={psych:[10,59,225,62],mba:[10,244,180,236],coach:[10,429,135,62],agile:[740,59,315,176],ai:[740,244,0,236],mil:[740,429,45,176]};
+SKILLS.forEach(s=>{
+  const [x,y,ang,rt]=SLOT[s.id],left=x<450,px=left?x+150:x,py=y+18,a=rad(ang),e=P(ang%180===0?rt:258,a),t=P(rt,a);
+  el("path",{class:"wire",id:"w-"+s.id,d:`M${px},${py}L${e}L${t}`},document.getElementById("wires"));
+  el("circle",{class:"dot",id:"d-"+s.id,cx:t[0],cy:t[1],r:5},document.getElementById("wires"));
+  const g=el("g",{class:"pill",id:"p-"+s.id,"data-id":s.id,tabindex:0,role:"button","aria-label":s.full},document.getElementById("pills"));
+  el("rect",{x,y,width:150,height:36,rx:18},g);
+  el("text",{x:x+75,y:y+23,"text-anchor":"middle"},g).textContent=s.t;
+});
+document.getElementById("chips").innerHTML=`<div class="grp"><b>Draws on</b>${SKILLS.map(s=>`<button class="chip" data-id="${s.id}">${s.t}</button>`).join("")}</div>`;
+const LAYER={people:0,process:1,product:2};
+const list=a=>"<ul>"+a.map(x=>"<li>"+x+"</li>").join("")+"</ul>";
+const stats=a=>a.map(([n,c])=>n?`<div class="stat"><b>${n}</b><span>${c}</span></div>`:`<div class="stat"><span>${c}</span></div>`).join("");
+const chip=(id,label)=>`<button class="chip" data-id="${id}">${label}</button>`;
+let cur=0;
+function select(id){
+  const si=/^s\d+$/.test(id)?+id.slice(1):-1,seg=SEGS[si],sk=SKILLS.find(s=>s.id===id);
+  if(seg)cur=si;
+  SEGS.forEach((s,i)=>{const on=i===si,rel=sk?s.d.includes(sk.id):id==="core"&&s.r===0;
+    document.getElementById("s"+i).setAttribute("class","seg r"+s.r+(on?" on":rel?" rel":(seg||sk)?" dim":""))});
+  document.getElementById("core").setAttribute("class",id==="core"?"on":"");
+  SKILLS.forEach(s=>{const on=s.id===id,rel=seg?seg.d.includes(s.id):id==="core"&&s.layer==="people";
+    document.getElementById("p-"+s.id).setAttribute("class","pill"+(on?" on":rel?" rel":""));
+    document.getElementById("w-"+s.id).setAttribute("class","wire"+(on||rel?" on":""));
+    document.getElementById("d-"+s.id).setAttribute("class","dot"+(on||rel?" on":""))});
+  document.querySelectorAll("#chips .chip").forEach(c=>c.classList.toggle("on",c.dataset.id===id));
+  let h;
+  if(seg)h=`<div class="kind">${RINGS[seg.r]} · ${seg.l}</div><h2>${seg.t}</h2><div class="sec">Evidence</div>${stats(seg.ev)}
+    <div class="sec">How I put it to work</div>${list(seg.how)}${seg.link?`<p style="margin:8px 0 0;font-size:14px"><a href="${seg.link[0]}" target="_top">${seg.link[1]} →</a></p>`:""}
+    <div class="sec">Draws on</div><div class="chiprow">${seg.d.map(d=>chip(d,SKILLS.find(s=>s.id===d).t)).join("")}</div>`;
+  else if(sk)h=`<div class="kind">Background · strengthens ${sk.layer[0].toUpperCase()+sk.layer.slice(1)}</div><h2>${sk.full}</h2><div class="sec">Evidence</div>${list(sk.ev)}
+    <div class="sec">How I put it to work</div>${list(sk.how)}<div class="sec">Shows up in</div><div class="chiprow">${SEGS.map((s,i)=>s.d.includes(sk.id)?chip("s"+i,s.l):"").join("")}</div>`;
+  else h=`<div class="kind">The core</div><h2>People & Relationships</h2><p class="belief">Everything comes from this. Process exists to serve the people doing the work, and an excellent product is what a trusted, well-coached team produces.</p>
+    <div class="sec">Evidence</div>${stats([["70+","engineers hired and trained"],["90%+","retention over two years"]])}
+    <div class="sec">Start with the people practices</div><div class="chiprow">${SEGS.map((s,i)=>s.r===0?chip("s"+i,s.l):"").join("")}</div>
+    <div class="sec">How to read this</div>${list(["Each section of a ring is a practice. Click one for the evidence.","The six outer buttons are what I draw on. Click one to see where it shows up."])}`;
+  document.getElementById("panel").innerHTML=h+`<div class="nav"><button data-step="-1" aria-label="Previous practice">←</button><span>${seg?(si+1)+" of "+SEGS.length:"Tap the wheel or use the arrows"}</span><button data-step="1" aria-label="Next practice">→</button></div>`;
+}
+document.addEventListener("click",e=>{
+  const st=e.target.closest("[data-step]");if(st){select("s"+((cur+ +st.dataset.step+SEGS.length)%SEGS.length));return}
+  const t=e.target.closest("[data-id]");if(t){select(t.dataset.id);if(mq.matches&&t.closest("#chips"))document.getElementById("svg").scrollIntoView({behavior:"smooth",block:"start"})}});
+document.addEventListener("keydown",e=>{const t=e.target;if((e.key==="Enter"||e.key===" ")&&t.dataset&&t.dataset.id&&t.tagName!=="BUTTON"){e.preventDefault();select(t.dataset.id)}});
+const EMBED=window.top!==window;
+if(EMBED){document.body.classList.add("embed");const post=()=>parent.postMessage({lmH:Math.ceil(document.querySelector(".wrap").getBoundingClientRect().height)},location.origin);
+  new ResizeObserver(post).observe(document.querySelector(".wrap"));addEventListener("load",post)}
+const mq=matchMedia("(max-width:900px)"),vb=()=>document.getElementById("svg").setAttribute("viewBox",mq.matches?"196 8 508 537":"0 0 900 545");
+mq.addEventListener("change",vb);vb();cur=SEGS.length-1;select("core");
+</script>
+</body>
+</html>
