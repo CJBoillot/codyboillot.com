@@ -71,6 +71,9 @@ svg text{font-family:"Inter",sans-serif;pointer-events:none}
 .panel li{position:relative;padding:3px 0 3px 18px;font-size:14.5px}
 .panel li::before{content:"";position:absolute;left:0;top:11px;width:7px;height:7px;border-radius:50%;background:var(--grad)}
 .chiprow{display:flex;gap:8px;flex-wrap:wrap}
+.built{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:12.5px;color:var(--muted);margin:2px 0 4px}
+.built .chip{border-color:var(--accent)}
+.stat a{white-space:nowrap;font-weight:600}
 .chip{font-size:12.5px;font-weight:600;padding:5px 12px;border-radius:999px;background:transparent;border:1px solid var(--line-2);color:var(--text)}
 .chip:hover{border-color:var(--accent)}
 .chip.on{background:var(--accent);border-color:var(--accent);color:#0b0f17}
@@ -89,10 +92,8 @@ svg text{font-family:"Inter",sans-serif;pointer-events:none}
  #pills,#wires{display:none}
  .grid>div:first-child{display:contents}
  #svg{order:1}.legend{order:2;margin:0 0 6px;font-size:12.5px}.panel{order:3}.chips{order:4;display:block;margin:12px 0 0}
- .chips .grp{flex-wrap:nowrap;overflow-x:auto;margin:0;padding-bottom:6px;scrollbar-width:none}
- .chips .grp::-webkit-scrollbar{display:none}
- .chips .grp b{width:auto;flex:none;margin-right:2px}
- .chips .chip{flex:none;padding:7px 12px}
+ .chips .grp{margin:0}
+ .chips .chip{padding:7px 12px}
  .panel .nav{order:-1;margin:0 0 12px;padding:0 0 12px;border-bottom:1px solid var(--line)}
  .panel{padding:14px 18px 18px}
  svg{max-height:none}
@@ -142,8 +143,8 @@ const SEGS=[
  {r:1,l:"Light ceremonies",t:"Meetings that earn their time",ev:[[null,"Certified ScrumMaster since 2020, Certified Agile Facilitator since 2023"],[null,"Scrum Master at Sallie Mae; Product Owner for three teams"]],how:["Facilitate the room without dominating it","Remove impediments before they cost a sprint","Every retrospective ends with one change to try"],d:["agile","coach"]},
  {r:2,l:"Vision & roadmap",t:"Own it from idea to adoption",ev:[["100+","daily users on one internal platform"],[null,"Direct a portfolio of platforms for a 70+ person organization"]],how:["Own vision, roadmap and backlog","Run discovery with the people who will use it","Plan releases around adoption, not launch day"],d:["mba","agile"]},
  {r:2,l:"KPIs & value",t:"Measure what the work is worth",ev:[["$5M+","annual savings from vendor consolidation"]],how:["Define success measures before building","Weigh cost, risk and value before committing a team","Let user feedback set the next priority"],d:["mba"]},
- {r:2,l:"Executive reporting",t:"Tell leaders the truth, briefly",ev:[["0","disruption to operations during a $5M+ vendor transition"],[null,"Concise executive reporting on milestones, risks and tradeoffs"]],how:["Lead with the decision that is needed","Offer options with their tradeoffs","No surprises: raise risk early"],d:["mba","mil"]},
- {r:2,l:"AI-built products",t:"Ship by directing AI agents",ev:[["2026","founded and launched LoPro, a CRM run by AI agents"],[null,"Live apps and demos at CodyBoillot.com"]],how:["Direct AI agents, then verify and test the output","Prototype in days to learn what users need","Teach others to build the same way"],d:["ai","mba"]}
+ {r:2,l:"Executive reporting",t:"Tell leaders the truth, briefly",ev:[[null,"Completed a $5M+ vendor transition with zero disruption to operations"],[null,"Concise executive reporting on milestones, risks and tradeoffs"]],how:["Lead with the decision that is needed","Offer options with their tradeoffs","No surprises: raise risk early"],d:["mba","mil"]},
+ {r:2,l:"AI-built products",t:"Ship by directing AI agents",ev:[["LoPro","a CRM run by AI agents that I founded and launched in 2026","../projects/lopro/"],["Apps","live apps and demos I built by directing AI agents","../#projects"]],how:["Direct AI agents, then verify and test the output","Prototype in days to learn what users need","Teach others to build the same way"],d:["ai","mba"]}
 ];
 const SKILLS=[
  {id:"psych",t:"Org Psychology",layer:"people",x:10,y:60,full:"Organizational Psychology",kind:"Background",
@@ -187,10 +188,10 @@ SKILLS.forEach(s=>{
   el("rect",{x,y,width:150,height:36,rx:18},g);
   el("text",{x:x+75,y:y+23,"text-anchor":"middle"},g).textContent=s.t;
 });
-document.getElementById("chips").innerHTML=`<div class="grp"><b>Draws on</b>${SKILLS.map(s=>`<button class="chip" data-id="${s.id}">${s.t}</button>`).join("")}</div>`;
+document.getElementById("chips").innerHTML=`<div class="grp"><b>My background</b>${SKILLS.map(s=>`<button class="chip" data-id="${s.id}">${s.t}</button>`).join("")}</div>`;
 const LAYER={people:0,process:1,product:2};
 const list=a=>"<ul>"+a.map(x=>"<li>"+x+"</li>").join("")+"</ul>";
-const stats=a=>a.map(([n,c])=>n?`<div class="stat"><b>${n}</b><span>${c}</span></div>`:`<div class="stat"><span>${c}</span></div>`).join("");
+const stats=a=>a.map(([n,c,u])=>{const t=c+(u?` <a href="${u}" target="_top">View →</a>`:"");return n?`<div class="stat"><b>${n}</b><span>${t}</span></div>`:`<div class="stat"><span>${t}</span></div>`}).join("");
 const chip=(id,label)=>`<button class="chip" data-id="${id}">${label}</button>`;
 let cur=0;
 function select(id){
@@ -205,15 +206,15 @@ function select(id){
     document.getElementById("d-"+s.id).setAttribute("class","dot"+(on||rel?" on":""))});
   document.querySelectorAll("#chips .chip").forEach(c=>c.classList.toggle("on",c.dataset.id===id));
   let h;
-  if(seg)h=`<div class="kind">${RINGS[seg.r]} · ${seg.l}</div><h2>${seg.t}</h2><div class="sec">Evidence</div>${stats(seg.ev)}
-    <div class="sec">How I put it to work</div>${list(seg.how)}${seg.link?`<p style="margin:8px 0 0;font-size:14px"><a href="${seg.link[0]}" target="_top">${seg.link[1]} →</a></p>`:""}
-    <div class="sec">Draws on</div><div class="chiprow">${seg.d.map(d=>chip(d,SKILLS.find(s=>s.id===d).t)).join("")}</div>`;
+  if(seg)h=`<div class="kind">${RINGS[seg.r]} practice · ${seg.l}</div><h2>${seg.t}</h2>
+    <div class="built"><span>Built on my</span>${seg.d.map(d=>chip(d,SKILLS.find(s=>s.id===d).t)).join("")}</div><div class="sec">Evidence</div>${stats(seg.ev)}
+    <div class="sec">How I put it to work</div>${list(seg.how)}${seg.link?`<p style="margin:8px 0 0;font-size:14px"><a href="${seg.link[0]}" target="_top">${seg.link[1]} →</a></p>`:""}`;
   else if(sk)h=`<div class="kind">Background · strengthens ${sk.layer[0].toUpperCase()+sk.layer.slice(1)}</div><h2>${sk.full}</h2><div class="sec">Evidence</div>${list(sk.ev)}
-    <div class="sec">How I put it to work</div>${list(sk.how)}<div class="sec">Shows up in</div><div class="chiprow">${SEGS.map((s,i)=>s.d.includes(sk.id)?chip("s"+i,s.l):"").join("")}</div>`;
+    <div class="sec">How I put it to work</div>${list(sk.how)}<div class="sec">Practices it supports</div><div class="chiprow">${SEGS.map((s,i)=>s.d.includes(sk.id)?chip("s"+i,s.l):"").join("")}</div>`;
   else h=`<div class="kind">The core</div><h2>People & Relationships</h2><p class="belief">Everything comes from this. Process exists to serve the people doing the work, and an excellent product is what a trusted, well-coached team produces.</p>
     <div class="sec">Evidence</div>${stats([["70+","engineers hired and trained"],["90%+","retention over two years"]])}
     <div class="sec">Start with the people practices</div><div class="chiprow">${SEGS.map((s,i)=>s.r===0?chip("s"+i,s.l):"").join("")}</div>
-    <div class="sec">How to read this</div>${list(["Each section of a ring is a practice. Click one for the evidence.","The six outer buttons are what I draw on. Click one to see where it shows up."])}`;
+    <div class="sec">How to read this</div>${list(["Each wedge is a practice: something I do as a leader. Select one for the evidence.","The six outer buttons are the training and experience behind those practices. Select one to see which practices it supports."])}`;
   document.getElementById("panel").innerHTML=h+`<div class="nav"><button data-step="-1" aria-label="Previous practice">←</button><span>${seg?(si+1)+" of "+SEGS.length:"Tap the wheel or use the arrows"}</span><button data-step="1" aria-label="Next practice">→</button></div>`;
 }
 document.addEventListener("click",e=>{
