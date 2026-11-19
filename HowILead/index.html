@@ -22,7 +22,7 @@ a{color:var(--accent)}
 .head h1{font-size:24px}
 .head p{margin:0;color:var(--muted);font-size:14.5px}
 .tag{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:#ffc24b;border:1px dashed rgba(255,194,75,.5);border-radius:6px;padding:1px 7px;margin-left:auto}
-.grid{display:grid;grid-template-columns:minmax(0,1.75fr) minmax(310px,1fr);gap:16px;align-items:center}
+.grid{display:grid;grid-template-columns:minmax(0,1.75fr) minmax(310px,1fr);gap:16px;align-items:start}
 svg{width:100%;height:auto;display:block;max-height:calc(100vh - 150px)}
 svg text{font-family:"Inter",sans-serif;pointer-events:none}
 .seg{cursor:pointer;transform-origin:450px 262px;transition:transform .2s,filter .2s,opacity .2s}
@@ -193,8 +193,9 @@ const LAYER={people:0,process:1,product:2};
 const list=a=>"<ul>"+a.map(x=>"<li>"+x+"</li>").join("")+"</ul>";
 const stats=a=>a.map(([n,c,u])=>{const t=c+(u?` <a href="${u}" target="_top">View →</a>`:"");return n?`<div class="stat"><b>${n}</b><span>${t}</span></div>`:`<div class="stat"><span>${t}</span></div>`}).join("");
 const chip=(id,label)=>`<button class="chip" data-id="${id}">${label}</button>`;
-let cur=0;
+let cur=0,sel="core";
 function select(id){
+  sel=id;
   const si=/^s\d+$/.test(id)?+id.slice(1):-1,seg=SEGS[si],sk=SKILLS.find(s=>s.id===id);
   if(seg)cur=si;
   SEGS.forEach((s,i)=>{const on=i===si,rel=sk?s.d.includes(sk.id):id==="core"&&s.r===0;
@@ -226,6 +227,14 @@ if(EMBED){document.body.classList.add("embed");const post=()=>parent.postMessage
   new ResizeObserver(post).observe(document.querySelector(".wrap"));addEventListener("load",post)}
 const mq=matchMedia("(max-width:900px)"),vb=()=>document.getElementById("svg").setAttribute("viewBox",mq.matches?"196 8 508 537":"0 0 900 545");
 mq.addEventListener("change",vb);vb();cur=SEGS.length-1;select("core");
+/* Keep the wheel still: size the panel to its tallest state so nothing shifts while navigating. */
+function fit(){
+  const p=document.getElementById("panel"),keepSel=sel,keepCur=cur;p.style.minHeight="";
+  if(!mq.matches){let m=0;["core",...SEGS.map((_,i)=>"s"+i),...SKILLS.map(s=>s.id)].forEach(id=>{select(id);m=Math.max(m,p.offsetHeight)});p.style.minHeight=m+"px"}
+  select(keepSel);cur=keepCur;
+}
+let fitT;addEventListener("resize",()=>{clearTimeout(fitT);fitT=setTimeout(fit,150)});
+fit();if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fit);
 </script>
 </body>
 </html>
