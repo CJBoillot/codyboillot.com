@@ -15,7 +15,7 @@ See [SkillTrainer](#skilltrainer) below.
 | `assets/site.css` | Shared styles for the detail and hub pages (a copy of the home page's CSS plus page extras). Update it when the home page's styles change. |
 | `assets/tiles.css` | The card-grid styles used by the home page and the `/games` and `/projects` hubs. |
 | `assets/projects/` | Covers and screenshots for the project pages. |
-| `404.html` | Site-wide not-found page. Also redirects wrong-case URLs to `/SkillTrainer/`, `/ClickToConquer/`, `/FactoryAFK/`, `/BattlePass/` and `/games/`. |
+| `404.html` | Site-wide not-found page. Also redirects wrong-case URLs to `/SkillTrainer/`, `/ClickToConquer/`, `/FactoryAFK/`, `/BattlePass/`, `/Scoreboard/` and `/games/`. |
 | `assets/headshot.jpg` | The portrait on the hero. Falls back to a "CB" monogram if missing. |
 | `assets/favicon.svg` | Browser tab icon, used by both the home page and SkillTrainer. |
 | `resume.pdf` | Backs the résumé button. |
@@ -29,6 +29,7 @@ See [SkillTrainer](#skilltrainer) below.
 | `FactoryAFK/` | Factory A.F.K., an idle factory game. Built from one game file; `cloud.js` + `cloud-config.js` add Google sign-in and Firestore saves (Firebase project `factory-afk`). |
 | `Singularity/` | Singularity, an idle game about a rogue AI taking over the galaxy. One self-contained `index.html`; Google sign-in and Firestore saves are built in (Firebase project `singularity-afk`, saves at `users/{uid}/games/singularity`). |
 | `DuoPlanner/` | WoW Forever PvP Planner: grades all 406 two-spec duos and 28 solo specs, with role/spec filters, save-and-export, and a races/racials sheet. One self-contained `index.html`, regenerated from a build script (data in a spreadsheet + JSON). |
+| `Scoreboard/` | Game Night Scoreboard: score keeper for 1 to 12 players with a stopwatch/countdown clock and a hold-to-buzz buzzer. One self-contained `index.html`; scores and clock save to localStorage only. Linked from the home page's Other links. |
 | `downloads/` | Files served from the site, e.g. the resume. Cozy Zone Compendium (formerly Cozy Zone Collector) is not hosted here; its card on the home page and `/games` links to CurseForge. |
 | `CNAME` | Tells GitHub Pages to serve `codyboillot.com`. |
 | `.nojekyll` | Tells GitHub Pages to serve files as-is. |
