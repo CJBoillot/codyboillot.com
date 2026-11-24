@@ -106,6 +106,7 @@
     transform: translateY(-2px); border-color: var(--accent);
     background: linear-gradient(100deg, rgba(255,138,61,.16), rgba(255,94,98,.08));
   }
+  .hero-promo + .hero-promo { margin-top: .7rem; }
   .hero-promo .badge-new { flex: 0 0 auto; }
   .hero-promo-text { flex: 1; min-width: 0; }
   .hero-promo-text strong { color: var(--text); }
@@ -126,8 +127,10 @@
     padding: 0.5rem 1rem; border-radius: 999px; font-weight: 600; font-size: 0.88rem;
     background: var(--grad); color: #1a1206 !important;
   }
+  .nav-links a { white-space: nowrap; }
   .nav-toggle { display: none; }
-  @media (max-width: 720px) {
+  /* 900px, not 720px: with the highlighted link the full row no longer fits on a tablet. */
+  @media (max-width: 900px) {
     .nav-toggle {
       display: inline-flex; align-items: center; gap: .45rem;
       background: transparent; border: 1px solid var(--line-2); color: var(--text);
@@ -145,6 +148,20 @@
     header.nav.open .nav-links { display: flex; }
     .nav-links a { display: block; padding: .85rem 1.25rem; font-size: 1.05rem; border-top: 1px solid var(--line); }
     .nav-links a.nav-cta { margin: .6rem 1.25rem 0; text-align: center; border-top: 0; }
+  }
+  /* Highlighted link to /rubric/ ("What I look for in engineers in the AI age") */
+  .nav-links a.nav-hl {
+    color: var(--accent-2); font-weight: 600; white-space: nowrap;
+    padding: .42rem .85rem; border-radius: 999px;
+    border: 1px solid rgba(255,194,75,.45); background: rgba(255,194,75,.08);
+    transition: color .2s, background .2s, border-color .2s;
+  }
+  .nav-links a.nav-hl:hover, .nav-links a.nav-hl[aria-current="page"] { color: #1a1206; background: var(--grad); border-color: transparent; }
+  .nav-hl .nl-2 { display: none; }
+  @media (max-width: 1000px) { .nav-hl .nl-1 { display: none; } }
+  @media (max-width: 900px) {
+    .nav-links a.nav-hl { border: 0; border-top: 1px solid var(--line); border-radius: 0; background: rgba(255,194,75,.07); padding: .85rem 1.25rem; white-space: normal; }
+    .nav-hl .nl-1, .nav-hl .nl-2 { display: inline; }
   }
   footer.foot .other-links { margin-bottom: 1.2rem; }
   footer.foot .other-links h4 { margin: 0 0 .5rem; font-size: .8rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted-2); font-weight: 600; }
@@ -419,6 +436,7 @@
     <a href="#top" class="brand">Cody&nbsp;Boillot<span class="dot">.</span></a>
     <button class="nav-toggle" id="navToggle" type="button" aria-expanded="false" aria-controls="navLinks"><span class="bars" aria-hidden="true"></span>Menu</button>
     <nav class="nav-links" id="navLinks" aria-label="Primary">
+      <a href="rubric/" class="nav-hl">What I look for<span class="nl-1"> in engineers</span><span class="nl-2"> in the AI age</span></a>
       <a href="#about">About</a>
       <a href="#experience">Experience</a>
       <a href="#work">What I Build</a>
@@ -455,6 +473,17 @@
           </a>
         </div>
 
+        <a class="hero-promo" href="rubric/">
+          <span class="badge-new">New</span>
+          <span class="hero-promo-text">
+            <strong>What I look for in engineers in the AI age:</strong> the rubric I train and evaluate to.
+            <span class="hero-promo-go">Read it</span>
+          </span>
+          <svg class="hero-promo-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
+        </a>
         <!-- Promotion for the demo, kept separate from the two primary CTAs so
              it adds a third option rather than diluting them. -->
         <a class="hero-promo" href="#projects">
@@ -936,6 +965,7 @@
         <h4>Other links</h4>
         <ul>
           <li><a href="/private/sc2-field-manual-NZTfkHUN3mvX/">SC2 Field Manual</a></li>
+          <li><a href="/rubric/">What I look for in engineers</a></li>
           <li><a href="/DuoPlanner/">WoW Duo Planner</a></li>
           <li><a href="/PMP/">PMP Rapid-Fire</a></li>
           <li><a href="/Scoreboard/">Game Night Scoreboard</a></li>

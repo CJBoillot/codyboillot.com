@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>What I look for in engineers in the AI age · Cody J. Boillot</title>
+<meta name="description" content="The rubric Cody J. Boillot uses to train and evaluate associate developers in their first six months: 20 criteria across AI-first engineering, collaboration, communication and behavior." />
+<meta name="author" content="Cody J. Boillot" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="What I look for in engineers in the AI age" />
+<meta property="og:description" content="The rubric I use to train and evaluate associate developers in their first six months: 20 criteria, each with what meets, exceeds and falls short of the bar." />
+<meta property="og:image" content="https://codyboillot.com/assets/headshot.jpg" />
+<meta property="og:url" content="https://codyboillot.com/rubric/" />
+<meta name="twitter:card" content="summary" />
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml" />
+<link rel="canonical" href="https://codyboillot.com/rubric/" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../assets/site.css" />
+<style>
+  :root { --ok: #4ade80; --up: #ffc24b; --no: #ff7a7d; }
+  html { scroll-padding-top: 9.5rem; }
+
+  /* ---------- Intro ---------- */
+  .rb-hero { padding: clamp(2rem, 5vw, 3.5rem) 0 0; }
+  .rb-hero h1 { font-size: clamp(2rem, 5.4vw, 3.3rem); font-weight: 800; max-width: 18ch; margin-top: .7rem; }
+  .rb-lede { color: var(--muted); font-size: clamp(1.02rem, 2vw, 1.18rem); max-width: 62ch; margin-top: 1.2rem; }
+  .rb-lede strong { color: var(--text); font-weight: 600; }
+  .rb-cta { display: flex; flex-wrap: wrap; gap: .8rem; margin-top: 1.8rem; }
+  .rb-facts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; margin-top: 2.4rem;
+    background: var(--line); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+  .rb-facts div { background: var(--bg-soft); padding: 1.1rem .8rem; text-align: center; }
+  .rb-facts b { display: block; font-family: "Sora", sans-serif; font-weight: 800; font-size: clamp(1.4rem, 3.2vw, 1.9rem); }
+  .rb-facts span { color: var(--muted); font-size: .82rem; }
+  @media (max-width: 560px) { .rb-facts { grid-template-columns: repeat(2, 1fr); } }
+
+  /* ---------- The short version ---------- */
+  .rb-block { padding: clamp(2.6rem, 6vw, 4rem) 0 0; }
+  .rb-block > .wrap > h2 { font-size: clamp(1.4rem, 3.2vw, 1.9rem); font-weight: 800; margin-top: .5rem; }
+  .rb-block > .wrap > p { color: var(--muted); max-width: 64ch; margin-top: .7rem; }
+  .four { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-top: 1.6rem; counter-reset: four; }
+  @media (max-width: 900px) { .four { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 520px) { .four { grid-template-columns: 1fr; } }
+  .four a { display: block; position: relative; overflow: hidden; padding: 1.2rem 1.1rem 1.1rem;
+    background: linear-gradient(180deg, var(--card), var(--card-2)); border: 1px solid var(--line);
+    border-radius: var(--radius); transition: transform .2s ease, border-color .2s ease; }
+  .four a::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 3px; background: var(--grad); }
+  .four a:hover { transform: translateY(-3px); border-color: var(--line-2); }
+  .four .verb { font-family: "Sora", sans-serif; font-weight: 800; font-size: 1.25rem; }
+  .four p { color: var(--muted); font-size: .93rem; margin-top: .5rem; }
+  .four .when { display: inline-block; margin-top: .9rem; font-size: .74rem; font-weight: 700; letter-spacing: .06em;
+    text-transform: uppercase; color: var(--accent-2); }
+
+  /* ---------- Controls ---------- */
+  .rb-bar { position: sticky; top: 64px; z-index: 40; margin-top: clamp(2.4rem, 5vw, 3.4rem);
+    background: rgba(11,15,23,0.86); backdrop-filter: blur(12px);
+    border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .rb-bar .wrap { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem 1.6rem; padding: .7rem 0; }
+  .seg { display: flex; align-items: center; gap: .4rem; min-width: 0; }
+  .seg > span { font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted-2); margin-right: .2rem; white-space: nowrap; }
+  .seg button { font: inherit; font-size: .85rem; font-weight: 600; color: var(--muted); cursor: pointer; white-space: nowrap;
+    padding: .38rem .8rem; border-radius: 999px; background: rgba(255,255,255,0.04); border: 1px solid var(--line-2);
+    transition: color .15s, background .15s, border-color .15s; }
+  .seg button:hover { color: var(--text); }
+  .seg button[aria-pressed="true"] { background: var(--grad); color: #1a1206; border-color: transparent; }
+  .seg button small { font-size: .78em; font-weight: 700; opacity: .7; margin-left: .15rem; }
+  .rb-count { margin-left: auto; color: var(--muted-2); font-size: .82rem; white-space: nowrap; }
+  @media (max-width: 720px) {
+    html { scroll-padding-top: 11rem; }
+    .rb-bar .wrap { gap: .5rem; }
+    .seg { flex: 1 1 100%; overflow-x: auto; scrollbar-width: none; }
+    .seg::-webkit-scrollbar { display: none; }
+    .seg > span { display: none; }
+    .seg button { font-size: .8rem; padding: .34rem .62rem; }
+    .rb-count { display: none; }
+  }
+
+  /* ---------- Areas and criteria ---------- */
+  .area-jump { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1.4rem; }
+  .area-jump a { font-size: .86rem; color: var(--text); padding: .42rem .85rem; border-radius: 999px;
+    background: rgba(255,255,255,0.04); border: 1px solid var(--line-2); }
+  .area-jump a:hover { border-color: var(--accent); }
+  .area-jump b { color: var(--accent-2); margin-left: .25rem; }
+
+  .area { padding-top: clamp(2.2rem, 5vw, 3.2rem); }
+  .area-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: .3rem .9rem; margin-bottom: 1.1rem; }
+  .area-head h2 { font-size: clamp(1.3rem, 3vw, 1.75rem); font-weight: 800; }
+  .area-count { font-size: .78rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+  .area-head p { flex-basis: 100%; color: var(--muted); }
+
+  .crit { background: var(--bg-soft); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 1.2rem 1.3rem 1.3rem; margin-top: .9rem; }
+  .crit:target { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(255,138,61,.14); }
+  .crit-head { display: flex; align-items: baseline; gap: .9rem; }
+  .crit-num { font-family: "Sora", sans-serif; font-weight: 800; font-size: .85rem; color: var(--muted-2); flex: none; }
+  .crit-head h3 { font-size: clamp(1.02rem, 2.1vw, 1.16rem); font-weight: 700; line-height: 1.3; letter-spacing: -0.01em; flex: 1; }
+  .mo { flex: none; font-size: .7rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; white-space: nowrap;
+    color: var(--accent-2); border: 1px solid var(--line-2); background: rgba(255,194,75,0.06); padding: .25rem .6rem; border-radius: 999px; }
+  .levels { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.4rem; margin-top: 1rem; }
+  .lvl { border-top: 2px solid var(--line-2); padding-top: .7rem; }
+  .lvl h4 { margin: 0; font-family: "Inter", sans-serif; font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+  .lvl p { color: var(--muted); font-size: .94rem; line-height: 1.55; margin-top: .35rem; }
+  .lvl-meets { border-color: var(--ok); }   .lvl-meets h4 { color: var(--ok); }
+  .lvl-meets p { color: var(--text); }
+  .lvl-exceeds { border-color: var(--up); } .lvl-exceeds h4 { color: var(--up); }
+  .lvl-below { border-color: var(--no); }   .lvl-below h4 { color: var(--no); }
+  @media (max-width: 760px) {
+    .levels { grid-template-columns: 1fr; gap: .9rem; }
+    .crit { padding: 1rem 1rem 1.1rem; }
+    .crit-head { flex-wrap: wrap; gap: .3rem .7rem; }
+    .crit-head h3 { flex-basis: 100%; order: 3; }
+  }
+
+  /* Filters. Levels hide by a class on the list; criteria and areas use [hidden]. */
+  .rubric[data-level="meets"]   .lvl:not(.lvl-meets),
+  .rubric[data-level="exceeds"] .lvl:not(.lvl-exceeds),
+  .rubric[data-level="below"]   .lvl:not(.lvl-below) { display: none; }
+  .rubric:not([data-level="all"]) .levels { grid-template-columns: 1fr; }
+  .rubric:not([data-level="all"]) .lvl p { max-width: 75ch; }
+  .rb-empty { color: var(--muted); padding: 2rem 0; }
+
+  .rb-end { margin-top: clamp(3rem, 7vw, 5rem); }
+
+  @media print {
+    header.nav, .rb-bar, .rb-cta, .contact, footer.foot, .area-jump { display: none !important; }
+    body { background: #fff; color: #000; } body::before { display: none; }
+    .crit { break-inside: avoid; background: #fff; border-color: #bbb; }
+    .lvl p, .lvl-meets p, .rb-lede, .area-head p, .four p { color: #222; }
+    .lvl h4, .mo, .area-count { color: #000; }
+    .rubric .lvl { display: block !important; } .rubric .levels { grid-template-columns: repeat(3, 1fr) !important; }
+  }
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap nav-inner">
+    <a href="../" class="brand">Cody&nbsp;Boillot<span class="dot">.</span></a>
+    <nav class="nav-links" aria-label="Primary">
+      <a href="../rubric/" class="nav-hl" aria-current="page">What I look for<span class="nl-1"> in engineers</span></a>
+      <a href="../projects/">Projects</a>
+      <a href="../games/">Games</a>
+      <a href="../" class="nav-cta">About me</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top" class="sub-page">
+
+  <section class="rb-hero">
+    <div class="wrap">
+      <div class="sec-tag">The rubric I train to</div>
+      <h1>What I look for in engineers in the <span class="gradient-text" style="white-space:nowrap">AI age</span></h1>
+      <p class="rb-lede">This is the rubric I wrote for an associate developer's first six months. It is what I train to, coach against and evaluate with: <strong>twenty criteria</strong>, each with a plain description of what meets the bar, what exceeds it and what falls short, and the check-in where it should first be met.</p>
+      <div class="rb-cta">
+        <a class="btn btn-primary" href="#rubric">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+          Read the rubric
+        </a>
+        <a class="btn btn-ghost" href="../downloads/Associate_Developer_6_Month_Rubric.xlsx" download>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg>
+          Download (Excel)
+        </a>
+      </div>
+      <div class="rb-facts">
+        <div><b class="gradient-text">20</b><span>criteria</span></div>
+        <div><b class="gradient-text">4</b><span>areas</span></div>
+        <div><b class="gradient-text">3</b><span>check-ins</span></div>
+        <div><b class="gradient-text">6</b><span>months</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="rb-block">
+    <div class="wrap">
+      <div class="sec-tag">The short version</div>
+      <h2>Four things I expect from anyone who builds with AI</h2>
+      <p>The first four criteria are about AI itself. Using it is expected by month two. Understanding and owning what it produced is expected by month four.</p>
+      <div class="four">
+        <a href="#c1"><div class="verb">Use it</div><p>AI is the default way to plan, build, test, review and document work.</p><span class="when">By month 2</span></a>
+        <a href="#c2"><div class="verb">Direct it</div><p>Break the problem down and give the tool the context, requirements and standards it needs.</p><span class="when">By month 2</span></a>
+        <a href="#c3"><div class="verb">Understand it</div><p>Explain how the solution works, and why, without the AI's help.</p><span class="when">By month 4</span></a>
+        <a href="#c4"><div class="verb">Verify it</div><p>Review, test and correct generated work. Own the quality of everything submitted.</p><span class="when">By month 4</span></a>
+      </div>
+      <p>The other sixteen cover what AI does not do for you: standing up and securing real systems, and working well with the people around you.</p>
+      <nav class="area-jump" aria-label="Rubric areas">
+          <a href="#eng">Engineering and Development <b>10</b></a>
+          <a href="#collab">Collaboration and Knowledge Sharing <b>3</b></a>
+          <a href="#comm">Communication <b>4</b></a>
+          <a href="#atl">Above the Line Behavior <b>3</b></a>
+      </nav>
+    </div>
+  </section>
+
+  <div class="rb-bar" id="rubric">
+    <div class="wrap">
+      <div class="seg" role="group" aria-label="Filter by check-in">
+        <span>Check-in</span>
+        <button type="button" data-month="all" aria-pressed="true">All <small>20</small></button>
+        <button type="button" data-month="2" aria-pressed="false">Month 2 <small>6</small></button>
+        <button type="button" data-month="4" aria-pressed="false">Month 4 <small>7</small></button>
+        <button type="button" data-month="6" aria-pressed="false">Month 6 <small>7</small></button>
+      </div>
+      <div class="seg" role="group" aria-label="Choose which level to show">
+        <span>Show</span>
+        <button type="button" data-level="all" aria-pressed="true">All<span class="lv-long"> levels</span></button>
+        <button type="button" data-level="meets" aria-pressed="false">Meets</button>
+        <button type="button" data-level="exceeds" aria-pressed="false">Exceeds</button>
+        <button type="button" data-level="below" aria-pressed="false">Does not meet</button>
+      </div>
+      <div class="rb-count" id="rbCount" aria-live="polite">20 of 20 criteria</div>
+    </div>
+  </div>
+
+  <div class="wrap rubric" id="rubricList" data-level="all">
+      <section class="area" id="eng" data-area="eng">
+        <div class="area-head">
+          <h2>Engineering and Development</h2>
+          <span class="area-count">10 criteria</span>
+          <p>AI across the whole lifecycle, and the fundamentals underneath it.</p>
+        </div>
+        <article class="crit" id="c1" data-area="eng" data-month="2">
+          <header class="crit-head">
+            <span class="crit-num" aria-hidden="true">01</span>
+            <h3>Builds software using AI tools across the development lifecycle</h3>
+            <span class="mo">Month 2</span>
+          </header>
+          <div class="levels">
+            <div class="lvl lvl-meets"><h4>Meets</h4><p>Uses AI tools as the default way to plan, build, test, review, and document work</p></div>
+            <div class="lvl lvl-exceeds"><h4>Exceeds</h4><p>Finds new ways to apply AI across the lifecycle and shares workflows that make the team faster</p></div>
+            <div class="lvl lvl-below"><h4>Does not meet</h4><p>Avoids AI tools or uses them only occasionally, slowing delivery</p></div>
+          </div>
+        </article>
+        <article class="crit" id="c2" data-area="eng" data-month="2">
+          <header class="crit-head">
+            <span class="crit-num" aria-hidden="true">02</span>
+            <h3>Directs AI effectively with clear context, requirements, and constraints</h3>
+            <span class="mo">Month 2</span>
+          </header>
+          <div class="levels">
+            <div class="lvl lvl-meets"><h4>Meets</h4><p>Breaks problems down and gives AI tools the product context, requirements, and standards needed to get a usable result</p></div>
+            <div class="lvl lvl-exceeds"><h4>Exceeds</h4><p>Produces accurate results in few iterations and builds reusable prompts, rules, or context files for the team</p></div>
+            <div class="lvl lvl-below"><h4>Does not meet</h4><p>Gives vague instructions and accepts whatever comes back, or cannot break a problem into workable pieces</p></div>
+          </div>
+        </article>
+        <article class="crit" id="c3" data-area="eng" data-month="4">
+          <header class="crit-head">
+            <span class="crit-num" aria-hidden="true">03</span>
+            <h3>Understands what is under the hood of AI-built code and why it is built that way</h3>
+            <span class="mo">Month 4</span>
+          </header>
+          <div class="levels">
+            <div class="lvl lvl-meets"><h4>Meets</h4><p>Can explain how the solution works, the design choices behind it, and the trade-offs, without the AI&#x27;s help</p></div>
+            <div class="lvl lvl-exceeds"><h4>Exceeds</h4><p>Challenges and improves AI-proposed designs, choosing simpler or more suitable approaches with clear reasoning</p></div>
+            <div class="lvl lvl-below"><h4>Does not meet</h4><p>Cannot explain code they submitted or why an approach was chosen</p></div>
+          </div>
+        </article>
+        <article class="crit" id="c4" data-area="eng" data-month="4">
+          <header class="crit-head">
+            <span class="crit-num" aria-hidden="true">04</span>
+            <h3>Verifies AI output before it ships</h3>
+            <span class="mo">Month 4</span>
+          </header>
+          <div class="levels">
+            <div class="lvl lvl-meets"><h4>Meets</h4><p>Reviews, tests, and corrects AI-generated work; owns the quality of everything submitted</p></div>
+            <div class="lvl lvl-exceeds"><h4>Exceeds</h4><p>Catches subtle errors and edge cases, and strengthens automated tests and checks that guard AI-built changes</p></div>
+            <div class="lvl lvl-below"><h4>Does not meet</h4><p>Submits generated work unreviewed or untested; errors are caught by others</p></div>
+          </div>
+        </article>
+        <article class="crit" id="c5" data-area="eng" data-month="4">
+          <header class="crit-head">
+            <span class="crit-num" aria-hidden="true">05</span>
+            <h3>Sets up applications end to end</h3>
+            <span class="mo">Month 4</span>
+          </header>
+          <div class="levels">
+            <div class="lvl lvl-meets"><h4>Meets</h4><p>Can stand up a new application: repository, local environment, configuration, pipeline, and deployment through each environment</p></div>
+            <div class="lvl lvl-exceeds"><h4>Exceeds</h4><p>Sets up applications confidently with minimal guidance and improves templates or setup docs for the next person</p></div>
+            <div class="lvl lvl-below"><h4>Does not meet</h4><p>Cannot get an application running or deployed without someone else doing the setup</p></div>
+          </div>
+        </article>
+        <article class="crit" id="c6" data-area="eng" data-month="4">
+          <header class="crit-head">
+            <span class="crit-num" aria-hidden="true">06</span>
+            <h3>Understands Terraform and infrastructure as code</h3>
+            <span class="mo">Month 4</span>
+          </header>
+          <div class="levels">
+            <div class="lvl lvl-meets"><h4>Meets</h4><p>Reads, explains, and makes routine changes to Terraform; understands plan, apply, and state</p></div>
+            <div class="lvl lvl-exceeds"><h4>Exceeds</h4><p>Writes clean, reusable Terraform and anticipates the impact of a change before applying it</p></div>
+            <div class="lvl lvl-below"><h4>Does not meet</h4><p>Cannot interpret Terraform, or applies changes without understanding their effect</p></div>
+          </div>
+        </article>
+        <article class="crit" id="c7" data-area="eng" data-month="6">
+          <header class="crit-head">
+            <span class="crit-num" aria-hidden="true">07</span>
+            <h3>Understands AWS and the core services the team uses</h3>
+            <span class="mo">Month 6</span>
+          </header>
+          <div class="levels">
+            <div class="lvl lvl-meets"><h4>Meets</h4><p>Explains what each core service does (compute, storage, databases, networking, IAM) and how the application uses them</p></div>
+            <div class="lvl lvl-exceeds"><h4>Exceeds</h4><p>Chooses appropriate services for a problem with cost, scale, and reliability in mind, and troubleshoots cloud issues independently</p></div>
+            <div class="lvl lvl-below"><h4>Does not meet</h4><p>Treats cloud infrastructure as a black box or cannot find and inspect resources</p></div>
+          </div>
+        </article>
+        <article class="crit" id="c8" data-area="eng" data-month="6">
+          <header class="crit-head">
+            <span class="crit-num" aria-hidden="true">08</span>
+            <h3>Understands authentication and authorization</h3>
+            <span class="mo">Month 6</span>
+          </header>
+          <div class="levels">
+            <div class="lvl lvl-meets"><h4>Meets</h4><p>Explains how users and services prove identity and receive permissions (tokens, sessions, roles) and implements them using team standards</p></div>
+            <div class="lvl lvl-exceeds"><h4>Exceeds</h4><p>Spots auth weaknesses in designs or AI-generated code and proposes sound fixes</p></div>
+            <div class="lvl lvl-below"><h4>Does not meet</h4><p>Confuses authentication with authorization or introduces access-control gaps</p></div>
+          </div>
+        </article>
+        <article class="crit" id="c9" data-area="eng" data-month="4">
+          <header class="crit-head">
+            <span class="crit-num" aria-hidden="true">09</span>
+            <h3>Understands security fundamentals</h3>
+            <span class="mo">Month 4</span>
+          </header>
+          <div class="levels">
+            <div class="lvl lvl-meets"><h4>Meets</h4><p>Handles secrets and sensitive data correctly, applies least privilege, keeps dependencies current, and knows what must not be shared with AI tools</p></div>
+            <div class="lvl lvl-exceeds"><h4>Exceeds</h4><p>Identifies security risks early in their own and others&#x27; work and raises them constructively</p></div>
+            <div class="lvl lvl-below"><h4>Does not meet</h4><p>Exposes secrets or data, grants broad permissions, or ignores security guidance</p></div>
+          </div>
+        </article>
+        <article class="crit" id="c10" data-area="eng" data-month="6">
+          <header class="crit-head">
+            <span class="crit-num" aria-hidden="true">10</span>
+            <h3>Understands how systems talk to each other</h3>
+            <span class="mo">Month 6</span>
+          </header>
+          <div class="levels">
+            <div class="lvl lvl-meets"><h4>Meets</h4><p>Can trace a request across services and explain the APIs, networking, events, and data flows involved</p></div>
+            <div class="lvl lvl-exceeds"><h4>Exceeds</h4><p>Diagnoses cross-system issues using logs and metrics, and diagrams integrations clearly for others</p></div>
+            <div class="lvl lvl-below"><h4>Does not meet</h4><p>Cannot describe how the application connects to other systems or where to look when an integration fails</p></div>
+          </div>
+        </article>
+      </section>
+      <section class="area" id="collab" data-area="collab">
+        <div class="area-head">
+          <h2>Collaboration and Knowledge Sharing</h2>
+          <span class="area-count">3 criteria</span>
+          <p>Work that other people can find, follow and build on.</p>
+        </div>
+        <article class="crit" id="c11" data-area="collab" data-month="4">
+          <header class="crit-head">
+            <span class="crit-num" aria-hidden="true">11</span>
+            <h3>Creates clear, easily accessible documentation for the team</h3>
+            <span class="mo">Month 4</span>
+          </header>
+          <div class="levels">
+            <div class="lvl lvl-meets"><h4>Meets</h4><p>Documentation is well written, current, and easy for others to find</p></div>
+            <div class="lvl lvl-exceeds"><h4>Exceeds</h4><p>Creates documentation that others rely on for onboarding, handoffs, or reference</p></div>
+            <div class="lvl lvl-below"><h4>Does not meet</h4><p>Documentation is missing, unclear, or disorganized</p></div>
+          </div>
+        </article>
+        <article class="crit" id="c12" data-area="collab" data-month="2">
+          <header class="crit-head">
+            <span class="crit-num" aria-hidden="true">12</span>
+            <h3>Listens to review feedback and gives feedback when asked</h3>
+            <span class="mo">Month 2</span>
+          </header>
+          <div class="levels">
+            <div class="lvl lvl-meets"><h4>Meets</h4><p>Applies feedback meaningfully and offers support when asked</p></div>
+            <div class="lvl lvl-exceeds"><h4>Exceeds</h4><p>Actively applies feedback and begins offering thoughtful, constructive feedback to peers</p></div>
+            <div class="lvl lvl-below"><h4>Does not meet</h4><p>Ignores or resists feedback, or avoids giving feedback when asked</p></div>
+          </div>
+        </article>
+        <article class="crit" id="c13" data-area="collab" data-month="6">
+          <header class="crit-head">
+            <span class="crit-num" aria-hidden="true">13</span>
+            <h3>Works effectively with teammates and partners in other roles</h3>
+            <span class="mo">Month 6</span>
+          </header>
+          <div class="levels">
+            <div class="lvl lvl-meets"><h4>Meets</h4><p>Pairs willingly, shares work in progress, and collaborates well with design, product, and QA</p></div>
+            <div class="lvl lvl-exceeds"><h4>Exceeds</h4><p>Strengthens the team by volunteering help, sharing what they learn, and building trust across roles</p></div>
+            <div class="lvl lvl-below"><h4>Does not meet</h4><p>Works in isolation or is difficult to collaborate with</p></div>
+          </div>
+        </article>
+      </section>
+      <section class="area" id="comm" data-area="comm">
+        <div class="area-head">
+          <h2>Communication</h2>
+          <span class="area-count">4 criteria</span>
+          <p>Listening, writing, and asking for help at the right moment.</p>
+        </div>
+        <article class="crit" id="c14" data-area="comm" data-month="2">
+          <header class="crit-head">
+            <span class="crit-num" aria-hidden="true">14</span>
+            <h3>Actively listens in meetings, takes notes, and shares them with the team</h3>
+            <span class="mo">Month 2</span>
+          </header>
+          <div class="levels">
+            <div class="lvl lvl-meets"><h4>Meets</h4><p>Listens carefully, captures relevant information, and shares organized notes proactively</p></div>
+            <div class="lvl lvl-exceeds"><h4>Exceeds</h4><p>Comes prepared, asks insightful questions, tracks follow-ups independently, and shares notes that keep the team aligned</p></div>
+            <div class="lvl lvl-below"><h4>Does not meet</h4><p>Misses key points, or notes are disorganized or not shared when needed</p></div>
+          </div>
+        </article>
+        <article class="crit" id="c15" data-area="comm" data-month="4">
+          <header class="crit-head">
+            <span class="crit-num" aria-hidden="true">15</span>
+            <h3>Communicates effectively and respectfully in conversation and in writing</h3>
+            <span class="mo">Month 4</span>
+          </header>
+          <div class="levels">
+            <div class="lvl lvl-meets"><h4>Meets</h4><p>Communicates clearly and respectfully, balances listening with talking, and writes clear updates and messages</p></div>
+            <div class="lvl lvl-exceeds"><h4>Exceeds</h4><p>Communicates clearly and confidently across audiences while maintaining a strong balance of listening</p></div>
+            <div class="lvl lvl-below"><h4>Does not meet</h4><p>Dominates conversations, goes silent, or communicates in ways others struggle to follow</p></div>
+          </div>
+        </article>
+        <article class="crit" id="c16" data-area="comm" data-month="2">
+          <header class="crit-head">
+            <span class="crit-num" aria-hidden="true">16</span>
+            <h3>Asks for guidance when necessary or blocked</h3>
+            <span class="mo">Month 2</span>
+          </header>
+          <div class="levels">
+            <div class="lvl lvl-meets"><h4>Meets</h4><p>Seeks help appropriately, after a reasonable attempt, to avoid staying blocked</p></div>
+            <div class="lvl lvl-exceeds"><h4>Exceeds</h4><p>Anticipates blockers and seeks guidance early to maintain progress</p></div>
+            <div class="lvl lvl-below"><h4>Does not meet</h4><p>Remains stuck without asking for help, or asks before making any attempt</p></div>
+          </div>
+        </article>
+        <article class="crit" id="c17" data-area="comm" data-month="2">
+          <header class="crit-head">
+            <span class="crit-num" aria-hidden="true">17</span>
+            <h3>Understands tasks and their acceptance criteria and goals</h3>
+            <span class="mo">Month 2</span>
+          </header>
+          <div class="levels">
+            <div class="lvl lvl-meets"><h4>Meets</h4><p>Demonstrates clear understanding of assigned tasks before starting work</p></div>
+            <div class="lvl lvl-exceeds"><h4>Exceeds</h4><p>Clarifies ambiguous requirements in ways that benefit the broader team</p></div>
+            <div class="lvl lvl-below"><h4>Does not meet</h4><p>Lacks clarity on task requirements or goals</p></div>
+          </div>
+        </article>
+      </section>
+      <section class="area" id="atl" data-area="atl">
+        <div class="area-head">
+          <h2>Above the Line Behavior</h2>
+          <span class="area-count">3 criteria</span>
+          <p>How someone shows up when the work gets hard.</p>
+        </div>
+        <article class="crit" id="c18" data-area="atl" data-month="6">
+          <header class="crit-head">
+            <span class="crit-num" aria-hidden="true">18</span>
+            <h3>Authentic Communication</h3>
+            <span class="mo">Month 6</span>
+          </header>
+          <div class="levels">
+            <div class="lvl lvl-meets"><h4>Meets</h4><p>Listens well, confirms understanding, avoids ambiguity</p></div>
+            <div class="lvl lvl-exceeds"><h4>Exceeds</h4><p>Demonstrates strong self-awareness and clear intent in all communication</p></div>
+            <div class="lvl lvl-below"><h4>Does not meet</h4><p>Interrupts, assumes, or communicates vaguely</p></div>
+          </div>
+        </article>
+        <article class="crit" id="c19" data-area="atl" data-month="6">
+          <header class="crit-head">
+            <span class="crit-num" aria-hidden="true">19</span>
+            <h3>Constructive Negotiation</h3>
+            <span class="mo">Month 6</span>
+          </header>
+          <div class="levels">
+            <div class="lvl lvl-meets"><h4>Meets</h4><p>Collaborates respectfully and moves work forward</p></div>
+            <div class="lvl lvl-exceeds"><h4>Exceeds</h4><p>Helps resolve minor disagreements constructively and respectfully</p></div>
+            <div class="lvl lvl-below"><h4>Does not meet</h4><p>Resists alignment, is combative or passive</p></div>
+          </div>
+        </article>
+        <article class="crit" id="c20" data-area="atl" data-month="6">
+          <header class="crit-head">
+            <span class="crit-num" aria-hidden="true">20</span>
+            <h3>Impeccable Coordination</h3>
+            <span class="mo">Month 6</span>
+          </header>
+          <div class="levels">
+            <div class="lvl lvl-meets"><h4>Meets</h4><p>Keeps stakeholders informed and aligned</p></div>
+            <div class="lvl lvl-exceeds"><h4>Exceeds</h4><p>Keeps relevant teammates informed proactively without being prompted</p></div>
+            <div class="lvl lvl-below"><h4>Does not meet</h4><p>Leaves others out of the loop or miscommunicates progress</p></div>
+          </div>
+        </article>
+      </section>
+  </div>
+
+  <section class="contact rb-end" id="contact">
+    <div class="wrap">
+      <h2>Want engineers who work <span class="gradient-text">this way?</span></h2>
+      <p>I build the training, the standards and the coaching that get a team there.</p>
+      <div class="contact-cta">
+        <a class="btn btn-primary" href="../#contact">Get in touch</a>
+        <a class="btn btn-ghost" href="../#lead">How I lead</a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <div class="wrap">© <span id="yr">2026</span> Cody J. Boillot · Built simple, built to ship.</div>
+  </footer>
+</main>
+
+<script>
+  document.getElementById("yr").textContent = new Date().getFullYear();
+  (function () {
+    var list = document.getElementById("rubricList");
+    var count = document.getElementById("rbCount");
+    var crits = Array.prototype.slice.call(list.querySelectorAll(".crit"));
+    var areas = Array.prototype.slice.call(list.querySelectorAll(".area"));
+    var month = "all";
+
+    function press(attr, value) {
+      document.querySelectorAll(".rb-bar button[" + attr + "]").forEach(function (b) {
+        b.setAttribute("aria-pressed", String(b.getAttribute(attr) === value));
+      });
+    }
+    function applyMonth() {
+      var shown = 0;
+      crits.forEach(function (c) {
+        var on = month === "all" || c.getAttribute("data-month") === month;
+        c.hidden = !on; if (on) shown++;
+      });
+      areas.forEach(function (a) { a.hidden = !a.querySelector(".crit:not([hidden])"); });
+      count.textContent = shown + " of " + crits.length + " criteria";
+    }
+    document.querySelectorAll(".rb-bar button[data-month]").forEach(function (b) {
+      b.addEventListener("click", function () { month = b.getAttribute("data-month"); press("data-month", month); applyMonth(); });
+    });
+    document.querySelectorAll(".rb-bar button[data-level]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var v = b.getAttribute("data-level"); list.setAttribute("data-level", v); press("data-level", v);
+      });
+    });
+    // A link to one criterion (from the four cards above) must be able to reach it.
+    function reveal() {
+      var t = location.hash && document.querySelector(location.hash);
+      if (t && t.hidden) { month = "all"; press("data-month", "all"); applyMonth(); t.scrollIntoView(); }
+    }
+    window.addEventListener("hashchange", reveal);
+    // On a phone, three levels for twenty criteria is a long scroll: start on "Meets".
+    if (window.matchMedia && window.matchMedia("(max-width: 760px)").matches) {
+      list.setAttribute("data-level", "meets"); press("data-level", "meets");
+      // The page just got shorter, so a link to one criterion has to be re-aimed.
+      var t = location.hash && document.querySelector(location.hash);
+      if (t) t.scrollIntoView();
+    }
+  })();
+</script>
+</body>
+</html>

@@ -83,6 +83,7 @@
     transform: translateY(-2px); border-color: var(--accent);
     background: linear-gradient(100deg, rgba(255,138,61,.16), rgba(255,94,98,.08));
   }
+  .hero-promo + .hero-promo { margin-top: .7rem; }
   .hero-promo .badge-new { flex: 0 0 auto; }
   .hero-promo-text { flex: 1; min-width: 0; }
   .hero-promo-text strong { color: var(--text); }
@@ -104,6 +105,21 @@
     background: var(--grad); color: #1a1206 !important;
   }
   @media (max-width: 720px) { .nav-links a:not(.nav-cta) { display: none; } }
+  /* Highlighted link to /rubric/ ("What I look for in engineers in the AI age") */
+  .nav-links a.nav-hl {
+    color: var(--accent-2); font-weight: 600; white-space: nowrap;
+    padding: .42rem .85rem; border-radius: 999px;
+    border: 1px solid rgba(255,194,75,.45); background: rgba(255,194,75,.08);
+    transition: color .2s, background .2s, border-color .2s;
+  }
+  .nav-links a.nav-hl:hover, .nav-links a.nav-hl[aria-current="page"] { color: #1a1206; background: var(--grad); border-color: transparent; }
+  .nav-hl .nl-2 { display: none; }
+  @media (max-width: 1000px) { .nav-hl .nl-1 { display: none; } }
+  @media (max-width: 720px) {
+    .nav-links { gap: .6rem; }
+    .nav-links a.nav-hl { display: inline-block; font-size: .8rem; padding: .36rem .65rem; }
+  }
+  @media (max-width: 400px) { .nav-links a.nav-cta { font-size: .8rem; padding: .42rem .7rem; } }
 
   /* ---------- Buttons ---------- */
   .btn {
