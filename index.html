@@ -129,8 +129,8 @@
   }
   .nav-links a { white-space: nowrap; }
   .nav-toggle { display: none; }
-  /* 900px, not 720px: with the highlighted link the full row no longer fits on a tablet. */
-  @media (max-width: 900px) {
+  /* 1100px: with the highlighted link and Build Yours the full row no longer fits below this. */
+  @media (max-width: 1100px) {
     .nav-toggle {
       display: inline-flex; align-items: center; gap: .45rem;
       background: transparent; border: 1px solid var(--line-2); color: var(--text);
@@ -158,8 +158,8 @@
   }
   .nav-links a.nav-hl:hover, .nav-links a.nav-hl[aria-current="page"] { color: #1a1206; background: var(--grad); border-color: transparent; }
   .nav-hl .nl-2 { display: none; }
-  @media (max-width: 1000px) { .nav-hl .nl-1 { display: none; } }
-  @media (max-width: 900px) {
+  @media (max-width: 1260px) { .nav-hl .nl-1 { display: none; } }
+  @media (max-width: 1100px) {
     .nav-links a.nav-hl { border: 0; border-top: 1px solid var(--line); border-radius: 0; background: rgba(255,194,75,.07); padding: .85rem 1.25rem; white-space: normal; }
     .nav-hl .nl-1, .nav-hl .nl-2 { display: inline; }
   }
@@ -446,6 +446,7 @@
       <a href="rubric/" class="nav-hl">What I look for<span class="nl-1"> in engineers</span><span class="nl-2"> in the AI age</span></a>
       <a href="#about">About</a>
       <a href="leadership/">Leadership</a>
+      <a href="BuildYours/">Build Yours</a>
       <a href="#experience">Experience</a>
       <a href="#work">What I Build</a>
       <a href="#projects">Projects</a>
