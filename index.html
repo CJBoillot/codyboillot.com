@@ -129,8 +129,8 @@
   }
   .nav-links a { white-space: nowrap; }
   .nav-toggle { display: none; }
-  /* 1100px: with the highlighted link and Build Yours the full row no longer fits below this. */
-  @media (max-width: 1100px) {
+  /* Below 900px the menu collapses behind the Menu button. */
+  @media (max-width: 900px) {
     .nav-toggle {
       display: inline-flex; align-items: center; gap: .45rem;
       background: transparent; border: 1px solid var(--line-2); color: var(--text);
@@ -149,7 +149,7 @@
     .nav-links a { display: block; padding: .85rem 1.25rem; font-size: 1.05rem; border-top: 1px solid var(--line); }
     .nav-links a.nav-cta { margin: .6rem 1.25rem 0; text-align: center; border-top: 0; }
   }
-  /* Highlighted link to /rubric/ ("What I look for in engineers in the AI age") */
+  /* Highlighted link to /BuildYours/ ("Build Your Profile Site") */
   .nav-links a.nav-hl {
     color: var(--accent-2); font-weight: 600; white-space: nowrap;
     padding: .42rem .85rem; border-radius: 999px;
@@ -158,8 +158,8 @@
   }
   .nav-links a.nav-hl:hover, .nav-links a.nav-hl[aria-current="page"] { color: #1a1206; background: var(--grad); border-color: transparent; }
   .nav-hl .nl-2 { display: none; }
-  @media (max-width: 1260px) { .nav-hl .nl-1 { display: none; } }
-  @media (max-width: 1100px) {
+  @media (max-width: 1000px) { .nav-hl .nl-1 { display: none; } }
+  @media (max-width: 900px) {
     .nav-links a.nav-hl { border: 0; border-top: 1px solid var(--line); border-radius: 0; background: rgba(255,194,75,.07); padding: .85rem 1.25rem; white-space: normal; }
     .nav-hl .nl-1, .nav-hl .nl-2 { display: inline; }
   }
@@ -443,16 +443,12 @@
     <a href="#top" class="brand">Cody&nbsp;Boillot<span class="dot">.</span></a>
     <button class="nav-toggle" id="navToggle" type="button" aria-expanded="false" aria-controls="navLinks"><span class="bars" aria-hidden="true"></span>Menu</button>
     <nav class="nav-links" id="navLinks" aria-label="Primary">
-      <a href="rubric/" class="nav-hl">What I look for<span class="nl-1"> in engineers</span><span class="nl-2"> in the AI age</span></a>
-      <a href="#about">About</a>
+      <a href="BuildYours/" class="nav-hl">Build Your<span class="nl-1"> Profile</span> Site</a>
+      <a href="#experience">My Resume</a>
       <a href="leadership/">Leadership</a>
-      <a href="BuildYours/">Build Yours</a>
-      <a href="#experience">Experience</a>
-      <a href="#work">What I Build</a>
       <a href="#projects">Projects</a>
       <a href="#games">Games</a>
-      <a href="#skills">Skills</a>
-      <a href="#contact" class="nav-cta">Get in touch</a>
+      <a href="#about" class="nav-cta">About me</a>
     </nav>
   </div>
 </header>
