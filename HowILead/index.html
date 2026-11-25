@@ -13,7 +13,7 @@
 :root{--bg:#0b0f17;--card:#141b2b;--card-2:#1a2336;--line:rgba(255,255,255,.09);--line-2:rgba(255,255,255,.2);--text:#eef2f9;--muted:#9aa6bd;--muted-2:#6b768e;--accent:#ff8a3d;--grad:linear-gradient(100deg,#ffc24b 0%,#ff8a3d 45%,#ff5e62 100%)}
 *{box-sizing:border-box}
 html,body{margin:0}
-body{background:var(--bg);color:var(--text);font-family:"Inter",system-ui,sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased;min-height:100vh;display:flex;flex-direction:column;justify-content:center}
+body{background:var(--bg);color:var(--text);font-family:"Inter",system-ui,sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased;min-height:100vh;display:flex;flex-direction:column;justify-content:flex-start}
 h1,h2{font-family:"Sora","Inter",sans-serif;margin:0;line-height:1.2}
 button{font:inherit;color:inherit;cursor:pointer}
 a{color:var(--accent)}
@@ -108,6 +108,7 @@ body.embed svg{max-height:560px}
 </style>
 </head>
 <body>
+<script src="../assets/viewmode.js"></script>
 <div class="wrap">
   <div class="head"><h1>How I lead</h1><p>People and relationships first. Everything else grows from that.</p></div>
   <div class="grid">

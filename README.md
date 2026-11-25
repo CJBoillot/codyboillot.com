@@ -22,7 +22,10 @@ See [SkillTrainer](#skilltrainer) below.
 | `games/` | `games/index.html` lists the games (codyboillot.com/games); `games/<name>/` holds each full write-up with screenshots. Card text lives in both the home page and the hubs; update both when a card changes. |
 | `SkillTrainer/` | The training-engine demo. |
 | `PMP/` | PMP Rapid-Fire, a PMP 2026 study app: themed 20-card flashcard sets, exam-style quizzes, scenario practice and progress tracking. Plain HTML/JS; optional Google sign-in syncs progress to Firestore (Firebase project `pmp-rapid-fire`, data at `users/{uid}/pmp/state` and `users/{uid}/quizzes/{id}`). |
-| `HowILead/` | The interactive "How I lead" wheel (people, process, product). One self-contained `index.html`, embedded in the home page's How I Lead section through an iframe that resizes itself by `postMessage`; it also works when opened directly. |
+| `HowILead/` | The interactive "How I lead" wheel (people, process, product), shown on the Leadership page as "My Personality". One self-contained `index.html`. |
+| `MySprint/` | "My Sprint": an interactive two-week sprint inside a six-sprint PI. Click a ceremony for how it is run, how it goes wrong, and what changed with AI; Sprint 6 adds a PI dependency board. One self-contained `index.html`. |
+| `leadership/` | The Leadership section: three cards (My Personality, My Training, My Sprint) linking to `HowILead/`, `rubric/` and `MySprint/`, with screenshots in `assets/leadership/`. The home page shows a short teaser that links here. |
+| `assets/viewmode.js` | Adds a "back to Leadership" link and a Desktop / Mobile switch to the three Leadership sub pages. Mobile loads the same page in a phone-width frame; the switch is hidden on phones. |
 | `AISprint/` | Coaching the AI-First Sprint, a demo of a scenario-based Agile coaching course. One self-contained `index.html`; only Module 3 (Story Pointing) is playable. Progress saves to localStorage. Its card is on the home page and `/projects`. |
 | `ClickToConquer/` | Click to Conquer, an idle survival-crafting game (Firebase cloud saves). |
 | `BattlePass/` | Battle Pass: MTX (Maximum Transaction eXtraction), a satirical idle game about live-service monetization. Copied from its own project. `cloud.js` + `cloud-config.js` add Google sign-in and Firestore saves (Firebase project `battlepass-mtx`). |

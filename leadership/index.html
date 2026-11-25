@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Leadership · Cody J. Boillot</title>
+<meta name="description" content="How Cody J. Boillot leads: the personality and practices behind his leadership, the rubric he trains engineers with, and how he runs a sprint, each as an interactive page." />
+<meta name="author" content="Cody J. Boillot" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Leadership · Cody J. Boillot" />
+<meta property="og:description" content="My personality as a leader, how I train engineers, and how I run a sprint. Three interactive pages." />
+<meta property="og:image" content="https://codyboillot.com/assets/headshot.jpg" />
+<meta property="og:url" content="https://codyboillot.com/leadership/" />
+<meta name="twitter:card" content="summary" />
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml" />
+<link rel="canonical" href="https://codyboillot.com/leadership/" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../assets/site.css" />
+<style>
+  .ld-list { display: grid; gap: clamp(1.4rem, 3vw, 2.2rem); padding-bottom: clamp(3rem, 7vw, 5rem); }
+  .ld { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: clamp(1.2rem, 3vw, 2.4rem); align-items: center;
+        background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: clamp(1.1rem, 2.6vw, 1.9rem); }
+  .ld:nth-child(even) .ld-shot { order: -1; }
+  .ld-n { font-size: .8rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); }
+  .ld h2 { font-size: clamp(1.4rem, 3vw, 1.9rem); font-weight: 800; margin-top: .4rem; }
+  .ld ul { list-style: disc; margin: .9rem 0 1.2rem; padding-left: 1.15rem; color: var(--muted); display: grid; gap: .45rem; }
+  .ld li::marker { color: var(--accent); }
+  .ld-shot { display: block; border-radius: 12px; overflow: hidden; border: 1px solid var(--line-2); background: var(--bg); transition: transform .2s, border-color .2s; }
+  .ld-shot:hover { transform: translateY(-3px); border-color: var(--accent); }
+  .ld-shot img { display: block; width: 100%; height: auto; }
+  @media (max-width: 820px) {
+    .ld { grid-template-columns: minmax(0, 1fr); }
+    .ld:nth-child(even) .ld-shot { order: 0; }
+  }
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap nav-inner">
+    <a href="../" class="brand">Cody&nbsp;Boillot<span class="dot">.</span></a>
+    <nav class="nav-links" aria-label="Primary">
+      <a href="../rubric/" class="nav-hl">What I look for<span class="nl-1"> in engineers</span></a>
+      <a href="../leadership/" aria-current="page">Leadership</a>
+      <a href="../projects/">Projects</a>
+      <a href="../games/">Games</a>
+      <a href="../" class="nav-cta">About me</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top" class="sub-page">
+  <section class="block">
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="sec-tag">Leadership</div>
+        <h1 style="font-size:clamp(1.9rem,4.4vw,2.8rem);font-weight:800;margin-top:.6rem">How I lead, how I train, and how I run a sprint.</h1>
+        <p>Three interactive pages. Each one shows a part of how I work, with the detail a résumé can't hold.</p>
+      </div>
+
+      <div class="ld-list">
+        <article class="ld" id="personality">
+          <div>
+            <div class="ld-n">01 · My Personality</div>
+            <h2>People and relationships first.</h2>
+            <ul>
+              <li>An interactive wheel of the twelve practices I use as a leader, across people, process, and product.</li>
+              <li>Each practice shows the evidence behind it and how I put it to work.</li>
+              <li>Built on six backgrounds: organizational psychology, an MBA, coaching, Agile, AI, and military service.</li>
+            </ul>
+            <a class="btn btn-primary" href="../HowILead/">Explore the wheel</a>
+          </div>
+          <a class="ld-shot" href="../HowILead/"><img src="../assets/leadership/personality.jpg" width="1200" height="700" loading="lazy" alt="The How I Lead wheel: people and relationships at the center, with rings of practices for people, process, and product" /></a>
+        </article>
+
+        <article class="ld" id="training">
+          <div>
+            <div class="ld-n">02 · My Training</div>
+            <h2>What I look for in engineers in the AI age.</h2>
+            <ul>
+              <li>The rubric I use to train and evaluate associate developers in their first six months.</li>
+              <li>Twenty criteria across AI-first engineering, collaboration, communication, and behavior.</li>
+              <li>Each one spells out what meets, exceeds, and falls short of the bar.</li>
+            </ul>
+            <a class="btn btn-primary" href="../rubric/">Open the rubric</a>
+          </div>
+          <a class="ld-shot" href="../rubric/"><img src="../assets/leadership/training.jpg" width="1200" height="700" loading="lazy" alt="The engineer rubric: criteria cards showing what meets, exceeds, and falls short of the bar" /></a>
+        </article>
+
+        <article class="ld" id="sprint">
+          <div>
+            <div class="ld-n">03 · My Sprint</div>
+            <h2>A two-week sprint, ceremony by ceremony.</h2>
+            <ul>
+              <li>An interactive timeline of a two-week sprint inside a six-sprint PI.</li>
+              <li>For every ceremony: how I run it, how it goes wrong, and how I pull it back.</li>
+              <li>What changed in each one when AI started writing the code, plus a dependency board for PI planning.</li>
+            </ul>
+            <a class="btn btn-primary" href="../MySprint/">Walk through a sprint</a>
+          </div>
+          <a class="ld-shot" href="../MySprint/"><img src="../assets/leadership/sprint.jpg" width="1200" height="700" loading="lazy" alt="The My Sprint timeline: six sprints, a two-week calendar of ceremonies, and a panel explaining Sprint Planning" /></a>
+        </article>
+      </div>
+    </div>
+  </section>
+</main>
+
+</body>
+</html>
