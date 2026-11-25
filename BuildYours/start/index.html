@@ -114,6 +114,30 @@
   .paste svg { flex: none; width: 22px; height: 22px; color: var(--accent-2); margin-top: .1rem; }
   .st .paste p { margin: 0; color: var(--text); font-weight: 600; }
   .st .paste p b { color: var(--accent-2); }
+  /* Numbered tasks inside a step, each tagged with where it happens */
+  .how { margin-top: 1rem; border: 1px dashed var(--line-2); border-radius: 12px; padding: .7rem .85rem; color: var(--muted); font-size: .92rem; }
+  .how b { color: var(--text); }
+  .tasks { list-style: none; margin: 1.1rem 0 0; padding: 0; display: grid; gap: 0; }
+  .task { display: grid; grid-template-columns: 32px minmax(0, 1fr); gap: .8rem; position: relative; padding-bottom: 1.3rem; }
+  .task:not(:last-child)::before { content: ""; position: absolute; left: 15px; top: 34px; bottom: 4px; width: 2px; background: var(--line-2); }
+  .task-n { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: var(--card-2); border: 1px solid var(--line-2); font-weight: 800; font-size: .88rem; color: var(--accent-2); }
+  .task-c { min-width: 0; padding-top: .1rem; }
+  .where { display: inline-block; font-size: .68rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; border-radius: 999px; padding: .12rem .55rem; }
+  .w-here { background: rgba(255,138,61,.14); color: #ffb98a; }
+  .w-ai { background: rgba(96,165,250,.16); color: #93c5fd; }
+  .w-editor, .w-phone { background: rgba(167,139,250,.16); color: #c4b5fd; }
+  .task-t { font-weight: 700; color: var(--text); font-size: 1.02rem; margin-top: .3rem; }
+  .task-b > :first-child { margin-top: .45rem; }
+  .task-b .fl2 { margin-top: .6rem; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .wm { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem; margin-top: 1.2rem; padding-top: 1rem; border-top: 1px solid var(--line); }
+  .wm > div { min-width: 0; padding: .1rem 0 .1rem .8rem; border-left: 3px solid var(--line-2); }
+  .wm > div:only-child { grid-column: 1 / -1; }
+  .wm strong { font-size: .74rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+  .wm .miss { border-left-color: var(--accent-3); }
+  .wm .miss strong { color: var(--accent-3); }
+  .st .wm p { margin-top: .2rem; font-size: .92rem; }
+  @media (max-width: 640px) { .wm { grid-template-columns: minmax(0, 1fr); } }
   .note { margin-top: 1rem; border: 1px solid rgba(255,194,75,.4); background: rgba(255,194,75,.06); border-radius: 12px; padding: .7rem .85rem; }
   .note strong { display: block; font-size: .74rem; letter-spacing: .1em; text-transform: uppercase; color: var(--accent-2); }
   .st .note p { margin-top: .25rem; color: #dfe5f0; }
@@ -306,6 +330,13 @@
   }
   function promptBox(n, name) { return "<div class='prompt'><div class='prompt-h'><span>" + name + " · for " + AIS[S.ai].n + "</span><button class='copy' type='button' data-p='" + n + "'>Copy</button></div><pre id='pp" + n + "'></pre><button class='prompt-more' type='button' data-more='1'>Show the whole prompt</button></div>"; }
   function paste(html) { return "<div class='paste' role='note'><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'><path d='M9 4h6a1 1 0 0 1 1 1v1H8V5a1 1 0 0 1 1-1zM8 6H6a1 1 0 0 0-1 1v13a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-2'/><path d='M9 13h6M9 17h4'/></svg><p>" + html + "</p></div>"; }
+  var WHERE = { here: "On this page", editor: "In your code editor", phone: "On your phone" };
+  function task(n, where, title, body) {
+    var lab = where === "ai" ? "In " + AIS[S.ai].n : WHERE[where];
+    return "<li class='task'><span class='task-n' aria-hidden='true'>" + n + "</span><div class='task-c'><span class='where w-" + where + "'>" + lab + "</span><div class='task-t'><span class='sr'>Task " + n + ": </span>" + title + "</div>" + (body ? "<div class='task-b'>" + body + "</div>" : "") + "</div></li>";
+  }
+  function tasks(arr) { return "<ol class='tasks'>" + arr.join("") + "</ol>"; }
+  function howWorks() { return "<div class='how'><b>How each step works:</b> fill in what's asked here, copy the prompt, paste it into " + AIS[S.ai].n + ", then bring the answer back here. The labels tell you where each part happens.</div>"; }
   function hood(title, html) { return "<div class='hood'><strong>Under the hood · " + title + "</strong>" + html + "</div>"; }
 
   function cmpHtml() {
@@ -361,11 +392,20 @@
   var PARTS = ["Plan", "Choose", "Build", "Check", "Launch"];
   var STEPS = [
     { pt: 0, t: "Decide what to prove", lead: "Before you open any tool, decide the three things a hiring manager should believe after two minutes on your site.",
-      body: function () { return "<div class='fl2'>" + inp("name", "Your name", "Alex Kim") + inp("role", "The role you want", "Software Engineer") + "</div><h3>Get your claims</h3><p>Copy this prompt into your AI assistant, then <span class='must'>paste your résumé under it.</span></p>" + promptBox(1, "Positioning prompt") + paste("Before you send it: <b>paste your full résumé below the prompt.</b> Without it, the AI has nothing to base your claims on and will guess.") + "<h3>Write down the three you settle on</h3><div class='fl'>" + inp("c0", "Claim 1 <small>(your strongest)</small>", "I cut page load times by measuring first") + inp("c1", "Claim 2", "") + inp("c2", "Claim 3", "") + "</div>"; },
+      body: function () { return howWorks() + tasks([
+        task(1, "here", "Fill in your name and the role you want", "<div class='fl2'>" + inp("name", "Your name", "Alex Kim") + inp("role", "The role you want", "Software Engineer") + "</div>"),
+        task(2, "here", "Copy the prompt", promptBox(1, "Positioning prompt")),
+        task(3, "ai", "Paste the prompt, add your résumé, and send", paste("<b>Paste your full résumé below the prompt</b> before you send it. Without it, the AI has nothing to base your claims on and will guess.")),
+        task(4, "here", "Read the answer, then type the three claims you settle on", "<p>Talk it through with the AI until you're happy, then type the final three here. They fill in the later prompts and your site preview.</p><div class='fl'>" + inp("c0", "Claim 1 <small>(your strongest)</small>", "I cut page load times by measuring first") + inp("c1", "Claim 2", "") + inp("c2", "Claim 3", "") + "</div>")
+      ]); },
       note: "Stay in this one conversation through the build steps. The AI builds on what you decide here.",
       why: "A site without a point is just a longer résumé. Three claims give every page a job.", miss: "Claims nobody could check, such as “hard worker”. If a stranger can't verify it from your site, rewrite it." },
     { pt: 0, t: "Pick your proof", lead: "Choose one or two projects that back up each claim. Cut the rest.",
-      body: function () { return "<p>In the AI chat, list everything you've built: work, school, side projects, open source. Let the AI match projects to claims, then make the final cut yourself.</p>" + promptBox(2, "Project picker prompt") + paste("Before you send it: <b>list every project below the prompt</b>, one line each with what it was and what you did.") + "<h3>The projects you're keeping</h3><div class='fl'>" + [0, 1, 2].map(function (i) { return "<div class='proj-f'>" + inp("p" + i + "n", "Project " + (i + 1) + (i ? " <small>(optional)</small>" : ""), i ? "" : "Bakery storefront") + inp("p" + i + "d", "One line: the problem and what changed", i ? "" : "Cut load time on phones from six seconds to two") + "</div>"; }).join("") + "</div>"; },
+      body: function () { return tasks([
+        task(1, "here", "Copy the prompt", "<p>It already includes your claims from step 1.</p>" + promptBox(2, "Project picker prompt")),
+        task(2, "ai", "Paste the prompt, list your projects, and send", paste("<b>List every project below the prompt</b>, one line each: what it was and what you did. Work, school, side projects and open source all count.")),
+        task(3, "here", "Read the answer, then type the projects you're keeping", "<p>Make the final cut yourself.</p><div class='fl'>" + [0, 1, 2].map(function (i) { return "<div class='proj-f'>" + inp("p" + i + "n", "Project " + (i + 1) + (i ? " <small>(optional)</small>" : ""), i ? "" : "Bakery storefront") + inp("p" + i + "d", "One line: the problem and what changed", i ? "" : "Cut load time on phones from six seconds to two") + "</div>"; }).join("") + "</div>")
+      ]); },
       note: "If a claim has no proof, you have two honest choices: build the proof or drop the claim.",
       why: "Hiring managers skim. Your weakest project sets the impression as much as your strongest.", miss: "Keeping a project because it took a long time. Effort is not evidence." },
     { pt: 0, t: "Sketch the pages", lead: "Four pages are enough. Know what goes on each before you build.",
@@ -387,36 +427,71 @@
       hood: function () { return hood("Git and GitHub", "<p>Git keeps the history of every change you make, so you can always go back. GitHub stores that history online and lets you share it. Your repository is also proof: employers can open it and read your code.</p>"); },
       why: "Set up once now, and every later step is copy, paste and check." },
     { pt: 2, t: "Write the brief", lead: "Agree on the plan before any code. Read the brief, correct it, then approve it.",
-      body: function () { return "<p>This prompt already includes your claims, projects, build path, colors and fonts from earlier steps.</p>" + promptBox(8, "Site brief prompt"); },
+      body: function () { return tasks([
+        task(1, "here", "Copy the prompt", "<p>It already includes your claims, projects, build path, colors and fonts.</p>" + promptBox(8, "Site brief prompt")),
+        task(2, "ai", "Paste it into the same chat and send"),
+        task(3, "ai", "Read the brief, correct it, then approve it", "<p>Reply with anything that's wrong or missing. When it's right, reply \u201cApproved.\u201d</p>")
+      ]); },
       note: "Every prompt here has four parts: context, constraints, one clear ask, and what good looks like. Notice them. That pattern is the skill.",
       hood: function () { return hood("why a brief", "<p>A brief is a spec, the same thing a ticket is on an engineering team. Writing it first means the AI builds what you decided, not what it guessed. It's also the document you'd hand a teammate.</p>"); },
       why: "This is how work gets handed to a person, too.", miss: "Skipping straight to “build me a portfolio”. A generic ask gets a generic site." },
     { pt: 2, t: "Build the home page", lead: "Build one page, read every line of it, then ask for changes one at a time.",
-      body: function () { return promptBox(9, "Home page prompt"); },
+      body: function () { return tasks([
+        task(1, "here", "Copy the prompt", promptBox(9, "Home page prompt")),
+        task(2, "ai", "Paste it into the same chat and send"),
+        task(3, "ai", "Read every line, then ask for changes", "<p>Open the preview. Ask for one change at a time, in plain words: what's wrong and what you want instead.</p>"),
+        task(4, "editor", "Save the files", "<p>Copy each file into your code editor and save it in your project folder.</p>")
+      ]); },
       hood: function () { return hood("your files", hoodBuild()); },
       why: "One page at a time keeps the AI focused and keeps you able to check its work.", miss: "Accepting the first draft. The first draft is the AI's site. The fifth draft is yours." },
     { pt: 2, t: "Add your projects", lead: "One page per project: the problem, what you built, the result.",
-      body: function () { return "<p>Repeat this prompt for each project. Answer the AI's questions with real details, and say “I don't have a number” when you don't.</p>" + promptBox(10, "Project page prompt"); },
+      body: function () { return tasks([
+        task(1, "here", "Copy the prompt", promptBox(10, "Project page prompt")),
+        task(2, "ai", "Paste it into the same chat and send"),
+        task(3, "ai", "Answer its questions", "<p>Use real details, and say \u201cI don't have a number\u201d when you don't.</p>"),
+        task(4, "editor", "Save the page, then repeat for each project")
+      ]); },
       hood: function () { return hood("pages and links", hoodRoutes()); },
       why: "A project told as problem, build and result shows how you think. A list of technologies does not.", miss: "Writing “we” for everything. Say what you did." },
     { pt: 2, t: "Make one skill clickable", lead: "Build a small demo a visitor can try in under a minute.",
-      body: function () { return promptBox(11, "Clickable skill prompt"); },
+      body: function () { return tasks([
+        task(1, "here", "Copy the prompt", promptBox(11, "Clickable skill prompt")),
+        task(2, "ai", "Paste it into the same chat and send"),
+        task(3, "ai", "Pick one idea, then read its walkthrough", "<p>Make sure you could explain how it works without the AI.</p>"),
+        task(4, "editor", "Save it to your site")
+      ]); },
       note: "This is the step that gets a site remembered, and the one most people skip.",
       hood: function () { return hood("JavaScript events", "<p>Interactive pages run on <b>events</b>. Your code says “when this button is clicked, run this function” with <code>addEventListener</code>. The function reads what changed, updates a value, and redraws part of the page. Almost every demo is that loop.</p>"); },
       why: "Anyone can type “strong in accessibility”. A working contrast checker on your site proves it.", miss: "Building something huge. Small and finished wins." },
     { pt: 3, t: "Make it work on a phone", lead: "Recruiters open links on their phones. Test at phone width and fix what breaks.",
-      body: function () { return promptBox(12, "Phone check prompt") + "<p style='margin-top:.8rem'>Then open the site on your actual phone and tap every link.</p>"; },
+      body: function () { return tasks([
+        task(1, "here", "Copy the prompt", promptBox(12, "Phone check prompt")),
+        task(2, "ai", "Paste it into the same chat and send"),
+        task(3, "editor", "Apply the fixes"),
+        task(4, "phone", "Open the site on your own phone and tap every link")
+      ]); },
       hood: function () { return hood("responsive design", "<p>Three pieces make a page fit any screen. The <code>viewport</code> tag tells phones not to zoom out. Flexible widths, such as <code>width: min(100%, 880px)</code>, let boxes shrink. <b>Media queries</b>, such as <code>@media (max-width: 700px)</code>, change the layout below a set width, like stacking columns.</p>"); },
       why: "A site that scrolls sideways on a phone looks unfinished.", miss: "Testing only by shrinking your browser window. Use a real phone too." },
     { pt: 3, t: "Know your code", lead: "If your site says it, you said it. Check every fact, then make sure you can explain every file.",
-      body: function () { return "<ol><li>Read every sentence out loud. Delete anything you wouldn't say in an interview.</li><li>Check every number, date, title and employer against your résumé.</li><li>Click every link.</li></ol><h3>Then let the AI quiz you</h3>" + promptBox(13, "Code quiz prompt"); },
+      body: function () { return tasks([
+        task(1, "here", "Check every fact yourself", "<ol><li>Read every sentence out loud. Delete anything you wouldn't say in an interview.</li><li>Check every number, date, title and employer against your résumé.</li><li>Click every link.</li></ol>"),
+        task(2, "here", "Copy the quiz prompt", promptBox(13, "Code quiz prompt")),
+        task(3, "ai", "Paste it into the same chat, then answer each question", "<p>Don't look at the code first. The point is to find what you can't explain yet.</p>")
+      ]); },
       note: "This is the standard I hold engineers to: use AI for anything, and answer for everything. An interviewer will ask how your site works.",
       why: "AI assistants state wrong things confidently, and an interviewer can tell when you can't explain your own work.", miss: "An invented statistic. One made-up number can cost you the interview." },
     { pt: 3, t: "Ask for a review", lead: "Get the hard feedback now, from the employer's side.",
-      body: function () { return "<p>Start a <b>new</b> chat so the AI has no memory of building the site. Paste the prompt, then <span class='must'>your site's text under it.</span> After that, ask one real person the same four questions.</p>" + promptBox(14, "Hiring manager review prompt") + paste("Before you send it: <b>copy all the text from your live site and paste it below the prompt</b>, or paste the site's address if your assistant can open web pages."); },
+      body: function () { return tasks([
+        task(1, "here", "Copy the prompt", promptBox(14, "Hiring manager review prompt")),
+        task(2, "ai", "Open a <u>new</u> chat, paste the prompt, add your site's text, and send", "<p>A new chat has no memory of building your site, so it judges it fresh.</p>" + paste("<b>Copy all the text from your live site and paste it below the prompt</b>, or paste the site's address if your assistant can open web pages.")),
+        task(3, "editor", "Fix what matters", "<p>Then ask one real person the same four questions.</p>")
+      ]); },
       why: "It's easier to hear it now than to wonder later why nobody called.", miss: "Arguing with the feedback. Fix it or decide not to, then move on." },
     { pt: 4, t: "Put it live", lead: "A link beats an attachment, and it shows you can ship.",
-      body: function () { return launchHtml() + promptBox(15, "Launch prompt"); },
+      body: function () { return tasks([
+        task(1, "here", "Copy the prompt", promptBox(15, "Launch prompt")),
+        task(2, "ai", "Paste it into the same chat and follow along one step at a time")
+      ]) + "<h3>The short version</h3>" + launchHtml(); },
       hood: function () { return hood("deploying", hoodDeploy()); },
       why: "Until it has an address, nobody can see it." },
     { pt: 4, t: "Share it", lead: "The site only works if people open it.",
@@ -434,7 +509,7 @@
     h += st.body();
     if (st.hood) h += st.hood();
     if (st.note) h += "<div class='note'><strong>Coach's note</strong><p>" + st.note + "</p></div>";
-    if (st.why || st.miss) h += "<details class='more'><summary>Why this step matters</summary>" + (st.why ? "<p style='margin-top:.5rem'>" + st.why + "</p>" : "") + (st.miss ? "<div class='miss'><strong>Common mistake</strong><p>" + st.miss + "</p></div>" : "") + "</details>";
+    if (st.why || st.miss) h += "<div class='wm'>" + (st.why ? "<div><strong>Why it matters</strong><p>" + st.why + "</p></div>" : "") + (st.miss ? "<div class='miss'><strong>Common mistake</strong><p>" + st.miss + "</p></div>" : "") + "</div>";
     h += "<div class='nav2'><button type='button' class='back' data-go='" + (i - 1) + "'" + (i === 1 ? " disabled" : "") + ">Back</button><button type='button' class='next' data-done='" + i + "'>" + (i === N ? "Done, see my site" : "Done, next step") + "</button></div></article>";
     return h;
   }
