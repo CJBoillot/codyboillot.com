@@ -425,7 +425,8 @@
   .lightbox .lb-close { top: .8rem; right: .8rem; }
   .lightbox .lb-prev { left: .8rem; top: 50%; transform: translateY(-50%); }
   .lightbox .lb-next { right: .8rem; top: 50%; transform: translateY(-50%); }
-  .lead-links { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+  .lead-links { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; }
+  @media (max-width: 1080px) { .lead-links { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   .lead-links a { display: block; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 1.1rem 1.2rem; transition: transform .2s, border-color .2s; }
   .lead-links a:hover { transform: translateY(-3px); border-color: var(--accent); }
   .lead-links b { display: block; font-family: "Sora", "Inter", sans-serif; font-size: 1.05rem; color: var(--text); }
@@ -496,7 +497,7 @@
         <a class="hero-promo" href="#projects">
           <span class="badge-new">New</span>
           <span class="hero-promo-text">
-            <strong>Projects:</strong> an interactive Agile coaching course, an AI-agent CRM, and more.
+            <strong>Projects:</strong> an AI-agent CRM, a skill-tree training platform, and more.
             <span class="hero-promo-go">See what I've built</span>
           </span>
           <svg class="hero-promo-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -557,12 +558,13 @@
       <div class="sec-head reveal">
         <div class="sec-tag">Leadership</div>
         <h2>People and relationships first.</h2>
-        <p>Everything else grows from that. See my personality as a leader, how I train engineers, and how I run a sprint, each as an interactive page.</p>
+        <p>Everything else grows from that. See my personality as a leader, how I train engineers, how I run a sprint, and how I coach, each as an interactive page.</p>
       </div>
       <div class="lead-links reveal">
         <a href="HowILead/"><b>My Personality</b><span>The twelve practices I lead with, and the evidence behind each.</span></a>
         <a href="rubric/"><b>My Training</b><span>The rubric I use to train and evaluate engineers in the AI age.</span></a>
         <a href="MySprint/"><b>My Sprint</b><span>A two-week sprint, ceremony by ceremony, with what AI changed.</span></a>
+        <a href="AISprint/"><b>My Coaching</b><span>Play a story pointing scenario and see how I would coach it.</span></a>
       </div>
       <p style="margin-top:1.4rem"><a class="btn btn-primary" href="leadership/">See how I lead</a></p>
     </div>
@@ -724,17 +726,6 @@
         <p>A commercial CRM, two learning platforms and a 3D engine, each built end to end.</p>
       </div>
       <div class="tiles tiles-2">
-        <article class="tile reveal" id="aisprint">
-          <a class="tile-thumb type" href="AISprint/" tabindex="-1" aria-hidden="true"><b>AI-First Sprint</b><span>Agile coaching · Scenario-based course</span></a>
-          <div class="tile-body">
-            <div class="badge-row"><span class="pill">New · Interactive demo</span></div>
-            <h3><a href="AISprint/">Coaching the AI-First Sprint</a></h3>
-            <p>A scenario-based course on Agile leadership when AI writes the code. Play the Story Pointing module.</p>
-            <div class="tile-actions">
-              <a class="btn btn-primary btn-sm" href="AISprint/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>Try the demo</a>
-            </div>
-          </div>
-        </article>
         <article class="tile reveal" id="lopro">
           <a class="tile-thumb type" href="projects/lopro/" tabindex="-1" aria-hidden="true"><b>LoPro</b><span>React · Node.js · AWS · AI agents</span></a>
           <div class="tile-body">
