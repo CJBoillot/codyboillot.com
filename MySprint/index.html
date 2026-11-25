@@ -156,6 +156,8 @@ a{color:var(--accent)}
 .dep.bad{stroke-dasharray:5 4}
 .dep.dim{opacity:.12}
 html.vm-framed .wrap{padding-top:12px}
+.try{display:inline-block;margin-top:7px;font-size:13.5px;font-weight:600;color:var(--accent);text-decoration:none;border-bottom:1px solid rgba(255,138,61,.45)}
+.try:hover{border-color:var(--accent)}
 </style>
 </head>
 <body>
@@ -204,7 +206,8 @@ const C={
   how:["Start with capacity: who is out, and how many points we can realistically carry.","The product owner presents the proposed goals and the top stories.","The team asks questions, estimates, and pulls stories until capacity is full.","We write the sprint goals and the team commits to them."],
   why:"It is a two-way promise. The team commits to the goals, and the business commits to keeping them stable for the sprint.",
   fix:[["Stories arrive unrefined, so planning turns into refinement.","A story that isn't ready goes back to refinement, not into the sprint."],["The team plans to 100% of capacity and leaves no room for surprises.","We leave a buffer and plan to less than full capacity."],["Someone outside the team assigns the work, and the team stops owning the commitment.","The product owner decides what matters. The team decides how much it can take."]],
-  ai:"Writing the code is no longer where the effort goes. We size stories by the review, testing, and debugging they need, so a story AI can draft in an hour may still be a five."},
+  ai:"Writing the code is no longer where the effort goes. We size stories by the review, testing, and debugging they need, so a story AI can draft in an hour may still be a five.",
+  link:["../AISprint/#story-pointing","Play the story pointing scenario"]},
  su:{t:"Daily Standup",safe:"Team Sync in SAFe",when:"Every day",len:"15 minutes",cls:"su",
   what:"A short daily check on progress toward the sprint goal. It is not a status report.",
   who:"The team. I facilitate.",
@@ -282,7 +285,7 @@ function panel(){
  const v=view(),c=C[sel],i=v.order.indexOf(sel);
  $("panel").innerHTML=`<div class="n">${sprint===6?"Sprint 6":"Ceremony"} · ${i+1} of ${v.order.length}</div><h2>${c.t}</h2><p class="safe">${c.safe}</p><div class="pills"><span>${c.when}</span><span>${c.len}</span></div>
  <p class="lead">${c.what}</p>
- <div class="sec ai"><h3>What changed with AI</h3><p>${c.ai}</p></div>
+ <div class="sec ai"><h3>What changed with AI</h3><p>${c.ai}</p>${c.link?`<a class="try" href="${c.link[0]}" target="_top">${c.link[1]} &rarr;</a>`:""}</div>
  <div class="tabs" role="tablist">${[["how",c.howLab||"How I run it"],["fix","When it goes wrong"],["who","Who and why"]].map(([k,l])=>`<button role="tab" aria-selected="${tab===k}" class="${tab===k?"on":""}" data-tab="${k}">${l}</button>`).join("")}</div>
  <div class="tabp">${tab==="how"?`${c.howNote?`<p class="note">${c.howNote}</p>`:""}<ol class="steps">${c.how.map(x=>`<li>${x}</li>`).join("")}</ol>`:tab==="fix"?c.fix.map(([a,b])=>`<div class="pair"><div class="bad"><b>Off the rails</b>${a}</div><div class="good"><b>How I pull it back</b>${b}</div></div>`).join(""):`<div class="who"><h3>${c.whoLab||"Who attends"}</h3><p>${c.who}</p><h3>Why it matters</h3><p>${c.why}</p></div>`}</div>
  <div class="nav"><button id="prev" aria-label="Previous">&larr;</button><div class="dots">${v.order.map((k,j)=>`<i class="${j===i?"on":""}"></i>`).join("")}</div><button id="next" aria-label="Next">&rarr;</button></div>`;

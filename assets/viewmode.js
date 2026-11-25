@@ -13,7 +13,7 @@
     + ".vm-stage{display:none;justify-content:center;padding:16px 0 28px}"
     + ".vm-stage iframe{width:390px;max-width:100%;height:calc(100vh - 150px);min-height:560px;border:8px solid #1a2336;border-radius:30px;background:#0b0f17;box-shadow:0 20px 60px -20px rgba(0,0,0,.7)}"
     + "body.vm-mobile{display:block!important;min-height:0!important}"
-    + "body.vm-mobile>*:not(.vm-bar):not(.vm-stage):not(header):not(script):not(style){display:none!important}"
+    + "body.vm-mobile>*:not(.vm-bar):not(.vm-stage):not(header.nav):not(script):not(style){display:none!important}"
     + "body.vm-mobile .vm-stage{display:flex}"
     + "@media(max-width:900px){.vm-sw{display:none}}";
   var st = document.createElement("style"); st.textContent = css; document.head.appendChild(st);
@@ -25,7 +25,7 @@
     + '<button type="button" data-vm="mobile" aria-pressed="false">Mobile</button></div></div>';
   var stage = document.createElement("div"); stage.className = "vm-stage";
   function mount() {
-    var hdr = document.querySelector("body > header");
+    var hdr = document.querySelector("body > header.nav");
     if (hdr) hdr.after(bar); else document.body.prepend(bar);
     bar.after(stage);
   }
