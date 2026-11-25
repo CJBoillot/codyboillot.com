@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>My Sprint: Cody J. Boillot</title>
+<meta name="description" content="An interactive walk through how Cody J. Boillot runs a two-week sprint and a six-sprint PI, ceremony by ceremony." />
+<meta name="author" content="Cody J. Boillot" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="My Sprint: how I run a two-week sprint and a six-sprint PI" />
+<meta property="og:description" content="An interactive walk through each Scrum ceremony: how I run it, how it goes wrong, how I pull it back, and what changed with AI." />
+<meta property="og:url" content="https://codyboillot.com/MySprint/" />
+<meta name="twitter:card" content="summary" />
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml" />
+<link rel="canonical" href="https://codyboillot.com/MySprint/" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700&display=swap" rel="stylesheet" />
+<style>
+:root{--bg:#0b0f17;--card:#141b2b;--card-2:#1a2336;--line:rgba(255,255,255,.09);--line-2:rgba(255,255,255,.2);--text:#eef2f9;--muted:#9aa6bd;--muted-2:#6b768e;--accent:#ff8a3d;--gold:#ffc24b;--people:#ee7f52;--process:#12897b;--product:#1e4a94;--teal-l:#5fd3c2;--blue-l:#8fb4ff}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font-family:"Inter",system-ui,sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:"Sora","Inter",sans-serif;margin:0;line-height:1.2}
+button{font:inherit;color:inherit;cursor:pointer;background:none;border:0}
+a{color:var(--accent)}
+.wrap{max-width:1240px;margin:0 auto;padding:16px 20px 24px}
+.head{border-left:3px solid var(--accent);padding-left:12px;margin-bottom:14px}
+.head h1{font-size:24px}
+.head p{margin:2px 0 0;color:var(--muted);font-size:14.5px}
+.box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.lab{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:10px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.lab span{letter-spacing:0;text-transform:none;font-weight:500;color:var(--muted-2)}
+.strip{display:grid;grid-template-columns:repeat(5,minmax(0,1fr)) minmax(0,1.5fr);gap:8px}
+.sp{background:var(--card-2);border:1px solid var(--line);border-radius:10px;padding:10px 8px;text-align:center;font-weight:600;font-size:14px;transition:all .15s;min-height:52px}
+.sp small{display:block;font-weight:500;font-size:11.5px;color:var(--muted);margin-top:1px}
+.sp:hover{border-color:var(--line-2)}
+.sp.on{background:var(--process);border-color:var(--process)}
+.sp.on small{color:#d9f5f0}
+.sp.ip{border-style:dashed;border-color:rgba(255,194,75,.55)}
+.sp.ip.on{background:var(--gold);border-color:var(--gold);border-style:solid;color:#0b0f17}
+.sp.ip.on small{color:#3a2a05}
+.grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(320px,1fr);gap:16px;align-items:start;margin-top:16px}
+.tl h2{font-size:19px;margin-bottom:2px}
+.tl .sub{color:var(--muted);font-size:13.5px;margin:0 0 12px}
+.weeks{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--line);border-radius:10px 10px 0 0;overflow:hidden}
+.weeks div{text-align:center;font-size:12.5px;font-weight:600;color:var(--muted);padding:5px;background:var(--card-2)}
+.weeks div+div{border-left:1px solid var(--line)}
+.days{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));border:1px solid var(--line);border-top:0;border-radius:0 0 10px 10px;position:relative}
+.day{border-left:1px solid var(--line);padding:6px 4px 8px;min-height:150px;display:flex;flex-direction:column;gap:6px}
+.day:first-child{border-left:0}
+.day .dn{font-size:11.5px;color:var(--muted);text-align:center;font-weight:600}
+.day .slot{flex:1;display:flex;flex-direction:column;gap:6px}
+.chip{display:block;width:100%;border-radius:8px;padding:6px 4px;font-size:11.5px;font-weight:600;line-height:1.2;text-align:center;border:2px solid transparent;transition:all .15s}
+.chip.plan,.chip.rev{background:var(--product);color:#fff}
+.chip.ref,.chip.retro{background:var(--people);color:#0b0f17}
+.chip.pi{background:var(--gold);color:#0b0f17}
+.chip .fl{display:none}
+.chip{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chip:hover{filter:brightness(1.15)}
+.chip.on{border-color:#fff;box-shadow:0 0 0 2px rgba(255,255,255,.18)}
+.band{grid-column:1/-1;margin:8px 6px 0;background:rgba(255,194,75,.12);border:1px dashed rgba(255,194,75,.6);border-radius:8px;padding:8px 10px;font-size:13px;font-weight:600;color:var(--gold);text-align:center;width:calc(100% - 12px)}
+.band.on{background:var(--gold);color:#0b0f17;border-style:solid}
+.days.ipd .day{min-height:100px}
+.key{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:12.5px;color:var(--muted)}
+.key span{display:inline-flex;align-items:center;gap:6px}
+.key i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.panel{position:sticky;top:12px}
+.panel .n{font-size:12.5px;color:var(--muted)}
+.panel h2{font-size:22px;margin:2px 0 2px}
+.panel .safe{font-size:13px;color:var(--muted);margin:0 0 8px}
+.pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px}
+.pills span{background:rgba(95,211,194,.14);color:var(--teal-l);border-radius:999px;padding:2px 10px;font-size:12.5px;font-weight:600}
+.sec{border-top:1px solid var(--line);padding:9px 0}
+.sec h3{font-family:"Inter",sans-serif;font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:2px}
+.sec p{margin:0;font-size:14.5px}
+.sec ul{margin:0;padding-left:18px;font-size:14.5px}
+.sec.ai{background:rgba(255,138,61,.08);border:1px solid rgba(255,138,61,.3);border-radius:10px;padding:9px 12px;margin-top:4px}
+.sec.ai h3{color:var(--accent)}
+.nav{display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--line);padding-top:10px;margin-top:8px}
+.nav button{width:38px;height:38px;border-radius:10px;border:1px solid var(--line-2);font-size:18px}
+.nav button:hover{border-color:var(--gold)}
+.dots{display:flex;gap:7px}
+.dots i{width:8px;height:8px;border-radius:50%;background:var(--muted-2)}
+.dots i.on{background:var(--accent)}
+:focus-visible{outline:2px solid #fff;outline-offset:2px}
+@media(max-width:900px){
+ .wrap{padding:12px 12px 20px}
+ .strip{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .sp{padding:9px 4px;font-size:13.5px}
+ .sp small{font-size:10.5px;line-height:1.25}
+ .grid{grid-template-columns:minmax(0,1fr)}
+ .weeks{display:none}
+ .days{grid-template-columns:minmax(0,1fr);border-top:1px solid var(--line);border-radius:10px}
+ .day,.days.ipd .day{min-height:0;flex-direction:row;align-items:center;border-left:0;border-top:1px solid var(--line);padding:7px 10px;gap:10px}
+ .day:first-child{border-top:0}
+ .day .dn{flex:0 0 52px;text-align:left;font-size:12.5px}
+ .day .slot{flex-direction:row;flex-wrap:wrap}
+ .chip{width:auto;padding:5px 10px;font-size:12.5px}
+ .chip .sh{display:none}.chip .fl{display:inline}
+ .chip{white-space:normal}
+ .band{margin:8px 10px;width:calc(100% - 20px)}
+ .panel{position:static}
+}
+
+.lead{font-size:15px;margin:6px 0 10px}
+.tabs{display:flex;gap:6px;margin:12px 0 10px;background:var(--card-2);border-radius:10px;padding:4px}
+.tabs button{flex:1;border-radius:8px;padding:7px 6px;font-size:13px;font-weight:600;color:var(--muted)}
+.tabs button.on{background:var(--process);color:#fff}
+.tabp{min-height:150px}
+.note{margin:0 0 6px;font-size:14px;color:var(--muted)}
+.steps{margin:0;padding:0;list-style:none;counter-reset:s}
+.steps li{counter-increment:s;position:relative;padding:7px 0 7px 36px;font-size:14.5px;border-top:1px solid var(--line)}
+.steps li:first-child{border-top:0}
+.steps li:before{content:counter(s);position:absolute;left:0;top:7px;width:24px;height:24px;border-radius:50%;background:rgba(95,211,194,.16);color:var(--teal-l);font-weight:700;font-size:12.5px;display:grid;place-items:center}
+.pair{border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:8px;font-size:14px}
+.pair div{padding:8px 11px}
+.pair b{display:block;font-size:11px;letter-spacing:.05em;text-transform:uppercase;margin-bottom:1px}
+.pair .bad{background:rgba(255,94,98,.08)}.pair .bad b{color:#ff8f92}
+.pair .good{background:rgba(95,211,194,.08);border-top:1px solid var(--line)}.pair .good b{color:var(--teal-l)}
+.who h3{font-family:"Inter",sans-serif;font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:600;margin:8px 0 2px}
+.who p{margin:0;font-size:14.5px}
+.top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:14px}
+.top .head{margin-bottom:0;min-width:0}
+.future{display:inline-flex;align-items:center;gap:9px;flex:0 0 auto;border:1px solid rgba(255,194,75,.45);background:rgba(255,194,75,.06);border-radius:10px;padding:7px 11px;color:var(--text);font-size:13.5px;font-weight:600;transition:all .15s}
+.future .new{color:var(--gold);border:1px solid rgba(255,194,75,.5);font-size:10px;font-weight:600;border-radius:999px;padding:1px 8px;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap}
+.future .go{color:var(--gold);font-size:15px}
+.future:hover,.future.on{border-color:var(--gold);background:rgba(255,194,75,.14)}
+.chip.su{background:rgba(95,211,194,.16);color:var(--teal-l);border-color:rgba(95,211,194,.35)}
+.chip.su.on{background:var(--process);color:#fff;border-color:#fff}
+@media(max-width:1000px) and (min-width:901px){.chip.su .sh{font-size:9.5px}}
+@media(max-width:935px) and (min-width:901px){.chip.su .sh{font-size:8.5px;letter-spacing:-.2px}}
+@media(max-width:1180px) and (min-width:901px){.grid{grid-template-columns:minmax(0,1.5fr) minmax(300px,1fr)}.chip{font-size:10.5px;padding:6px 1px}.day{padding:6px 2px 8px}}
+@media(max-width:760px){.top{flex-direction:column;gap:10px}.future{align-self:stretch;justify-content:space-between}}
+@media(max-width:560px){.tabs button{font-size:12px;padding:7px 3px}}
+
+#board{margin-top:16px;border-top:1px solid var(--line);padding-top:14px}
+.bh{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.bh h3{font-size:16px}.bh h3 span{font-family:"Inter",sans-serif;font-size:11px;font-weight:600;color:var(--muted);border:1px solid var(--line-2);border-radius:999px;padding:1px 8px;margin-left:6px;text-transform:uppercase;letter-spacing:.05em;vertical-align:middle}
+.seg2{display:flex;background:var(--card-2);border-radius:9px;padding:3px}
+.seg2 button{border-radius:7px;padding:5px 11px;font-size:12.5px;font-weight:600;color:var(--muted)}
+.seg2 button.on{background:var(--process);color:#fff}
+.bcap{margin:8px 0;font-size:13.5px;color:var(--muted);min-height:40px}
+.bcap b{color:var(--text)}.bcap .bad{color:#ff8f92;font-weight:600}.bcap .ok{color:var(--teal-l);font-weight:600}
+.bscroll{overflow:hidden}
+.swipe{display:none;margin:0 0 4px;font-size:12px;color:var(--muted-2)}
+@media(max-width:700px){.swipe{display:block}}
+#bsvg{width:100%;height:auto;display:block}
+#bsvg text{font-family:"Inter",sans-serif}
+.card{cursor:pointer;transition:transform .5s ease}
+.card rect{fill:var(--card-2);stroke:var(--line-2);stroke-width:1.2;transition:all .2s}
+.card text{font-size:11.5px;font-weight:600;fill:var(--text);pointer-events:none}
+.card:hover rect,.card.on rect{stroke:#fff;stroke-width:2}
+.card.dim{opacity:.35}
+.dep{fill:none;stroke:#ff5e62;stroke-width:2;transition:opacity .2s}
+.dep.bad{stroke-dasharray:5 4}
+.dep.dim{opacity:.12}
+html.vm-framed .wrap{padding-top:12px}
+</style>
+</head>
+<body>
+<script src="../assets/viewmode.js"></script>
+<div class="wrap">
+  <div class="top">
+    <div class="head">
+      <h1>My Sprint</h1>
+      <p>How I run a two-week sprint inside a six-sprint PI. Select a sprint, then a ceremony.</p>
+    </div>
+    <button class="future" id="future"><span class="new">New in 2026</span><span class="ft">Where this is heading: AI-Native SAFe</span><span class="go">&rarr;</span></button>
+  </div>
+
+  <div class="box">
+    <div class="lab">Program Increment <span>6 sprints · 12 weeks</span></div>
+    <div class="strip" id="strip"></div>
+  </div>
+
+  <div class="grid">
+    <div class="box tl">
+      <h2 id="tl-h"></h2>
+      <p class="sub" id="tl-s"></p>
+      <div class="weeks"><div>Week 1</div><div>Week 2</div></div>
+      <div class="days" id="days"></div>
+      <div id="board" hidden>
+        <div class="bh"><h3>Dependency board <span>example</span></h3>
+          <div class="seg2" role="group" aria-label="Board state"><button data-b="0">First draft</button><button data-b="1">After sequencing</button></div></div>
+        <p class="bcap" id="bcap"></p>
+        <div class="bscroll"><svg id="bsvg" viewBox="0 0 700 250" role="img" aria-label="Example PI board: three teams, five sprints, red lines for dependencies"></svg></div>
+      </div>
+      <div class="key">
+        <span><i style="background:var(--product)"></i>Plan and review</span>
+        <span><i style="background:var(--people)"></i>Refine and reflect</span>
+        <span><i style="background:var(--teal-l)"></i>Daily standup</span>
+        <span><i style="background:var(--gold)"></i>PI level</span>
+      </div>
+    </div>
+    <div class="box panel" id="panel" aria-live="polite"></div>
+  </div>
+</div>
+<script>
+const C={
+ plan:{t:"Sprint Planning",sh:"Plan",safe:"Iteration Planning in SAFe",when:"Day 1",len:"90 minutes",cls:"plan",
+  what:"The first event of the sprint. The team agrees on sprint goals and picks the stories it believes it can finish.",
+  who:"The whole team, including the product owner. Stakeholders join when needed to confirm the work fits business needs.",
+  how:["Start with capacity: who is out, and how many points we can realistically carry.","The product owner presents the proposed goals and the top stories.","The team asks questions, estimates, and pulls stories until capacity is full.","We write the sprint goals and the team commits to them."],
+  why:"It is a two-way promise. The team commits to the goals, and the business commits to keeping them stable for the sprint.",
+  fix:[["Stories arrive unrefined, so planning turns into refinement.","A story that isn't ready goes back to refinement, not into the sprint."],["The team plans to 100% of capacity and leaves no room for surprises.","We leave a buffer and plan to less than full capacity."],["Someone outside the team assigns the work, and the team stops owning the commitment.","The product owner decides what matters. The team decides how much it can take."]],
+  ai:"Writing the code is no longer where the effort goes. We size stories by the review, testing, and debugging they need, so a story AI can draft in an hour may still be a five."},
+ su:{t:"Daily Standup",safe:"Team Sync in SAFe",when:"Every day",len:"15 minutes",cls:"su",
+  what:"A short daily check on progress toward the sprint goal. It is not a status report.",
+  who:"The team. I facilitate.",
+  how:["What I did yesterday.","What I'm doing today.","Whether I have any blockers."],
+  howNote:"Each person answers the same three questions. Anything that needs a longer talk goes to the parking lot.",
+  why:"Blockers surface in a day, not at the end of the sprint.",
+  fix:[["It becomes a status report to me.","I remind the team the answers are for each other, not for me."],["Two people solve a problem while eight wait.","It goes to the parking lot, and only the people involved stay after."]],
+  ai:"The common blocker is no longer \"I'm still coding.\" It's work waiting on review or testing."},
+ ref:{t:"Backlog Refinement",sh:"Refine",safe:"Team Backlog Refinement in SAFe",when:"Weekly",len:"60 minutes",cls:"ref",
+  what:"Getting upcoming stories ready before planning.",
+  who:"The product owner, the Scrum Master, the team, and relevant stakeholders.",
+  how:["The product owner brings the next stories.","The team asks questions and splits anything too large.","We write acceptance criteria before a story is called ready."],
+  why:"Planning is fast only when stories arrive ready.",
+  fix:[["The team designs the solution in the meeting.","Timebox each story. If it isn't clear in ten minutes, it needs more work before it comes back."],["Stories leave without acceptance criteria.","A story without acceptance criteria isn't ready, so it doesn't go to planning."]],
+  ai:"Acceptance criteria matter more, because they become both the prompt and the test."},
+ rev:{t:"Sprint Review",sh:"Review",safe:"Iteration Review in SAFe",when:"Day 10",len:"90 minutes or less",cls:"rev",
+  what:"The team shows stakeholders what it finished and gets feedback.",
+  who:"The team and its stakeholders.",
+  how:["We restate the sprint goals.","We demo working, tested software. No slides.","We agree on what the feedback changes in the backlog."],
+  why:"It confirms we're building the right thing while it's still cheap to change.",
+  fix:[["It turns into a slide deck.","We demo the working software itself."],["Unfinished work gets shown as done.","Only work that meets the definition of done gets demoed. Unfinished stories are named and re-planned."]],
+  ai:"We build faster, so stakeholders see more each sprint. I also ask how each piece was tested, not just whether it runs."},
+ retro:{t:"Retrospective",sh:"Retro",safe:"Iteration Retrospective in SAFe",when:"Day 10",len:"60 minutes or less",cls:"retro",
+  what:"The team looks at how it worked and picks improvements.",
+  who:"The team only. No stakeholders.",
+  how:["Everyone writes first.","We group the themes.","We vote on the top few."],
+  why:"It's how a team gets better on purpose.",
+  fix:[["It becomes venting.","Every item ends with one owner and one next step."],["The same issues return every sprint with no action.","We open by checking last sprint's actions."]],
+  ai:"We review where AI helped and where it cost us time, and update our shared prompts and practices."},
+ ip:{t:"Innovation & Planning Sprint",safe:"IP Iteration in SAFe",when:"Sprint 6",len:"Two weeks",cls:"band",
+  what:"The last sprint of the PI. No new delivery work is planned into it.",
+  who:"Every team.",whoLab:"Who takes part",howLab:"How I run it",
+  how:["Developers choose their own work.","Learning and tech debt are the priorities.","The PI event happens during this sprint."],
+  why:"Teams planned to 100% become unpredictable. This sprint is the buffer and the reset.",
+  fix:[["It gets used to finish work that slipped from sprints 1 to 5.","Leftover work goes into the next PI's plan, and this sprint stays protected."]],
+  ai:"Tools change quickly, so this is when the team learns new ones and cleans up AI-generated code that needs it."},
+ pi:{t:"PI Event",sh:"PI",safe:"PI Planning in SAFe",when:"During Sprint 6",len:"Typically two days",cls:"pi",
+  what:"Teams that depend on each other plan the next quarter together.",
+  who:"All the teams that plan together, plus stakeholders and leaders. An RTE, an acting RTE, or a senior Scrum Master facilitates.",
+  how:["A Release Train Engineer (RTE) runs it. Without one, I assign an acting RTE or a senior Scrum Master.","Teams put their planned work on a shared board, sprint by sprint.","Every dependency between teams gets a red line.","We use the red lines to set the development order: whatever others depend on gets built first.","We agree on the big picture and which epics lead the quarter."],
+  why:"The people who do the work should plan the work.",
+  fix:[["Leaders hand down a finished plan.","Teams build their own plans. Leaders set the priorities and answer questions."],["Dependencies are found after the event.","Every dependency goes on a shared board with an owner before anyone commits."]],
+  ai:"Building is faster, so sequencing and dependencies between teams are now the real constraint."}
+};
+const FUTURE={t:"Where this is heading",safe:"AI-Native SAFe, released in 2026 alongside Core SAFe",pills:["Emerging","What I run today is Core SAFe"],
+ secs:[["What it is","A second version of SAFe built on the assumption that AI does much of the building. Core SAFe, the model shown on this page, continues beside it."],
+ ["What changes",["Teams get smaller, typically three to seven people working with AI.","Quarterly planning becomes a one-day event focused on outcomes.","Teams re-check direction every sprint with a short Sense and Respond session, not once a quarter."]],
+ ["What I already practice",["Stories sized by review, testing, and debugging effort, not coding time.","Every piece of AI output verified by a person before it counts as done.","Testing as the quality gate, because we didn't write the code by hand."]],
+ ["What I'm watching",["How far to shrink teams without losing coverage.","Whether one-day planning holds up when teams depend on each other."]]]};
+const DELIV={order:["plan","su","ref","rev","retro"],days:{1:["plan"],3:["ref"],8:["ref"],10:["rev","retro"]}};
+const IPS={order:["ip","su","pi"],days:{8:["pi"],9:["pi"]}};
+let sprint=1,sel="plan",fut=false,tab="how";
+const $=id=>document.getElementById(id),view=()=>sprint===6?IPS:DELIV;
+function strip(){
+ $("strip").innerHTML=[1,2,3,4,5,6].map(n=>`<button class="sp ${n===6?"ip":""} ${n===sprint&&!fut?"on":""}" data-s="${n}" aria-pressed="${n===sprint&&!fut}">Sprint ${n}<small>${n===6?"Innovation & Planning · PI Event":"Delivery"}</small></button>`).join("");
+ $("future").classList.toggle("on",fut);
+}
+function days(){
+ const v=view(),ip=sprint===6;
+ $("tl-h").textContent=ip?"Sprint 6: Innovation & Planning":`Sprint ${sprint}: two weeks of delivery`;
+ $("tl-s").textContent=ip?"No new delivery work. The teams learn, pay down tech debt, and plan the next quarter.":"Sprints 1 to 5 follow the same rhythm.";
+ let h="";
+ for(let d=1;d<=10;d++){
+  const cs=(v.days[d]||[]).map(k=>`<button class="chip ${C[k].cls} ${sel===k&&!fut?"on":""}" data-k="${k}" aria-label="${C[k].t}"><span class="sh">${C[k].sh}</span><span class="fl">${C[k].t}</span></button>`).join("");
+  h+=`<div class="day"><div class="dn">Day ${d}</div><div class="slot"><button class="chip su ${sel==="su"&&!fut?"on":""}" data-k="su" aria-label="Daily Standup, day ${d}"><span class="sh">Standup</span><span class="fl">Standup</span></button>${cs}</div></div>`;
+ }
+ if(ip)h+=`<button class="band ${sel==="ip"&&!fut?"on":""}" data-k="ip">Innovation & Planning: developers choose their work · learning · tech debt</button>`;
+ $("days").innerHTML=h;$("days").classList.toggle("ipd",ip);
+}
+const list=a=>Array.isArray(a)?(a.length>1?`<ul>${a.map(x=>`<li>${x}</li>`).join("")}</ul>`:`<p>${a[0]}</p>`):`<p>${a}</p>`;
+function panel(){
+ if(fut){const f=FUTURE;
+  $("panel").innerHTML=`<div class="n">Looking ahead</div><h2>${f.t}</h2><p class="safe">${f.safe}</p><div class="pills">${f.pills.map(p=>`<span>${p}</span>`).join("")}</div>`+f.secs.map(([a,b])=>`<div class="sec"><h3>${a}</h3>${list(b)}</div>`).join("")+`<div class="nav"><span></span><button id="close" aria-label="Back to the sprint" style="width:auto;padding:0 14px;font-size:14px">Back to the sprint</button><span></span></div>`;
+  return}
+ const v=view(),c=C[sel],i=v.order.indexOf(sel);
+ $("panel").innerHTML=`<div class="n">${sprint===6?"Sprint 6":"Ceremony"} · ${i+1} of ${v.order.length}</div><h2>${c.t}</h2><p class="safe">${c.safe}</p><div class="pills"><span>${c.when}</span><span>${c.len}</span></div>
+ <p class="lead">${c.what}</p>
+ <div class="sec ai"><h3>What changed with AI</h3><p>${c.ai}</p></div>
+ <div class="tabs" role="tablist">${[["how",c.howLab||"How I run it"],["fix","When it goes wrong"],["who","Who and why"]].map(([k,l])=>`<button role="tab" aria-selected="${tab===k}" class="${tab===k?"on":""}" data-tab="${k}">${l}</button>`).join("")}</div>
+ <div class="tabp">${tab==="how"?`${c.howNote?`<p class="note">${c.howNote}</p>`:""}<ol class="steps">${c.how.map(x=>`<li>${x}</li>`).join("")}</ol>`:tab==="fix"?c.fix.map(([a,b])=>`<div class="pair"><div class="bad"><b>Off the rails</b>${a}</div><div class="good"><b>How I pull it back</b>${b}</div></div>`).join(""):`<div class="who"><h3>${c.whoLab||"Who attends"}</h3><p>${c.who}</p><h3>Why it matters</h3><p>${c.why}</p></div>`}</div>
+ <div class="nav"><button id="prev" aria-label="Previous">&larr;</button><div class="dots">${v.order.map((k,j)=>`<i class="${j===i?"on":""}"></i>`).join("")}</div><button id="next" aria-label="Next">&rarr;</button></div>`;
+}
+
+const TEAMS=["Platform team","Web team","Data team"];
+const F=[{id:"a",t:"Sign-in service",r:0,c:[2,1]},{id:"b",t:"Payments API",r:0,c:[4,2]},{id:"c",t:"Account page",r:1,c:[1,2],n:["a"]},{id:"d",t:"Checkout",r:1,c:[3,4],n:["b","c"]},{id:"e",t:"Usage tracking",r:2,c:[2,3],n:["a"]},{id:"f",t:"Billing reports",r:2,c:[5,5],n:["b","e"]}];
+let bst=0,bsel=null;
+const fget=id=>F.find(f=>f.id===id);
+let vert=false;
+function board(){
+ const sv=$("bsvg");vert=$("board").clientWidth<620;
+ const W=vert?340:700,H=vert?372:250,cw=vert?90:100,ch=vert?30:34;
+ const px=f=>vert?46+f.r*98+4:96+(f.c[bst]-1)*120+10,py=f=>vert?30+(f.c[bst]-1)*68+19:34+f.r*70+18;
+ sv.setAttribute("viewBox",`0 0 ${W} ${H}`);
+ let h=`<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M1 1L9 5L1 9" fill="none" stroke="#ff5e62" stroke-width="1.8"/></marker></defs>`;
+ const g="rgba(255,255,255,.08)",lab=(x,y,t,a)=>`<text x="${x}" y="${y}" text-anchor="${a}" font-size="${vert?11:11.5}" font-weight="600" fill="#9aa6bd">${t}</text>`;
+ if(vert){
+  TEAMS.forEach((t,r)=>{h+=lab(46+r*98+49,16,t.replace(" team",""),"middle")+`<line x1="${46+r*98}" y1="24" x2="${46+r*98}" y2="${H}" stroke="${g}"/>`});
+  for(let c=1;c<=5;c++)h+=lab(2,30+(c-1)*68+38,"S"+c,"start")+`<line x1="0" y1="${30+(c-1)*68}" x2="${W}" y2="${30+(c-1)*68}" stroke="${g}"/>`;
+ }else{
+  for(let c=1;c<=5;c++)h+=lab(96+(c-1)*120+60,18,"Sprint "+c,"middle")+`<line x1="${96+(c-1)*120}" y1="26" x2="${96+(c-1)*120}" y2="244" stroke="${g}"/>`;
+  TEAMS.forEach((t,r)=>{h+=lab(4,34+r*70+39,t,"start")+`<line x1="0" y1="${34+r*70}" x2="700" y2="${34+r*70}" stroke="${g}"/>`});
+ }
+ let bad=0;const rel=bsel?new Set([bsel,...(fget(bsel).n||[]),...F.filter(f=>(f.n||[]).includes(bsel)).map(f=>f.id)]):null;
+ F.forEach(f=>(f.n||[]).forEach(n=>{const p=fget(n),isBad=p.c[bst]>=f.c[bst];if(isBad)bad++;
+  const on=!bsel||f.id===bsel||n===bsel,ax=px(p),ay=py(p),bx=px(f),by=py(f);let d;
+  if(isBad){const dx=bx-ax,dy=by-ay;
+   if(Math.abs(dx)>=Math.abs(dy)*1.4)d=`M${dx>0?ax+cw:ax},${ay+ch/2} L${dx>0?bx:bx+cw},${by+ch/2}`;
+   else d=`M${ax+cw/2},${dy>0?ay+ch:ay} L${bx+cw/2},${dy>0?by:by+ch}`}
+  else if(vert){const x1=ax+cw/2,y1=ay+ch,x2=bx+cw/2,y2=by;d=`M${x1},${y1} C${x1},${y1+22} ${x2},${y2-22} ${x2},${y2}`}
+  else{const x1=ax+cw,y1=ay+ch/2,x2=bx,y2=by+ch/2;d=`M${x1},${y1} C${x1+30},${y1} ${x2-30},${y2} ${x2},${y2}`}
+  h+=`<path class="dep ${isBad?"bad":""} ${on?"":"dim"}" d="${d}" marker-end="url(#ah)"/>`}));
+ F.forEach(f=>{h+=`<g class="card ${bsel===f.id?"on":""} ${rel&&!rel.has(f.id)?"dim":""}" data-f="${f.id}" transform="translate(${px(f)},${py(f)})" tabindex="0" role="button" aria-label="${f.t}"><rect width="${cw}" height="${ch}" rx="7"/><text x="${cw/2}" y="${ch/2+4}" text-anchor="middle" style="font-size:${vert?10.5:11.5}px">${f.t}</text></g>`});
+ sv.innerHTML=h;
+ document.querySelectorAll("[data-b]").forEach(b=>b.classList.toggle("on",+b.dataset.b===bst));
+ let cap;
+ if(bsel){const f=fget(bsel),need=(f.n||[]).map(n=>fget(n).t),feeds=F.filter(x=>(x.n||[]).includes(bsel)).map(x=>x.t);
+  cap=`<b>${f.t}</b> `+(need.length?`needs ${need.join(" and ")} first. `:"depends on nothing, so it can start right away. ")+(feeds.length?`${feeds.join(" and ")} wait${feeds.length>1?"":"s"} on it.`:"");}
+ else cap=bst?`<span class="ok">Every red line now points forward.</span> Sign-in service moved to Sprint 1 because two other teams wait on it. Select a card to see what it needs.`:`<span class="bad">${bad} dependencies point the wrong way.</span> Each team planned alone, so some work is scheduled before the thing it depends on. Dashed lines mark the conflicts.`;
+ $("bcap").innerHTML=cap;
+}
+function draw(){strip();days();panel();$("board").hidden=sprint!==6;if(sprint===6)board()}
+function step(n){const o=view().order;sel=o[(o.indexOf(sel)+n+o.length)%o.length];draw()}
+document.addEventListener("click",e=>{
+ const s=e.target.closest("[data-s]"),k=e.target.closest("[data-k]");
+ const bb=e.target.closest("[data-b]"),bf=e.target.closest("[data-f]");
+ if(bb){bst=+bb.dataset.b;bsel=null;board();return}
+ if(bf){bsel=bsel===bf.dataset.f?null:bf.dataset.f;board();return}
+ if(s){sprint=+s.dataset.s;fut=false;if(!view().order.includes(sel))sel=view().order[0];draw()}
+ else if(k){sel=k.dataset.k;fut=false;draw();if(matchMedia("(max-width:900px)").matches)$("panel").scrollIntoView({behavior:"smooth",block:"start"})}
+ else if(e.target.closest("#future")){fut=true;draw();if(matchMedia("(max-width:900px)").matches)$("panel").scrollIntoView({behavior:"smooth",block:"start"})}
+ else if(e.target.closest("[data-tab]")){tab=e.target.closest("[data-tab]").dataset.tab;panel()}
+ else if(e.target.closest("#close")){fut=false;draw()}
+ else if(e.target.closest("#prev"))step(-1);
+ else if(e.target.closest("#next"))step(1);
+});
+draw();
+new ResizeObserver(()=>{if(sprint===6&&($('board').clientWidth<620)!==vert)board()}).observe($('board'));
+</script>
+</body>
+</html>

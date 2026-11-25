@@ -130,6 +130,8 @@
     .lvl h4, .mo, .area-count { color: #000; }
     .rubric .lvl { display: block !important; } .rubric .levels { grid-template-columns: repeat(3, 1fr) !important; }
   }
+  html.vm-framed header.nav { display: none; }
+  html.vm-framed .rb-bar { top: 0; }
 </style>
 </head>
 <body>
@@ -139,12 +141,14 @@
     <a href="../" class="brand">Cody&nbsp;Boillot<span class="dot">.</span></a>
     <nav class="nav-links" aria-label="Primary">
       <a href="../rubric/" class="nav-hl" aria-current="page">What I look for<span class="nl-1"> in engineers</span></a>
+      <a href="../leadership/">Leadership</a>
       <a href="../projects/">Projects</a>
       <a href="../games/">Games</a>
       <a href="../" class="nav-cta">About me</a>
     </nav>
   </div>
 </header>
+<script src="../assets/viewmode.js"></script>
 
 <main id="top" class="sub-page">
 
