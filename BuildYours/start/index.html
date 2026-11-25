@@ -28,6 +28,8 @@
   .jr-row { display: flex; align-items: center; gap: .5rem; }
   .jr-parts { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .35rem; flex: 1; min-width: 0; }
   .jr-p { min-width: 0; background: none; border: 0; padding: 0; color: var(--muted-2); font: inherit; font-size: .74rem; font-weight: 700; text-align: left; cursor: pointer; }
+  .jr-p { position: relative; padding-top: 11px; }
+  .jr-p .here { position: absolute; top: 0; width: 0; height: 0; transform: translateX(-50%); border-left: 7px solid transparent; border-right: 7px solid transparent; border-top: 9px solid #4ade80; filter: drop-shadow(0 0 4px rgba(74,222,128,.6)); transition: left .25s; }
   .jr-p i { display: block; height: 6px; border-radius: 999px; background: var(--card-2); overflow: hidden; margin-bottom: .3rem; }
   .jr-p i b { display: block; height: 100%; width: 0; background: var(--grad); }
   .jr-p span { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -40,6 +42,7 @@
   .map button:hover, .map button.cur { background: var(--card); color: var(--text); }
   .map .mk { flex: none; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: .7rem; font-weight: 700; border: 1px solid var(--line-2); }
   .map .dn .mk { background: rgba(74,222,128,.16); border-color: rgba(74,222,128,.5); color: #86efac; }
+  .map .restart { width: auto; margin: .7rem 0 .2rem; border: 1px solid rgba(255,94,98,.45); color: #fca5a5; border-radius: 999px; padding: .35rem .9rem; font-size: .8rem; }
   .map h4 { margin: .5rem 0 .1rem; font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
 
   /* Step card */
@@ -138,6 +141,13 @@
   .wm .miss strong { color: var(--accent-3); }
   .st .wm p { margin-top: .2rem; font-size: .92rem; }
   @media (max-width: 640px) { .wm { grid-template-columns: minmax(0, 1fr); } }
+  .chk { list-style: none; margin: .7rem 0 0; padding: 0; display: grid; gap: .5rem; }
+  .chk li { display: flex; gap: .7rem; align-items: flex-start; border: 1px solid var(--line-2); border-radius: 12px; padding: .7rem .8rem; background: var(--bg); transition: border-color .2s, background .2s; }
+  .chk li.on { border-color: rgba(74,222,128,.45); background: rgba(74,222,128,.06); }
+  .chk input { flex: none; width: 20px; height: 20px; margin: .15rem 0 0; accent-color: #4ade80; cursor: pointer; }
+  .chk label { cursor: pointer; color: var(--muted); font-size: .95rem; min-width: 0; }
+  .chk li.on label > b { text-decoration: line-through; text-decoration-color: rgba(134,239,172,.7); }
+  .st h2:focus, .st h2:focus-visible { outline: none; }
   .note { margin-top: 1rem; border: 1px solid rgba(255,194,75,.4); background: rgba(255,194,75,.06); border-radius: 12px; padding: .7rem .85rem; }
   .note strong { display: block; font-size: .74rem; letter-spacing: .1em; text-transform: uppercase; color: var(--accent-2); }
   .st .note p { margin-top: .25rem; color: #dfe5f0; }
@@ -242,7 +252,7 @@
   };
 
   var S = { name: "", role: "", c0: "", c1: "", c2: "", p0n: "", p0d: "", p1n: "", p1d: "", p2n: "", p2d: "", email: "",
-            ai: "claude", path: "simple", pal: "mint", mode: "dark", accent: "", font: "clean", done: {}, cur: 1 };
+            ai: "claude", path: "simple", pal: "mint", mode: "dark", accent: "", font: "clean", tools: {}, done: {}, cur: 1 };
   try { var sv = JSON.parse(localStorage.getItem("by-v2") || "null"); if (sv) for (var k in S) if (sv[k] !== undefined) S[k] = sv[k]; } catch (e) {}
   function save() { try { localStorage.setItem("by-v2", JSON.stringify(S)); } catch (e) {} }
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (m) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]; }); }
@@ -366,9 +376,12 @@
     return h + previewHtml("Live preview of your site");
   }
   function toolsHtml() {
-    var h = "<ol><li><b>A GitHub account.</b> Free at <a href='https://github.com' target='_blank' rel='noopener'>github.com</a>.</li><li><b>A code editor.</b> <a href='https://code.visualstudio.com' target='_blank' rel='noopener'>Visual Studio Code</a> is free and the most common choice.</li>";
-    if (S.path !== "simple") h += "<li><b>Node.js.</b> Install the LTS version from <a href='https://nodejs.org' target='_blank' rel='noopener'>nodejs.org</a>.</li><li><b>A Vercel account.</b> Sign up free at <a href='https://vercel.com' target='_blank' rel='noopener'>vercel.com</a> with your GitHub account.</li>";
-    return h + "<li><b>" + AIS[S.ai].n + ".</b> " + AIS[S.ai].open + "</li></ol>";
+    var items = [["github", "<b>A GitHub account.</b> Free at <a href='https://github.com' target='_blank' rel='noopener'>github.com</a>."],
+                 ["editor", "<b>A code editor.</b> <a href='https://code.visualstudio.com' target='_blank' rel='noopener'>Visual Studio Code</a> is free and the most common choice."]];
+    if (S.path !== "simple") items.push(["node", "<b>Node.js.</b> Install the LTS version from <a href='https://nodejs.org' target='_blank' rel='noopener'>nodejs.org</a>."], ["vercel", "<b>A Vercel account.</b> Sign up free at <a href='https://vercel.com' target='_blank' rel='noopener'>vercel.com</a> with your GitHub account."]);
+    items.push(["ai", "<b>" + AIS[S.ai].n + ".</b> " + AIS[S.ai].open]);
+    var tl = S.tools || {};
+    return "<p>Tick each one off as you set it up.</p><ul class='chk'>" + items.map(function (it) { var on = !!tl[it[0]]; return "<li class='" + (on ? "on" : "") + "'><input type='checkbox' id='tl_" + it[0] + "' data-tool='" + it[0] + "'" + (on ? " checked" : "") + " /><label for='tl_" + it[0] + "'>" + it[1] + "</label></li>"; }).join("") + "</ul>";
   }
   function launchHtml() {
     if (S.path === "simple") return "<ol><li>Create a <b>public</b> repository on GitHub and upload your files, with <code>index.html</code> at the top level.</li><li>Open the repository's Settings, choose Pages, and deploy from your main branch.</li><li>Wait a minute or two, then open the address GitHub shows you.</li><li>Optional: buy a domain with your name and connect it under the same Pages settings.</li></ol><p>GitHub's guide: <a href='https://docs.github.com/en/pages/quickstart' target='_blank' rel='noopener'>GitHub Pages quickstart</a>.</p>";
@@ -526,10 +539,13 @@
   function journey() {
     var cnt = [0, 0, 0, 0, 0], tot = [0, 0, 0, 0, 0], curPt = S.cur > N ? -1 : STEPS[S.cur - 1].pt;
     STEPS.forEach(function (s, i) { tot[s.pt]++; if (S.done[i + 1]) cnt[s.pt]++; });
-    document.getElementById("jrParts").innerHTML = PARTS.map(function (p, i) { var first = 1; for (var j = 0; j < N; j++) if (STEPS[j].pt === i) { first = j + 1; break; } return "<button type='button' class='jr-p" + (i === curPt ? " cur" : "") + "' data-go='" + first + "' aria-label='Part " + (i + 1) + ", " + p + ": " + cnt[i] + " of " + tot[i] + " steps done'><i><b style='width:" + (cnt[i] / tot[i] * 100) + "%'></b></i><span>" + p + "</span></button>"; }).join("");
+    document.getElementById("jrParts").innerHTML = PARTS.map(function (p, i) { var first = 1; for (var j = 0; j < N; j++) if (STEPS[j].pt === i) { first = j + 1; break; } var here = "";
+      if (i === curPt) { var idx = S.cur - first; here = "<em class='here' style='left:" + ((idx + 0.5) / tot[i] * 100) + "%' aria-hidden='true'></em>"; }
+      if (S.cur > N && i === 4) here = "<em class='here' style='left:100%' aria-hidden='true'></em>";
+      return "<button type='button' class='jr-p" + (i === curPt ? " cur" : "") + "' data-go='" + first + "'" + (i === curPt ? " aria-current='step'" : "") + " aria-label='Part " + (i + 1) + ", " + p + ": " + cnt[i] + " of " + tot[i] + " steps done" + (i === curPt ? ", you are on step " + S.cur : "") + "'>" + here + "<i><b style='width:" + (cnt[i] / tot[i] * 100) + "%'></b></i><span>" + p + "</span></button>"; }).join("");
     var m = "", last = -1;
     STEPS.forEach(function (s, i) { if (s.pt !== last) { if (last >= 0) m += "</ol>"; m += "<h4>Part " + (s.pt + 1) + " · " + PARTS[s.pt] + "</h4><ol>"; last = s.pt; } m += "<li class='" + (S.done[i + 1] ? "dn" : "") + "'><button type='button' data-go='" + (i + 1) + "' class='" + (S.cur === i + 1 ? "cur" : "") + "'><span class='mk'>" + (S.done[i + 1] ? "✓" : i + 1) + "</span>" + s.t + "</button></li>"; });
-    m += "</ol><ol style='margin-top:.4rem'><li><button type='button' data-go='" + FIN + "' class='" + (S.cur === FIN ? "cur" : "") + "'><span class='mk'>★</span>Your site preview</button></li></ol>";
+    m += "</ol><ol style='margin-top:.4rem'><li><button type='button' data-go='" + FIN + "' class='" + (S.cur === FIN ? "cur" : "") + "'><span class='mk'>★</span>Your site preview</button></li></ol><button type='button' class='restart' data-restart='1'>Start over and clear everything I entered</button>";
     document.getElementById("map").innerHTML = m;
   }
   function render(scroll) {
@@ -545,7 +561,12 @@
     }
   }
   function closeMap() { var b = document.getElementById("jrAll"); document.getElementById("map").classList.remove("open"); b.setAttribute("aria-expanded", "false"); b.textContent = "All steps"; }
-  function go(n) { S.cur = Math.max(1, Math.min(FIN, n)); save(); closeMap(); render(true); try { history.replaceState(null, "", "#step-" + S.cur); } catch (e) {} }
+  function go(n, fromHistory) {
+    S.cur = Math.max(1, Math.min(FIN, n)); save(); closeMap(); render(true);
+    /* Each step gets its own history entry, so the browser's Back button goes back one step. */
+    if (!fromHistory) { try { if (location.hash !== "#step-" + S.cur) history.pushState(null, "", "#step-" + S.cur); } catch (e) {} }
+  }
+  window.addEventListener("popstate", function () { var m = /^#step-(\d+)$/.exec(location.hash); go(m ? +m[1] : 1, true); });
   function rerenderInPlace() { var y = window.scrollY; render(false); window.scrollTo(0, y); }
 
   /* ---------- Events ---------- */
@@ -553,7 +574,7 @@
     var el;
     if ((el = e.target.closest("[data-go]"))) { go(+el.getAttribute("data-go")); return; }
     if ((el = e.target.closest("[data-done]"))) { var d = +el.getAttribute("data-done"); S.done[d] = 1; go(d + 1); return; }
-    if ((el = e.target.closest("[data-restart]"))) { if (confirm("Clear everything you entered and start again from step 1?")) { try { localStorage.removeItem("by-v2"); } catch (x) {} try { history.replaceState(null, "", location.pathname); } catch (x) {} location.reload(); } return; }
+    if ((el = e.target.closest("[data-restart]"))) { if (confirm("Clear everything you entered and start again from step 1?")) { try { localStorage.removeItem("by-v2"); } catch (x) {} location.href = "./#step-1"; location.reload(); } return; }
     if ((el = e.target.closest("[data-set]"))) { S[el.getAttribute("data-set")] = el.getAttribute("data-v"); save(); rerenderInPlace(); return; }
     if ((el = e.target.closest("[data-pw]"))) { var w = el.closest(".pvw"); w.classList.toggle("phone", el.getAttribute("data-pw") === "phone"); w.querySelectorAll("[data-pw]").forEach(function (b) { b.setAttribute("aria-pressed", String(b === el)); }); return; }
     if ((el = e.target.closest("[data-more]"))) { var pb = el.closest(".prompt"); pb.classList.toggle("full"); el.textContent = pb.classList.contains("full") ? "Show less" : "Show the whole prompt"; return; }
@@ -573,9 +594,14 @@
     if (k) { S[k] = e.target.value; save(); fillPrompts(); refreshPreview(); return; }
     if (e.target.id === "accIn") { S.accent = e.target.value; save(); fillPrompts(); refreshPreview(); var cr = document.getElementById("cr"); if (cr) cr.innerHTML = crHtml(); }
   });
-  document.addEventListener("change", function (e) { if (e.target.id === "accIn") rerenderInPlace(); });
+  document.addEventListener("change", function (e) {
+    if (e.target.id === "accIn") { rerenderInPlace(); return; }
+    var tk = e.target.getAttribute && e.target.getAttribute("data-tool");
+    if (tk) { S.tools = S.tools || {}; if (e.target.checked) S.tools[tk] = 1; else delete S.tools[tk]; save(); e.target.parentNode.classList.toggle("on", e.target.checked); }
+  });
 
   var hm = /^#step-(\d+)$/.exec(location.hash); if (hm) S.cur = Math.max(1, Math.min(FIN, +hm[1]));
+  try { history.replaceState(null, "", "#step-" + S.cur); } catch (e) {}
   render(false);
 })();
 </script>
