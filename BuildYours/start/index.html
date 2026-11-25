@@ -107,6 +107,11 @@
   .hood > strong { display: block; font-size: .76rem; letter-spacing: .1em; text-transform: uppercase; color: #93c5fd; }
   .st .hood p, .st .hood li { color: #d4dcea; }
   .hood p { margin-top: .4rem; }
+  .st .must { color: var(--accent-2); font-weight: 700; }
+  .paste { display: flex; gap: .6rem; align-items: flex-start; margin-top: .7rem; border: 1px solid rgba(255,194,75,.55); background: rgba(255,194,75,.1); border-radius: 12px; padding: .7rem .85rem; }
+  .paste svg { flex: none; width: 22px; height: 22px; color: var(--accent-2); margin-top: .1rem; }
+  .st .paste p { margin: 0; color: var(--text); font-weight: 600; }
+  .st .paste p b { color: var(--accent-2); }
   .note { margin-top: 1rem; border: 1px solid rgba(255,194,75,.4); background: rgba(255,194,75,.06); border-radius: 12px; padding: .7rem .85rem; }
   .note strong { display: block; font-size: .74rem; letter-spacing: .1em; text-transform: uppercase; color: var(--accent-2); }
   .st .note p { margin-top: .25rem; color: #dfe5f0; }
@@ -298,6 +303,7 @@
     return "<div class='chips " + (cls || "") + "'>" + Object.keys(obj).map(function (k) { return "<button type='button' class='chip' data-set='" + key + "' data-v='" + k + "' aria-pressed='" + (S[key] === k) + "'>" + esc(obj[k].n) + (sub ? "<small>" + esc(obj[k][sub]) + "</small>" : "") + "</button>"; }).join("") + "</div>";
   }
   function promptBox(n, name) { return "<div class='prompt'><div class='prompt-h'><span>" + name + " · for " + AIS[S.ai].n + "</span><button class='copy' type='button' data-p='" + n + "'>Copy</button></div><pre id='pp" + n + "'></pre><button class='prompt-more' type='button' data-more='1'>Show the whole prompt</button></div>"; }
+  function paste(html) { return "<div class='paste' role='note'><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'><path d='M9 4h6a1 1 0 0 1 1 1v1H8V5a1 1 0 0 1 1-1zM8 6H6a1 1 0 0 0-1 1v13a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-2'/><path d='M9 13h6M9 17h4'/></svg><p>" + html + "</p></div>"; }
   function hood(title, html) { return "<div class='hood'><strong>Under the hood · " + title + "</strong>" + html + "</div>"; }
 
   function cmpHtml() {
@@ -353,11 +359,11 @@
   var PARTS = ["Plan", "Choose", "Build", "Check", "Launch"];
   var STEPS = [
     { pt: 0, t: "Decide what to prove", lead: "Before you open any tool, decide the three things a hiring manager should believe after two minutes on your site.",
-      body: function () { return "<div class='fl2'>" + inp("name", "Your name", "Alex Kim") + inp("role", "The role you want", "Software Engineer") + "</div><h3>Get your claims</h3><p>Copy this prompt into your AI assistant and paste your résumé under it.</p>" + promptBox(1, "Positioning prompt") + "<h3>Write down the three you settle on</h3><div class='fl'>" + inp("c0", "Claim 1 <small>(your strongest)</small>", "I cut page load times by measuring first") + inp("c1", "Claim 2", "") + inp("c2", "Claim 3", "") + "</div>"; },
+      body: function () { return "<div class='fl2'>" + inp("name", "Your name", "Alex Kim") + inp("role", "The role you want", "Software Engineer") + "</div><h3>Get your claims</h3><p>Copy this prompt into your AI assistant, then <span class='must'>paste your résumé under it.</span></p>" + promptBox(1, "Positioning prompt") + paste("Before you send it: <b>paste your full résumé below the prompt.</b> Without it, the AI has nothing to base your claims on and will guess.") + "<h3>Write down the three you settle on</h3><div class='fl'>" + inp("c0", "Claim 1 <small>(your strongest)</small>", "I cut page load times by measuring first") + inp("c1", "Claim 2", "") + inp("c2", "Claim 3", "") + "</div>"; },
       note: "Stay in this one conversation through the build steps. The AI builds on what you decide here.",
       why: "A site without a point is just a longer résumé. Three claims give every page a job.", miss: "Claims nobody could check, such as “hard worker”. If a stranger can't verify it from your site, rewrite it." },
     { pt: 0, t: "Pick your proof", lead: "Choose one or two projects that back up each claim. Cut the rest.",
-      body: function () { return "<p>In the AI chat, list everything you've built: work, school, side projects, open source. Let the AI match projects to claims, then make the final cut yourself.</p>" + promptBox(2, "Project picker prompt") + "<h3>The projects you're keeping</h3><div class='fl'>" + [0, 1, 2].map(function (i) { return "<div class='proj-f'>" + inp("p" + i + "n", "Project " + (i + 1) + (i ? " <small>(optional)</small>" : ""), i ? "" : "Bakery storefront") + inp("p" + i + "d", "One line: the problem and what changed", i ? "" : "Cut load time on phones from six seconds to two") + "</div>"; }).join("") + "</div>"; },
+      body: function () { return "<p>In the AI chat, list everything you've built: work, school, side projects, open source. Let the AI match projects to claims, then make the final cut yourself.</p>" + promptBox(2, "Project picker prompt") + paste("Before you send it: <b>list every project below the prompt</b>, one line each with what it was and what you did.") + "<h3>The projects you're keeping</h3><div class='fl'>" + [0, 1, 2].map(function (i) { return "<div class='proj-f'>" + inp("p" + i + "n", "Project " + (i + 1) + (i ? " <small>(optional)</small>" : ""), i ? "" : "Bakery storefront") + inp("p" + i + "d", "One line: the problem and what changed", i ? "" : "Cut load time on phones from six seconds to two") + "</div>"; }).join("") + "</div>"; },
       note: "If a claim has no proof, you have two honest choices: build the proof or drop the claim.",
       why: "Hiring managers skim. Your weakest project sets the impression as much as your strongest.", miss: "Keeping a project because it took a long time. Effort is not evidence." },
     { pt: 0, t: "Sketch the pages", lead: "Four pages are enough. Know what goes on each before you build.",
@@ -405,7 +411,7 @@
       note: "This is the standard I hold engineers to: use AI for anything, and answer for everything. An interviewer will ask how your site works.",
       why: "AI assistants state wrong things confidently, and an interviewer can tell when you can't explain your own work.", miss: "An invented statistic. One made-up number can cost you the interview." },
     { pt: 3, t: "Ask for a review", lead: "Get the hard feedback now, from the employer's side.",
-      body: function () { return "<p>Start a <b>new</b> chat so the AI has no memory of building the site. Paste the prompt, then your site's text under it. After that, ask one real person the same four questions.</p>" + promptBox(14, "Hiring manager review prompt"); },
+      body: function () { return "<p>Start a <b>new</b> chat so the AI has no memory of building the site. Paste the prompt, then <span class='must'>your site's text under it.</span> After that, ask one real person the same four questions.</p>" + promptBox(14, "Hiring manager review prompt") + paste("Before you send it: <b>copy all the text from your live site and paste it below the prompt</b>, or paste the site's address if your assistant can open web pages."); },
       why: "It's easier to hear it now than to wonder later why nobody called.", miss: "Arguing with the feedback. Fix it or decide not to, then move on." },
     { pt: 4, t: "Put it live", lead: "A link beats an attachment, and it shows you can ship.",
       body: function () { return launchHtml() + promptBox(15, "Launch prompt"); },
