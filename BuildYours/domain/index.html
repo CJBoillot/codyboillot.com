@@ -65,6 +65,23 @@
   .card .hood p { color: #d4dcea; margin-top: .4rem; }
   .btns { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: 1.2rem; }
   [hidden] { display: none !important; }
+  .dc-f label { display: block; font-size: .82rem; font-weight: 700; color: var(--text); margin: .9rem 0 .35rem; }
+  .dc-f label small { font-weight: 400; color: var(--muted-2); }
+  .dc-f input { width: 100%; background: var(--bg); border: 1px solid var(--line-2); border-radius: 10px; color: var(--text); font: inherit; padding: .6rem .75rem; }
+  .dc-f input:focus-visible, .dc-own button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .dc-own { display: flex; gap: .5rem; }
+  .dc-own input { flex: 1; min-width: 0; }
+  .dc-own button { flex: none; background: var(--grad); color: #1a1206; border: 0; border-radius: 10px; padding: 0 1rem; font: inherit; font-weight: 700; cursor: pointer; }
+  .dc-list { list-style: none; margin: .8rem 0 0; padding: 0; display: grid; gap: .4rem; }
+  .dc-list li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .3rem .8rem; border: 1px solid var(--line-2); border-radius: 10px; padding: .55rem .75rem; background: var(--bg); }
+  .dc-list li code { font-size: .92rem; background: none; border: 0; padding: 0; color: var(--text); }
+  #dcAll { margin-top: .8rem; }
+  .card .dc-res { margin-top: .5rem; min-height: 1.4em; }
+  .dc-b { display: inline-block; border-radius: 999px; padding: .15rem .6rem; font-size: .78rem; font-weight: 700; }
+  .dc-free { background: rgba(74,222,128,.15); color: #86efac; }
+  .dc-taken { background: rgba(255,94,98,.15); color: #fca5a5; }
+  .dc-wait { background: rgba(255,255,255,.08); color: var(--muted); }
+  .dc-list a, .dc-res a { font-size: .85rem; }
 </style>
 </head>
 <body>
@@ -89,6 +106,18 @@
     <div class="sec-tag">Bonus</div>
     <h1>Get yourname.com</h1>
     <p class="dm-lede">A free address like <code>yourname.github.io</code> works. Your own name as the address looks more finished on a résumé, and it stays yours if you ever change hosts. I recommend it.</p>
+
+    <section class="card" id="check" aria-labelledby="checkH">
+      <h2 id="checkH">Is your name available?</h2>
+      <p>Type your name and I'll suggest addresses, then check them with the registry for .com and .net.</p>
+      <div class="dc-f"><label for="dcName">Your name</label><input type="text" id="dcName" maxlength="60" placeholder="Alex Kim" autocomplete="name" /></div>
+      <ul class="dc-list" id="dcList" aria-live="polite"></ul>
+      <button type="button" class="btn btn-primary" id="dcAll" hidden>Check these</button>
+      <div class="dc-f" style="margin-top:1.1rem"><label for="dcOwn">Or try your own <small>(.com or .net)</small></label>
+        <div class="dc-own"><input type="text" id="dcOwn" maxlength="70" placeholder="alexkimdev.com" /><button type="button" id="dcOwnBtn">Check</button></div>
+        <p class="dc-res" id="dcOwnRes" aria-live="polite"></p></div>
+      <p class="fine">Checking sends only the domain name to Verisign, the registry for .com and .net, and only when you click Check. A result is a snapshot, not a hold, and Route 53's own search has the final say: a few names are reserved or carry premium prices.</p>
+    </section>
 
     <section class="card" aria-labelledby="costH">
       <h2 id="costH">What it costs</h2>
@@ -140,7 +169,37 @@
   </div>
 </main>
 
+<script src="../domaincheck.js"></script>
 <script>
+  (function () {
+    /* Name suggestions and availability checks */
+    var DC = window.DomainCheck, nameIn = document.getElementById("dcName"), list = document.getElementById("dcList"), all = document.getElementById("dcAll");
+    function esc(x) { return String(x).replace(/[&<>"']/g, function (m) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]; }); }
+    function draw() {
+      var sug = DC.suggest(nameIn.value);
+      list.innerHTML = sug.map(function (d) { return "<li data-d='" + esc(d) + "'><code>" + esc(d) + "</code><span class='dc-r'></span></li>"; }).join("");
+      all.hidden = !sug.length;
+    }
+    all.addEventListener("click", function () {
+      list.querySelectorAll("li").forEach(function (li, i) {
+        var d = li.getAttribute("data-d"), r = li.querySelector(".dc-r");
+        r.innerHTML = DC.badge(d, "checking");
+        setTimeout(function () { DC.check(d).then(function (st) { r.innerHTML = DC.badge(d, st); }); }, i * 250);
+      });
+    });
+    nameIn.addEventListener("input", draw);
+    var own = document.getElementById("dcOwn"), ownRes = document.getElementById("dcOwnRes");
+    function checkOwn() {
+      var d = DC.normalize(own.value);
+      if (!d) { ownRes.textContent = "Type a name ending in .com or .net, such as alexkim.com."; return; }
+      ownRes.innerHTML = "<code>" + esc(d) + "</code> " + DC.badge(d, "checking");
+      DC.check(d).then(function (st) { ownRes.innerHTML = "<code>" + esc(d) + "</code> " + DC.badge(d, st); });
+    }
+    document.getElementById("dcOwnBtn").addEventListener("click", checkOwn);
+    own.addEventListener("keydown", function (e) { if (e.key === "Enter") checkOwn(); });
+    try { var sv = JSON.parse(localStorage.getItem("by-v2") || "null"); if (sv && sv.name) nameIn.value = sv.name; } catch (e) {}
+    draw();
+  })();
   (function () {
     var host = "gh";
     try { var s = JSON.parse(localStorage.getItem("by-v2") || "null"); if (s && s.path && s.path !== "simple") host = "vc"; } catch (e) {}

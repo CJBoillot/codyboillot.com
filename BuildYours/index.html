@@ -104,8 +104,8 @@
     <div class="wrap">
       <h2>How it works</h2>
       <ol class="how">
-        <li><b>Plan</b><span>Decide what you want to prove.</span></li>
-        <li><b>Choose</b><span>Your AI, build path and look.</span></li>
+        <li><b>Plan</b><span>Pick your AI and decide what to prove.</span></li>
+        <li><b>Design</b><span>Your build path and look.</span></li>
         <li><b>Build</b><span>Copy the prompts; the AI writes the code.</span></li>
         <li><b>Check</b><span>Test it, verify it, get quizzed on it.</span></li>
         <li><b>Launch</b><span>Put it live and share it.</span></li>
@@ -137,7 +137,7 @@
     var s = null;
     try { s = JSON.parse(localStorage.getItem("by-v2") || "null"); } catch (e) {}
     if (!s || !((s.cur > 1) || (s.done && Object.keys(s.done).length))) return;
-    var lab = s.cur > 16 ? "Resume: your site preview" : "Resume at step " + s.cur;
+    var lab = s.cur > 13 ? "Resume: your site preview" : "Resume at step " + s.cur;
     document.querySelectorAll(".js-start").forEach(function (a, i) {
       var r = document.createElement("a"); r.className = "btn btn-primary"; r.href = "start/#step-" + s.cur; r.textContent = lab;
       a.parentNode.insertBefore(r, a); a.className = "btn btn-ghost js-start";
