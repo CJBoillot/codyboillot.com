@@ -152,6 +152,23 @@
   .drec > strong { display: block; font-size: .76rem; letter-spacing: .1em; text-transform: uppercase; color: #86efac; }
   .st .drec p { margin-top: .4rem; }
   .drec .btn { margin-top: .8rem; white-space: normal; max-width: 100%; text-align: center; }
+  /* Page zones: 1 Fill in, 2 Learn, 3 Copy and go */
+  .zone { margin-top: 1.3rem; border-radius: 16px; padding: clamp(.9rem, 2.5vw, 1.2rem); border: 1px solid var(--line); }
+  .zone-h { display: flex; align-items: center; gap: .55rem; font-family: "Sora", sans-serif; font-weight: 800; font-size: 1.02rem; color: var(--text); }
+  .zone-h span { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-family: "Inter", sans-serif; font-size: .8rem; }
+  .z-fill { background: rgba(255,138,61,.05); border-color: rgba(255,138,61,.3); }
+  .z-fill .zone-h span { background: rgba(255,138,61,.18); color: #ffb98a; }
+  .z-learn { background: transparent; }
+  .z-learn .zone-h span { background: rgba(96,165,250,.16); color: #93c5fd; }
+  .z-learn .hood:first-of-type { margin-top: .8rem; }
+  .z-go { background: rgba(74,222,128,.05); border-color: rgba(74,222,128,.35); }
+  .z-go .zone-h span { background: rgba(74,222,128,.18); color: #86efac; }
+  .st .go-txt { margin-top: .6rem; color: var(--text); }
+  .zone > .fl2:first-of-type, .zone > p:first-of-type { margin-top: .7rem; }
+  .zone .wm { margin-top: 1rem; }
+  .nav2 .next.ready { box-shadow: 0 0 0 3px rgba(74,222,128,.55); animation: rdy 1.6s ease-in-out 2; }
+  @keyframes rdy { 50% { box-shadow: 0 0 0 7px rgba(74,222,128,.15); } }
+  @media (prefers-reduced-motion: reduce) { .nav2 .next.ready { animation: none; } }
   .note { margin-top: 1rem; border: 1px solid rgba(255,194,75,.4); background: rgba(255,194,75,.06); border-radius: 12px; padding: .7rem .85rem; }
   .note strong { display: block; font-size: .74rem; letter-spacing: .1em; text-transform: uppercase; color: var(--accent-2); }
   .st .note p { margin-top: .25rem; color: #dfe5f0; }
@@ -256,8 +273,22 @@
   };
 
   var S = { name: "", role: "", c0: "", c1: "", c2: "", p0n: "", p0d: "", p1n: "", p1d: "", p2n: "", p2d: "", email: "",
-            ai: "claude", path: "simple", pal: "mint", mode: "dark", accent: "", font: "clean", tools: {}, done: {}, cur: 1 };
-  try { var sv = JSON.parse(localStorage.getItem("by-v2") || "null"); if (sv) for (var k in S) if (sv[k] !== undefined) S[k] = sv[k]; } catch (e) {}
+            ai: "claude", path: "simple", pal: "mint", mode: "dark", accent: "", font: "clean", tools: {}, done: {}, cur: 1,
+            r0: "", r1: "", r2: "", live: "", v: 3 };
+  try {
+    var sv = JSON.parse(localStorage.getItem("by-v2") || "null");
+    if (sv) {
+      for (var k in S) if (sv[k] !== undefined) S[k] = sv[k];
+      /* Saved progress from the earlier 16-step layout: move it to the matching page of 12. */
+      if (sv.v !== 3) {
+        var MAP = [0, 1, 2, 3, 1, 4, 4, 5, 5, 6, 7, 7, 8, 9, 10, 11, 12, 13], nd = {};
+        S.cur = MAP[sv.cur] || 1;
+        for (var d in (sv.done || {})) if (MAP[d] && MAP[d] <= 12) nd[MAP[d]] = 1;
+        S.done = nd; S.v = 3;
+        try { localStorage.setItem("by-v2", JSON.stringify(S)); } catch (x) {}
+      }
+    }
+  } catch (e) {}
   function save() { try { localStorage.setItem("by-v2", JSON.stringify(S)); } catch (e) {} }
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (m) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]; }); }
   function t(k) { return (S[k] || "").trim(); }
@@ -380,13 +411,15 @@
     h += "<h3>Fonts</h3>" + chips("font", FONTS, "d");
     return h + previewHtml("Live preview of your site");
   }
+  function chkList(items) {
+    var tl = S.tools || {};
+    return "<ul class='chk'>" + items.map(function (it) { var on = !!tl[it[0]]; return "<li class='" + (on ? "on" : "") + "'><input type='checkbox' id='tl_" + it[0] + "' data-tool='" + it[0] + "'" + (on ? " checked" : "") + " /><label for='tl_" + it[0] + "'>" + it[1] + "</label></li>"; }).join("") + "</ul>";
+  }
   function toolsHtml() {
     var items = [["github", "<b>A GitHub account.</b> Free at <a href='https://github.com' target='_blank' rel='noopener'>github.com</a>."],
                  ["editor", "<b>A code editor.</b> <a href='https://code.visualstudio.com' target='_blank' rel='noopener'>Visual Studio Code</a> is free and the most common choice."]];
     if (S.path !== "simple") items.push(["node", "<b>Node.js.</b> Install the LTS version from <a href='https://nodejs.org' target='_blank' rel='noopener'>nodejs.org</a>."], ["vercel", "<b>A Vercel account.</b> Sign up free at <a href='https://vercel.com' target='_blank' rel='noopener'>vercel.com</a> with your GitHub account."]);
-    items.push(["ai", "<b>" + AIS[S.ai].n + ".</b> " + AIS[S.ai].open]);
-    var tl = S.tools || {};
-    return "<p>Tick each one off as you set it up.</p><ul class='chk'>" + items.map(function (it) { var on = !!tl[it[0]]; return "<li class='" + (on ? "on" : "") + "'><input type='checkbox' id='tl_" + it[0] + "' data-tool='" + it[0] + "'" + (on ? " checked" : "") + " /><label for='tl_" + it[0] + "'>" + it[1] + "</label></li>"; }).join("") + "</ul>";
+    return chkList(items);
   }
   function launchHtml() {
     if (S.path === "simple") return "<ol><li>Create a <b>public</b> repository on GitHub and upload your files, with <code>index.html</code> at the top level.</li><li>Open the repository's Settings, choose Pages, and deploy from your main branch.</li><li>Wait a minute or two, then open the address GitHub shows you.</li><li>Recommended: connect a domain with your name. See the bonus tutorial below.</li></ol><p>GitHub's guide: <a href='https://docs.github.com/en/pages/quickstart' target='_blank' rel='noopener'>GitHub Pages quickstart</a>.</p>";
@@ -407,135 +440,115 @@
     return "<p>Vercel watches your GitHub repository. Each time you push, it runs <code>npm run build</code>, which turns your code into optimized files, and publishes the result. If the build fails, the old version stays live and Vercel shows you the error.</p><p>A custom domain works through DNS: you add a record at your domain company that points your name to Vercel.</p>";
   }
 
-  var PARTS = ["Plan", "Choose", "Build", "Check", "Launch"];
+  var PARTS = ["Plan", "Design", "Build", "Check", "Launch"];
+  function ai() { return AIS[S.ai].n; }
+  function claimFields() { return "<div class='fl'>" + inp("c0", "Claim 1 <small>(your strongest)</small>", "I cut page load times by measuring first") + inp("c1", "Claim 2", "") + inp("c2", "Claim 3", "") + "</div>"; }
+  function projFields() { return "<div class='fl'>" + [0, 1, 2].map(function (i) { return "<div class='proj-f'>" + inp("p" + i + "n", "Project " + (i + 1) + (i ? " <small>(optional)</small>" : ""), i ? "" : "Bakery storefront") + inp("p" + i + "d", "One line: the problem and what changed", i ? "" : "Cut load time on phones from six seconds to two") + "</div>"; }).join("") + "</div>"; }
+  function pathPick() { return "<h3>Build path</h3>" + chips("path", PATHS, "s", "g3") + "<ul class='b' style='margin-top:.8rem'><li><b>Simple Pages</b> is free, fast and has nothing to maintain. This site is built this way.</li><li><b>React + Vite</b> suits front-end candidates who want a modern framework visible in their code.</li><li><b>Next.js</b> suits full-stack candidates, or anyone who expects to add a blog, forms or data later.</li></ul>"; }
+
+  /* Every page: fill in (top), learn (middle), copy and go (bottom). */
   var STEPS = [
-    { pt: 0, t: "Decide what to prove", lead: "Before you open any tool, decide the three things a hiring manager should believe after two minutes on your site.",
-      body: function () { return howWorks() + tasks([
-        task(1, "here", "Fill in your name and the role you want", "<div class='fl2'>" + inp("name", "Your name", "Alex Kim") + inp("role", "The role you want", "Software Engineer") + "</div>"),
-        task(2, "here", "Copy the prompt", promptBox(1, "Positioning prompt")),
-        task(3, "ai", "Paste the prompt, add your résumé, and send", paste("<b>Paste your full résumé below the prompt</b> before you send it. Without it, the AI has nothing to base your claims on and will guess.")),
-        task(4, "here", "Read the answer, then type the three claims you settle on", "<p>Talk it through with the AI until you're happy, then type the final three here. They fill in the later prompts and your site preview.</p><div class='fl'>" + inp("c0", "Claim 1 <small>(your strongest)</small>", "I cut page load times by measuring first") + inp("c1", "Claim 2", "") + inp("c2", "Claim 3", "") + "</div>")
-      ]); },
-      note: "Stay in this one conversation through the build steps. The AI builds on what you decide here.",
-      why: "A site without a point is just a longer résumé. Three claims give every page a job.", miss: "Claims nobody could check, such as “hard worker”. If a stranger can't verify it from your site, rewrite it." },
-    { pt: 0, t: "Pick your proof", lead: "Choose one or two projects that back up each claim. Cut the rest.",
-      body: function () { return tasks([
-        task(1, "here", "Copy the prompt", "<p>It already includes your claims from step 1.</p>" + promptBox(2, "Project picker prompt")),
-        task(2, "ai", "Paste the prompt, list your projects, and send", paste("<b>List every project below the prompt</b>, one line each: what it was and what you did. Work, school, side projects and open source all count.")),
-        task(3, "here", "Read the answer, then type the projects you're keeping", "<p>Make the final cut yourself.</p><div class='fl'>" + [0, 1, 2].map(function (i) { return "<div class='proj-f'>" + inp("p" + i + "n", "Project " + (i + 1) + (i ? " <small>(optional)</small>" : ""), i ? "" : "Bakery storefront") + inp("p" + i + "d", "One line: the problem and what changed", i ? "" : "Cut load time on phones from six seconds to two") + "</div>"; }).join("") + "</div>")
-      ]); },
-      note: "If a claim has no proof, you have two honest choices: build the proof or drop the claim.",
-      why: "Hiring managers skim. Your weakest project sets the impression as much as your strongest.", miss: "Keeping a project because it took a long time. Effort is not evidence." },
-    { pt: 0, t: "Sketch the pages", lead: "Four pages are enough. Know what goes on each before you build.",
-      body: function () { return "<ul class='b'><li><b>Home.</b> Who you are, the role you want, your three claims.</li><li><b>Projects.</b> The proof you picked in the last step.</li><li><b>About.</b> A short story of how you got here.</li><li><b>Contact.</b> One clear way to reach you.</li></ul><div class='fl' style='margin-top:1rem'>" + inp("email", "The email address for your Contact page", "you@example.com", "email") + "</div>"; },
-      why: "A ten-minute sketch saves you from rebuilding the site three times.", miss: "Adding a blog you won't keep up. An empty blog looks worse than no blog." },
-    { pt: 1, t: "Pick your AI assistant", lead: "Claude, ChatGPT or Gemini. Any of them can finish this tutorial.",
-      body: function () { return chips("ai", AIS, "by", "g3") + "<details class='more' style='border:0;padding-top:0'><summary>How they compare</summary>" + cmpHtml() + "</details>"; },
+    { pt: 0, t: "Start", lead: "Tell us who you are, pick your AI assistant, then hand it your résumé.",
+      fill: function () { return "<div class='fl2'>" + inp("name", "Your name", "Alex Kim") + inp("role", "The role you want", "Software Engineer") + "</div><h3>Your AI assistant</h3>" + chips("ai", AIS, "by", "g3") + "<details class='more' style='border:0;padding-top:.2rem'><summary>How they compare</summary>" + cmpHtml() + "</details>"; },
+      learn: function () { return hood("how this works", "<p>Every page has the same shape. <b>Fill in</b> the top. <b>Copy</b> the prompt at the bottom, which is built from your answers. <b>Paste</b> it into " + ai() + ". The next page starts by asking what " + ai() + " gave you back.</p>"); },
       note: "I use Claude and built this site with it, so it's the only one I can vouch for firsthand. The comparison comes from the published sources linked under it.",
-      why: "The assistant you already know beats the one that ranks higher. You're learning to direct an AI, and that skill carries across all of them.", miss: "Switching assistants halfway through. Each one starts with no memory of your decisions." },
-    { pt: 1, t: "Pick your build path", lead: "A hiring manager sees the result, not the framework. Pick the simplest path that proves your skills.",
-      body: function () { return chips("path", PATHS, "s", "g3") + "<ul class='b' style='margin-top:1rem'><li><b>Simple Pages</b> is free, fast and has nothing to maintain. This site is built this way.</li><li><b>React + Vite</b> suits front-end candidates who want a modern framework visible in their code.</li><li><b>Next.js</b> suits full-stack candidates, or anyone who expects to add a blog, forms or data later.</li></ul>"; },
-      why: "Every prompt and lesson after this step follows the path you pick.", miss: "Choosing a heavy framework to look impressive, then never finishing. A live simple site beats an unfinished complex one." },
-    { pt: 1, t: "Pick your look", lead: "Choose light or dark, a palette and a font pairing. The preview shows your own site as you go.",
-      body: function () { return lookFields(); },
-      hood: function () { return hood("contrast", "<p>Contrast is how different two colors are in brightness, written as a ratio such as 7:1. The web's accessibility guideline, WCAG, asks for at least 4.5:1 for normal text. The two checks above update as you pick, so you'll know a choice is hard to read before an employer squints at it.</p>"); },
-      why: "A consistent look reads as care. It also stops the AI from handing you the same purple gradient it hands everyone.", miss: "Low-contrast gray text. If you have to squint, so will the person hiring." },
-    { pt: 2, t: "Set up the tools", lead: "A place for your code, a place to edit it, and your assistant.",
-      body: function () { return toolsHtml(); },
-      hood: function () { return hood("Git and GitHub", "<p>Git keeps the history of every change you make, so you can always go back. GitHub stores that history online and lets you share it. Your repository is also proof: employers can open it and read your code.</p>"); },
-      why: "Set up once now, and every later step is copy, paste and check." },
-    { pt: 2, t: "Write the brief", lead: "Agree on the plan before any code. Read the brief, correct it, then approve it.",
-      body: function () { return tasks([
-        task(1, "here", "Copy the prompt", "<p>It already includes your claims, projects, build path, colors and fonts.</p>" + promptBox(8, "Site brief prompt")),
-        task(2, "ai", "Paste it into the same chat and send"),
-        task(3, "ai", "Read the brief, correct it, then approve it", "<p>Reply with anything that's wrong or missing. When it's right, reply \u201cApproved.\u201d</p>")
-      ]); },
+      why: "A site without a point is just a longer résumé. This page gets you the three claims every page will prove.", miss: "Sending the prompt without your résumé. The AI will guess, and the guesses will sound like everyone else's.",
+      p: 1, pn: "Claims prompt", pasteMsg: "<b>Paste your full résumé below the prompt</b> before you send it.",
+      goTxt: function () { return "Paste it into " + ai() + ", add your résumé under it, and send. Talk it through until you have three claims you believe, then go to the next page."; } },
+    { pt: 0, t: "Your claims", lead: "Write down the three claims you settled on with the AI.",
+      fill: function () { return "<p>What did " + ai() + " suggest? Type your final three here. They fill in your later prompts and your site preview.</p>" + claimFields(); },
+      note: "Push back on the AI until every claim is something a stranger could check on your site.",
+      why: "Claims you can prove give every page a job.", miss: "Claims nobody could check, such as “hard worker”. If a stranger can't verify it from your site, rewrite it.",
+      p: 2, pn: "Projects prompt", pasteMsg: "<b>List every project below the prompt</b>, one line each: what it was and what you did. Work, school, side projects and open source all count.",
+      goTxt: function () { return "Paste it into the same " + ai() + " chat, list your projects under it, and send."; } },
+    { pt: 0, t: "Your proof", lead: "Keep the projects that prove your claims. Cut the rest.",
+      fill: function () { return "<p>Which projects did you and " + ai() + " pick? Make the final cut yourself.</p>" + projFields() + "<div class='fl' style='margin-top:1rem'>" + inp("email", "The email address for your Contact page", "you@example.com", "email") + "</div>"; },
+      learn: function () { return hood("your four pages", "<ul class='b'><li><b>Home.</b> Who you are, the role you want, your three claims.</li><li><b>Projects.</b> The proof you just picked.</li><li><b>About.</b> A short story of how you got here.</li><li><b>Contact.</b> One clear way to reach you.</li></ul><p>Four pages are enough. The brief on the next page uses exactly these.</p>"); },
+      note: "If a claim has no proof, you have two honest choices: build the proof or drop the claim.",
+      why: "Hiring managers skim. Your weakest project sets the impression as much as your strongest.", miss: "Keeping a project because it took a long time. Effort is not evidence.",
+      noPrompt: "Nothing to copy on this page. Check your projects and email above, then go on." },
+    { pt: 1, t: "Your build", lead: "Pick how the site is built and how it looks. The preview shows your own site as you go.",
+      fill: function () { return pathPick() + lookFields(); },
+      learn: function () { return hood("contrast", "<p>Contrast is how different two colors are in brightness, written as a ratio such as 7:1. The web's accessibility guideline, WCAG, asks for at least 4.5:1 for normal text. The two checks above update as you pick.</p>"); },
+      why: "A hiring manager sees the result, not the framework. A consistent look reads as care.", miss: "Choosing a heavy framework to look impressive, then never finishing. A live simple site beats an unfinished complex one.",
+      p: 8, pn: "Site brief prompt",
+      goTxt: function () { return "Paste it into the same " + ai() + " chat and send. Read the brief, correct anything wrong, then reply “Approved.”"; } },
+    { pt: 2, t: "Get ready", lead: "Confirm the plan, set up your tools, then ask for the first page.",
+      fill: function () { return chkList([["brief", "<b>" + ai() + " wrote a brief and I approved it.</b>"]]) + "<h3>Your tools</h3>" + toolsHtml(); },
+      learn: function () { return hood("Git and GitHub", "<p>Git keeps the history of every change you make, so you can always go back. GitHub stores that history online and lets you share it. Your repository is also proof: employers can open it and read your code.</p>"); },
       note: "Every prompt here has four parts: context, constraints, one clear ask, and what good looks like. Notice them. That pattern is the skill.",
-      hood: function () { return hood("why a brief", "<p>A brief is a spec, the same thing a ticket is on an engineering team. Writing it first means the AI builds what you decided, not what it guessed. It's also the document you'd hand a teammate.</p>"); },
-      why: "This is how work gets handed to a person, too.", miss: "Skipping straight to “build me a portfolio”. A generic ask gets a generic site." },
-    { pt: 2, t: "Build the home page", lead: "Build one page, read every line of it, then ask for changes one at a time.",
-      body: function () { return tasks([
-        task(1, "here", "Copy the prompt", promptBox(9, "Home page prompt")),
-        task(2, "ai", "Paste it into the same chat and send"),
-        task(3, "ai", "Read every line, then ask for changes", "<p>Open the preview. Ask for one change at a time, in plain words: what's wrong and what you want instead.</p>"),
-        task(4, "editor", "Save the files", "<p>Copy each file into your code editor and save it in your project folder.</p>")
-      ]); },
-      hood: function () { return hood("your files", hoodBuild()); },
-      why: "One page at a time keeps the AI focused and keeps you able to check its work.", miss: "Accepting the first draft. The first draft is the AI's site. The fifth draft is yours." },
-    { pt: 2, t: "Add your projects", lead: "One page per project: the problem, what you built, the result.",
-      body: function () { return tasks([
-        task(1, "here", "Copy the prompt", promptBox(10, "Project page prompt")),
-        task(2, "ai", "Paste it into the same chat and send"),
-        task(3, "ai", "Answer its questions", "<p>Use real details, and say \u201cI don't have a number\u201d when you don't.</p>"),
-        task(4, "editor", "Save the page, then repeat for each project")
-      ]); },
-      hood: function () { return hood("pages and links", hoodRoutes()); },
-      why: "A project told as problem, build and result shows how you think. A list of technologies does not.", miss: "Writing “we” for everything. Say what you did." },
-    { pt: 2, t: "Make one skill clickable", lead: "Build a small demo a visitor can try in under a minute.",
-      body: function () { return tasks([
-        task(1, "here", "Copy the prompt", promptBox(11, "Clickable skill prompt")),
-        task(2, "ai", "Paste it into the same chat and send"),
-        task(3, "ai", "Pick one idea, then read its walkthrough", "<p>Make sure you could explain how it works without the AI.</p>"),
-        task(4, "editor", "Save it to your site")
-      ]); },
-      note: "This is the step that gets a site remembered, and the one most people skip.",
-      hood: function () { return hood("JavaScript events", "<p>Interactive pages run on <b>events</b>. Your code says “when this button is clicked, run this function” with <code>addEventListener</code>. The function reads what changed, updates a value, and redraws part of the page. Almost every demo is that loop.</p>"); },
-      why: "Anyone can type “strong in accessibility”. A working contrast checker on your site proves it.", miss: "Building something huge. Small and finished wins." },
-    { pt: 3, t: "Make it work on a phone", lead: "Recruiters open links on their phones. Test at phone width and fix what breaks.",
-      body: function () { return tasks([
-        task(1, "here", "Copy the prompt", promptBox(12, "Phone check prompt")),
-        task(2, "ai", "Paste it into the same chat and send"),
-        task(3, "editor", "Apply the fixes"),
-        task(4, "phone", "Open the site on your own phone and tap every link")
-      ]); },
-      hood: function () { return hood("responsive design", "<p>Three pieces make a page fit any screen. The <code>viewport</code> tag tells phones not to zoom out. Flexible widths, such as <code>width: min(100%, 880px)</code>, let boxes shrink. <b>Media queries</b>, such as <code>@media (max-width: 700px)</code>, change the layout below a set width, like stacking columns.</p>"); },
-      why: "A site that scrolls sideways on a phone looks unfinished.", miss: "Testing only by shrinking your browser window. Use a real phone too." },
-    { pt: 3, t: "Know your code", lead: "If your site says it, you said it. Check every fact, then make sure you can explain every file.",
-      body: function () { return tasks([
-        task(1, "here", "Check every fact yourself", "<ol><li>Read every sentence out loud. Delete anything you wouldn't say in an interview.</li><li>Check every number, date, title and employer against your résumé.</li><li>Click every link.</li></ol>"),
-        task(2, "here", "Copy the quiz prompt", promptBox(13, "Code quiz prompt")),
-        task(3, "ai", "Paste it into the same chat, then answer each question", "<p>Don't look at the code first. The point is to find what you can't explain yet.</p>")
-      ]); },
+      why: "One page at a time keeps the AI focused and keeps you able to check its work.", miss: "Accepting the first draft. The first draft is the AI's site. The fifth draft is yours.",
+      p: 9, pn: "Home page prompt",
+      goTxt: function () { return "Paste it into the same " + ai() + " chat and send. Read every line it builds, ask for changes one at a time, then save the files in your code editor."; } },
+    { pt: 2, t: "Home page", lead: "Check your home page, then ask for your project pages.",
+      fill: function () { return chkList([["homeSaved", "<b>I saved the home page files</b> in my project folder."], ["homeTrue", "<b>The preview looks right</b>, and every word on it is true."]]); },
+      learn: function () { return hood("your files", hoodBuild()); },
+      why: "A project told as problem, build and result shows how you think. A list of technologies does not.", miss: "Writing “we” for everything. Say what you did.",
+      p: 10, pn: "Project page prompt",
+      goTxt: function () { return "Paste it into the same chat, answer its questions with real details, and save the page. Repeat the prompt for each project."; } },
+    { pt: 2, t: "Projects", lead: "Check your project pages, then add one thing visitors can click.",
+      fill: function () { return chkList([["projSaved", "<b>I saved a page for each project.</b>"], ["projLinks", "<b>Each project page links back</b> to the home page."]]); },
+      learn: function () { return hood("pages and links", hoodRoutes()); },
+      note: "The clickable demo is what gets a site remembered, and it's the part most people skip.",
+      why: "Anyone can type “strong in accessibility”. A working contrast checker on your site proves it.", miss: "Building something huge. Small and finished wins.",
+      p: 11, pn: "Clickable demo prompt",
+      goTxt: function () { return "Paste it into the same chat, pick one of its three ideas, then save the demo and read its walkthrough."; } },
+    { pt: 3, t: "Phone check", lead: "Check your demo, then make sure everything works on a phone.",
+      fill: function () { return chkList([["demoSaved", "<b>I saved the demo</b> and it works."], ["demoExplain", "<b>I can explain how the demo works</b> without the AI."]]); },
+      learn: function () { return hood("JavaScript events", "<p>Interactive pages run on <b>events</b>. Your code says “when this button is clicked, run this function” with <code>addEventListener</code>. The function reads what changed, updates a value, and redraws part of the page. Almost every demo is that loop.</p>"); },
+      why: "Recruiters open links on their phones. A site that scrolls sideways looks unfinished.", miss: "Testing only by shrinking your browser window. Use a real phone too.",
+      p: 12, pn: "Phone check prompt",
+      goTxt: function () { return "Paste it into the same chat, apply the fixes it gives you, then open the site on your own phone and tap every link."; } },
+    { pt: 3, t: "Know your code", lead: "If your site says it, you said it. Check every fact, then get quizzed on your code.",
+      fill: function () { return chkList([["phoneFixed", "<b>I applied the phone fixes</b> and tested on my own phone."], ["readAloud", "<b>I read every sentence out loud</b> and deleted anything I wouldn't say in an interview."], ["facts", "<b>I checked every number, date, title and employer</b> against my résumé."], ["links", "<b>I clicked every link.</b>"]]); },
+      learn: function () { return hood("responsive design", "<p>Three pieces make a page fit any screen. The <code>viewport</code> tag tells phones not to zoom out. Flexible widths, such as <code>width: min(100%, 880px)</code>, let boxes shrink. <b>Media queries</b>, such as <code>@media (max-width: 700px)</code>, change the layout below a set width.</p>"); },
       note: "This is the standard I hold engineers to: use AI for anything, and answer for everything. An interviewer will ask how your site works.",
-      why: "AI assistants state wrong things confidently, and an interviewer can tell when you can't explain your own work.", miss: "An invented statistic. One made-up number can cost you the interview." },
-    { pt: 3, t: "Ask for a review", lead: "Get the hard feedback now, from the employer's side.",
-      body: function () { return tasks([
-        task(1, "here", "Copy the prompt", promptBox(14, "Hiring manager review prompt")),
-        task(2, "ai", "Open a <u>new</u> chat, paste the prompt, add your site's text, and send", "<p>A new chat has no memory of building your site, so it judges it fresh.</p>" + paste("<b>Copy all the text from your live site and paste it below the prompt</b>, or paste the site's address if your assistant can open web pages.")),
-        task(3, "editor", "Fix what matters", "<p>Then ask one real person the same four questions.</p>")
-      ]); },
-      why: "It's easier to hear it now than to wonder later why nobody called.", miss: "Arguing with the feedback. Fix it or decide not to, then move on." },
-    { pt: 4, t: "Put it live", lead: "A link beats an attachment, and it shows you can ship.",
-      body: function () { return tasks([
-        task(1, "here", "Copy the prompt", promptBox(15, "Launch prompt")),
-        task(2, "ai", "Paste it into the same chat and follow along one step at a time")
-      ]) + "<h3>The short version</h3>" + launchHtml() + domainRec(); },
-      hood: function () { return hood("deploying", hoodDeploy()); },
-      why: "Until it has an address, nobody can see it." },
-    { pt: 4, t: "Share it", lead: "The site only works if people open it.",
-      body: function () { return "<ol><li>Put the address at the top of your résumé, next to your email.</li><li>Add it to your LinkedIn contact info and Featured section.</li><li>Paste it into the website field on every application.</li><li>In a cover letter, point to the one project page that fits that job.</li></ol>"; },
-      why: "Give people a reason and a direct link.", miss: "Launching and never updating. Add each new project while it's fresh." }
+      why: "AI assistants state wrong things confidently, and an interviewer can tell when you can't explain your own work.", miss: "An invented statistic. One made-up number can cost you the interview.",
+      p: 13, pn: "Code quiz prompt",
+      goTxt: function () { return "Paste it into the same chat and answer each question without looking at the code first."; } },
+    { pt: 3, t: "Review", lead: "Get the hard feedback now, from the employer's side.",
+      fill: function () { return chkList([["quizDone", "<b>I finished the quiz</b> and looked up what I missed."]]); },
+      why: "It's easier to hear it now than to wonder later why nobody called.", miss: "Arguing with the feedback. Fix it or decide not to, then move on.",
+      p: 14, pn: "Hiring manager review prompt", pasteMsg: "<b>Copy all the text from your site and paste it below the prompt</b>, or paste the site's address if your assistant can open web pages.",
+      goTxt: function () { return "Open a <b>new</b> " + ai() + " chat, so it judges your site fresh. Paste the prompt, add your site's text under it, and send. Then ask one real person the same four questions."; } },
+    { pt: 4, t: "Go live", lead: "Fix what the review found, then put your site live.",
+      fill: function () { return "<p>What did the review say to fix? Write down the top three.</p><div class='fl'>" + inp("r0", "Fix 1", "") + inp("r1", "Fix 2 <small>(optional)</small>", "") + inp("r2", "Fix 3 <small>(optional)</small>", "") + "</div>" + chkList([["fixesDone", "<b>I made the fixes.</b>"]]); },
+      learn: function () { return hood("deploying", hoodDeploy()); },
+      why: "A link beats an attachment, and it shows you can ship.",
+      p: 15, pn: "Launch prompt",
+      goTxt: function () { return "Paste it into the same chat and follow along one step at a time."; },
+      after: function () { return "<details class='more' style='border:0;padding-top:.4rem'><summary>The short version</summary>" + launchHtml() + "</details>" + domainRec(); } },
+    { pt: 4, t: "Share it", lead: "Your site only works if people open it.",
+      fill: function () { return "<div class='fl'>" + inp("live", "Your live address", "https://alexkim.com") + "</div>"; },
+      why: "Give people a reason and a direct link.", miss: "Launching and never updating. Add each new project while it's fresh.",
+      share: true }
   ];
   var N = STEPS.length, FIN = N + 1;
   if (!(S.cur >= 1 && S.cur <= FIN)) S.cur = 1;
 
   /* ---------- Render ---------- */
   var stage = document.getElementById("stage");
+  function zone(n, label, html, cls) { return "<section class='zone " + (cls || "") + "'><div class='zone-h'><span>" + n + "</span>" + label + "</div>" + html + "</section>"; }
   function stepCard(i) {
-    var st = STEPS[i - 1], h = "<article class='st'>";
+    var st = STEPS[i - 1], h = "<article class='st'>", z = 0;
     h += "<div class='st-k'>Part " + (st.pt + 1) + " · " + PARTS[st.pt] + " · Step " + i + " of " + N + "</div><h2>" + st.t + "</h2><p class='st-lead'>" + st.lead + "</p>";
-    h += st.body();
-    if (st.hood) h += st.hood();
-    if (st.note) h += "<div class='note'><strong>Coach's note</strong><p>" + st.note + "</p></div>";
-    if (st.why || st.miss) h += "<div class='wm'>" + (st.why ? "<div><strong>Why it matters</strong><p>" + st.why + "</p></div>" : "") + (st.miss ? "<div class='miss'><strong>Common mistake</strong><p>" + st.miss + "</p></div>" : "") + "</div>";
-    h += "<div class='nav2'><button type='button' class='back' data-go='" + (i - 1) + "'" + (i === 1 ? " disabled" : "") + ">Back</button><button type='button' class='next' data-done='" + i + "'>" + (i === N ? "Done, see my site" : "Done, next step") + "</button></div></article>";
+    h += zone(++z, "Fill in", st.fill(), "z-fill");
+    var learn = (st.learn ? st.learn() : "") + (st.note ? "<div class='note'><strong>Coach's note</strong><p>" + st.note + "</p></div>" : "") + ((st.why || st.miss) ? "<div class='wm'>" + (st.why ? "<div><strong>Why it matters</strong><p>" + st.why + "</p></div>" : "") + (st.miss ? "<div class='miss'><strong>Common mistake</strong><p>" + st.miss + "</p></div>" : "") + "</div>" : "");
+    if (learn) h += zone(++z, "Learn", learn, "z-learn");
+    var go = "";
+    if (st.p) go = "<p class='go-txt'>" + st.goTxt() + "</p>" + (st.pasteMsg ? paste(st.pasteMsg) : "") + promptBox(st.p, st.pn) + (st.after ? st.after() : "");
+    else if (st.share) go = "<p class='go-txt'>Tick each one off as you do it.</p>" + chkList([["shResume", "<b>Résumé.</b> Put the address at the top, next to your email."], ["shLinkedIn", "<b>LinkedIn.</b> Add it to your contact info and Featured section."], ["shApps", "<b>Applications.</b> Paste it into the website field every time."], ["shCover", "<b>Cover letters.</b> Point to the one project page that fits that job."]]);
+    else go = "<p class='go-txt'>" + st.noPrompt + "</p>";
+    h += zone(++z, st.p ? "Copy and go" : (st.share ? "Share it" : "Go on"), go, "z-go");
+    var ready = !!S.done[i];
+    h += "<div class='nav2'><button type='button' class='back' data-go='" + (i - 1) + "'" + (i === 1 ? " disabled" : "") + ">Back</button><button type='button' class='next" + (ready ? " ready" : "") + "' data-done='" + i + "'>" + (i === N ? "Done, see my site" : "Next page") + "</button></div></article>";
     return h;
   }
   function finCard() {
     var nm = t("name");
     return "<article class='st'><div class='st-k'>Finished</div><h2>" + (nm ? "Nice work, " + esc(nm) + "." : "Nice work.") + " Here's your site.</h2><p class='st-lead'>This preview is built right here in your browser from what you entered. Nothing is sent anywhere. Switch light and dark, try it at phone width, and download it as a starting file.</p>"
       + modeSeg() + previewHtml("Your site")
-      + "<div class='fin-btns'><button type='button' class='btn btn-primary' id='dl'>Download index.html</button><button type='button' class='btn btn-ghost' data-go='6'>Change colors or fonts</button><a class='btn btn-ghost' href='../sample/'>See a finished example</a><a class='btn btn-ghost' href='../domain/'>Bonus: get yourname.com</a></div>"
+      + "<div class='fin-btns'><button type='button' class='btn btn-primary' id='dl'>Download index.html</button><button type='button' class='btn btn-ghost' data-go='4'>Change colors or fonts</button><a class='btn btn-ghost' href='../sample/'>See a finished example</a><a class='btn btn-ghost' href='../domain/'>Bonus: get yourname.com</a></div>"
       + hood("the file you download", "<p>It's one HTML file with its CSS inside a <code>&lt;style&gt;</code> tag. Open it in any browser. " + (S.path === "simple" ? "On the Simple Pages path you can upload it to GitHub Pages as it is, then grow it with the build steps." : "On your " + PATHS[S.path].n + " path, paste it into your AI chat as the design reference for your real project.") + "</p><p>Look for the <code>:root</code> block at the top: those variables are your palette. Change one and the whole page follows.</p>")
       + "<div class='why' style='margin-top:1.6rem'><h3>Why I teach it this way</h3><p>I've hired and trained more than 70 engineers. These steps follow the habits I coach on my teams:</p><ul><li><b>Start with the outcome.</b> Decide what the site must prove before you open a tool.</li><li><b>Direct the AI.</b> Give it context, constraints and one clear ask.</li><li><b>Know what you shipped.</b> You answer for every line, whoever typed it.</li><li><b>Ask for honest feedback.</b> Find the weak spots before an employer does.</li></ul><div class='fin-btns'><a class='btn btn-primary' href='../../leadership/'>See how I lead</a><a class='btn btn-ghost' href='../../rubric/'>What I look for in engineers</a></div></div>"
       + "<div class='nav2'><button type='button' class='back' data-go='" + N + "'>Back</button><button type='button' class='back' data-restart='1'>Start over</button></div></article>";
@@ -585,7 +598,11 @@
     if ((el = e.target.closest("[data-more]"))) { var pb = el.closest(".prompt"); pb.classList.toggle("full"); el.textContent = pb.classList.contains("full") ? "Show less" : "Show the whole prompt"; return; }
     if ((el = e.target.closest(".copy"))) {
       var txt = P[el.getAttribute("data-p")](), b = el;
-      var ok = function () { b.textContent = "Copied"; setTimeout(function () { b.textContent = "Copy"; }, 1600); };
+      var ok = function () {
+        b.textContent = "Copied"; setTimeout(function () { b.textContent = "Copy"; }, 1600);
+        if (S.cur <= N && !S.done[S.cur]) { S.done[S.cur] = 1; save(); journey(); }
+        var nx = stage.querySelector(".next"); if (nx) { nx.classList.add("ready"); }
+      };
       var fb = function () { var ta = document.createElement("textarea"); ta.value = txt; ta.setAttribute("readonly", ""); ta.style.position = "fixed"; ta.style.top = "0"; ta.style.opacity = "0"; document.body.appendChild(ta); ta.select(); try { document.execCommand("copy"); ok(); } catch (x) {} document.body.removeChild(ta); };
       if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(ok, fb); else fb();
       return;
