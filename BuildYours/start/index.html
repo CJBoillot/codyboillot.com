@@ -56,6 +56,8 @@
   .st b, .st strong { color: var(--text); }
   .st code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .86em; background: #0a0d14; border: 1px solid var(--line); border-radius: 5px; padding: .05em .35em; color: #d7deea; overflow-wrap: anywhere; }
 
+  /* Tall enough that every step can scroll to the top, even short ones. */
+  #stage { min-height: calc(100vh - 120px); }
   .fl { display: grid; gap: .8rem; margin-top: .7rem; }
   .fl2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem; margin-top: 1rem; }
   .f label { display: block; font-size: .8rem; font-weight: 700; color: var(--text); margin-bottom: .35rem; }
@@ -458,7 +460,14 @@
   function render(scroll) {
     stage.innerHTML = S.cur > N ? finCard() : stepCard(S.cur);
     fillPrompts(); journey(); refreshPreview();
-    if (scroll) { var y = document.getElementById("jr").offsetTop - 64; if (window.scrollY > y) window.scrollTo({ top: y }); var h = stage.querySelector("h2"); if (h) { h.setAttribute("tabindex", "-1"); h.focus({ preventScroll: true }); } }
+    if (scroll) {
+      /* Put the top of the new step card just under the sticky menu and progress bar.
+         (The progress bar is sticky, so its offsetTop can't be used here.) */
+      var card = stage.querySelector(".st"), hdr = document.querySelector("header.nav"), jr = document.getElementById("jr");
+      var y = card.getBoundingClientRect().top + window.scrollY - (hdr ? hdr.offsetHeight : 64) - jr.offsetHeight - 12;
+      window.scrollTo({ top: Math.max(0, y), behavior: "instant" });
+      var h = stage.querySelector("h2"); if (h) { h.setAttribute("tabindex", "-1"); h.focus({ preventScroll: true }); }
+    }
   }
   function closeMap() { var b = document.getElementById("jrAll"); document.getElementById("map").classList.remove("open"); b.setAttribute("aria-expanded", "false"); b.textContent = "All steps"; }
   function go(n) { S.cur = Math.max(1, Math.min(FIN, n)); save(); closeMap(); render(true); try { history.replaceState(null, "", "#step-" + S.cur); } catch (e) {} }
