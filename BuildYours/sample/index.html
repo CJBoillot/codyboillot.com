@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Jordan Rivera · Example profile site</title>
+<meta name="description" content="An example profile site for a made-up candidate, showing what the Build Yours tutorial on CodyBoillot.com produces." />
+<meta name="robots" content="noindex" />
+<link rel="icon" href="../../assets/favicon.svg" type="image/svg+xml" />
+<style>
+  :root { --bg: #f6efe6; --surface: #fffaf3; --text: #3b2f2a; --muted: #6f5f57; --accent: #c2410c; --line: #e4d6c4; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; line-height: 1.6; overflow-x: hidden; }
+  h1, h2, h3 { font-family: Georgia, "Times New Roman", serif; line-height: 1.15; margin: 0; }
+  p { margin: 0; }
+  a { color: var(--accent); }
+  .wrap { width: min(100% - 2.5rem, 860px); margin-inline: auto; }
+  .flag { background: #3b2f2a; color: #fffaf3; font-size: .88rem; padding: .6rem 0; }
+  .flag .wrap { display: flex; flex-wrap: wrap; gap: .4rem 1rem; align-items: center; justify-content: space-between; }
+  .flag a { color: #ffd9b8; font-weight: 700; }
+  nav { display: flex; flex-wrap: wrap; gap: .4rem 1.2rem; align-items: center; justify-content: space-between; padding: 1.1rem 0; border-bottom: 1px solid var(--line); }
+  nav b { font-family: Georgia, serif; font-size: 1.1rem; }
+  nav div { display: flex; flex-wrap: wrap; gap: 1rem; }
+  nav a { color: var(--text); text-decoration: none; font-size: .92rem; font-weight: 600; }
+  .hero { padding: clamp(2.2rem, 7vw, 4.5rem) 0 clamp(1.6rem, 4vw, 2.5rem); }
+  .hero h1 { font-size: clamp(2rem, 6.5vw, 3.4rem); max-width: 16ch; }
+  .hero p { color: var(--muted); font-size: 1.08rem; margin-top: 1rem; max-width: 54ch; }
+  .btn { display: inline-block; margin-top: 1.4rem; background: var(--accent); color: #fff; text-decoration: none; font-weight: 700; padding: .7rem 1.3rem; border-radius: 999px; }
+  section { padding: clamp(1.6rem, 4vw, 2.6rem) 0; border-top: 1px solid var(--line); }
+  section > h2 { font-size: clamp(1.4rem, 3.6vw, 1.9rem); }
+  .claims { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin-top: 1.2rem; }
+  .claims a { display: block; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 1rem; text-decoration: none; color: var(--text); min-width: 0; }
+  .claims b { display: block; font-family: Georgia, serif; font-size: 1.05rem; }
+  .claims span { display: block; color: var(--muted); font-size: .9rem; margin-top: .4rem; }
+  .claims i { display: block; color: var(--accent); font-style: normal; font-weight: 700; font-size: .85rem; margin-top: .7rem; }
+  .proj { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: clamp(1rem, 3vw, 1.5rem); margin-top: 1.2rem; }
+  .proj h3 { font-size: 1.25rem; }
+  .proj dl { margin: .8rem 0 0; display: grid; gap: .7rem; }
+  .proj dt { font-size: .74rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
+  .proj dd { margin: .15rem 0 0; color: var(--muted); }
+  .demo { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: clamp(1rem, 3vw, 1.5rem); margin-top: 1.2rem; }
+  .demo-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin-top: 1rem; }
+  .demo label { display: block; font-size: .85rem; font-weight: 700; }
+  .demo input[type=color] { width: 100%; height: 44px; border: 1px solid var(--line); border-radius: 8px; background: #fff; padding: 2px; margin-top: .3rem; }
+  .swatch { margin-top: 1rem; border-radius: 10px; padding: 1.1rem; font-size: 1.05rem; font-weight: 600; border: 1px solid var(--line); overflow-wrap: anywhere; }
+  .res { margin-top: .9rem; display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+  .res b { font-size: 1.3rem; font-family: Georgia, serif; }
+  .tag { border-radius: 999px; padding: .2rem .7rem; font-size: .8rem; font-weight: 700; }
+  .pass { background: #dcfce7; color: #14532d; } .fail { background: #fee2e2; color: #7f1d1d; }
+  footer { border-top: 1px solid var(--line); padding: 1.6rem 0 2.4rem; color: var(--muted); font-size: .9rem; }
+  @media (max-width: 700px) { .claims, .demo-row { grid-template-columns: minmax(0, 1fr); } }
+</style>
+</head>
+<body>
+<div class="flag"><div class="wrap"><span>Example site. Jordan Rivera is a made-up candidate, and the projects and numbers here are invented for illustration.</span><a href="../">← Back to the tutorial</a></div></div>
+
+<div class="wrap">
+  <nav aria-label="Primary"><b>Jordan Rivera</b><div><a href="#proof">Proof</a><a href="#projects">Projects</a><a href="#try">Try it</a><a href="#contact">Contact</a></div></nav>
+
+  <header class="hero">
+    <h1>I make slow pages fast and hard pages usable.</h1>
+    <p>Front-end developer looking for a junior or mid-level role on a product team. Three things I can prove are below, each with a project behind it.</p>
+    <a class="btn" href="#projects">See the proof</a>
+  </header>
+
+  <section id="proof">
+    <h2>Three things you can check</h2>
+    <div class="claims">
+      <a href="#p1"><b>I measure before I optimize.</b><span>I cut a store page's load time by finding what was slow first.</span><i>Bakery storefront →</i></a>
+      <a href="#p2"><b>I build for keyboards and screen readers.</b><span>Every form I ship works without a mouse.</span><i>Clinic sign-up form →</i></a>
+      <a href="#try"><b>I know contrast rules by heart.</b><span>Try the checker I built for this page.</span><i>Contrast checker →</i></a>
+    </div>
+  </section>
+
+  <section id="projects">
+    <h2>Projects</h2>
+    <article class="proj" id="p1">
+      <h3>Bakery storefront</h3>
+      <dl>
+        <div><dt>The problem</dt><dd>A neighborhood bakery's order page took about six seconds to load on a phone, and customers gave up before ordering.</dd></div>
+        <div><dt>What I built</dt><dd>I measured the page, found three oversized images and a blocking script, resized the images and deferred the script. HTML, CSS and plain JavaScript.</dd></div>
+        <div><dt>The result</dt><dd>Load time on a mid-range phone dropped from about six seconds to under two.</dd></div>
+        <div><dt>What I'd do differently</dt><dd>I would set a size limit for images on day one so the problem couldn't come back.</dd></div>
+      </dl>
+    </article>
+    <article class="proj" id="p2">
+      <h3>Clinic sign-up form</h3>
+      <dl>
+        <div><dt>The problem</dt><dd>A volunteer clinic's sign-up form couldn't be completed with a keyboard, which locked out some of the people it served.</dd></div>
+        <div><dt>What I built</dt><dd>I rebuilt the form with real labels, a visible focus ring and error messages a screen reader announces.</dd></div>
+        <div><dt>The result</dt><dd>The whole form can be filled in and sent without touching a mouse.</dd></div>
+        <div><dt>What I'd do differently</dt><dd>I would test with a screen reader user in week one, not week three.</dd></div>
+      </dl>
+    </article>
+  </section>
+
+  <section id="try">
+    <h2>Try it: contrast checker</h2>
+    <p style="color:var(--muted);margin-top:.5rem">Pick a text color and a background. The checker scores them against the WCAG readability guideline.</p>
+    <div class="demo">
+      <div class="demo-row">
+        <div><label for="fg">Text color</label><input type="color" id="fg" value="#3b2f2a" /></div>
+        <div><label for="bgc">Background color</label><input type="color" id="bgc" value="#f6efe6" /></div>
+      </div>
+      <div class="swatch" id="sw">The quick brown fox jumps over the lazy dog.</div>
+      <div class="res" aria-live="polite"><b id="ratio"></b><span class="tag" id="aa"></span><span class="tag" id="aaa"></span></div>
+    </div>
+  </section>
+
+  <section id="contact">
+    <h2>Contact</h2>
+    <p style="margin-top:.6rem">The best way to reach me is email: <a href="mailto:jordan@example.com">jordan@example.com</a></p>
+  </section>
+
+  <footer>This page is a teaching example from <a href="../">Build Yours</a> on CodyBoillot.com. One HTML file, no frameworks.</footer>
+</div>
+
+<script>
+(function () {
+  function lum(hex) {
+    var c = [1, 3, 5].map(function (i) { var v = parseInt(hex.substr(i, 2), 16) / 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); });
+    return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+  }
+  var fg = document.getElementById("fg"), bg = document.getElementById("bgc");
+  function go() {
+    var a = lum(fg.value), b = lum(bg.value), r = (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+    var sw = document.getElementById("sw"); sw.style.color = fg.value; sw.style.background = bg.value;
+    document.getElementById("ratio").textContent = r.toFixed(2) + " : 1";
+    var aa = document.getElementById("aa"), aaa = document.getElementById("aaa");
+    aa.textContent = (r >= 4.5 ? "Passes" : "Fails") + " AA"; aa.className = "tag " + (r >= 4.5 ? "pass" : "fail");
+    aaa.textContent = (r >= 7 ? "Passes" : "Fails") + " AAA"; aaa.className = "tag " + (r >= 7 ? "pass" : "fail");
+  }
+  fg.addEventListener("input", go); bg.addEventListener("input", go); go();
+})();
+</script>
+</body>
+</html>
