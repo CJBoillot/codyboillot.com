@@ -137,7 +137,7 @@
     var s = null;
     try { s = JSON.parse(localStorage.getItem("by-v2") || "null"); } catch (e) {}
     if (!s || !((s.cur > 1) || (s.done && Object.keys(s.done).length))) return;
-    var lab = s.cur > 12 ? "Resume: your site preview" : "Resume at step " + s.cur;
+    var lab = s.cur > 13 ? "Resume: your site preview" : "Resume at step " + s.cur;
     document.querySelectorAll(".js-start").forEach(function (a, i) {
       var r = document.createElement("a"); r.className = "btn btn-primary"; r.href = "start/#step-" + s.cur; r.textContent = lab;
       a.parentNode.insertBefore(r, a); a.className = "btn btn-ghost js-start";
