@@ -139,7 +139,7 @@
         var small = a.parentNode.querySelector("small"); if (small) small.remove();
         var o = document.createElement("button"); o.type = "button"; o.className = "lp-over"; o.textContent = "Start over";
         o.addEventListener("click", function () {
-          if (!confirm("Clear everything you entered and start again from step 1?")) return;
+          if (!confirm("Start over?\n\nThis resets all your progress and erases everything you entered: your name, claims, projects and choices. It can't be undone.")) return;
           try { localStorage.removeItem("by-v2"); } catch (e) {}
           location.href = "start/#step-1";
         });

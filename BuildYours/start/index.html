@@ -574,7 +574,7 @@
     var el;
     if ((el = e.target.closest("[data-go]"))) { go(+el.getAttribute("data-go")); return; }
     if ((el = e.target.closest("[data-done]"))) { var d = +el.getAttribute("data-done"); S.done[d] = 1; go(d + 1); return; }
-    if ((el = e.target.closest("[data-restart]"))) { if (confirm("Clear everything you entered and start again from step 1?")) { try { localStorage.removeItem("by-v2"); } catch (x) {} location.href = "./#step-1"; location.reload(); } return; }
+    if ((el = e.target.closest("[data-restart]"))) { if (confirm("Start over?\n\nThis resets all your progress and erases everything you entered: your name, claims, projects and choices. It can't be undone.")) { try { localStorage.removeItem("by-v2"); } catch (x) {} location.href = "./#step-1"; location.reload(); } return; }
     if ((el = e.target.closest("[data-set]"))) { S[el.getAttribute("data-set")] = el.getAttribute("data-v"); save(); rerenderInPlace(); return; }
     if ((el = e.target.closest("[data-pw]"))) { var w = el.closest(".pvw"); w.classList.toggle("phone", el.getAttribute("data-pw") === "phone"); w.querySelectorAll("[data-pw]").forEach(function (b) { b.setAttribute("aria-pressed", String(b === el)); }); return; }
     if ((el = e.target.closest("[data-more]"))) { var pb = el.closest(".prompt"); pb.classList.toggle("full"); el.textContent = pb.classList.contains("full") ? "Show less" : "Show the whole prompt"; return; }
