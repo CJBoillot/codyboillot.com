@@ -25,6 +25,7 @@
   .lp-hero p { color: var(--muted); font-size: clamp(1rem, 2.2vw, 1.15rem); margin-top: 1rem; max-width: 56ch; }
   .lp-cta { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem 1rem; margin-top: 1.5rem; }
   .lp-cta small { color: var(--muted-2); font-size: .88rem; }
+  .lp-over { background: none; border: 0; color: var(--muted); font: inherit; font-size: .88rem; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; padding: .3rem; }
   .lp-sec { padding: clamp(1.6rem, 4vw, 2.4rem) 0; border-top: 1px solid var(--line); }
   .lp-sec h2 { font-size: clamp(1.3rem, 3vw, 1.7rem); font-weight: 800; }
   .lp-sec > .wrap > p { color: var(--muted); margin-top: .6rem; max-width: 60ch; }
@@ -35,6 +36,10 @@
   .cost { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1rem; }
   .cost span { border: 1px solid var(--line-2); border-radius: 999px; padding: .35rem .85rem; font-size: .9rem; color: var(--muted); }
   .cost b { color: #86efac; }
+  .lp-sec .rec { color: var(--muted); margin-top: .9rem; max-width: 62ch; }
+  .lp-sec .rec b { color: var(--text); }
+  .lp-sec .rec a { color: var(--accent-2); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; }
+  .lp-sec .fine { color: var(--muted-2); font-size: .8rem; margin-top: .4rem; }
   .how { list-style: none; margin: 1rem 0 0; padding: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .7rem; counter-reset: s; }
   .how li { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: .9rem; min-width: 0; counter-increment: s; }
   .how li::before { content: counter(s); display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--grad); color: #1a1206; font-weight: 800; font-size: .85rem; margin-bottom: .5rem; }
@@ -71,7 +76,7 @@
       <div class="sec-tag">Free tutorial</div>
       <h1>Build a profile site that gets you hired.</h1>
       <p>I interview dozens of software engineering candidates every month. Most don't have their own site. Today you can build one for $0.</p>
-      <div class="lp-cta"><a class="btn btn-primary js-start" href="start/">Start step 1</a><small>Free. No sign-up.</small></div>
+      <div class="lp-cta"><a class="btn btn-primary js-start" href="start/#step-1">Start step 1</a><small>Free. No sign-up.</small></div>
     </div>
   </section>
 
@@ -89,7 +94,9 @@
   <section class="lp-sec">
     <div class="wrap">
       <h2>What it costs</h2>
-      <div class="cost"><span>Tutorial <b>$0</b></span><span>Hosting <b>$0</b></span><span>AI assistant, free plan <b>$0</b></span><span>Custom domain: optional</span></div>
+      <div class="cost"><span>Tutorial <b>$0</b></span><span>Hosting <b>$0</b></span><span>AI assistant, free plan <b>$0</b></span></div>
+      <p class="rec">Recommended: your own address, like <b>yourname.com</b>. About $16 a year at Amazon Route 53, plus $0.50 a month for DNS.* <a href="domain/">Bonus tutorial: set it up</a></p>
+      <p class="fine">*Prices as of November 2026.</p>
     </div>
   </section>
 
@@ -118,20 +125,33 @@
   <section class="lp-sec lp-close">
     <div class="wrap">
       <p>Built by Cody Boillot, who has hired and trained 70+ engineers.</p>
-      <div class="lp-cta"><a class="btn btn-primary js-start" href="start/">Start step 1</a><a class="btn btn-ghost" href="sample/">See a finished example</a></div>
+      <div class="lp-cta"><a class="btn btn-primary js-start" href="start/#step-1">Start step 1</a><a class="btn btn-ghost" href="sample/">See a finished example</a></div>
     </div>
   </section>
 </main>
 
 <script>
-  /* Returning visitors with saved progress get a Continue button. */
+  /* Returning visitors: Resume goes to their saved step, Start step 1 goes to step 1
+     (their answers stay saved), and Start over clears everything. */
   (function () {
-    try {
-      var s = JSON.parse(localStorage.getItem("by-v2") || "null");
-      if (s && (s.cur > 1 || (s.done && Object.keys(s.done).length))) {
-        document.querySelectorAll(".js-start").forEach(function (a) { a.textContent = "Continue where you left off"; });
+    var s = null;
+    try { s = JSON.parse(localStorage.getItem("by-v2") || "null"); } catch (e) {}
+    if (!s || !((s.cur > 1) || (s.done && Object.keys(s.done).length))) return;
+    var lab = s.cur > 16 ? "Resume: your site preview" : "Resume at step " + s.cur;
+    document.querySelectorAll(".js-start").forEach(function (a, i) {
+      var r = document.createElement("a"); r.className = "btn btn-primary"; r.href = "start/#step-" + s.cur; r.textContent = lab;
+      a.parentNode.insertBefore(r, a); a.className = "btn btn-ghost js-start";
+      if (i === 0) {
+        var small = a.parentNode.querySelector("small"); if (small) small.remove();
+        var o = document.createElement("button"); o.type = "button"; o.className = "lp-over"; o.textContent = "Start over";
+        o.addEventListener("click", function () {
+          if (!confirm("Start over?\n\nThis resets all your progress and erases everything you entered: your name, claims, projects and choices. It can't be undone.")) return;
+          try { localStorage.removeItem("by-v2"); } catch (e) {}
+          location.href = "start/#step-1";
+        });
+        a.parentNode.appendChild(o);
       }
-    } catch (e) {}
+    });
   })();
 </script>
 </body>

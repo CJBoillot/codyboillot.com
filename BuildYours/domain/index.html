@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Bonus: Get yourname.com · Build Your Profile Site · Cody J. Boillot</title>
+<meta name="description" content="Bonus tutorial: register a domain with your name at Amazon Route 53 and point it at your profile site on GitHub Pages or Vercel." />
+<meta name="author" content="Cody J. Boillot" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Bonus: get yourname.com for your profile site" />
+<meta property="og:description" content="Register a domain at Amazon Route 53 and point it at GitHub Pages or Vercel, step by step." />
+<meta property="og:image" content="https://codyboillot.com/assets/headshot.jpg" />
+<meta property="og:url" content="https://codyboillot.com/BuildYours/domain/" />
+<meta name="twitter:card" content="summary" />
+<link rel="icon" href="../../assets/favicon.svg" type="image/svg+xml" />
+<link rel="canonical" href="https://codyboillot.com/BuildYours/domain/" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../../assets/site.css" />
+<style>
+  .dm { padding: clamp(2rem, 6vw, 3.5rem) 0 clamp(3rem, 7vw, 5rem); }
+  .dm h1 { font-size: clamp(1.8rem, 4.6vw, 2.7rem); font-weight: 800; margin-top: .6rem; }
+  .dm-lede { color: var(--muted); margin-top: .8rem; max-width: 60ch; }
+  .back { display: inline-block; color: var(--muted); font-size: .9rem; margin-bottom: .8rem; }
+  .back:hover { color: var(--text); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: clamp(1.1rem, 3vw, 1.8rem); margin-top: clamp(1.2rem, 3vw, 1.8rem); min-width: 0; }
+  .card h2 { font-size: clamp(1.2rem, 2.8vw, 1.5rem); font-weight: 800; }
+  .card p, .card li { color: var(--muted); font-size: .96rem; }
+  .card p + p { margin-top: .5rem; }
+  .card b, .card strong { color: var(--text); }
+  .card a:not(.btn) { color: var(--accent-2); text-decoration: underline; text-underline-offset: 2px; overflow-wrap: anywhere; }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .86em; background: #0a0d14; border: 1px solid var(--line); border-radius: 5px; padding: .05em .35em; color: #d7deea; overflow-wrap: anywhere; }
+  .cost { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .45rem 1rem; margin-top: .9rem; max-width: 460px; }
+  .cost span:nth-child(even) { color: var(--text); font-weight: 700; text-align: right; }
+  .cost .tot { border-top: 1px solid var(--line-2); padding-top: .45rem; }
+  .fine { color: var(--muted-2) !important; font-size: .8rem !important; margin-top: .7rem; }
+  .seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--line-2); border-radius: 999px; padding: 3px; gap: 2px; margin-top: .7rem; }
+  .seg button { background: none; border: 0; color: var(--muted); font: inherit; font-size: .88rem; font-weight: 600; padding: .4rem 1rem; border-radius: 999px; cursor: pointer; }
+  .seg button[aria-pressed=true] { background: var(--grad); color: #1a1206; }
+  .seg button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .tasks { list-style: none; margin: 1.1rem 0 0; padding: 0; display: grid; }
+  .task { display: grid; grid-template-columns: 32px minmax(0, 1fr); gap: .8rem; position: relative; padding-bottom: 1.3rem; }
+  .task:not(:last-child)::before { content: ""; position: absolute; left: 15px; top: 34px; bottom: 4px; width: 2px; background: var(--line-2); }
+  .task-n { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: var(--card-2); border: 1px solid var(--line-2); font-weight: 800; font-size: .88rem; color: var(--accent-2); }
+  .task-c { min-width: 0; padding-top: .1rem; }
+  .where { display: inline-block; font-size: .68rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; border-radius: 999px; padding: .12rem .55rem; }
+  .w-aws { background: rgba(255,153,0,.16); color: #fdba74; }
+  .w-host { background: rgba(167,139,250,.16); color: #c4b5fd; }
+  .w-mail { background: rgba(96,165,250,.16); color: #93c5fd; }
+  .task-t { font-weight: 700; color: var(--text); font-size: 1.02rem; margin-top: .3rem; }
+  .task-b > :first-child { margin-top: .45rem; }
+  .task-b ol { margin: .4rem 0 0; padding-left: 1.2rem; display: grid; gap: .3rem; }
+  .rec { margin-top: .6rem; border: 1px solid var(--line-2); border-radius: 10px; overflow: hidden; }
+  .rec div { display: grid; grid-template-columns: 5.5rem minmax(0, 1fr); gap: .6rem; padding: .45rem .7rem; font-size: .88rem; }
+  .rec div + div { border-top: 1px solid var(--line); }
+  .rec dt { color: var(--muted-2); font-weight: 700; font-size: .74rem; letter-spacing: .06em; text-transform: uppercase; padding-top: .1rem; }
+  .rec dd { margin: 0; color: var(--text); min-width: 0; overflow-wrap: anywhere; }
+  .rec .h { background: #0a0d14; color: var(--muted); font-weight: 700; font-size: .78rem; display: block; }
+  .tip { margin-top: .7rem; border: 1px solid rgba(255,194,75,.45); background: rgba(255,194,75,.07); border-radius: 12px; padding: .65rem .8rem; }
+  .card .tip p { color: #dfe5f0; margin: 0; }
+  .hood { margin-top: 1.2rem; border: 1px solid rgba(96,165,250,.35); background: rgba(96,165,250,.06); border-radius: 14px; padding: .9rem 1rem; }
+  .hood > strong { display: block; font-size: .76rem; letter-spacing: .1em; text-transform: uppercase; color: #93c5fd; }
+  .card .hood p { color: #d4dcea; margin-top: .4rem; }
+  .btns { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: 1.2rem; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap nav-inner">
+    <a href="../../" class="brand">Cody&nbsp;Boillot<span class="dot">.</span></a>
+    <nav class="nav-links" aria-label="Primary">
+      <a href="../" class="nav-hl" aria-current="page">Build Your<span class="nl-1"> Profile</span> Site</a>
+      <a href="../../#experience">My Resume</a>
+      <a href="../../leadership/">Leadership</a>
+      <a href="../../projects/">Projects</a>
+      <a href="../../games/">Games</a>
+      <a href="../../" class="nav-cta">About me</a>
+    </nav>
+  </div>
+</header>
+
+<main class="dm">
+  <div class="wrap">
+    <a class="back" href="../start/">&larr; Back to the tutorial</a>
+    <div class="sec-tag">Bonus</div>
+    <h1>Get yourname.com</h1>
+    <p class="dm-lede">A free address like <code>yourname.github.io</code> works. Your own name as the address looks more finished on a résumé, and it stays yours if you ever change hosts. I recommend it.</p>
+
+    <section class="card" aria-labelledby="costH">
+      <h2 id="costH">What it costs</h2>
+      <div class="cost">
+        <span>A .com domain at Amazon Route 53</span><span>about $16 a year*</span>
+        <span>Route 53 DNS for your domain</span><span>$0.50 a month*</span>
+        <span class="tot">Total for the first year</span><span class="tot">about $22*</span>
+      </div>
+      <p class="fine">*Prices as of November 2026, before taxes. Other endings, such as .dev, cost a different amount. Check <a href="https://aws.amazon.com/route53/pricing/" target="_blank" rel="noopener">Route 53 pricing</a> before you buy.</p>
+    </section>
+
+    <section class="card" aria-labelledby="hostH">
+      <h2 id="hostH">Where is your site hosted?</h2>
+      <p>The last part of the setup depends on it.</p>
+      <div class="seg" role="group" aria-label="Your host">
+        <button type="button" data-host="gh" aria-pressed="true">GitHub Pages</button>
+        <button type="button" data-host="vc" aria-pressed="false">Vercel</button>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="stepsH">
+      <h2 id="stepsH">Set it up</h2>
+      <ol class="tasks">
+        <li class="task"><span class="task-n">1</span><div class="task-c"><span class="where w-aws">In AWS</span><div class="task-t">Create an AWS account</div><div class="task-b"><p>Sign up at <a href="https://aws.amazon.com" target="_blank" rel="noopener">aws.amazon.com</a>. It asks for a payment card, because the domain is a paid purchase.</p></div></div></li>
+        <li class="task"><span class="task-n">2</span><div class="task-c"><span class="where w-aws">In Route 53</span><div class="task-t">Search for your name and register it</div><div class="task-b"><ol><li>Open the Route 53 console and choose <b>Registered domains</b>, then <b>Register domains</b>.</li><li>Search for the name you want, such as <code>alexkim.com</code>. If it's taken, try your middle initial or <code>alexkim.dev</code>.</li><li>Choose it, keep the length at one year, and leave auto-renew on so you don't lose it.</li><li>Enter your contact details. Leave privacy protection on, so your address isn't public.</li><li>Review and submit.</li></ol></div></div></li>
+        <li class="task"><span class="task-n">3</span><div class="task-c"><span class="where w-mail">In your email</span><div class="task-t">Confirm your email address</div><div class="task-b"><p>You'll get an email asking you to verify your contact address. Click the link. If you skip it, the domain can be suspended.</p><p>Registration usually finishes within an hour, but it can take longer. Route 53 creates a <b>hosted zone</b> for the domain automatically; that's where your DNS records go.</p></div></div></li>
+
+        <li class="task" data-for="gh"><span class="task-n">4</span><div class="task-c"><span class="where w-host">In GitHub</span><div class="task-t">Add the domain to your site first</div><div class="task-b"><p>In your site's repository, open <b>Settings</b>, then <b>Pages</b>. Under <b>Custom domain</b>, type <code>alexkim.com</code> (your domain) and click <b>Save</b>.</p><div class="tip"><p>Do this before adding the DNS records. GitHub warns that records pointing at Pages without the domain added in your repository can let someone else claim your address.</p></div></div></div></li>
+        <li class="task" data-for="gh"><span class="task-n">5</span><div class="task-c"><span class="where w-aws">In Route 53</span><div class="task-t">Point your domain at GitHub Pages</div><div class="task-b"><p>Open <b>Hosted zones</b>, choose your domain, and click <b>Create record</b>. Make these two records:</p>
+          <dl class="rec"><div class="h">Record 1: your bare domain</div><div><dt>Name</dt><dd>Leave blank</dd></div><div><dt>Type</dt><dd>A</dd></div><div><dt>Value</dt><dd><code>185.199.108.153</code><br /><code>185.199.109.153</code><br /><code>185.199.110.153</code><br /><code>185.199.111.153</code><br />(one per line)</dd></div></dl>
+          <dl class="rec"><div class="h">Record 2: the www version</div><div><dt>Name</dt><dd><code>www</code></dd></div><div><dt>Type</dt><dd>CNAME</dd></div><div><dt>Value</dt><dd><code>your-username.github.io</code>, using your GitHub username</dd></div></dl>
+          <p class="fine">Addresses from GitHub's guide, <a href="https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/managing-a-custom-domain-for-your-github-pages-site" target="_blank" rel="noopener">Managing a custom domain for your GitHub Pages site</a>.</p></div></div></li>
+        <li class="task" data-for="gh"><span class="task-n">6</span><div class="task-c"><span class="where w-host">In GitHub</span><div class="task-t">Turn on HTTPS</div><div class="task-b"><p>Back in <b>Settings</b> &rarr; <b>Pages</b>, wait for the DNS check to pass, then tick <b>Enforce HTTPS</b>. It can take a little while for the option to become available.</p></div></div></li>
+
+        <li class="task" data-for="vc" hidden><span class="task-n">4</span><div class="task-c"><span class="where w-host">In Vercel</span><div class="task-t">Add the domain to your project</div><div class="task-b"><p>Open your project, go to <b>Settings</b>, then <b>Domains</b>, and add <code>alexkim.com</code> (your domain). Add the <code>www</code> version too if Vercel offers it. Vercel then shows the exact DNS values for your project on the domain card.</p></div></div></li>
+        <li class="task" data-for="vc" hidden><span class="task-n">5</span><div class="task-c"><span class="where w-aws">In Route 53</span><div class="task-t">Point your domain at Vercel</div><div class="task-b"><p>Open <b>Hosted zones</b>, choose your domain, and click <b>Create record</b>. Copy the values from your Vercel domain card:</p>
+          <dl class="rec"><div class="h">Record 1: your bare domain</div><div><dt>Name</dt><dd>Leave blank</dd></div><div><dt>Type</dt><dd>A</dd></div><div><dt>Value</dt><dd>The IP address on your domain card, usually <code>76.76.21.21</code></dd></div></dl>
+          <dl class="rec"><div class="h">Record 2: the www version</div><div><dt>Name</dt><dd><code>www</code></dd></div><div><dt>Type</dt><dd>CNAME</dd></div><div><dt>Value</dt><dd>The CNAME value on your domain card</dd></div></dl>
+          <p class="fine">From Vercel's guide, <a href="https://vercel.com/kb/guide/a-record-and-caa-with-vercel" target="_blank" rel="noopener">Can I use my domain on Vercel with A records?</a> Delete any AAAA record for the bare domain if one exists.</p></div></div></li>
+        <li class="task" data-for="vc" hidden><span class="task-n">6</span><div class="task-c"><span class="where w-host">In Vercel</span><div class="task-t">Wait for the check to turn green</div><div class="task-b"><p>Vercel checks the records and sets up HTTPS on its own once they're found.</p></div></div></li>
+
+        <li class="task"><span class="task-n">7</span><div class="task-c"><span class="where w-host">In your browser</span><div class="task-t">Open your new address</div><div class="task-b"><p>Try both <code>alexkim.com</code> and <code>www.alexkim.com</code>. DNS changes usually show up within minutes, but can take up to a day or two. Then update your résumé and LinkedIn with the new address.</p></div></div></li>
+      </ol>
+
+      <div class="hood"><strong>Under the hood · DNS</strong><p>DNS is the internet's address book. Your <b>A record</b> says "this name lives at these IP addresses." Your <b>CNAME</b> says "www is another name for that host." Registering the domain makes you its owner; the records tell browsers where to find your site.</p></div>
+
+      <div class="btns"><a class="btn btn-primary" href="../start/">Back to the tutorial</a><a class="btn btn-ghost" href="../">Build Your Profile Site home</a></div>
+    </section>
+  </div>
+</main>
+
+<script>
+  (function () {
+    var host = "gh";
+    try { var s = JSON.parse(localStorage.getItem("by-v2") || "null"); if (s && s.path && s.path !== "simple") host = "vc"; } catch (e) {}
+    function set(h) {
+      host = h;
+      document.querySelectorAll("[data-host]").forEach(function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-host") === h)); });
+      document.querySelectorAll("[data-for]").forEach(function (li) { li.hidden = li.getAttribute("data-for") !== h; });
+    }
+    document.querySelectorAll("[data-host]").forEach(function (b) { b.addEventListener("click", function () { set(b.getAttribute("data-host")); }); });
+    set(host);
+  })();
+</script>
+</body>
+</html>

@@ -28,6 +28,8 @@
   .jr-row { display: flex; align-items: center; gap: .5rem; }
   .jr-parts { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .35rem; flex: 1; min-width: 0; }
   .jr-p { min-width: 0; background: none; border: 0; padding: 0; color: var(--muted-2); font: inherit; font-size: .74rem; font-weight: 700; text-align: left; cursor: pointer; }
+  .jr-p { position: relative; padding-top: 11px; }
+  .jr-p .here { position: absolute; top: 0; width: 0; height: 0; transform: translateX(-50%); border-left: 7px solid transparent; border-right: 7px solid transparent; border-top: 9px solid #4ade80; filter: drop-shadow(0 0 4px rgba(74,222,128,.6)); transition: left .25s; }
   .jr-p i { display: block; height: 6px; border-radius: 999px; background: var(--card-2); overflow: hidden; margin-bottom: .3rem; }
   .jr-p i b { display: block; height: 100%; width: 0; background: var(--grad); }
   .jr-p span { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -40,6 +42,7 @@
   .map button:hover, .map button.cur { background: var(--card); color: var(--text); }
   .map .mk { flex: none; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: .7rem; font-weight: 700; border: 1px solid var(--line-2); }
   .map .dn .mk { background: rgba(74,222,128,.16); border-color: rgba(74,222,128,.5); color: #86efac; }
+  .map .restart { width: auto; margin: .7rem 0 .2rem; border: 1px solid rgba(255,94,98,.45); color: #fca5a5; border-radius: 999px; padding: .35rem .9rem; font-size: .8rem; }
   .map h4 { margin: .5rem 0 .1rem; font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
 
   /* Step card */
@@ -56,6 +59,8 @@
   .st b, .st strong { color: var(--text); }
   .st code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .86em; background: #0a0d14; border: 1px solid var(--line); border-radius: 5px; padding: .05em .35em; color: #d7deea; overflow-wrap: anywhere; }
 
+  /* Tall enough that every step can scroll to the top, even short ones. */
+  #stage { min-height: calc(100vh - 120px); }
   .fl { display: grid; gap: .8rem; margin-top: .7rem; }
   .fl2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem; margin-top: 1rem; }
   .f label { display: block; font-size: .8rem; font-weight: 700; color: var(--text); margin-bottom: .35rem; }
@@ -112,6 +117,41 @@
   .paste svg { flex: none; width: 22px; height: 22px; color: var(--accent-2); margin-top: .1rem; }
   .st .paste p { margin: 0; color: var(--text); font-weight: 600; }
   .st .paste p b { color: var(--accent-2); }
+  /* Numbered tasks inside a step, each tagged with where it happens */
+  .how { margin-top: 1rem; border: 1px dashed var(--line-2); border-radius: 12px; padding: .7rem .85rem; color: var(--muted); font-size: .92rem; }
+  .how b { color: var(--text); }
+  .tasks { list-style: none; margin: 1.1rem 0 0; padding: 0; display: grid; gap: 0; }
+  .task { display: grid; grid-template-columns: 32px minmax(0, 1fr); gap: .8rem; position: relative; padding-bottom: 1.3rem; }
+  .task:not(:last-child)::before { content: ""; position: absolute; left: 15px; top: 34px; bottom: 4px; width: 2px; background: var(--line-2); }
+  .task-n { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: var(--card-2); border: 1px solid var(--line-2); font-weight: 800; font-size: .88rem; color: var(--accent-2); }
+  .task-c { min-width: 0; padding-top: .1rem; }
+  .where { display: inline-block; font-size: .68rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; border-radius: 999px; padding: .12rem .55rem; }
+  .w-here { background: rgba(255,138,61,.14); color: #ffb98a; }
+  .w-ai { background: rgba(96,165,250,.16); color: #93c5fd; }
+  .w-editor, .w-phone { background: rgba(167,139,250,.16); color: #c4b5fd; }
+  .task-t { font-weight: 700; color: var(--text); font-size: 1.02rem; margin-top: .3rem; }
+  .task-b > :first-child { margin-top: .45rem; }
+  .task-b .fl2 { margin-top: .6rem; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .wm { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem; margin-top: 1.2rem; padding-top: 1rem; border-top: 1px solid var(--line); }
+  .wm > div { min-width: 0; padding: .1rem 0 .1rem .8rem; border-left: 3px solid var(--line-2); }
+  .wm > div:only-child { grid-column: 1 / -1; }
+  .wm strong { font-size: .74rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+  .wm .miss { border-left-color: var(--accent-3); }
+  .wm .miss strong { color: var(--accent-3); }
+  .st .wm p { margin-top: .2rem; font-size: .92rem; }
+  @media (max-width: 640px) { .wm { grid-template-columns: minmax(0, 1fr); } }
+  .chk { list-style: none; margin: .7rem 0 0; padding: 0; display: grid; gap: .5rem; }
+  .chk li { display: flex; gap: .7rem; align-items: flex-start; border: 1px solid var(--line-2); border-radius: 12px; padding: .7rem .8rem; background: var(--bg); transition: border-color .2s, background .2s; }
+  .chk li.on { border-color: rgba(74,222,128,.45); background: rgba(74,222,128,.06); }
+  .chk input { flex: none; width: 20px; height: 20px; margin: .15rem 0 0; accent-color: #4ade80; cursor: pointer; }
+  .chk label { cursor: pointer; color: var(--muted); font-size: .95rem; min-width: 0; }
+  .chk li.on label > b { text-decoration: line-through; text-decoration-color: rgba(134,239,172,.7); }
+  .st h2:focus, .st h2:focus-visible { outline: none; }
+  .drec { margin-top: 1.2rem; border: 1px solid rgba(74,222,128,.4); background: rgba(74,222,128,.06); border-radius: 14px; padding: .9rem 1rem; }
+  .drec > strong { display: block; font-size: .76rem; letter-spacing: .1em; text-transform: uppercase; color: #86efac; }
+  .st .drec p { margin-top: .4rem; }
+  .drec .btn { margin-top: .8rem; white-space: normal; max-width: 100%; text-align: center; }
   .note { margin-top: 1rem; border: 1px solid rgba(255,194,75,.4); background: rgba(255,194,75,.06); border-radius: 12px; padding: .7rem .85rem; }
   .note strong { display: block; font-size: .74rem; letter-spacing: .1em; text-transform: uppercase; color: var(--accent-2); }
   .st .note p { margin-top: .25rem; color: #dfe5f0; }
@@ -216,7 +256,7 @@
   };
 
   var S = { name: "", role: "", c0: "", c1: "", c2: "", p0n: "", p0d: "", p1n: "", p1d: "", p2n: "", p2d: "", email: "",
-            ai: "claude", path: "simple", pal: "mint", mode: "dark", accent: "", font: "clean", done: {}, cur: 1 };
+            ai: "claude", path: "simple", pal: "mint", mode: "dark", accent: "", font: "clean", tools: {}, done: {}, cur: 1 };
   try { var sv = JSON.parse(localStorage.getItem("by-v2") || "null"); if (sv) for (var k in S) if (sv[k] !== undefined) S[k] = sv[k]; } catch (e) {}
   function save() { try { localStorage.setItem("by-v2", JSON.stringify(S)); } catch (e) {} }
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (m) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]; }); }
@@ -304,6 +344,14 @@
   }
   function promptBox(n, name) { return "<div class='prompt'><div class='prompt-h'><span>" + name + " · for " + AIS[S.ai].n + "</span><button class='copy' type='button' data-p='" + n + "'>Copy</button></div><pre id='pp" + n + "'></pre><button class='prompt-more' type='button' data-more='1'>Show the whole prompt</button></div>"; }
   function paste(html) { return "<div class='paste' role='note'><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'><path d='M9 4h6a1 1 0 0 1 1 1v1H8V5a1 1 0 0 1 1-1zM8 6H6a1 1 0 0 0-1 1v13a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-2'/><path d='M9 13h6M9 17h4'/></svg><p>" + html + "</p></div>"; }
+  var WHERE = { here: "On this page", editor: "In your code editor", phone: "On your phone" };
+  function task(n, where, title, body) {
+    var lab = where === "ai" ? "In " + AIS[S.ai].n : WHERE[where];
+    return "<li class='task'><span class='task-n' aria-hidden='true'>" + n + "</span><div class='task-c'><span class='where w-" + where + "'>" + lab + "</span><div class='task-t'><span class='sr'>Task " + n + ": </span>" + title + "</div>" + (body ? "<div class='task-b'>" + body + "</div>" : "") + "</div></li>";
+  }
+  function tasks(arr) { return "<ol class='tasks'>" + arr.join("") + "</ol>"; }
+  function howWorks() { return "<div class='how'><b>How each step works:</b> fill in what's asked here, copy the prompt, paste it into " + AIS[S.ai].n + ", then bring the answer back here. The labels tell you where each part happens.</div>"; }
+  function domainRec() { return "<div class='drec'><strong>Recommended · your own domain</strong><p>An address like <b>yourname.com</b> looks more finished than a free one and stays yours if you change hosts. About $16 a year at Amazon Route 53, plus $0.50 a month for DNS.*</p><a class='btn btn-ghost' href='../domain/'>Bonus tutorial: get yourname.com</a><p class='src'>*Prices as of November 2026.</p></div>"; }
   function hood(title, html) { return "<div class='hood'><strong>Under the hood · " + title + "</strong>" + html + "</div>"; }
 
   function cmpHtml() {
@@ -312,7 +360,7 @@
       ["Previewing the page", "Artifacts panel runs the page beside the chat.", "Canvas panel shows and edits the page.", "Canvas panel, included on the free plan."],
       ["Working in your code", "Claude Code. Needs a paid plan.", "Codex. Limited on the free plan.", "Antigravity. Open to free accounts."],
       ["Free plan", "Sonnet and Haiku models, with file creation.", "GPT-6 Luna model, with limits on coding tools.", "Flash-Lite model with lower limits."],
-      ["First paid step", "Pro, $20 a month.", "Plus, $20 a month. Go is $8.", "AI Pro, $19.99 a month. AI Plus is $4.99."]
+      ["First paid step", "Pro, $20 a month.*", "Plus, $20 a month. Go is $8.*", "AI Pro, $19.99 a month. AI Plus is $4.99.*"]
     ];
     var h = "<div class='cmp'>";
     ["claude", "chatgpt", "gemini"].forEach(function (id, i) {
@@ -320,7 +368,7 @@
       rows.forEach(function (r) { h += "<div><dt>" + r[0] + "</dt><dd>" + r[i + 1] + "</dd></div>"; });
       h += "</dl></div>";
     });
-    return h + "</div><p class='src'>Last checked " + CHECKED + ". Plans and models change every few months, so confirm on each company's pricing page. Sources: <a href='https://dataaspirant.com/blog/chatgpt-vs-claude-vs-gemini/' target='_blank' rel='noopener'>Dataaspirant</a>, <a href='https://techjournal.org/claude-vs-chatgpt-vs-gemini-2026' target='_blank' rel='noopener'>Tech Journal</a>.</p>";
+    return h + "</div><p class='src'>*Prices as of November 2026. Plans and models change every few months, so confirm on each company's pricing page. Sources: <a href='https://dataaspirant.com/blog/chatgpt-vs-claude-vs-gemini/' target='_blank' rel='noopener'>Dataaspirant</a>, <a href='https://techjournal.org/claude-vs-chatgpt-vs-gemini-2026' target='_blank' rel='noopener'>Tech Journal</a>.</p>";
   }
   function modeSeg() { return "<div class='seg' role='group' aria-label='Color mode'><button type='button' data-set='mode' data-v='light' aria-pressed='" + (S.mode === "light") + "'>Light</button><button type='button' data-set='mode' data-v='dark' aria-pressed='" + (S.mode === "dark") + "'>Dark</button></div>"; }
   function lookFields() {
@@ -333,13 +381,16 @@
     return h + previewHtml("Live preview of your site");
   }
   function toolsHtml() {
-    var h = "<ol><li><b>A GitHub account.</b> Free at <a href='https://github.com' target='_blank' rel='noopener'>github.com</a>.</li><li><b>A code editor.</b> <a href='https://code.visualstudio.com' target='_blank' rel='noopener'>Visual Studio Code</a> is free and the most common choice.</li>";
-    if (S.path !== "simple") h += "<li><b>Node.js.</b> Install the LTS version from <a href='https://nodejs.org' target='_blank' rel='noopener'>nodejs.org</a>.</li><li><b>A Vercel account.</b> Sign up free at <a href='https://vercel.com' target='_blank' rel='noopener'>vercel.com</a> with your GitHub account.</li>";
-    return h + "<li><b>" + AIS[S.ai].n + ".</b> " + AIS[S.ai].open + "</li></ol>";
+    var items = [["github", "<b>A GitHub account.</b> Free at <a href='https://github.com' target='_blank' rel='noopener'>github.com</a>."],
+                 ["editor", "<b>A code editor.</b> <a href='https://code.visualstudio.com' target='_blank' rel='noopener'>Visual Studio Code</a> is free and the most common choice."]];
+    if (S.path !== "simple") items.push(["node", "<b>Node.js.</b> Install the LTS version from <a href='https://nodejs.org' target='_blank' rel='noopener'>nodejs.org</a>."], ["vercel", "<b>A Vercel account.</b> Sign up free at <a href='https://vercel.com' target='_blank' rel='noopener'>vercel.com</a> with your GitHub account."]);
+    items.push(["ai", "<b>" + AIS[S.ai].n + ".</b> " + AIS[S.ai].open]);
+    var tl = S.tools || {};
+    return "<p>Tick each one off as you set it up.</p><ul class='chk'>" + items.map(function (it) { var on = !!tl[it[0]]; return "<li class='" + (on ? "on" : "") + "'><input type='checkbox' id='tl_" + it[0] + "' data-tool='" + it[0] + "'" + (on ? " checked" : "") + " /><label for='tl_" + it[0] + "'>" + it[1] + "</label></li>"; }).join("") + "</ul>";
   }
   function launchHtml() {
-    if (S.path === "simple") return "<ol><li>Create a <b>public</b> repository on GitHub and upload your files, with <code>index.html</code> at the top level.</li><li>Open the repository's Settings, choose Pages, and deploy from your main branch.</li><li>Wait a minute or two, then open the address GitHub shows you.</li><li>Optional: buy a domain with your name and connect it under the same Pages settings.</li></ol><p>GitHub's guide: <a href='https://docs.github.com/en/pages/quickstart' target='_blank' rel='noopener'>GitHub Pages quickstart</a>.</p>";
-    return "<ol><li>Push your project to a GitHub repository.</li><li>In Vercel, choose Add New Project and import that repository. Vercel detects " + PATHS[S.path].n + " and fills in the build settings.</li><li>Deploy, then open the address Vercel gives you.</li><li>Optional: buy a domain with your name and add it under the project's Domains settings.</li></ol><p>Vercel's free Hobby plan is for personal, non-commercial sites, which covers a profile site. Check the current terms: <a href='https://vercel.com/docs/plans/hobby' target='_blank' rel='noopener'>Vercel Hobby plan</a>.</p>";
+    if (S.path === "simple") return "<ol><li>Create a <b>public</b> repository on GitHub and upload your files, with <code>index.html</code> at the top level.</li><li>Open the repository's Settings, choose Pages, and deploy from your main branch.</li><li>Wait a minute or two, then open the address GitHub shows you.</li><li>Recommended: connect a domain with your name. See the bonus tutorial below.</li></ol><p>GitHub's guide: <a href='https://docs.github.com/en/pages/quickstart' target='_blank' rel='noopener'>GitHub Pages quickstart</a>.</p>";
+    return "<ol><li>Push your project to a GitHub repository.</li><li>In Vercel, choose Add New Project and import that repository. Vercel detects " + PATHS[S.path].n + " and fills in the build settings.</li><li>Deploy, then open the address Vercel gives you.</li><li>Recommended: connect a domain with your name. See the bonus tutorial below.</li></ol><p>Vercel's free Hobby plan is for personal, non-commercial sites, which covers a profile site. Check the current terms: <a href='https://vercel.com/docs/plans/hobby' target='_blank' rel='noopener'>Vercel Hobby plan</a>.</p>";
   }
   function hoodBuild() {
     if (S.path === "simple") return "<p><code>index.html</code> is the page's structure: a header, a main area and sections, each tag saying what its content <i>is</i>. <code>styles.css</code> decides how it looks. Your colors sit at the top as CSS variables, such as <code>--accent</code>, so changing one line recolors the whole site.</p><p>The browser reads both files directly. There is no build step, which is why GitHub Pages can serve them as they are.</p>";
@@ -359,11 +410,20 @@
   var PARTS = ["Plan", "Choose", "Build", "Check", "Launch"];
   var STEPS = [
     { pt: 0, t: "Decide what to prove", lead: "Before you open any tool, decide the three things a hiring manager should believe after two minutes on your site.",
-      body: function () { return "<div class='fl2'>" + inp("name", "Your name", "Alex Kim") + inp("role", "The role you want", "Software Engineer") + "</div><h3>Get your claims</h3><p>Copy this prompt into your AI assistant, then <span class='must'>paste your résumé under it.</span></p>" + promptBox(1, "Positioning prompt") + paste("Before you send it: <b>paste your full résumé below the prompt.</b> Without it, the AI has nothing to base your claims on and will guess.") + "<h3>Write down the three you settle on</h3><div class='fl'>" + inp("c0", "Claim 1 <small>(your strongest)</small>", "I cut page load times by measuring first") + inp("c1", "Claim 2", "") + inp("c2", "Claim 3", "") + "</div>"; },
+      body: function () { return howWorks() + tasks([
+        task(1, "here", "Fill in your name and the role you want", "<div class='fl2'>" + inp("name", "Your name", "Alex Kim") + inp("role", "The role you want", "Software Engineer") + "</div>"),
+        task(2, "here", "Copy the prompt", promptBox(1, "Positioning prompt")),
+        task(3, "ai", "Paste the prompt, add your résumé, and send", paste("<b>Paste your full résumé below the prompt</b> before you send it. Without it, the AI has nothing to base your claims on and will guess.")),
+        task(4, "here", "Read the answer, then type the three claims you settle on", "<p>Talk it through with the AI until you're happy, then type the final three here. They fill in the later prompts and your site preview.</p><div class='fl'>" + inp("c0", "Claim 1 <small>(your strongest)</small>", "I cut page load times by measuring first") + inp("c1", "Claim 2", "") + inp("c2", "Claim 3", "") + "</div>")
+      ]); },
       note: "Stay in this one conversation through the build steps. The AI builds on what you decide here.",
       why: "A site without a point is just a longer résumé. Three claims give every page a job.", miss: "Claims nobody could check, such as “hard worker”. If a stranger can't verify it from your site, rewrite it." },
     { pt: 0, t: "Pick your proof", lead: "Choose one or two projects that back up each claim. Cut the rest.",
-      body: function () { return "<p>In the AI chat, list everything you've built: work, school, side projects, open source. Let the AI match projects to claims, then make the final cut yourself.</p>" + promptBox(2, "Project picker prompt") + paste("Before you send it: <b>list every project below the prompt</b>, one line each with what it was and what you did.") + "<h3>The projects you're keeping</h3><div class='fl'>" + [0, 1, 2].map(function (i) { return "<div class='proj-f'>" + inp("p" + i + "n", "Project " + (i + 1) + (i ? " <small>(optional)</small>" : ""), i ? "" : "Bakery storefront") + inp("p" + i + "d", "One line: the problem and what changed", i ? "" : "Cut load time on phones from six seconds to two") + "</div>"; }).join("") + "</div>"; },
+      body: function () { return tasks([
+        task(1, "here", "Copy the prompt", "<p>It already includes your claims from step 1.</p>" + promptBox(2, "Project picker prompt")),
+        task(2, "ai", "Paste the prompt, list your projects, and send", paste("<b>List every project below the prompt</b>, one line each: what it was and what you did. Work, school, side projects and open source all count.")),
+        task(3, "here", "Read the answer, then type the projects you're keeping", "<p>Make the final cut yourself.</p><div class='fl'>" + [0, 1, 2].map(function (i) { return "<div class='proj-f'>" + inp("p" + i + "n", "Project " + (i + 1) + (i ? " <small>(optional)</small>" : ""), i ? "" : "Bakery storefront") + inp("p" + i + "d", "One line: the problem and what changed", i ? "" : "Cut load time on phones from six seconds to two") + "</div>"; }).join("") + "</div>")
+      ]); },
       note: "If a claim has no proof, you have two honest choices: build the proof or drop the claim.",
       why: "Hiring managers skim. Your weakest project sets the impression as much as your strongest.", miss: "Keeping a project because it took a long time. Effort is not evidence." },
     { pt: 0, t: "Sketch the pages", lead: "Four pages are enough. Know what goes on each before you build.",
@@ -385,36 +445,71 @@
       hood: function () { return hood("Git and GitHub", "<p>Git keeps the history of every change you make, so you can always go back. GitHub stores that history online and lets you share it. Your repository is also proof: employers can open it and read your code.</p>"); },
       why: "Set up once now, and every later step is copy, paste and check." },
     { pt: 2, t: "Write the brief", lead: "Agree on the plan before any code. Read the brief, correct it, then approve it.",
-      body: function () { return "<p>This prompt already includes your claims, projects, build path, colors and fonts from earlier steps.</p>" + promptBox(8, "Site brief prompt"); },
+      body: function () { return tasks([
+        task(1, "here", "Copy the prompt", "<p>It already includes your claims, projects, build path, colors and fonts.</p>" + promptBox(8, "Site brief prompt")),
+        task(2, "ai", "Paste it into the same chat and send"),
+        task(3, "ai", "Read the brief, correct it, then approve it", "<p>Reply with anything that's wrong or missing. When it's right, reply \u201cApproved.\u201d</p>")
+      ]); },
       note: "Every prompt here has four parts: context, constraints, one clear ask, and what good looks like. Notice them. That pattern is the skill.",
       hood: function () { return hood("why a brief", "<p>A brief is a spec, the same thing a ticket is on an engineering team. Writing it first means the AI builds what you decided, not what it guessed. It's also the document you'd hand a teammate.</p>"); },
       why: "This is how work gets handed to a person, too.", miss: "Skipping straight to “build me a portfolio”. A generic ask gets a generic site." },
     { pt: 2, t: "Build the home page", lead: "Build one page, read every line of it, then ask for changes one at a time.",
-      body: function () { return promptBox(9, "Home page prompt"); },
+      body: function () { return tasks([
+        task(1, "here", "Copy the prompt", promptBox(9, "Home page prompt")),
+        task(2, "ai", "Paste it into the same chat and send"),
+        task(3, "ai", "Read every line, then ask for changes", "<p>Open the preview. Ask for one change at a time, in plain words: what's wrong and what you want instead.</p>"),
+        task(4, "editor", "Save the files", "<p>Copy each file into your code editor and save it in your project folder.</p>")
+      ]); },
       hood: function () { return hood("your files", hoodBuild()); },
       why: "One page at a time keeps the AI focused and keeps you able to check its work.", miss: "Accepting the first draft. The first draft is the AI's site. The fifth draft is yours." },
     { pt: 2, t: "Add your projects", lead: "One page per project: the problem, what you built, the result.",
-      body: function () { return "<p>Repeat this prompt for each project. Answer the AI's questions with real details, and say “I don't have a number” when you don't.</p>" + promptBox(10, "Project page prompt"); },
+      body: function () { return tasks([
+        task(1, "here", "Copy the prompt", promptBox(10, "Project page prompt")),
+        task(2, "ai", "Paste it into the same chat and send"),
+        task(3, "ai", "Answer its questions", "<p>Use real details, and say \u201cI don't have a number\u201d when you don't.</p>"),
+        task(4, "editor", "Save the page, then repeat for each project")
+      ]); },
       hood: function () { return hood("pages and links", hoodRoutes()); },
       why: "A project told as problem, build and result shows how you think. A list of technologies does not.", miss: "Writing “we” for everything. Say what you did." },
     { pt: 2, t: "Make one skill clickable", lead: "Build a small demo a visitor can try in under a minute.",
-      body: function () { return promptBox(11, "Clickable skill prompt"); },
+      body: function () { return tasks([
+        task(1, "here", "Copy the prompt", promptBox(11, "Clickable skill prompt")),
+        task(2, "ai", "Paste it into the same chat and send"),
+        task(3, "ai", "Pick one idea, then read its walkthrough", "<p>Make sure you could explain how it works without the AI.</p>"),
+        task(4, "editor", "Save it to your site")
+      ]); },
       note: "This is the step that gets a site remembered, and the one most people skip.",
       hood: function () { return hood("JavaScript events", "<p>Interactive pages run on <b>events</b>. Your code says “when this button is clicked, run this function” with <code>addEventListener</code>. The function reads what changed, updates a value, and redraws part of the page. Almost every demo is that loop.</p>"); },
       why: "Anyone can type “strong in accessibility”. A working contrast checker on your site proves it.", miss: "Building something huge. Small and finished wins." },
     { pt: 3, t: "Make it work on a phone", lead: "Recruiters open links on their phones. Test at phone width and fix what breaks.",
-      body: function () { return promptBox(12, "Phone check prompt") + "<p style='margin-top:.8rem'>Then open the site on your actual phone and tap every link.</p>"; },
+      body: function () { return tasks([
+        task(1, "here", "Copy the prompt", promptBox(12, "Phone check prompt")),
+        task(2, "ai", "Paste it into the same chat and send"),
+        task(3, "editor", "Apply the fixes"),
+        task(4, "phone", "Open the site on your own phone and tap every link")
+      ]); },
       hood: function () { return hood("responsive design", "<p>Three pieces make a page fit any screen. The <code>viewport</code> tag tells phones not to zoom out. Flexible widths, such as <code>width: min(100%, 880px)</code>, let boxes shrink. <b>Media queries</b>, such as <code>@media (max-width: 700px)</code>, change the layout below a set width, like stacking columns.</p>"); },
       why: "A site that scrolls sideways on a phone looks unfinished.", miss: "Testing only by shrinking your browser window. Use a real phone too." },
     { pt: 3, t: "Know your code", lead: "If your site says it, you said it. Check every fact, then make sure you can explain every file.",
-      body: function () { return "<ol><li>Read every sentence out loud. Delete anything you wouldn't say in an interview.</li><li>Check every number, date, title and employer against your résumé.</li><li>Click every link.</li></ol><h3>Then let the AI quiz you</h3>" + promptBox(13, "Code quiz prompt"); },
+      body: function () { return tasks([
+        task(1, "here", "Check every fact yourself", "<ol><li>Read every sentence out loud. Delete anything you wouldn't say in an interview.</li><li>Check every number, date, title and employer against your résumé.</li><li>Click every link.</li></ol>"),
+        task(2, "here", "Copy the quiz prompt", promptBox(13, "Code quiz prompt")),
+        task(3, "ai", "Paste it into the same chat, then answer each question", "<p>Don't look at the code first. The point is to find what you can't explain yet.</p>")
+      ]); },
       note: "This is the standard I hold engineers to: use AI for anything, and answer for everything. An interviewer will ask how your site works.",
       why: "AI assistants state wrong things confidently, and an interviewer can tell when you can't explain your own work.", miss: "An invented statistic. One made-up number can cost you the interview." },
     { pt: 3, t: "Ask for a review", lead: "Get the hard feedback now, from the employer's side.",
-      body: function () { return "<p>Start a <b>new</b> chat so the AI has no memory of building the site. Paste the prompt, then <span class='must'>your site's text under it.</span> After that, ask one real person the same four questions.</p>" + promptBox(14, "Hiring manager review prompt") + paste("Before you send it: <b>copy all the text from your live site and paste it below the prompt</b>, or paste the site's address if your assistant can open web pages."); },
+      body: function () { return tasks([
+        task(1, "here", "Copy the prompt", promptBox(14, "Hiring manager review prompt")),
+        task(2, "ai", "Open a <u>new</u> chat, paste the prompt, add your site's text, and send", "<p>A new chat has no memory of building your site, so it judges it fresh.</p>" + paste("<b>Copy all the text from your live site and paste it below the prompt</b>, or paste the site's address if your assistant can open web pages.")),
+        task(3, "editor", "Fix what matters", "<p>Then ask one real person the same four questions.</p>")
+      ]); },
       why: "It's easier to hear it now than to wonder later why nobody called.", miss: "Arguing with the feedback. Fix it or decide not to, then move on." },
     { pt: 4, t: "Put it live", lead: "A link beats an attachment, and it shows you can ship.",
-      body: function () { return launchHtml() + promptBox(15, "Launch prompt"); },
+      body: function () { return tasks([
+        task(1, "here", "Copy the prompt", promptBox(15, "Launch prompt")),
+        task(2, "ai", "Paste it into the same chat and follow along one step at a time")
+      ]) + "<h3>The short version</h3>" + launchHtml() + domainRec(); },
       hood: function () { return hood("deploying", hoodDeploy()); },
       why: "Until it has an address, nobody can see it." },
     { pt: 4, t: "Share it", lead: "The site only works if people open it.",
@@ -432,7 +527,7 @@
     h += st.body();
     if (st.hood) h += st.hood();
     if (st.note) h += "<div class='note'><strong>Coach's note</strong><p>" + st.note + "</p></div>";
-    if (st.why || st.miss) h += "<details class='more'><summary>Why this step matters</summary>" + (st.why ? "<p style='margin-top:.5rem'>" + st.why + "</p>" : "") + (st.miss ? "<div class='miss'><strong>Common mistake</strong><p>" + st.miss + "</p></div>" : "") + "</details>";
+    if (st.why || st.miss) h += "<div class='wm'>" + (st.why ? "<div><strong>Why it matters</strong><p>" + st.why + "</p></div>" : "") + (st.miss ? "<div class='miss'><strong>Common mistake</strong><p>" + st.miss + "</p></div>" : "") + "</div>";
     h += "<div class='nav2'><button type='button' class='back' data-go='" + (i - 1) + "'" + (i === 1 ? " disabled" : "") + ">Back</button><button type='button' class='next' data-done='" + i + "'>" + (i === N ? "Done, see my site" : "Done, next step") + "</button></div></article>";
     return h;
   }
@@ -440,7 +535,7 @@
     var nm = t("name");
     return "<article class='st'><div class='st-k'>Finished</div><h2>" + (nm ? "Nice work, " + esc(nm) + "." : "Nice work.") + " Here's your site.</h2><p class='st-lead'>This preview is built right here in your browser from what you entered. Nothing is sent anywhere. Switch light and dark, try it at phone width, and download it as a starting file.</p>"
       + modeSeg() + previewHtml("Your site")
-      + "<div class='fin-btns'><button type='button' class='btn btn-primary' id='dl'>Download index.html</button><button type='button' class='btn btn-ghost' data-go='6'>Change colors or fonts</button><a class='btn btn-ghost' href='../sample/'>See a finished example</a></div>"
+      + "<div class='fin-btns'><button type='button' class='btn btn-primary' id='dl'>Download index.html</button><button type='button' class='btn btn-ghost' data-go='6'>Change colors or fonts</button><a class='btn btn-ghost' href='../sample/'>See a finished example</a><a class='btn btn-ghost' href='../domain/'>Bonus: get yourname.com</a></div>"
       + hood("the file you download", "<p>It's one HTML file with its CSS inside a <code>&lt;style&gt;</code> tag. Open it in any browser. " + (S.path === "simple" ? "On the Simple Pages path you can upload it to GitHub Pages as it is, then grow it with the build steps." : "On your " + PATHS[S.path].n + " path, paste it into your AI chat as the design reference for your real project.") + "</p><p>Look for the <code>:root</code> block at the top: those variables are your palette. Change one and the whole page follows.</p>")
       + "<div class='why' style='margin-top:1.6rem'><h3>Why I teach it this way</h3><p>I've hired and trained more than 70 engineers. These steps follow the habits I coach on my teams:</p><ul><li><b>Start with the outcome.</b> Decide what the site must prove before you open a tool.</li><li><b>Direct the AI.</b> Give it context, constraints and one clear ask.</li><li><b>Know what you shipped.</b> You answer for every line, whoever typed it.</li><li><b>Ask for honest feedback.</b> Find the weak spots before an employer does.</li></ul><div class='fin-btns'><a class='btn btn-primary' href='../../leadership/'>See how I lead</a><a class='btn btn-ghost' href='../../rubric/'>What I look for in engineers</a></div></div>"
       + "<div class='nav2'><button type='button' class='back' data-go='" + N + "'>Back</button><button type='button' class='back' data-restart='1'>Start over</button></div></article>";
@@ -449,19 +544,34 @@
   function journey() {
     var cnt = [0, 0, 0, 0, 0], tot = [0, 0, 0, 0, 0], curPt = S.cur > N ? -1 : STEPS[S.cur - 1].pt;
     STEPS.forEach(function (s, i) { tot[s.pt]++; if (S.done[i + 1]) cnt[s.pt]++; });
-    document.getElementById("jrParts").innerHTML = PARTS.map(function (p, i) { var first = 1; for (var j = 0; j < N; j++) if (STEPS[j].pt === i) { first = j + 1; break; } return "<button type='button' class='jr-p" + (i === curPt ? " cur" : "") + "' data-go='" + first + "' aria-label='Part " + (i + 1) + ", " + p + ": " + cnt[i] + " of " + tot[i] + " steps done'><i><b style='width:" + (cnt[i] / tot[i] * 100) + "%'></b></i><span>" + p + "</span></button>"; }).join("");
+    document.getElementById("jrParts").innerHTML = PARTS.map(function (p, i) { var first = 1; for (var j = 0; j < N; j++) if (STEPS[j].pt === i) { first = j + 1; break; } var here = "";
+      if (i === curPt) { var idx = S.cur - first; here = "<em class='here' style='left:" + ((idx + 0.5) / tot[i] * 100) + "%' aria-hidden='true'></em>"; }
+      if (S.cur > N && i === 4) here = "<em class='here' style='left:100%' aria-hidden='true'></em>";
+      return "<button type='button' class='jr-p" + (i === curPt ? " cur" : "") + "' data-go='" + first + "'" + (i === curPt ? " aria-current='step'" : "") + " aria-label='Part " + (i + 1) + ", " + p + ": " + cnt[i] + " of " + tot[i] + " steps done" + (i === curPt ? ", you are on step " + S.cur : "") + "'>" + here + "<i><b style='width:" + (cnt[i] / tot[i] * 100) + "%'></b></i><span>" + p + "</span></button>"; }).join("");
     var m = "", last = -1;
     STEPS.forEach(function (s, i) { if (s.pt !== last) { if (last >= 0) m += "</ol>"; m += "<h4>Part " + (s.pt + 1) + " · " + PARTS[s.pt] + "</h4><ol>"; last = s.pt; } m += "<li class='" + (S.done[i + 1] ? "dn" : "") + "'><button type='button' data-go='" + (i + 1) + "' class='" + (S.cur === i + 1 ? "cur" : "") + "'><span class='mk'>" + (S.done[i + 1] ? "✓" : i + 1) + "</span>" + s.t + "</button></li>"; });
-    m += "</ol><ol style='margin-top:.4rem'><li><button type='button' data-go='" + FIN + "' class='" + (S.cur === FIN ? "cur" : "") + "'><span class='mk'>★</span>Your site preview</button></li></ol>";
+    m += "</ol><ol style='margin-top:.4rem'><li><button type='button' data-go='" + FIN + "' class='" + (S.cur === FIN ? "cur" : "") + "'><span class='mk'>★</span>Your site preview</button></li></ol><button type='button' class='restart' data-restart='1'>Start over and clear everything I entered</button>";
     document.getElementById("map").innerHTML = m;
   }
   function render(scroll) {
     stage.innerHTML = S.cur > N ? finCard() : stepCard(S.cur);
     fillPrompts(); journey(); refreshPreview();
-    if (scroll) { var y = document.getElementById("jr").offsetTop - 64; if (window.scrollY > y) window.scrollTo({ top: y }); var h = stage.querySelector("h2"); if (h) { h.setAttribute("tabindex", "-1"); h.focus({ preventScroll: true }); } }
+    if (scroll) {
+      /* Put the top of the new step card just under the sticky menu and progress bar.
+         (The progress bar is sticky, so its offsetTop can't be used here.) */
+      var card = stage.querySelector(".st"), hdr = document.querySelector("header.nav"), jr = document.getElementById("jr");
+      var y = card.getBoundingClientRect().top + window.scrollY - (hdr ? hdr.offsetHeight : 64) - jr.offsetHeight - 12;
+      window.scrollTo({ top: Math.max(0, y), behavior: "instant" });
+      var h = stage.querySelector("h2"); if (h) { h.setAttribute("tabindex", "-1"); h.focus({ preventScroll: true }); }
+    }
   }
   function closeMap() { var b = document.getElementById("jrAll"); document.getElementById("map").classList.remove("open"); b.setAttribute("aria-expanded", "false"); b.textContent = "All steps"; }
-  function go(n) { S.cur = Math.max(1, Math.min(FIN, n)); save(); closeMap(); render(true); try { history.replaceState(null, "", "#step-" + S.cur); } catch (e) {} }
+  function go(n, fromHistory) {
+    S.cur = Math.max(1, Math.min(FIN, n)); save(); closeMap(); render(true);
+    /* Each step gets its own history entry, so the browser's Back button goes back one step. */
+    if (!fromHistory) { try { if (location.hash !== "#step-" + S.cur) history.pushState(null, "", "#step-" + S.cur); } catch (e) {} }
+  }
+  window.addEventListener("popstate", function () { var m = /^#step-(\d+)$/.exec(location.hash); go(m ? +m[1] : 1, true); });
   function rerenderInPlace() { var y = window.scrollY; render(false); window.scrollTo(0, y); }
 
   /* ---------- Events ---------- */
@@ -469,7 +579,7 @@
     var el;
     if ((el = e.target.closest("[data-go]"))) { go(+el.getAttribute("data-go")); return; }
     if ((el = e.target.closest("[data-done]"))) { var d = +el.getAttribute("data-done"); S.done[d] = 1; go(d + 1); return; }
-    if ((el = e.target.closest("[data-restart]"))) { if (confirm("Clear everything you entered and start again from step 1?")) { try { localStorage.removeItem("by-v2"); } catch (x) {} try { history.replaceState(null, "", location.pathname); } catch (x) {} location.reload(); } return; }
+    if ((el = e.target.closest("[data-restart]"))) { if (confirm("Start over?\n\nThis resets all your progress and erases everything you entered: your name, claims, projects and choices. It can't be undone.")) { try { localStorage.removeItem("by-v2"); } catch (x) {} location.href = "./#step-1"; location.reload(); } return; }
     if ((el = e.target.closest("[data-set]"))) { S[el.getAttribute("data-set")] = el.getAttribute("data-v"); save(); rerenderInPlace(); return; }
     if ((el = e.target.closest("[data-pw]"))) { var w = el.closest(".pvw"); w.classList.toggle("phone", el.getAttribute("data-pw") === "phone"); w.querySelectorAll("[data-pw]").forEach(function (b) { b.setAttribute("aria-pressed", String(b === el)); }); return; }
     if ((el = e.target.closest("[data-more]"))) { var pb = el.closest(".prompt"); pb.classList.toggle("full"); el.textContent = pb.classList.contains("full") ? "Show less" : "Show the whole prompt"; return; }
@@ -489,9 +599,14 @@
     if (k) { S[k] = e.target.value; save(); fillPrompts(); refreshPreview(); return; }
     if (e.target.id === "accIn") { S.accent = e.target.value; save(); fillPrompts(); refreshPreview(); var cr = document.getElementById("cr"); if (cr) cr.innerHTML = crHtml(); }
   });
-  document.addEventListener("change", function (e) { if (e.target.id === "accIn") rerenderInPlace(); });
+  document.addEventListener("change", function (e) {
+    if (e.target.id === "accIn") { rerenderInPlace(); return; }
+    var tk = e.target.getAttribute && e.target.getAttribute("data-tool");
+    if (tk) { S.tools = S.tools || {}; if (e.target.checked) S.tools[tk] = 1; else delete S.tools[tk]; save(); e.target.parentNode.classList.toggle("on", e.target.checked); }
+  });
 
   var hm = /^#step-(\d+)$/.exec(location.hash); if (hm) S.cur = Math.max(1, Math.min(FIN, +hm[1]));
+  try { history.replaceState(null, "", "#step-" + S.cur); } catch (e) {}
   render(false);
 })();
 </script>
