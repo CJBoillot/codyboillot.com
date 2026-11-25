@@ -104,8 +104,8 @@
     padding: 0.5rem 1rem; border-radius: 999px; font-weight: 600; font-size: 0.88rem;
     background: var(--grad); color: #1a1206 !important;
   }
-  @media (max-width: 720px) { .nav-links a:not(.nav-cta) { display: none; } }
-  /* Highlighted link to /rubric/ ("What I look for in engineers in the AI age") */
+  @media (max-width: 860px) { .nav-links a:not(.nav-cta) { display: none; } }
+  /* Highlighted link to /BuildYours/ ("Build Your Profile Site") */
   .nav-links a.nav-hl {
     color: var(--accent-2); font-weight: 600; white-space: nowrap;
     padding: .42rem .85rem; border-radius: 999px;
@@ -115,11 +115,12 @@
   .nav-links a.nav-hl:hover, .nav-links a.nav-hl[aria-current="page"] { color: #1a1206; background: var(--grad); border-color: transparent; }
   .nav-hl .nl-2 { display: none; }
   @media (max-width: 1000px) { .nav-hl .nl-1 { display: none; } }
-  @media (max-width: 720px) {
+  @media (max-width: 860px) {
     .nav-links { gap: .6rem; }
     .nav-links a.nav-hl { display: inline-block; font-size: .8rem; padding: .36rem .65rem; }
   }
-  @media (max-width: 400px) { .nav-links a.nav-cta { font-size: .8rem; padding: .42rem .7rem; } }
+  @media (max-width: 400px) { .nav-links a.nav-cta { font-size: .8rem; padding: .42rem .7rem; } .nav-links { gap: .4rem; } .brand { font-size: .95rem; } }
+  @media (max-width: 340px) { .nav-links a.nav-hl, .nav-links a.nav-cta { font-size: .74rem; padding: .34rem .55rem; } .brand { font-size: .88rem; } }
 
   /* ---------- Buttons ---------- */
   .btn {
