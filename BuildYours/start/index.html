@@ -18,6 +18,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="../../assets/site.css" />
+<script src="../domaincheck.js"></script>
 <style>
   .by { padding-bottom: clamp(3rem, 7vw, 5rem); }
   .by h1 { font-size: clamp(1.8rem, 4.2vw, 2.6rem); font-weight: 800; margin-top: .6rem; }
@@ -176,6 +177,15 @@
   .add { margin-top: .7rem; background: none; border: 1px dashed var(--line-2); color: var(--accent-2); border-radius: 10px; padding: .55rem .9rem; font: inherit; font-size: .9rem; font-weight: 600; cursor: pointer; width: 100%; text-align: left; }
   .add:hover { border-color: var(--accent-2); }
   .st .cap { margin-top: .6rem; font-size: .85rem; color: var(--muted-2); }
+  .dck { margin-top: .7rem; font-size: .9rem; color: var(--muted); display: flex; flex-wrap: wrap; align-items: center; gap: .4rem .6rem; }
+  .dck:empty { display: none; }
+  .dck b { color: var(--text); }
+  .dck-b { background: none; border: 1px solid rgba(74,222,128,.5); color: #86efac; border-radius: 999px; padding: .3rem .8rem; font: inherit; font-size: .82rem; font-weight: 600; cursor: pointer; }
+  .dck a { color: var(--accent-2); font-size: .85rem; }
+  .dc-b { display: inline-block; border-radius: 999px; padding: .15rem .6rem; font-size: .78rem; font-weight: 700; }
+  .dc-free { background: rgba(74,222,128,.15); color: #86efac; }
+  .dc-taken { background: rgba(255,94,98,.15); color: #fca5a5; }
+  .dc-wait { background: rgba(255,255,255,.08); color: var(--muted); }
   .note { margin-top: 1rem; border: 1px solid rgba(255,194,75,.4); background: rgba(255,194,75,.06); border-radius: 12px; padding: .7rem .85rem; }
   .note strong { display: block; font-size: .74rem; letter-spacing: .1em; text-transform: uppercase; color: var(--accent-2); }
   .st .note p { margin-top: .25rem; color: #dfe5f0; }
@@ -470,10 +480,18 @@
   }
   function pathPick() { return "<h3>Build path</h3>" + chips("path", PATHS, "s", "g3") + "<ul class='b' style='margin-top:.8rem'><li><b>Simple Pages</b> is free, fast and has nothing to maintain. This site is built this way.</li><li><b>React + Vite</b> suits front-end candidates who want a modern framework visible in their code.</li><li><b>Next.js</b> suits full-stack candidates, or anyone who expects to add a blog, forms or data later.</li></ul>"; }
 
+  /* Quick check: is the reader's name free as a .com? (uses ../domaincheck.js) */
+  function dckDomain() { return window.DomainCheck ? (window.DomainCheck.suggest(S.name)[0] || "") : ""; }
+  function dckHtml() {
+    var d = dckDomain();
+    if (!d) return "";
+    return "<span>Want <b>" + esc(d) + "</b> as your address?</span> <button type='button' class='dck-b' data-dck='" + esc(d) + "'>Check if it's free</button> <span class='dck-r' aria-live='polite'></span> <a href='../domain/#check'>More options</a>";
+  }
+
   /* Every page: fill in (top), learn (middle), copy and go (bottom). */
   var STEPS = [
     { pt: 0, t: "Get set up", lead: "Tell us who you are, pick your AI and build path, and set up your tools.",
-      fill: function () { return "<div class='fl2'>" + inp("name", "Your name", "Alex Kim") + inp("role", "The role you want", "Software Engineer") + "</div><h3>Your AI assistant</h3>" + chips("ai", AIS, "by", "g3") + "<details class='more' style='border:0;padding-top:.2rem'><summary>How they compare</summary>" + cmpHtml() + "</details>" + pathPick() + "<h3>Set up your tools</h3><p>Tick each one off as you set it up.</p>" + toolsHtml(); },
+      fill: function () { return "<div class='fl2'>" + inp("name", "Your name", "Alex Kim") + inp("role", "The role you want", "Software Engineer") + "</div><div class='dck' id='dck'>" + dckHtml() + "</div><h3>Your AI assistant</h3>" + chips("ai", AIS, "by", "g3") + "<details class='more' style='border:0;padding-top:.2rem'><summary>How they compare</summary>" + cmpHtml() + "</details>" + pathPick() + "<h3>Set up your tools</h3><p>Tick each one off as you set it up.</p>" + toolsHtml(); },
       learn: function () { return hood("how this works", "<p>Every page has the same shape. <b>Fill in</b> the top. <b>Copy</b> the prompt at the bottom, which is built from your answers. <b>Paste</b> it into " + ai() + ". The next page starts by asking what " + ai() + " gave you back.</p>") + hood("Git and GitHub", "<p>Git keeps the history of every change you make, so you can always go back. GitHub stores that history online and lets you share it. Your repository is also proof: employers can open it and read your code.</p>"); },
       note: "I use Claude and built this site with it, so it's the only one I can vouch for firsthand. The comparison comes from the published sources linked under it.",
       why: "A hiring manager sees the result, not the framework. The simplest path that proves your skills is the right one.", miss: "Choosing a heavy framework to look impressive, then never finishing. A live simple site beats an unfinished complex one.",
@@ -642,13 +660,19 @@
       else { var m = nP(); for (var r = ix; r < m - 1; r++) { S["p" + r + "n"] = S["p" + (r + 1) + "n"]; S["p" + r + "d"] = S["p" + (r + 1) + "d"]; } S["p" + (m - 1) + "n"] = ""; S["p" + (m - 1) + "d"] = ""; S.np = m - 1; }
       save(); rerenderInPlace(); refreshPreview(); return;
     }
+    if ((el = e.target.closest("[data-dck]"))) {
+      var dd = el.getAttribute("data-dck"), rr = el.parentNode.querySelector(".dck-r");
+      rr.innerHTML = window.DomainCheck.badge(dd, "checking");
+      window.DomainCheck.check(dd).then(function (st) { rr.innerHTML = window.DomainCheck.badge(dd, st); });
+      return;
+    }
     if (e.target.id === "accReset") { S.accent = ""; save(); rerenderInPlace(); return; }
     if (e.target.id === "dl") { var blob = new Blob([makeSite()], { type: "text/html" }); var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "index.html"; document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500); return; }
     if (e.target.id === "jrAll") { var m = document.getElementById("map"), o = m.classList.toggle("open"); e.target.setAttribute("aria-expanded", String(o)); e.target.textContent = o ? "Close" : "All steps"; }
   });
   document.addEventListener("input", function (e) {
     var k = e.target.getAttribute && e.target.getAttribute("data-k");
-    if (k) { S[k] = e.target.value; save(); fillPrompts(); refreshPreview(); return; }
+    if (k) { S[k] = e.target.value; save(); fillPrompts(); refreshPreview(); if (k === "name") { var dk = document.getElementById("dck"); if (dk) dk.innerHTML = dckHtml(); } return; }
     if (e.target.id === "accIn") { S.accent = e.target.value; save(); fillPrompts(); refreshPreview(); var cr = document.getElementById("cr"); if (cr) cr.innerHTML = crHtml(); }
   });
   document.addEventListener("change", function (e) {
