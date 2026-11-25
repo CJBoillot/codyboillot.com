@@ -432,6 +432,13 @@
   .lead-links b { display: block; font-family: "Sora", "Inter", sans-serif; font-size: 1.05rem; color: var(--text); }
   .lead-links span { display: block; color: var(--muted); font-size: .93rem; margin-top: .3rem; }
   @media (max-width: 760px) { .lead-links { grid-template-columns: minmax(0, 1fr); } }
+  /* About: Tech Talk photo on the left, text on the right; stacks on phones */
+  .about-grid { display: grid; grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr); gap: clamp(1.4rem, 3.5vw, 2.6rem); align-items: center; }
+  .about-photo { margin: 0; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--line-2); box-shadow: var(--shadow); }
+  .about-photo img { display: block; width: 100%; height: auto; }
+  .about-body .sec-head { margin-bottom: 1rem; }
+  .about-body .about-text { max-width: none; }
+  @media (max-width: 860px) { .about-grid { grid-template-columns: minmax(0, 1fr); } }
 </style>
 <link rel="stylesheet" href="assets/tiles.css" />
 </head>
@@ -515,6 +522,15 @@
   <!-- ABOUT -->
   <section class="block" id="about">
     <div class="wrap">
+      <div class="about-grid">
+      <figure class="about-photo reveal">
+        <picture>
+          <source srcset="assets/about/techtalk.webp" type="image/webp" />
+          <img src="assets/about/techtalk.jpg" width="1200" height="900" loading="lazy"
+               alt="Cody Boillot presenting a Tech Talk on AI, delivery, and developer productivity" />
+        </picture>
+      </figure>
+      <div class="about-body">
       <div class="sec-head reveal">
         <div class="sec-tag">About</div>
         <h2>A builder who leads, and a leader who ships.</h2>
@@ -533,6 +549,8 @@
         ground up and <strong>hired and trained 70+ engineers</strong> into fully independent
         contributors with 90%+ retention.
       </p>
+      </div>
+      </div>
     </div>
   </section>
 
