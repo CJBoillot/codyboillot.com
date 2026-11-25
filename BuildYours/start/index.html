@@ -148,6 +148,10 @@
   .chk label { cursor: pointer; color: var(--muted); font-size: .95rem; min-width: 0; }
   .chk li.on label > b { text-decoration: line-through; text-decoration-color: rgba(134,239,172,.7); }
   .st h2:focus, .st h2:focus-visible { outline: none; }
+  .drec { margin-top: 1.2rem; border: 1px solid rgba(74,222,128,.4); background: rgba(74,222,128,.06); border-radius: 14px; padding: .9rem 1rem; }
+  .drec > strong { display: block; font-size: .76rem; letter-spacing: .1em; text-transform: uppercase; color: #86efac; }
+  .st .drec p { margin-top: .4rem; }
+  .drec .btn { margin-top: .8rem; white-space: normal; max-width: 100%; text-align: center; }
   .note { margin-top: 1rem; border: 1px solid rgba(255,194,75,.4); background: rgba(255,194,75,.06); border-radius: 12px; padding: .7rem .85rem; }
   .note strong { display: block; font-size: .74rem; letter-spacing: .1em; text-transform: uppercase; color: var(--accent-2); }
   .st .note p { margin-top: .25rem; color: #dfe5f0; }
@@ -347,6 +351,7 @@
   }
   function tasks(arr) { return "<ol class='tasks'>" + arr.join("") + "</ol>"; }
   function howWorks() { return "<div class='how'><b>How each step works:</b> fill in what's asked here, copy the prompt, paste it into " + AIS[S.ai].n + ", then bring the answer back here. The labels tell you where each part happens.</div>"; }
+  function domainRec() { return "<div class='drec'><strong>Recommended · your own domain</strong><p>An address like <b>yourname.com</b> looks more finished than a free one and stays yours if you change hosts. About $16 a year at Amazon Route 53, plus $0.50 a month for DNS.*</p><a class='btn btn-ghost' href='../domain/'>Bonus tutorial: get yourname.com</a><p class='src'>*Prices as of November 2026.</p></div>"; }
   function hood(title, html) { return "<div class='hood'><strong>Under the hood · " + title + "</strong>" + html + "</div>"; }
 
   function cmpHtml() {
@@ -355,7 +360,7 @@
       ["Previewing the page", "Artifacts panel runs the page beside the chat.", "Canvas panel shows and edits the page.", "Canvas panel, included on the free plan."],
       ["Working in your code", "Claude Code. Needs a paid plan.", "Codex. Limited on the free plan.", "Antigravity. Open to free accounts."],
       ["Free plan", "Sonnet and Haiku models, with file creation.", "GPT-6 Luna model, with limits on coding tools.", "Flash-Lite model with lower limits."],
-      ["First paid step", "Pro, $20 a month.", "Plus, $20 a month. Go is $8.", "AI Pro, $19.99 a month. AI Plus is $4.99."]
+      ["First paid step", "Pro, $20 a month.*", "Plus, $20 a month. Go is $8.*", "AI Pro, $19.99 a month. AI Plus is $4.99.*"]
     ];
     var h = "<div class='cmp'>";
     ["claude", "chatgpt", "gemini"].forEach(function (id, i) {
@@ -363,7 +368,7 @@
       rows.forEach(function (r) { h += "<div><dt>" + r[0] + "</dt><dd>" + r[i + 1] + "</dd></div>"; });
       h += "</dl></div>";
     });
-    return h + "</div><p class='src'>Last checked " + CHECKED + ". Plans and models change every few months, so confirm on each company's pricing page. Sources: <a href='https://dataaspirant.com/blog/chatgpt-vs-claude-vs-gemini/' target='_blank' rel='noopener'>Dataaspirant</a>, <a href='https://techjournal.org/claude-vs-chatgpt-vs-gemini-2026' target='_blank' rel='noopener'>Tech Journal</a>.</p>";
+    return h + "</div><p class='src'>*Prices as of November 2026. Plans and models change every few months, so confirm on each company's pricing page. Sources: <a href='https://dataaspirant.com/blog/chatgpt-vs-claude-vs-gemini/' target='_blank' rel='noopener'>Dataaspirant</a>, <a href='https://techjournal.org/claude-vs-chatgpt-vs-gemini-2026' target='_blank' rel='noopener'>Tech Journal</a>.</p>";
   }
   function modeSeg() { return "<div class='seg' role='group' aria-label='Color mode'><button type='button' data-set='mode' data-v='light' aria-pressed='" + (S.mode === "light") + "'>Light</button><button type='button' data-set='mode' data-v='dark' aria-pressed='" + (S.mode === "dark") + "'>Dark</button></div>"; }
   function lookFields() {
@@ -384,8 +389,8 @@
     return "<p>Tick each one off as you set it up.</p><ul class='chk'>" + items.map(function (it) { var on = !!tl[it[0]]; return "<li class='" + (on ? "on" : "") + "'><input type='checkbox' id='tl_" + it[0] + "' data-tool='" + it[0] + "'" + (on ? " checked" : "") + " /><label for='tl_" + it[0] + "'>" + it[1] + "</label></li>"; }).join("") + "</ul>";
   }
   function launchHtml() {
-    if (S.path === "simple") return "<ol><li>Create a <b>public</b> repository on GitHub and upload your files, with <code>index.html</code> at the top level.</li><li>Open the repository's Settings, choose Pages, and deploy from your main branch.</li><li>Wait a minute or two, then open the address GitHub shows you.</li><li>Optional: buy a domain with your name and connect it under the same Pages settings.</li></ol><p>GitHub's guide: <a href='https://docs.github.com/en/pages/quickstart' target='_blank' rel='noopener'>GitHub Pages quickstart</a>.</p>";
-    return "<ol><li>Push your project to a GitHub repository.</li><li>In Vercel, choose Add New Project and import that repository. Vercel detects " + PATHS[S.path].n + " and fills in the build settings.</li><li>Deploy, then open the address Vercel gives you.</li><li>Optional: buy a domain with your name and add it under the project's Domains settings.</li></ol><p>Vercel's free Hobby plan is for personal, non-commercial sites, which covers a profile site. Check the current terms: <a href='https://vercel.com/docs/plans/hobby' target='_blank' rel='noopener'>Vercel Hobby plan</a>.</p>";
+    if (S.path === "simple") return "<ol><li>Create a <b>public</b> repository on GitHub and upload your files, with <code>index.html</code> at the top level.</li><li>Open the repository's Settings, choose Pages, and deploy from your main branch.</li><li>Wait a minute or two, then open the address GitHub shows you.</li><li>Recommended: connect a domain with your name. See the bonus tutorial below.</li></ol><p>GitHub's guide: <a href='https://docs.github.com/en/pages/quickstart' target='_blank' rel='noopener'>GitHub Pages quickstart</a>.</p>";
+    return "<ol><li>Push your project to a GitHub repository.</li><li>In Vercel, choose Add New Project and import that repository. Vercel detects " + PATHS[S.path].n + " and fills in the build settings.</li><li>Deploy, then open the address Vercel gives you.</li><li>Recommended: connect a domain with your name. See the bonus tutorial below.</li></ol><p>Vercel's free Hobby plan is for personal, non-commercial sites, which covers a profile site. Check the current terms: <a href='https://vercel.com/docs/plans/hobby' target='_blank' rel='noopener'>Vercel Hobby plan</a>.</p>";
   }
   function hoodBuild() {
     if (S.path === "simple") return "<p><code>index.html</code> is the page's structure: a header, a main area and sections, each tag saying what its content <i>is</i>. <code>styles.css</code> decides how it looks. Your colors sit at the top as CSS variables, such as <code>--accent</code>, so changing one line recolors the whole site.</p><p>The browser reads both files directly. There is no build step, which is why GitHub Pages can serve them as they are.</p>";
@@ -504,7 +509,7 @@
       body: function () { return tasks([
         task(1, "here", "Copy the prompt", promptBox(15, "Launch prompt")),
         task(2, "ai", "Paste it into the same chat and follow along one step at a time")
-      ]) + "<h3>The short version</h3>" + launchHtml(); },
+      ]) + "<h3>The short version</h3>" + launchHtml() + domainRec(); },
       hood: function () { return hood("deploying", hoodDeploy()); },
       why: "Until it has an address, nobody can see it." },
     { pt: 4, t: "Share it", lead: "The site only works if people open it.",
@@ -530,7 +535,7 @@
     var nm = t("name");
     return "<article class='st'><div class='st-k'>Finished</div><h2>" + (nm ? "Nice work, " + esc(nm) + "." : "Nice work.") + " Here's your site.</h2><p class='st-lead'>This preview is built right here in your browser from what you entered. Nothing is sent anywhere. Switch light and dark, try it at phone width, and download it as a starting file.</p>"
       + modeSeg() + previewHtml("Your site")
-      + "<div class='fin-btns'><button type='button' class='btn btn-primary' id='dl'>Download index.html</button><button type='button' class='btn btn-ghost' data-go='6'>Change colors or fonts</button><a class='btn btn-ghost' href='../sample/'>See a finished example</a></div>"
+      + "<div class='fin-btns'><button type='button' class='btn btn-primary' id='dl'>Download index.html</button><button type='button' class='btn btn-ghost' data-go='6'>Change colors or fonts</button><a class='btn btn-ghost' href='../sample/'>See a finished example</a><a class='btn btn-ghost' href='../domain/'>Bonus: get yourname.com</a></div>"
       + hood("the file you download", "<p>It's one HTML file with its CSS inside a <code>&lt;style&gt;</code> tag. Open it in any browser. " + (S.path === "simple" ? "On the Simple Pages path you can upload it to GitHub Pages as it is, then grow it with the build steps." : "On your " + PATHS[S.path].n + " path, paste it into your AI chat as the design reference for your real project.") + "</p><p>Look for the <code>:root</code> block at the top: those variables are your palette. Change one and the whole page follows.</p>")
       + "<div class='why' style='margin-top:1.6rem'><h3>Why I teach it this way</h3><p>I've hired and trained more than 70 engineers. These steps follow the habits I coach on my teams:</p><ul><li><b>Start with the outcome.</b> Decide what the site must prove before you open a tool.</li><li><b>Direct the AI.</b> Give it context, constraints and one clear ask.</li><li><b>Know what you shipped.</b> You answer for every line, whoever typed it.</li><li><b>Ask for honest feedback.</b> Find the weak spots before an employer does.</li></ul><div class='fin-btns'><a class='btn btn-primary' href='../../leadership/'>See how I lead</a><a class='btn btn-ghost' href='../../rubric/'>What I look for in engineers</a></div></div>"
       + "<div class='nav2'><button type='button' class='back' data-go='" + N + "'>Back</button><button type='button' class='back' data-restart='1'>Start over</button></div></article>";

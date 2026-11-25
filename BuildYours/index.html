@@ -36,6 +36,10 @@
   .cost { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1rem; }
   .cost span { border: 1px solid var(--line-2); border-radius: 999px; padding: .35rem .85rem; font-size: .9rem; color: var(--muted); }
   .cost b { color: #86efac; }
+  .lp-sec .rec { color: var(--muted); margin-top: .9rem; max-width: 62ch; }
+  .lp-sec .rec b { color: var(--text); }
+  .lp-sec .rec a { color: var(--accent-2); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; }
+  .lp-sec .fine { color: var(--muted-2); font-size: .8rem; margin-top: .4rem; }
   .how { list-style: none; margin: 1rem 0 0; padding: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .7rem; counter-reset: s; }
   .how li { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: .9rem; min-width: 0; counter-increment: s; }
   .how li::before { content: counter(s); display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--grad); color: #1a1206; font-weight: 800; font-size: .85rem; margin-bottom: .5rem; }
@@ -90,7 +94,9 @@
   <section class="lp-sec">
     <div class="wrap">
       <h2>What it costs</h2>
-      <div class="cost"><span>Tutorial <b>$0</b></span><span>Hosting <b>$0</b></span><span>AI assistant, free plan <b>$0</b></span><span>Custom domain: optional</span></div>
+      <div class="cost"><span>Tutorial <b>$0</b></span><span>Hosting <b>$0</b></span><span>AI assistant, free plan <b>$0</b></span></div>
+      <p class="rec">Recommended: your own address, like <b>yourname.com</b>. About $16 a year at Amazon Route 53, plus $0.50 a month for DNS.* <a href="domain/">Bonus tutorial: set it up</a></p>
+      <p class="fine">*Prices as of November 2026.</p>
     </div>
   </section>
 
