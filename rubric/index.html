@@ -130,6 +130,27 @@
     .lvl h4, .mo, .area-count { color: #000; }
     .rubric .lvl { display: block !important; } .rubric .levels { grid-template-columns: repeat(3, 1fr) !important; }
   }
+  /* ---------- Collapsible criteria: levels show only when a row is opened ---------- */
+  .js .crit-head { cursor: pointer; }
+  .js .crit-head::after { content: ""; flex: none; align-self: center; width: .6rem; height: .6rem; margin-left: .2rem;
+    border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: rotate(45deg) translateY(-2px); transition: transform .2s; }
+  .js .crit.open .crit-head::after { transform: rotate(225deg) translateY(-2px); }
+  .js .crit:not(.open) .levels { display: none; }
+  .js .crit:not(.open) { padding-top: .85rem; padding-bottom: .85rem; }
+  .js .crit-head:hover h3 { color: var(--accent-2); }
+  .js .crit-head:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 6px; }
+  .rb-all { font: inherit; font-size: .85rem; font-weight: 600; color: var(--muted); cursor: pointer; white-space: nowrap;
+    background: transparent; border: 1px solid var(--line-2); border-radius: 999px; padding: .36rem .8rem; margin-left: auto; }
+  .rb-all:hover { color: var(--text); border-color: var(--accent); }
+  .rb-all + .rb-count { margin-left: 0; }
+  @media (max-width: 1340px) { .rb-all + .rb-count { display: none; } }
+  @media (max-width: 760px) {
+    .seg { flex-wrap: wrap; overflow: visible; }
+    .rb-all { margin-left: 0; }
+    .js .crit-head { position: relative; padding-right: 1.7rem; }
+    .js .crit-head::after { position: absolute; right: .25rem; top: .3rem; margin: 0; }
+  }
+  @media print { .js .crit:not(.open) .levels { display: grid !important; } .js .crit-head::after { display: none; } }
   html.vm-framed header.nav { display: none; }
   html.vm-framed .rb-bar { top: 0; }
 </style>
@@ -213,6 +234,7 @@
         <button type="button" data-level="exceeds" aria-pressed="false">Exceeds</button>
         <button type="button" data-level="below" aria-pressed="false">Does not meet</button>
       </div>
+      <button type="button" class="rb-all" id="rbAll" aria-pressed="false">Expand all</button>
       <div class="rb-count" id="rbCount" aria-live="polite">20 of 20 criteria</div>
     </div>
   </div>
@@ -541,13 +563,35 @@
       if (t && t.hidden) { month = "all"; press("data-month", "all"); applyMonth(); t.scrollIntoView(); }
     }
     window.addEventListener("hashchange", reveal);
-    // On a phone, three levels for twenty criteria is a long scroll: start on "Meets".
-    if (window.matchMedia && window.matchMedia("(max-width: 760px)").matches) {
-      list.setAttribute("data-level", "meets"); press("data-level", "meets");
-      // The page just got shorter, so a link to one criterion has to be re-aimed.
-      var t = location.hash && document.querySelector(location.hash);
-      if (t) t.scrollIntoView();
+    // Each criterion starts collapsed; its three levels show only when the row is opened.
+    document.documentElement.classList.add("js");
+    var allBtn = document.getElementById("rbAll");
+    function setOpen(c, on) {
+      c.classList.toggle("open", on);
+      c.querySelector(".crit-head").setAttribute("aria-expanded", String(on));
     }
+    function syncAll() {
+      var every = crits.every(function (c) { return c.classList.contains("open"); });
+      allBtn.textContent = every ? "Collapse all" : "Expand all"; allBtn.setAttribute("aria-pressed", String(every));
+    }
+    crits.forEach(function (c, i) {
+      var h = c.querySelector(".crit-head"), l = c.querySelector(".levels");
+      l.id = l.id || "lv" + (i + 1);
+      h.setAttribute("role", "button"); h.tabIndex = 0; h.setAttribute("aria-controls", l.id); h.setAttribute("aria-expanded", "false");
+      function flip() { setOpen(c, !c.classList.contains("open")); syncAll(); }
+      h.addEventListener("click", flip);
+      h.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); flip(); } });
+    });
+    allBtn.addEventListener("click", function () {
+      var open = allBtn.getAttribute("aria-pressed") !== "true";
+      crits.forEach(function (c) { setOpen(c, open); }); syncAll();
+    });
+    // A criterion reached by a link opens itself.
+    function openTarget() {
+      var t = location.hash && document.querySelector(location.hash);
+      if (t && t.classList.contains("crit")) { setOpen(t, true); syncAll(); t.scrollIntoView(); }
+    }
+    window.addEventListener("hashchange", openTarget); openTarget();
   })();
 </script>
 </body>
